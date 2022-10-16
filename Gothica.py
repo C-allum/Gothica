@@ -55,6 +55,7 @@ creds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FI
 SpreadsheetID = "1iHvP4HC8UQqyiMmC3Xiggx8-17e5SGWJMncEeoiZP1s"
 
 EconSheet = "1qTC0gn7Fe_cHDVPB8KIEjSFUwrUSEhlLy1upHIKnKF8"
+#EconSheet = "1mmWxHhDUPI0PjLC2UXJZmj5wNqXnucFMz-er9NpVC2c" #TestEconSheet
 
 service = build("sheets", "v4", credentials=creds)
 
@@ -65,6 +66,7 @@ values = values.replace("'","")
 headers = values.split(",")
 
 shopsheet = "1gxNPXIichzK9mSN8eHYVdJvaaUgUnN6VF8WshL_4Les"
+#shopsheet = "1r_1tYCGtmanRkTGsfAz4WrOSUoi6roO-zYRHACQBD90" #TestShopSheet
 
 invsheet = "1qTC0gn7Fe_cHDVPB8KIEjSFUwrUSEhlLy1upHIKnKF8"
 
@@ -7312,5 +7314,5 @@ async def on_message_delete(message):
         await client.get_channel(logchannel).send(message.author.name + "'s message was deleted in " + str(message.channel) + ". The message was:\n\n" + message.content.replace("@", "\@") + "\n\nThis message was deleted at " + str(datetime.now()))
 
 Gtoken = "ODc2NDQwOTgwMzU2NzU1NDU2.YRkHRQ.R0QTTcjzr6YAZglNy4PU3Iyzx5o" # Main Gothica Bot
-
+KenToken = "MTAzMDU2NjI1MDAxMjc1ODAyNg.Gv8_nu.6QRuxQITeoaepHedVSHd187bX9Fit0uVqida7Y" #Kendrax Test Token
 client.run(Gtoken, reconnect=True)
