@@ -5146,43 +5146,72 @@ async def on_message(message):
             #Buy Item
 
             elif message.content.lower().startswith(str(myprefix) + "buy") or message.content.lower().startswith("$buy"):
-
-                #Iterate through table, find item index
-
+                
+                #Search Shop for item match
+                shopdata = sheet.values().get(spreadsheetId = shopsheet, range = "A1:J1000", majorDimension = 'COLUMNS').execute().get("values")
+                searchterm = message.content.replace("'","").replace("’","").split(" ", 1)[1].lower().rsplit(" ", 1)[0]
+                buyquant = 0
                 itindex = ""
 
-                shopdata = sheet.values().get(spreadsheetId = shopsheet, range = "A1:J1000", majorDimension = 'COLUMNS').execute().get("values")
+                #Try to extract a buy quantity from the end of the string
+                try:
+                    buyquant = int(message.content.split(" ", 1)[1].lower().rsplit(" ", 1)[-1])
+                except ValueError:
+                    buyquant = 1
 
-                for a in range(len(shopdata[0])):
+                #Temp variables to present possible options
+                matchnames = []
 
-                    if " " in message.content:
+                searchnames = []
+
+                matchno = 0
+
+                #Collect all instances of the searched term
+                for n in range(len(shopdata[0])):
+                    if searchterm in str(shopdata[1][n]).replace("'","").replace("’","").lower():
+
+                        matchno += 1
+
+                        matchnames.append("`" + str(matchno) + "` " + shopdata[0][n] + shopdata[1][n] + ", sold at" + shopdata[3][n].replace("#", " ").replace("-", " ").title())
+
+                        searchnames.append(shopdata[1][n])
+
+                #Give user a choice which instance they want
+                if matchno > 1:
+                    await message.channel.send(embed = discord.Embed(title = "Multiple Matches Found", description = "Type the number of the one you want.\n\n" + "\n".join(matchnames) + "\n\nThis message will timeout after 30 seconds.", colour = embcol))
+
+                    try:
+
+                        msg = await client.wait_for('message', timeout = 30, check = check(message.author))
 
                         try:
 
-                            if message.content.split(" ",2)[2].lower() in shopdata[1][a].lower():
+                            valu = int(msg.content)
 
-                                try:
+                            searchterm = searchnames[valu-1]
 
-                                    buyquant = int(message.content.split(" ")[1])
+                            await msg.delete()
 
-                                except ValueError:
+                        except TypeError or ValueError:
 
-                                    buyquant = 1
+                            await message.channel.send(embed=discord.Embed(title="Selection Invalid",description="You must enter an integer", colour = embcol))
 
-                                itindex = a
+                            await msg.delete()
 
-                                break
+                    except asyncio.TimeoutError:
 
-                        except IndexError:
+                        await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
 
-                            if message.content.split(" ",1)[1].lower() in shopdata[1][a].lower():
+                        await message.delete()
 
-                                buyquant = 1
+                #Grab index of the item    
+                for n in range(len(shopdata[0])):
+                    if searchterm.replace("'","").replace("’","").lower() in shopdata[1][n].replace("'","").replace("’","").lower():
+                        itindex = n
 
-                                itindex = a
 
-                                break
-                
+                #Get Item and Shop Data
+
                 if itindex != "":
 
                     failpur = 0
@@ -5416,6 +5445,7 @@ async def on_message(message):
                 else:
 
                     await message.channel.send(embed = discord.Embed(title = "We couldn't find any items matching that name.", description= "Check the spelling of the item, and look through `" + myprefix + "shop shopname` to ensure it is correct.", colour = embcol))
+
 
             #Use Item
 
