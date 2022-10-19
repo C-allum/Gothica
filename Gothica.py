@@ -94,7 +94,7 @@ async def on_message(message):
             #Character Creation Subroutine - On CharRegistry, untested
             elif str(message.channel) == "character-creation" and message.content.lower().lstrip("*").startswith("name") and not isbot:
 
-                await CharRegistry.createchar(message)
+                await CharRegistry.charcreate(message)
 
             #Character Edit Subroutine - On CharRegistry, untested
             elif message.content.lower().startswith(str(myprefix) + "edit") and not isbot:
