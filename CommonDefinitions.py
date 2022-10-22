@@ -29,7 +29,7 @@ from discord.utils import get
 from discord.embeds import Embed
 from discord.enums import NotificationLevel
 from discord.ext import commands
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from discord.ext.commands.errors import NoPrivateMessage
 
 from discord.gateway import DiscordClientWebSocketResponse
@@ -90,6 +90,7 @@ else:
     Plotsheet = "17ZTklwFnnrVk1qeZLOnEK6YacNQusRljUxaSXTvPDWU" #No change as yet
 
     token = "OTIxNTQwNzQ4MDM2NDExNDYy.GG6ouk.1aHkMKGD_0WM6MozQ5n73roXVzweY0vXjGAh0o" # Gothica Beta
+    #token = "MTAzMDU2NjI1MDAxMjc1ODAyNg.GAzgsF.Lu_RbIORriRXr2GEI_bCT6R9ta9YJbjWYQak0M" #Ken Gothy
 
     logchannel = 1031701327169998958 #Test Server
 
@@ -116,6 +117,9 @@ for i in range(len(headers)):
     headers[i] = headers[i].lstrip(" ")
     headers[i] = headers[i].lstrip("[")
     headers[i] = headers[i].rstrip("]")
+
+
+#Sheets
 
 aliases = sheet.values().get(spreadsheetId = "1xGL06_MrOb5IIt2FHJFeW_bdcwedIKZX-j3m2djSOaw", range = "A1:T50", majorDimension='COLUMNS').execute().get("values")
 
@@ -147,6 +151,20 @@ selopts = []
 
 column = ["F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","AA","AB"]
 
+#----------------EconomyValues----------------
+
+reactdz = 20
+reactCashMoney = 100
+reactMakeItRain = 200
+
+weeklyDezziePoolVerified = 500
+weeklyDezziePoolP1 = 650
+weeklyDezziePoolP2 = 800
+weeklyDezziePoolP3 = 1000
+
+weeklyDezzieBonusFucksmith = 500
+weeklyDezzieBonusBoost = 100
+#---------------------------------------------
 def check(author):
     def inner_check(message): 
         if message.author != author:

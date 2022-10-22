@@ -3,10 +3,103 @@ import OocFun
 import CharRegistry
 import CommonDefinitions
 from CommonDefinitions import *
-
 @client.event
 async def on_ready():
     print('Logged in as {0.user} at '.format(client) + str(datetime.now()).split(".")[0])
+    
+
+    #------------------DezzieAwardPoolReset--------------------
+
+
+    #Read old dezzie award reset date
+    economyResetDate = sheet.values().get(spreadsheetId = EconSheet, range = "D2", majorDimension='ROWS').execute().get("values")
+
+    #Grab current date and time
+    today = datetime.now()
+ 
+    #Prepare dates for Dezzie Award Pool Reset
+    try:
+        oldResetDateTime = int(economyResetDate[0][0])
+    except: 
+        #Happens if the date isn't initialized on the econ sheet. Initialize it then.
+        resetDateInitVal = [[int(datetime.timestamp(datetime(2022, 10, 22)))]]
+        sheet.values().update(spreadsheetId = EconSheet, range = "D2", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=resetDateInitVal)).execute()
+        oldResetDateTime = resetDateInitVal[0][0]
+        
+    if oldResetDateTime < datetime.timestamp(today):
+
+        #Calculate new timestamp
+        newResetDatetime = (today - timedelta(days=today.weekday()) + timedelta(days=7)).replace(hour=0, minute=0, second=0) #Takes todays date, subtracts the passed days of the week and adds 7, resulting in the date for next monday. Then replaces time component with 0
+        newResetDateTimestamp = int(datetime.timestamp(newResetDatetime))
+        
+        #Set timestamp in data
+        newResetValue = [[newResetDateTimestamp]]
+
+
+
+        print("Last dezzie amount pool reset:" + str(datetime.fromtimestamp(oldResetDateTime)))
+        print("Next reset:" + str(datetime.fromtimestamp(newResetDateTimestamp)))
+
+       
+        
+        #On reboot refresh dezzie pool of users
+        economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:A2000", majorDimension='ROWS').execute().get("values")
+
+        for i in range(5, len(economydata)-1, 4):
+
+            #Grab the name on the member
+            name = economydata[i][0]
+            userStillOnServer = 1
+
+            #Get Roles of the member. Attribute Error if they are not in the specified Guild (server)
+            try:
+                roles = client.get_guild(828411760365142076).get_member_named(name).roles
+            except AttributeError:
+                try:
+                    roles = client.get_guild(847968618167795782).get_member_named(name).roles
+                except AttributeError:
+                    userStillOnServer = 0
+
+            dezziePool = 0
+
+            #If they aren't on the server anymore, we can just not refresh their dezzie pool.
+            if userStillOnServer == 1:
+                #Base values
+                if "+3" in str(roles).lower():
+                    dezziePool = weeklyDezziePoolP3
+                elif "+2" in str(roles).lower():
+                    dezziePool = weeklyDezziePoolP2
+                elif "+1" in str(roles).lower():
+                    dezziePool = weeklyDezziePoolP1
+                else:
+                    dezziePool = weeklyDezziePoolVerified
+                #Bonus
+                if "licensed fucksmith" in str(roles).lower():
+                    dezziePool += weeklyDezzieBonusFucksmith
+                if "server booster" in str(roles).lower():
+                    dezziePool += weeklyDezzieBonusBoost
+                if "lorekeeper" in str(roles).lower() or "lorekeeper" in str(roles).lower() or "admin" in str(roles).lower():
+                    dezziePool = 100000
+
+            try:
+                economydata[i+3][0] = dezziePool
+            except IndexError:  
+                #Occurs when Dezzie pool is null. Initialize dezzie pool
+                economydata[i+3] = [dezziePool]
+
+        #update dezzie pools
+        sheet.values().update(spreadsheetId = EconSheet, range = "A1:A2000", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=economydata)).execute()
+
+        #update sheet with new refresh time
+        sheet.values().update(spreadsheetId = EconSheet, range = "D2", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=newResetValue)).execute()
+        print("Weekly Dezzie Award Pool Reset!")
+    else:
+        print("It is not dezzie award pool reset time yet!")
+    #----------------------------------------------------------
+
+
+    
+
 
 #Main Loop
 
@@ -94,7 +187,7 @@ async def on_message(message):
             #Character Creation Subroutine - On CharRegistry, untested
             elif str(message.channel) == "character-creation" and message.content.lower().lstrip("*").startswith("name") and not isbot:
 
-                await CharRegistry.createchar(message)
+                await CharRegistry.charcreate(message)
 
             #Character Edit Subroutine - On CharRegistry, untested
             elif message.content.lower().startswith(str(myprefix) + "edit") and not isbot:
@@ -4837,7 +4930,9 @@ async def on_message(message):
 
                 if not isbot and not message.content.startswith("%") and not message.content.startswith("$"):
 
-                    prevmess = await message.channel.history(limit=2, oldest_first=False).flatten()
+                    prevmess = [joinedMessages async for joinedMessages in message.channel.history(limit=2, oldest_first=False)] #Fix for pebblehost Await issue
+
+                    #prevmess = await message.channel.history(limit=2, oldest_first=False).flatten()
 
                     shopids = [917235652947488808, 917235695398039583, 917236137234399233, 917236902921388042, 917239168969621515, 917565100553031732]
 
@@ -5182,7 +5277,7 @@ async def on_raw_reaction_add(reaction):
 
             target = await client.fetch_user(targid)
 
-            targname = target.name
+            targetName = target.name
 
             try:
 
@@ -5190,7 +5285,7 @@ async def on_raw_reaction_add(reaction):
 
                     b = a * 4 + 5
 
-                    if str(targname + "#" + str(target.discriminator)) in str(economydata[b][0]):
+                    if str(targetName + "#" + str(target.discriminator)) in str(economydata[b][0]):
 
                         reciprow = b + 1
 
@@ -5202,15 +5297,15 @@ async def on_raw_reaction_add(reaction):
 
             if reaction.emoji.name == "dz":
                 
-                giveamount = 50
+                giveamount = reactdz
 
             elif reaction.emoji.name == "cashmoney":
                 
-                giveamount = 100
+                giveamount = reactCashMoney
 
             elif reaction.emoji.name == "makeitrain":
                 
-                giveamount = 200
+                giveamount = reactMakeItRain
 
             else:
 
@@ -5220,15 +5315,277 @@ async def on_raw_reaction_add(reaction):
 
             sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipnewtot]])).execute()
 
-            if reaction.member.name == targname:
+            if reaction.member.name == targetName:
 
-                await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targname, description = targname + " now has " + str(recipnewtot) + dezzieemj + "\n\nNot sure why they're awarding dezzies to themself like this, but ok.", colour = embcol, url = mess.jump_url))    
+                await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(recipnewtot) + dezzieemj + "\n\nNot sure why they're awarding dezzies to themself like this, but ok.", colour = embcol, url = mess.jump_url))    
 
             else:
 
-                await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targname, description = targname + " now has " + str(recipnewtot) + dezzieemj, colour = embcol, url = mess.jump_url))
+                await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(recipnewtot) + dezzieemj, colour = embcol, url = mess.jump_url))
         
         elif reaction.emoji.name == "💰":
+
+            mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
+
+            for a in range(len(mess.attachments)):
+
+                await client.get_channel(913998580027645992).send(mess.attachments[a])
+
+            if mess.content != "":
+                
+                await client.get_channel(913998580027645992).send(mess.content)
+
+        elif reaction.emoji.name == "💎":
+
+            mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
+
+            for a in range(len(mess.attachments)):
+
+                await client.get_channel(985417358019534878).send(mess.attachments[a])
+
+            if mess.content != "":
+                
+                await client.get_channel(985417358019534878).send(mess.content)
+
+        elif reaction.emoji.name == "⛓️":
+
+            mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
+
+            for a in range(len(mess.attachments)):
+
+                await client.get_channel(980494836811563148).send(mess.attachments[a])
+
+            if mess.content != "":
+                
+                await client.get_channel(980494836811563148).send(mess.content)
+
+        elif reaction.emoji.name == "❌" and mess.author.bot:
+
+            await client.get_channel(logchannel).send(str(reaction.member.name) + " deleted the following message from " + str(mess.author.name) + " in " + str(mess.channel))
+
+            try:
+
+                await client.get_channel(logchannel).send(mess.content)
+
+            except discord.errors.HTTPException:
+
+                await client.get_channel(logchannel).send(embed = mess.embeds[0])
+
+            try:
+
+                await mess.delete()
+
+            except discord.errors.NotFound:
+
+                pass
+
+    #Dezzie Reacts with weekly pool
+    elif reaction.emoji.name == "dz" or reaction.emoji.name == "cashmoney" or reaction.emoji.name == "makeitrain" or reaction.emoji.name == "DzCrit":
+
+        mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
+
+        economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ2000", majorDimension='ROWS').execute().get("values")
+
+        reciprow = ""
+
+        targid = mess.author.id
+
+        target = await client.fetch_user(targid)
+
+        targetName = target.name
+
+        giverow = ""
+
+        giveid = reaction.member.id
+
+        giver = await client.fetch_user(giveid)
+
+        givename = giver.name
+
+        try:
+
+            for a in range(math.floor(len(economydata)/4)):
+
+                b = a * 4 + 5
+
+                if str(targetName + "#" + str(target.discriminator)) in str(economydata[b][0]):
+
+                    reciprow = b + 1
+
+                    break
+
+            for a in range(math.floor(len(economydata)/4)):
+
+                b = a * 4 + 5
+
+                if str(givename + "#" + str(giver.discriminator)) in str(economydata[b][0]):
+
+                    giverow = b + 1
+
+                    break
+
+        except IndexError:
+
+            if not mess.author.bot:
+
+                await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = str(mess.author) + " is not in the economy.", description = "If this should not be the case, speak to Callum", colour = embcol))
+
+
+
+        #Determine gift amount - Values in CommonDefinitions.py
+        if reaction.emoji.name == "dz":
+                
+            giveamount = reactdz
+
+        elif reaction.emoji.name == "cashmoney":
+                
+            giveamount = reactCashMoney
+
+        elif reaction.emoji.name == "makeitrain":
+                
+            giveamount = reactMakeItRain
+
+        else:
+
+            giveamount = random.randint(100,500)
+
+        
+        #Retrieve users current react dezzie pool
+        try:
+
+            prevDezziePool = int(economydata[giverow+2][0])
+
+        except IndexError:
+
+            prevDezziePool = weeklyDezziePoolVerified
+
+        except ValueError:
+
+            prevDezziePool = weeklyDezziePoolVerified
+
+
+        #Check if given amount is smaller than the pool of dezzies left for the user
+        if reaction.channel_id != 828545311898468352:
+
+            if reaction.member.name == targetName:
+
+                await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = "No.", description = targetName + ", you can't just award dezzzies to yourself.", colour = embcol))    
+
+                await client.get_channel(918257057428279326).send(targetName + " tried to award dezzies to themself.")
+
+            else:
+                #Enough dezzies left in users dezzie pool:
+                if giveamount <= prevDezziePool:
+
+                    recipNewTot = int(economydata[reciprow-1][1]) + int(giveamount)
+                 
+                    newDezziePool = prevDezziePool - giveamount
+
+                    sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipNewTot]])).execute()
+
+                    sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(giverow+3)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newDezziePool]])).execute()
+
+                    if newDezziePool == 0:
+
+                        await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
+
+                    else:
+
+                        await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has " + str(newDezziePool) + dezzieemj + " in their dezzie award pool left for the week!", colour = embcol, url = mess.jump_url))
+
+                    await client.get_channel(918257057428279326).send(givename + " awarded Dezzies to " + targetName)
+                
+                #User has less dezzies in their pool than they reacted with
+                elif prevDezziePool > 0:
+
+                    newDezziePool = 0
+
+                    giveamount = prevDezziePool
+
+                    recipNewTot = int(economydata[reciprow-1][1]) + int(giveamount)
+
+                    sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipNewTot]])).execute()
+
+                    sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(giverow+3)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newDezziePool]])).execute()
+
+                    await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
+
+                    await client.get_channel(918257057428279326).send(givename + " awarded Dezzies to " + targetName)
+                
+                #User dezzie pool is empty:
+                else:
+                    await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + "'s dezzie award pool for the week is empty!" , description = "You will receive a fresh pool of dezzies to award to others at the start of next week!", colour = embcol, url = mess.jump_url))
+
+
+
+        else:
+
+            await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = "You can't use this at the here.", colour = embcol, url = mess.jump_url))
+
+
+
+
+    if reaction.emoji.name == "cuffs":
+
+        chan = client.get_channel(reaction.channel_id)
+
+        mess = await chan.fetch_message(reaction.message_id)
+
+        if reaction.channel_id == 994340109962973204:
+
+            emb = discord.Embed(title = reaction.member.name + " has claimed this artwork to make a character from.", colour = embcol)
+
+            user = await client.fetch_user(int(reaction.member.id))
+
+            await user.send("You have claimed this image. If it vanishes from here, it should still be in the channel.")
+
+            try:
+
+                emb.set_thumbnail(url = mess.attachments[0])
+
+                await user.send(mess.attachments[0])
+
+            except IndexError:
+
+                emb.set_thumbnail(url = mess.content)
+
+                await user.send(mess.content)
+
+            meslist = ["CLAIMED"]
+
+            reacts = meslist[random.randint(0,len(meslist)-1)]
+
+            reacts = reactletters(meslist[random.randint(0,len(meslist)-1)])
+
+            for n in range(len(reacts)):
+
+                await mess.add_reaction(reacts[n])
+
+        else:
+
+            try:
+
+                a = mess.attachments[0]
+
+                await client.get_channel(994340109962973204).send(reaction.member.name)
+
+                await client.get_channel(994340109962973204).send(mess.attachments[0].url)
+
+            except IndexError:
+
+                await mess.channel.send("That message doesn't contain an image.")
+
+    elif reaction.emoji.name == "❓":
+
+        mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
+
+        await client.get_channel(918257057428279326).send(str(reaction.member.name) + " queried the tupper of " + str(mess.author))
+
+
+    
+    if "lorekeeper" in str(reaction.member.roles).lower() or "moderator" in str(reaction.member.roles).lower():   
+
+        if reaction.emoji.name == "💰":
 
             mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
 
