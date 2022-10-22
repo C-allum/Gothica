@@ -85,7 +85,12 @@ async def on_ready():
                 economydata[i+3][0] = dezziePool
             except IndexError:  
                 #Occurs when Dezzie pool is null. Initialize dezzie pool
-                economydata[i+3] = [dezziePool]
+                try:
+                    economydata[i+3] = [dezziePool]
+                except IndexError:
+                    #Also triggers at the last person in the spreadsheet, as the cell is not just empty, but unreachable.
+                    pass
+
 
         #update dezzie pools
         sheet.values().update(spreadsheetId = EconSheet, range = "A1:A2000", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=economydata)).execute()
@@ -5465,7 +5470,7 @@ async def on_raw_reaction_add(reaction):
 
 
         #Check if given amount is smaller than the pool of dezzies left for the user
-        if reaction.channel_id != 828545311898468352:
+        if reaction.channel_id != 828545311898468352: #Disable Noticeboard Reacts
 
             if reaction.member.name == targetName:
 
