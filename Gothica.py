@@ -3282,15 +3282,39 @@ async def on_message(message):
                 
                 #Search Shop for item match
                 shopdata = sheet.values().get(spreadsheetId = shopsheet, range = "A1:J1000", majorDimension = 'COLUMNS').execute().get("values")
-                searchterm = message.content.replace("'","").replace("’","").split(" ", 1)[1].lower().rsplit(" ", 1)[0]
-                buyquant = 0
+                buyquant = 1
+                try:
+                    fullMessage = message.content.replace("'","").replace("’","").lower()
+                    fullMessage = fullMessage.split(" ", 1)[1] #cut the %buy off
+                    #Cut away trailing spaces
+                    while fullMessage.rsplit(" ")[-1] == "":
+                        fullMessage = fullMessage.rsplit(" ", 1)[0]
+
+                    searchterm = fullMessage.rsplit(" ", 1)[0]
+                    try:
+                        print("buyquantExtract: " + fullMessage.rsplit(" ", 1)[-1])
+                        buyquant = int(fullMessage.rsplit(" ", 1)[-1]) #Try to extract a buy quantity from the end of the string
+                        
+                        if buyquant < 1:
+                            buyquant = 0
+                    except ValueError:
+                        print("error")
+                        buyquant = 1  
+                    except TypeError:
+                        print("error typerror")
+                        buyquant = 1  
+                except IndexError:
+                    searchterm = "11111111111111" #Something irrelevant cause the search was empty
+                
                 itindex = ""
 
-                #Try to extract a buy quantity from the end of the string
-                try:
-                    buyquant = int(message.content.split(" ", 1)[1].lower().rsplit(" ", 1)[-1])
-                except ValueError:
-                    buyquant = 1
+                
+                print(searchterm)
+                print(buyquant)
+                #try:
+                #    buyquant = int(message.content.split(" ", 1)[1].lower().rsplit(" ", 1)[-1])
+                #except ValueError:
+                #    buyquant = 1
 
                 #Temp variables to present possible options
                 matchnames = []
@@ -3337,9 +3361,13 @@ async def on_message(message):
 
                         await message.delete()
 
+                elif matchno == 1: #Replace searchterm with the exact item name if only one match is present.
+                    searchterm = searchnames[0]
+
+
                 #Grab index of the item    
                 for n in range(len(shopdata[0])):
-                    if searchterm.replace("'","").replace("’","").lower() in shopdata[1][n].replace("'","").replace("’","").lower():
+                    if searchterm.replace("'","").replace("’","").lower() == shopdata[1][n].replace("'","").replace("’","").lower():
                         itindex = n
 
 
@@ -3509,7 +3537,7 @@ async def on_message(message):
 
                             if int(userinvs[r][1]) < (int(buyquant) * int(itprice)):
 
-                                await message.channel.send(embed = discord.Embed(title = "You can't afford this", description= "To buy " + str(buyquant) + " " + itname + ", you need " + str(buyquant * itprice) + dezzieemj + ". You only have " + userinvs[r][1], colour = embcol))
+                                await message.channel.send(embed = discord.Embed(title = "You can't afford this", description= "To buy " + str(buyquant) + " " + itname + ", you need " + str(int(buyquant) * int(itprice)) + dezzieemj + ". You only have " + userinvs[r][1], colour = embcol))
                                 
                                 sheet.values().update(spreadsheetId = shopsheet, range = str("I" + str(itindex + 1)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[itstock]])).execute()
 
