@@ -69,7 +69,7 @@ if 1: #Set to 1 to use the real spreadsheets, or 0 to use the testing spreadshee
 
     Plotsheet = "17ZTklwFnnrVk1qeZLOnEK6YacNQusRljUxaSXTvPDWU"
 
-    token = "ODc2NDQwOTgwMzU2NzU1NDU2.YRkHRQ.R0QTTcjzr6YAZglNy4PU3Iyzx5o" # Main Gothica Bot
+    token = "ODc2NDQwOTgwMzU2NzU1NDU2.Gyiw88.iUjK58iowTeWOxVDTcSxyZEPbWj2jMQoFSAGAY" # Main Gothica Bot
 
     logchannel = 918257057428279326
 
@@ -89,7 +89,7 @@ else:
 
     Plotsheet = "17ZTklwFnnrVk1qeZLOnEK6YacNQusRljUxaSXTvPDWU" #No change as yet
 
-    token = "OTIxNTQwNzQ4MDM2NDExNDYy.GG6ouk.1aHkMKGD_0WM6MozQ5n73roXVzweY0vXjGAh0o" # Gothica Beta
+    token = "OTIxNTQwNzQ4MDM2NDExNDYy.Gbz1YS.p3F8XyrZdDHHCQB-XlQ5vAlAwqH6yWA2tcGGa4" # Gothica Beta
     #token = "MTAzMDU2NjI1MDAxMjc1ODAyNg.GAzgsF.Lu_RbIORriRXr2GEI_bCT6R9ta9YJbjWYQak0M" #Ken Gothy
 
     logchannel = 1031701327169998958 #Test Server
