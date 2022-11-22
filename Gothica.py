@@ -22,6 +22,7 @@ async def on_ready():
         oldResetDateTime = int(economyResetDate[0][0])
     except: 
         #Happens if the date isn't initialized on the econ sheet. Initialize it then.
+        print("Initial reset date added!")
         resetDateInitVal = [[int(datetime.timestamp(datetime(2022, 10, 22)))]]
         sheet.values().update(spreadsheetId = EconSheet, range = "D2", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=resetDateInitVal)).execute()
         oldResetDateTime = resetDateInitVal[0][0]
@@ -31,24 +32,27 @@ async def on_ready():
         #Calculate new timestamp
         newResetDatetime = (today - timedelta(days=today.weekday()) + timedelta(days=7)).replace(hour=0, minute=0, second=0) #Takes todays date, subtracts the passed days of the week and adds 7, resulting in the date for next monday. Then replaces time component with 0
         newResetDateTimestamp = int(datetime.timestamp(newResetDatetime))
-        
+
         #Set timestamp in data
         newResetValue = [[newResetDateTimestamp]]
 
 
 
-        print("Last dezzie amount pool reset:" + str(datetime.fromtimestamp(oldResetDateTime)))
-        print("Next reset:" + str(datetime.fromtimestamp(newResetDateTimestamp)))
+        print("Last reset timestamp:" + str(datetime.fromtimestamp(oldResetDateTime)))
+        print("Next reset timestamp:" + str(datetime.fromtimestamp(newResetDateTimestamp)))
 
        
         
         #On reboot refresh dezzie pool of users
         economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:A2000", majorDimension='ROWS').execute().get("values")
-
-        for i in range(5, len(economydata)-1, 4):
-
+        
+        for i in range(5, len(economydata)-1, 4):            
             #Grab the name on the member
-            name = economydata[i][0]
+            try:
+                name = economydata[i][0]
+                print(name)
+            except IndexError:
+                print("Index error at: " + str(i) + ". Probably something broke in the economy sheet, and the registration of new people.")
             userStillOnServer = 1
 
             #Get Roles of the member. Attribute Error if they are not in the specified Guild (server)
