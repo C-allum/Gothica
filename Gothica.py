@@ -45,12 +45,11 @@ async def on_ready():
         
         #On reboot refresh dezzie pool of users
         economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:A2000", majorDimension='ROWS').execute().get("values")
-        
+
         for i in range(5, len(economydata)-1, 4):            
             #Grab the name on the member
             try:
                 name = economydata[i][0]
-                print(name)
             except IndexError:
                 print("Index error at: " + str(i) + ". Probably something broke in the economy sheet, and the registration of new people.")
             userStillOnServer = 1
