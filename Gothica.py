@@ -81,6 +81,8 @@ async def on_ready():
                     dezziePool += weeklyDezzieBonusFucksmith
                 if "server booster" in str(roles).lower():
                     dezziePool += weeklyDezzieBonusBoost
+                if "server veteran" in str(roles).lower():
+                    dezziePool += weeklyDezzieBonusVeteran
                 if "lorekeeper" in str(roles).lower() or "lorekeeper" in str(roles).lower() or "admin" in str(roles).lower():
                     dezziePool = 100000
 

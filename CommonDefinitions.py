@@ -164,7 +164,10 @@ weeklyDezziePoolP3 = 1000
 
 weeklyDezzieBonusFucksmith = 500
 weeklyDezzieBonusBoost = 100
+weeklyDezzieBonusVeteran = 100
+
 #---------------------------------------------
+
 def check(author):
     def inner_check(message): 
         if message.author != author:
