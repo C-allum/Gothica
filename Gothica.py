@@ -1756,7 +1756,8 @@ async def on_message(message):
 
                     roomchannel = discord.utils.get(client.get_all_channels(), name = roll)
 
-                    roomlatest = await client.get_channel(roomchannel.id).history(limit=2, oldest_first=False).flatten()
+                    roomlatest = [joinedMessages async for joinedMessages in client.get_channel(roomchannel.id).history(limit=2, oldest_first=False).flatten()] #Fix for pebblehost Await issue
+                    #roomlatest = await client.get_channel(roomchannel.id).history(limit=2, oldest_first=False).flatten()
 
                     if roomlatest[0].author == client.user:
 
@@ -2006,7 +2007,8 @@ async def on_message(message):
                     
                     roomchannel = discord.utils.get(client.get_all_channels(), name = rooms[n])
 
-                    roomlatest = await client.get_channel(roomchannel.id).history(limit=2, oldest_first=False).flatten()
+                    #roomlatest = await client.get_channel(roomchannel.id).history(limit=2, oldest_first=False).flatten()
+                    roomlatest = [joinedMessages async for joinedMessages in client.get_channel(roomchannel.id).history(limit=2, oldest_first=False).flatten()] #Fix for pebblehost Await issue
 
                     if roomlatest[0].author == client.user:
 
@@ -3022,7 +3024,8 @@ async def on_message(message):
 
                     bidchannel = 1010566688326045797
 
-                    bidlatest = await client.get_channel(bidchannel).history(limit=1, oldest_first=True).flatten()
+                    #bidlatest = await client.get_channel(bidchannel).history(limit=1, oldest_first=True).flatten()
+                    bidlatest = [joinedMessages async for joinedMessages in client.get_channel(bidchannel).history(limit=1, oldest_first=True).flatten()] #Fix for pebblehost Await issue
 
                     bids = bidlatest[0].content.split("\n")
 
@@ -3202,8 +3205,8 @@ async def on_message(message):
 
                                                 try:
                                                     
-                                                    last = await client.get_channel(sceneno).history(limit=1, oldest_first=False).flatten()
-
+                                                    #last = await client.get_channel(sceneno).history(limit=1, oldest_first=False).flatten()
+                                                    last = [joinedMessages async for joinedMessages in client.get_channel(sceneno).history(limit=1, oldest_first=False).flatten()] #Fix for pebblehost Await issue
                                                     prevlist.append(str("`" + str(a+1) + "` " + str(prevs[a]) + " - Last message by: " + last[0].author.name))
 
                                                 except AttributeError:
@@ -5040,8 +5043,8 @@ async def on_message(message):
 
             elif message.content.lower().startswith(str(myprefix) + "rembed"):
 
-                mess = await client.get_channel(1008422338548736060).history(limit=500, oldest_first=True).flatten()
-
+                #mess = await client.get_channel(1008422338548736060).history(limit=500, oldest_first=True).flatten()
+                mess = [joinedMessages async for joinedMessages in client.get_channel(1008422338548736060).history(limit=500, oldest_first=True).flatten()] #Pebblehost msg history fix
                 for n in range(len(mess)):
 
                     if mess[n].content != "":
@@ -5170,7 +5173,8 @@ async def on_message(message):
 
                     if message.channel != roomchannel and message.channel.name != "alias-bot":
 
-                        roomlatest = await client.get_channel(roomchannel.id).history(limit=2, oldest_first=False).flatten()
+                        #roomlatest = await client.get_channel(roomchannel.id).history(limit=2, oldest_first=False).flatten()
+                        roomlatest = [joinedMessages async for joinedMessages in client.get_channel(roomchannel.id).history(limit=2, oldest_first=False).flatten()] #Fix for pebblehost Await issue
 
                         if roomlatest[0].author == client.user:
 
