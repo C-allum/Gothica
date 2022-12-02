@@ -1078,6 +1078,7 @@ async def kinkgenerate(message):
     await threadid.send(embed = discord.Embed(title = "Kink Survey", description = "That concludes the kink survey! Thank you for your time. If you change your mind on anything I just asked you about, you can request us to change it with %kinkedit."))
 
     if processFailed == False: #This means nothing went wrong! We can write the results into the kink sheet.
+        kinkdata, namestr, targname = await getKinkData(message)
         sheet.values().update(spreadsheetId = kinksheet, range = f"A{len(kinkdata)+1}", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[newKinklist])).execute()
 
     else:
