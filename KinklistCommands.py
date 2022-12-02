@@ -988,7 +988,6 @@ async def kinkgenerate(message):
         for y in range(0, categoryKinkCount): #Go over each kink in a category
             kinkname = kinkdata[1][kinkindex]
 
-            print(kinkname)
             #Ask the player about the kink
             if not "into it" in kinkname and not "Additional" in kinkname:   #Everything but the "If you are into it" questions
 
@@ -1050,7 +1049,6 @@ async def kinkgenerate(message):
                     return
 
             elif "Additional" in kinkname: #Additional kinks/limits section
-                print("why am I here.")
                 try:
                     await threadid.send(embed = discord.Embed(title = f"{categoryName} ({x+1}/{len(categories)}): {kinkname}", description = f"Do you have any {kinkname} you want to add? List them here!\n\nThis message will timeout in 120 seconds."))
                     msg = await client.wait_for('message', timeout = 120, check = checkAuthor(message.author))
