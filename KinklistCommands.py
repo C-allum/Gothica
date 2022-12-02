@@ -957,8 +957,8 @@ async def kinkgenerate(message):
     #--------------Collect information from the user-------------
     #Request user's pronouns.
     try:
-        await threadid.send(embed = discord.Embed(title = "Pronouns", description = "First of all: What are your preferred pronouns?\n\nThis message will timeout in 120 seconds."))
-        msg = await client.wait_for('message', timeout = 120, check = checkAuthor(message.author))
+        await threadid.send(embed = discord.Embed(title = "Pronouns", description = "First of all: What are your preferred pronouns?"))
+        msg = await client.wait_for('message',  check = checkAuthor(message.author))
         newKinklist.append(msg.content)
     except asyncio.TimeoutError:
 
@@ -991,10 +991,10 @@ async def kinkgenerate(message):
             #Ask the player about the kink
             if not "into it" in kinkname and not "Additional" in kinkname:   #Everything but the "If you are into it" questions
 
-                await threadid.send(embed = discord.Embed(title = f"{categoryName} ({x+1}/{len(categories)}), Kink {y+1}/{categoryKinkCount}: {kinkname}", description = f"What are your feelings about {kinkname}?\n\n`1`: Kink\n`2`: Likes\n`3`: Unsure or Exploring\n`4`: No Strong Emotions\n`5`: Soft Limit\n`6`: Hard Limit\n`7`: Absolute Limit\n\nThis message will timeout in 120 seconds.", colour = embcol))
+                await threadid.send(embed = discord.Embed(title = f"{categoryName} ({x+1}/{len(categories)}), Kink {y+1}/{categoryKinkCount}: {kinkname}", description = f"What are your feelings about {kinkname}?\n\n`1`: Kink\n`2`: Likes\n`3`: Unsure or Exploring\n`4`: No Strong Emotions\n`5`: Soft Limit\n`6`: Hard Limit\n`7`: Absolute Limit.", colour = embcol))
 
                 try:
-                    msg2 = await client.wait_for('message', timeout = 120, check = check(message.author))
+                    msg2 = await client.wait_for('message',  check = check(message.author))
                     msg = int(msg2.content)
 
                     try:
@@ -1019,10 +1019,10 @@ async def kinkgenerate(message):
                     return
 
             elif "into it" in kinkname:
-                await threadid.send(embed = discord.Embed(title = f"{categoryName} ({x+1}/{len(categories)}), Kink {y+1}/{categoryKinkCount}: {kinkname}", description = f"{message.author.name}, {kinkname}\n\n`1`: For my characters (Submissive)\n`2`: For other people's characters (Dominant)\n`3`: To watch between other characters (Voyeur)\n`4`: All of the above (Switch)\n\nThis message will timeout in 120 seconds.", colour = embcol))
+                await threadid.send(embed = discord.Embed(title = f"{categoryName} ({x+1}/{len(categories)}), Kink {y+1}/{categoryKinkCount}: {kinkname}", description = f"{message.author.name}, {kinkname}\n\n`1`: For my characters (Submissive)\n`2`: For other people's characters (Dominant)\n`3`: To watch between other characters (Voyeur)\n`4`: All of the above (Switch).", colour = embcol))
                 try:
 
-                    msg2 = await client.wait_for('message', timeout = 120, check = check(message.author))
+                    msg2 = await client.wait_for('message', check = check(message.author))
 
                     msg = int(msg2.content)
 
@@ -1050,8 +1050,8 @@ async def kinkgenerate(message):
 
             elif "Additional" in kinkname: #Additional kinks/limits section
                 try:
-                    await threadid.send(embed = discord.Embed(title = f"{categoryName} ({x+1}/{len(categories)}): {kinkname}", description = f"Do you have any {kinkname} you want to add? List them here!\n\nThis message will timeout in 120 seconds."))
-                    msg = await client.wait_for('message', timeout = 120, check = checkAuthor(message.author))
+                    await threadid.send(embed = discord.Embed(title = f"{categoryName} ({x+1}/{len(categories)}): {kinkname}", description = f"Do you have any {kinkname} you want to add? List them here!"))
+                    msg = await client.wait_for('message', check = checkAuthor(message.author))
                     pref = str(msg.content)
                 except asyncio.TimeoutError:
                 
