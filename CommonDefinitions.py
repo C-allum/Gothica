@@ -51,9 +51,14 @@ bot = commands.Bot(command_prefix='%', activity = discord.Game(name="Testing Stu
 
 print(" Initialised {0.user} at ".format(client) + str(datetime.now()).split(".")[0])
 
+#-----------------LIVE VERSION/BETA TOGGLE---------------
+liveVersion = 1
+
+
+
 #Sheet Locations:
 
-if 1: #Set to 1 to use the real spreadsheets, or 0 to use the testing spreadsheets.
+if liveVersion: #Set to 1 to use the real spreadsheets, or 0 to use the testing spreadsheets.
 
     CharSheet = "1iHvP4HC8UQqyiMmC3Xiggx8-17e5SGWJMncEeoiZP1s"
 
@@ -118,7 +123,11 @@ for i in range(len(headers)):
     headers[i] = headers[i].lstrip("[")
     headers[i] = headers[i].rstrip("]")
 
-
+#channels
+if liveVersion:
+    kinkcreatechannel = "1048376490695327764"
+else: 
+    kinkcreatechannel = "891781900388159528"
 #Sheets
 
 aliases = sheet.values().get(spreadsheetId = "1xGL06_MrOb5IIt2FHJFeW_bdcwedIKZX-j3m2djSOaw", range = "A1:T50", majorDimension='COLUMNS').execute().get("values")
@@ -177,6 +186,13 @@ def check(author):
             return True 
         except ValueError: 
             return False
+    return inner_check
+
+def checkAuthor(author):
+    def inner_check(message):
+        if message.author != author:
+            return False
+        else: return True
     return inner_check
 
 def fracture(word):
