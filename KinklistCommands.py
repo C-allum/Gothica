@@ -1066,7 +1066,7 @@ async def kinksurvey(message):
                         msg2 = await client.wait_for('message',  check = check(message.author))
                         if msg2.channel == threadid:
                             messagefound = True
-                    pref = str(msg.content)
+                    pref = str(msg2.content)
                 except asyncio.TimeoutError:
                 
                     await threadid.channel.send("Message timed out")
@@ -1080,7 +1080,7 @@ async def kinksurvey(message):
                     processFailed = True
                     kinksel = "Fail"
 
-                    await msg.delete()
+                    await msg2.delete()
                     return
 
             await threadid.send(embed = discord.Embed(description = f"Registered {kinkname} as {pref}.", colour = embcol))
