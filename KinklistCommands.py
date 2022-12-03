@@ -1000,8 +1000,9 @@ async def kinkgenerate(message):
                 try:
                     messagefound = False
                     while messagefound == False:
-                        msg2 = await client.wait_for('message',  check = check(message.author))
-                        if msg.channel == threadid:
+                        print(f"In while. messagefound: {messagefound}")
+                        msg2 = await client.wait_for('message', check = check(message.author))
+                        if msg2.channel == threadid:
                             messagefound = True
                     
                     msg = int(msg2.content)
@@ -1033,7 +1034,7 @@ async def kinkgenerate(message):
                     messagefound = False
                     while messagefound == False:
                         msg2 = await client.wait_for('message',  check = check(message.author))
-                        if msg.channel == threadid:
+                        if msg2.channel == threadid:
                             messagefound = True
 
                     msg = int(msg2.content)
@@ -1066,7 +1067,7 @@ async def kinkgenerate(message):
                     messagefound = False
                     while messagefound == False:
                         msg2 = await client.wait_for('message',  check = check(message.author))
-                        if msg.channel == threadid:
+                        if msg2.channel == threadid:
                             messagefound = True
                     pref = str(msg.content)
                 except asyncio.TimeoutError:
