@@ -9,7 +9,7 @@ async def kinklist(message):
         await message.channel.send(embed = discord.Embed(title = "Could not find " + targname.split("#")[0] + "'s kink list", description = "Make sure that <@" + str(targname.id) + "> has completed the (as yet unreleased) kink survey."))
 
     else:
-        kinkdatanum = await getKinkDataNumerical(kinkdata, targname)
+        kinkdatanum, a = await getKinkDataNumerical(kinkdata, targname)
 
         #Show all kinks
         kinksec = -1
@@ -31,7 +31,6 @@ async def kinklist(message):
         segid = -2
 
         kinkavgs = 0
-
         for b in range(len(kinkdata[1])):
 
             try:
@@ -245,7 +244,6 @@ async def kinkedit(message):
         await message.channel.send(embed = discord.Embed(title = "Could not find " + targname.split("#")[0] + "'s kink list", description = "Make sure that <@" + str(targname.id) + "> has completed the (as yet unreleased) kink survey."))
 
     else:
-        kinkdatanum = await getKinkDataNumerical(kinkdata, targname)
 
         if targname != message.author and not "moderator" in str(message.author.roles).lower():
 
@@ -825,7 +823,7 @@ async def kinkencounter(message):
             await message.channel.send(embed = discord.Embed(title = "Could not find " + targname.split("#")[0] + "'s kink list", description = "Make sure that <@" + str(targname.id) + "> has completed the (as yet unreleased) kink survey."))
 
         else:
-            kinkdatanum = await getKinkDataNumerical(kinkdata, targname)
+
 
             try:
 
@@ -906,7 +904,7 @@ async def kinkencounter(message):
                 await message.channel.send("Room not found")
 
 #Assist the author in generating their kinklist if they don't already have one.
-async def kinkgenerate(message):
+async def kinksurvey(message):
     
     kinkdata, namestr, targname = await getKinkData(message)
     if str(message.channel.id) != kinkcreatechannel:
@@ -920,7 +918,7 @@ async def kinkgenerate(message):
 
     threadid = await message.create_thread(name= "Kinklist entry: " + str(len(kinkdata) - 1))
 
-    await threadid.send(embed = discord.Embed(title = "Kink Survey", description = "Welcome to the kink survey! We will ask you to give us a rating on all sorts of kinks in just a moment. We will go through a couple of categories with plenty of kinks, and when we are done you can look at your kinklist with the %kinklist command, or edit it with the %kinkedit command. Furthermore you can search for users with a certain kink using the %kinkplayers [kink] command, or look at someone else's list with %kinklist [@username]. \n\n Okay, with the formalities out of the way, let us begin..."))
+    await threadid.send(embed = discord.Embed(title = "Kink Survey", description = "Welcome to the kink survey! We will ask you to give us a rating on all sorts of kinks in just a moment. We will go through a couple of categories with plenty of kinks, and when we are done you can look at your kinklist with the %kinklist command, or edit it with the %kinkedit command. Furthermore you can search for users with a certain kink using the %kinkplayers [kink] command, or look at someone else's list with %kinklist [@username]. \n\n **Please note that we go to sleep around  \n\n Okay, with the formalities out of the way, let us begin..."))
     
 
     #--------------Prepare variables---------------
@@ -1000,7 +998,6 @@ async def kinkgenerate(message):
                 try:
                     messagefound = False
                     while messagefound == False:
-                        print(f"In while. messagefound: {messagefound}")
                         msg2 = await client.wait_for('message', check = check(message.author))
                         if msg2.channel == threadid:
                             messagefound = True
@@ -1131,7 +1128,7 @@ async def getKinkDataNumerical(kinkdata, targname):
                 if str(targname) == str(kinkdata[a][1]):
                     #Convert to Numbers
                     kinkdatanum = copy.deepcopy(kinkdata[a])
-                    for b in range(len(kinkdata[1])):
+                    for b in range(4, len(kinkdata[1])):
                         try:
                             if kinkdata[a][b] == "Absolute Limit":
                                 kinkdatanum[b] = -3
@@ -1156,5 +1153,5 @@ async def getKinkDataNumerical(kinkdata, targname):
                                 kinkdatanum[b] = 0
                         except IndexError:
                             kinkdatanum[b] = 0
-
-    return kinkdatanum
+                    break
+    return kinkdatanum, a
