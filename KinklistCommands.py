@@ -918,7 +918,7 @@ async def kinksurvey(message):
 
     threadid = await message.create_thread(name= "Kinklist entry: " + str(len(kinkdata) - 1))
 
-    await threadid.send(embed = discord.Embed(title = "Kink Survey", description = "Welcome to the kink survey! We will ask you to give us a rating on all sorts of kinks in just a moment. We will go through a couple of categories with plenty of kinks, and when we are done you can look at your kinklist with the %kinklist command, or edit it with the %kinkedit command. Furthermore you can search for users with a certain kink using the %kinkplayers [kink] command, or look at someone else's list with %kinklist [@username]. \n\n **Please note that we go to sleep around  \n\n Okay, with the formalities out of the way, let us begin..."))
+    await threadid.send(embed = discord.Embed(title = "Kink Survey", description = f"Welcome to the kink survey! We will ask you to give us a rating on all sorts of kinks in just a moment. We will go through a couple of categories with plenty of kinks, and when we are done you can look at your kinklist with the %kinklist command, or edit it with the %kinkedit command. Furthermore you can search for users with a certain kink using the %kinkplayers [kink] command, or look at someone else's list with %kinklist [@username]. \n\n **Please note that we go to sleep around <t:1670025600:T> on the night from sunday to monday every week. If you don't finish before that, your progress will be lost!** \n\n Okay, with the formalities out of the way, let us begin..."))
     
 
     #--------------Prepare variables---------------
