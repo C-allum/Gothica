@@ -926,6 +926,7 @@ async def kinksurvey(message):
     processFailed = False #Indicates if there was a problem during the process. Prevents writing to the sheet if true
     categories = kinkdata[0] #Categories for embed titles. Contains a lot of empty entries at this point.
     kinksPerCategory = [] #Counts the kinks per category. Needed for category display reasons later.
+    categoryIndex = [4] #Contains the index of the first element of the category. 4 is the index of the first kink after the user data
     kinks = kinkdata[1] #List of all entries of data. CAREFUL! 0-3 ARE NOT KINKS BUT PLAYER INFO.
     #count the entries before "General Preferences" as those are not kinks. Needed to later start the survey at the rightpoint.
     playerInformationEntries = 0
@@ -933,19 +934,20 @@ async def kinksurvey(message):
         playerInformationEntries += 1
 
 
-    #Count the amount of kinks per category
+    #Count the amount of kinks per category and write index of the category index.
     i = 0
     for x in range(playerInformationEntries + 1, len(kinkdata[0])):
         i += 1
         if (kinkdata[0][x] != ""):
         
             kinksPerCategory.append(i)
+            categoryIndex.append(categoryIndex[-1] + i)
             i = 0
             if (kinkdata[0][x] == "Additional Kinks and Limits"):
                 break
 
     kinksPerCategory.append(len(kinkdata[1]) - len(kinkdata[0]) + 1) #Length of last category has to be figured out this way because of index bounds.
-    
+    categoryIndex.append(categoryIndex[-1] + len(kinkdata[1]) - len(kinkdata[0]) + 1)
 
     while ("" in categories): #Removes the empty entries from the category row so we can use the category list length properly
         categories.remove("")
@@ -986,14 +988,25 @@ async def kinksurvey(message):
 
         categoryName = categories[x]
         categoryKinkCount = kinksPerCategory[x]
+        categorySection = False #Check if this is the part of the survey about the categories. Need to list the involved kinks for those.
+        if categoryName == "Categories":
+            categorySection = True
 
         for y in range(0, categoryKinkCount): #Go over each kink in a category
             kinkname = kinkdata[1][kinkindex]
 
             #Ask the player about the kink
             if not "into it" in kinkname and not "Additional" in kinkname:   #Everything but the "If you are into it" questions
+                if (categorySection == False):  #Every category but "Categories"
+                    await threadid.send(embed = discord.Embed(title = f"{categoryName} ({x+1}/{len(categories)}) \nKink {y+1}/{categoryKinkCount}: {kinkname}", description = f"What are your feelings about {kinkname}?\n\n`1`: Kink\n`2`: Likes\n`3`: Unsure or Exploring\n`4`: No Strong Emotions\n`5`: Soft Limit\n`6`: Hard Limit\n`7`: Absolute Limit.", colour = embcol))
+                else:   #"Categories" category needs to list kinks in the message so users understand what is part of the category
+                    categoryID = categories.index(kinkname) #Find the index of the category we are asking about to get the amount of kinks in that category.
+                    embedstring = f"What are your feelings about {kinkname}? \nThis includes things such as:\n"
 
-                await threadid.send(embed = discord.Embed(title = f"{categoryName} ({x+1}/{len(categories)}), Kink {y+1}/{categoryKinkCount}: {kinkname}", description = f"What are your feelings about {kinkname}?\n\n`1`: Kink\n`2`: Likes\n`3`: Unsure or Exploring\n`4`: No Strong Emotions\n`5`: Soft Limit\n`6`: Hard Limit\n`7`: Absolute Limit.", colour = embcol))
+                    for z in range(1, kinksPerCategory[categoryID]):
+                        embedstring = embedstring + f"- {kinkdata[1][categoryIndex[categoryID] + z]}\n"
+                    embedstring = embedstring + "You will be able to rate each kink individually later. \n\n`1`: Kink\n`2`: Likes\n`3`: Unsure or Exploring\n`4`: No Strong Emotions\n`5`: Soft Limit\n`6`: Hard Limit\n`7`: Absolute Limit."
+                    await threadid.send(embed = discord.Embed(title = f"{categoryName} ({x+1}/{len(categories)}) \nKink {y+1}/{categoryKinkCount}: {kinkname}", description = embedstring, colour = embcol))
 
                 try:
                     messagefound = False
@@ -1026,7 +1039,7 @@ async def kinksurvey(message):
                     return
 
             elif "into it" in kinkname:
-                await threadid.send(embed = discord.Embed(title = f"{categoryName} ({x+1}/{len(categories)}), Kink {y+1}/{categoryKinkCount}: {kinkname}", description = f"{message.author.name}, {kinkname}\n\n`1`: For my characters (Submissive)\n`2`: For other people's characters (Dominant)\n`3`: To watch between other characters (Voyeur)\n`4`: All of the above (Switch).", colour = embcol))
+                await threadid.send(embed = discord.Embed(title = f"{categoryName} ({x+1}/{len(categories)}) \nKink {y+1}/{categoryKinkCount}: {kinkname}", description = f"{message.author.name}, {kinkname}\n\n`1`: For my characters (Submissive)\n`2`: For other people's characters (Dominant)\n`3`: To watch between other characters (Voyeur)\n`4`: All of the above (Switch).", colour = embcol))
                 try:
                     messagefound = False
                     while messagefound == False:
