@@ -486,6 +486,8 @@ async def kinkedit(message):
                     await msg.delete()
 
                 if kinksel != "Fail":
+                    categories, kinksPerCategory, CategoryIndex, playerInformationEntries = getCategoryData(kinkdata)
+                    
 
                     kinkselector = int(msg.content)
 
@@ -935,35 +937,7 @@ async def kinksurvey(message):
     #--------------Prepare variables---------------
     newKinklist = [str(datetime.now()), f"{targname.name}#{targname.discriminator}", f"{targname.id}"] #Contains kink data, will be written into the sheet.
     processFailed = False #Indicates if there was a problem during the process. Prevents writing to the sheet if true
-    categories = kinkdata[0] #Categories for embed titles. Contains a lot of empty entries at this point.
-    kinksPerCategory = [] #Counts the kinks per category. Needed for category display reasons later.
-    categoryIndex = [4] #Contains the index of the first element of the category. 4 is the index of the first kink after the user data
-    kinks = kinkdata[1] #List of all entries of data. CAREFUL! 0-3 ARE NOT KINKS BUT PLAYER INFO.
-    #count the entries before "General Preferences" as those are not kinks. Needed to later start the survey at the rightpoint.
-    playerInformationEntries = 0
-    while ("General Preferences" != categories[playerInformationEntries]):
-        playerInformationEntries += 1
-
-
-    #Count the amount of kinks per category and write index of the category index.
-    i = 0
-    for x in range(playerInformationEntries + 1, len(kinkdata[0])):
-        i += 1
-        if (kinkdata[0][x] != ""):
-        
-            kinksPerCategory.append(i)
-            categoryIndex.append(categoryIndex[-1] + i)
-            i = 0
-            if (kinkdata[0][x] == "Additional Kinks and Limits"):
-                break
-
-    kinksPerCategory.append(len(kinkdata[1]) - len(kinkdata[0]) + 1) #Length of last category has to be figured out this way because of index bounds.
-    categoryIndex.append(categoryIndex[-1] + len(kinkdata[1]) - len(kinkdata[0]) + 1)
-
-    while ("" in categories): #Removes the empty entries from the category row so we can use the category list length properly
-        categories.remove("")
-    categories.remove("Player Information")
-
+    categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
 
     #--------------Collect information from the user-------------
     #Request user's pronouns.
@@ -1189,3 +1163,37 @@ async def getKinkDataNumerical(kinkdata, targname):
                             kinkdatanum[b] = 0
                     break
     return kinkdatanum, a
+
+#Returns valuable information about the kinklist itself like categories, kinks per category, the index of each category in the overall kinks and the amount of player information entries.
+async def getCategoryData(kinkdata):
+
+    categories = kinkdata[0] #Categories for embed titles. Contains a lot of empty entries at this point.
+    kinksPerCategory = [] #Counts the kinks per category.
+    categoryIndex = [4] #Contains the index of the first element of the category. 4 is the index of the first kink after the user data
+    playerInformationEntries = 1
+
+    
+    while ("" == categories[playerInformationEntries]):
+        playerInformationEntries += 1
+    
+    #Count the amount of kinks per category and write index of the category index.
+    i = 0
+    for x in range(playerInformationEntries + 1, len(kinkdata[0])):
+        i += 1
+        if (kinkdata[0][x] != ""):
+        
+            kinksPerCategory.append(i)
+            categoryIndex.append(categoryIndex[-1] + i)
+            i = 0
+            if (kinkdata[0][x] == "Additional Kinks and Limits"):
+                break
+
+    kinksPerCategory.append(len(kinkdata[1]) - len(kinkdata[0]) + 1) #Length of last category has to be figured out this way because of index bounds.
+    categoryIndex.append(categoryIndex[-1] + len(kinkdata[1]) - len(kinkdata[0]) + 1)
+
+    while ("" in categories): #Removes the empty entries from the category row so we can use the category list length properly
+        categories.remove("")
+    categories.remove("Player Information")
+
+ 
+    return categories, kinksPerCategory, categoryIndex, playerInformationEntries
