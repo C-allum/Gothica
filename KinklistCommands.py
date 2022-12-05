@@ -267,7 +267,7 @@ async def kinkedit(message):
 
                 searchterm = "Search term not found"
 
-            if searchterm in str(kinkdata[1]).lower():
+            if searchterm != "Search term not found" and searchterm in str(kinkdata[1]).lower():
 
                 kinkssearched = []
 
@@ -326,8 +326,12 @@ async def kinkedit(message):
                     pref = "Fail"
 
                     if kinkindex > 3 and not "into it" in kinksel:
-
-                        await message.channel.send(embed = discord.Embed(title = "Editing " + kinksel, description = message.author.name + ", you currently have " + kinksel + " as: " + kinkdata[a][kinkindex] + ". What would you like to change this to?\n\n`1`: Kink\n`2`: Likes\n`3`: Unsure or Exploring\n`4`: No Strong Emotions\n`5`: Soft Limit\n`6`: Hard Limit\n`7`: Absolute Limit\n\nThis message will timeout in 30 seconds.", colour = embcol))
+                        
+                        embedstring = f"{message.author.name}, you currently have {kinksel} as: {kinkdata[a][kinkindex]}. What would you like to change this to?\n\n"
+                        for z in range(0, len(kinkOptions)): #Add the answer options to the embed
+                            embedstring = embedstring + f"`{z+1}`: {kinkOptions[z]}\n"
+                        embedstring = embedstring + "\n\nThis message will timeout in 30 seconds."
+                        await message.channel.send(embed = discord.Embed(title = "Editing " + kinksel, description = embedstring, colour = embcol))
 
                         try:
 
@@ -337,9 +341,9 @@ async def kinkedit(message):
 
                             try:
 
-                                options = ["Kink", "Likes", "Unsure or Exploring", "No Strong Emotions", "Soft Limit", "Hard Limit", "Absolute Limit"]
+                                #options = ["Kink", "Likes", "Unsure or Exploring", "No Strong Emotions", "Soft Limit", "Hard Limit", "Absolute Limit"]
 
-                                pref = options[msg - 1]
+                                pref = kinkOptions[msg - 1]
 
                                 await msg2.delete()
 
@@ -577,7 +581,12 @@ async def kinkedit(message):
 
                     if kinkindex0 > 3 and not "into it" in kinktoedit:
 
-                        await message.channel.send(embed = discord.Embed(title = "Editing " + kinktoedit, description = message.author.name + ", you currently have " + kinktoedit + " as: " + kinkdata[a][kinkindex0] + ". What would you like to change this to?\n\n`1`: Kink\n`2`: Likes\n`3`: Unsure or Exploring\n`4`: No Strong Emotions\n`5`: Soft Limit\n`6`: Hard Limit\n`7`: Absolute Limit\n\nThis message will timeout in 30 seconds.", colour = embcol))
+                        embedstring = f"{message.author.name}, you currently have {kinktoedit} as: {kinkdata[a][kinkindex0]}. What would you like to change this to?\n\n"
+                        for z in range(0, len(kinkOptions)): #Add the answer options to the embed
+                            embedstring = embedstring + f"`{z+1}`: {kinkOptions[z]}\n"
+                        embedstring = embedstring + "\n\nThis message will timeout in 30 seconds."
+
+                        await message.channel.send(embed = discord.Embed(title = "Editing " + kinktoedit, description = embedstring, colour = embcol))
 
                         try:
 
@@ -1001,6 +1010,7 @@ async def kinksurvey(message):
             if not "into it" in kinkname and not "Additional" in kinkname:   #Everything but the "If you are into it" questions
                 if (categorySection == False):  #Every category but "Categories"
                     embedstring = f"What are your feelings about {kinkname}?\n\n"
+
                     for z in range(0, len(kinkOptions)): #Add the answer options to the embed
                         embedstring = embedstring + f"`{z+1}`: {kinkOptions[z]}\n"
                     await threadid.send(embed = discord.Embed(title = f"{categoryName} ({x+1}/{len(categories)}) \nKink {y+1}/{categoryKinkCount}: {kinkname}", description = embedstring, colour = embcol))
