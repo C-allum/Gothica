@@ -1,5 +1,7 @@
 from CommonDefinitions import *
 
+
+kinkOptions = ["Fave", "Kink", "Like", "It depends", "Willing to try", "No Strong Emotions", "Never heard of it", "Not my thing", "Soft Limit", "Hard Limit"]
 #Displays the kinklist of the author, or another user if they are tagged.
 async def kinklist(message):
     kinkdata, namestr, targname = await getKinkData(message)
@@ -998,14 +1000,23 @@ async def kinksurvey(message):
             #Ask the player about the kink
             if not "into it" in kinkname and not "Additional" in kinkname:   #Everything but the "If you are into it" questions
                 if (categorySection == False):  #Every category but "Categories"
-                    await threadid.send(embed = discord.Embed(title = f"{categoryName} ({x+1}/{len(categories)}) \nKink {y+1}/{categoryKinkCount}: {kinkname}", description = f"What are your feelings about {kinkname}?\n\n`1`: Kink\n`2`: Likes\n`3`: Unsure or Exploring\n`4`: No Strong Emotions\n`5`: Soft Limit\n`6`: Hard Limit\n`7`: Absolute Limit.", colour = embcol))
+                    embedstring = f"What are your feelings about {kinkname}?\n\n"
+                    for z in range(0, len(kinkOptions)): #Add the answer options to the embed
+                        embedstring = embedstring + f"`{z+1}`: {kinkOptions[z]}\n"
+                    await threadid.send(embed = discord.Embed(title = f"{categoryName} ({x+1}/{len(categories)}) \nKink {y+1}/{categoryKinkCount}: {kinkname}", description = embedstring, colour = embcol))
+
                 else:   #"Categories" category needs to list kinks in the message so users understand what is part of the category
                     categoryID = categories.index(kinkname) #Find the index of the category we are asking about to get the amount of kinks in that category.
                     embedstring = f"What are your feelings about {kinkname}? \nThis includes things such as:\n"
 
-                    for z in range(1, kinksPerCategory[categoryID]):
+                    for z in range(1, kinksPerCategory[categoryID]):    #Add the kinks of the category to the list in the embed.
                         embedstring = embedstring + f"- {kinkdata[1][categoryIndex[categoryID] + z]}\n"
-                    embedstring = embedstring + "You will be able to rate each kink individually later. \n\n`1`: Kink\n`2`: Likes\n`3`: Unsure or Exploring\n`4`: No Strong Emotions\n`5`: Soft Limit\n`6`: Hard Limit\n`7`: Absolute Limit."
+
+                    embedstring = embedstring + "You will be able to rate each kink individually later.\n\n"
+
+                    for z in range(0, len(kinkOptions)):#Add the answer options to the embed
+                        embedstring = embedstring + f"`{z+1}`: {kinkOptions[z]}\n"
+                
                     await threadid.send(embed = discord.Embed(title = f"{categoryName} ({x+1}/{len(categories)}) \nKink {y+1}/{categoryKinkCount}: {kinkname}", description = embedstring, colour = embcol))
 
                 try:
@@ -1018,8 +1029,8 @@ async def kinksurvey(message):
                     msg = int(msg2.content)
 
                     try:
-                        options = ["Kink", "Likes", "Unsure or Exploring", "No Strong Emotions", "Soft Limit", "Hard Limit", "Absolute Limit"]
-                        pref = options[msg - 1]
+                        #options = ["Kink", "Likes", "Unsure or Exploring", "No Strong Emotions", "Soft Limit", "Hard Limit", "Absolute Limit"]
+                        pref = kinkOptions[msg - 1]
                         await msg2.delete()
 
                     except IndexError:
