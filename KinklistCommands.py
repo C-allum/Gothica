@@ -2,6 +2,7 @@ from CommonDefinitions import *
 
 
 kinkOptions = ["Fave", "Kink", "Like", "It depends", "Willing to try", "No Strong Emotions", "Never heard of it", "Not my thing", "Soft Limit", "Hard Limit"]
+participationOptions = ["Submissive", "Dominant", "Voyeur", "Switch", "Submissive and Voyeur", "Dominant and Voyeur", "Enthusiast (Role doesn't matter to me)"]
 #Displays the kinklist of the author, or another user if they are tagged.
 async def kinklist(message):
     kinkdata, namestr, targname = await getKinkData(message)
@@ -246,6 +247,8 @@ async def kinkedit(message):
         await message.channel.send(embed = discord.Embed(title = "Could not find " + targname.split("#")[0] + "'s kink list", description = "Make sure that <@" + str(targname.id) + "> has completed the (as yet unreleased) kink survey."))
 
     else:
+        playerIndex = [row[1] for row in kinkdata].index(namestr)
+        playerKinkData = kinkdata[playerIndex]
 
         if targname != message.author and not "moderator" in str(message.author.roles).lower():
 
@@ -325,7 +328,7 @@ async def kinkedit(message):
 
                     pref = "Fail"
 
-                    if kinkindex > 3 and not "into it" in kinksel:
+                    if kinkindex > 3 and not "Role" in kinksel:
                         
                         embedstring = f"{message.author.name}, you currently have {kinksel} as: {kinkdata[a][kinkindex]}. What would you like to change this to?\n\n"
                         for z in range(0, len(kinkOptions)): #Add the answer options to the embed
@@ -361,9 +364,12 @@ async def kinkedit(message):
 
                             await msg2.delete()
 
-                    elif "into it" in kinksel:
-
-                        await message.channel.send(embed = discord.Embed(title = "Editing role in " + kinkdata[0][kinkindex], description = message.author.name + ", " + kinksel + "\n\nCurrently, this is set as: " + kinkdata[a][kinkindex] + ". What would you like to change this to?\n\n`1`: For my characters (Submissive)\n`2`: For other people's characters (Dominant)\n`3`: To watch between other characters (Voyeur)\n`4`: All of the above (Switch)\n\nThis message will timeout in 30 seconds.", colour = embcol))
+                    elif "Role" in kinksel:
+                        embedstring = f"{message.author.name}, {kinksel}\n\nCurrently, this is set as: {kinkdata[a][kinkindex]}. What would you like to change this to?\n\n"
+                        for z in range(0, len(participationOptions)): #Add the answer options to the embed
+                            embedstring = embedstring + f"`{z+1}`: {participationOptions[z]}\n"
+                        embedstring = embedstring + "\n\nThis message will timeout in 30 seconds."
+                        await message.channel.send(embed = discord.Embed(title = "Editing role in " + kinksel.rsplit(" ", 1)[0], description = embedstring, colour = embcol))
 
                         try:
 
@@ -373,9 +379,9 @@ async def kinkedit(message):
 
                             try:
 
-                                options = ["For my characters (Submissive)", "For other people's characters (Dominant)", "To watch between other characters (Voyeur)", "All of the above (Switch)"]
+                                #options = ["For my characters (Submissive)", "For other people's characters (Dominant)", "To watch between other characters (Voyeur)", "All of the above (Switch)"]
 
-                                pref = options[msg - 1]
+                                pref = participationOptions[msg - 1]
 
                                 await msg2.delete()
 
@@ -399,21 +405,10 @@ async def kinkedit(message):
 
                         try:
 
-                            msg2 = await client.wait_for('message', timeout = 30, check = check(message.author))
+                            msg2 = await client.wait_for('message', timeout = 30, check = checkAuthor(message.author))
 
-                            msg = int(msg2.content)
+                            pref = msg2.content
 
-                            try:
-
-                                options = ["For my characters (Submissive)", "For other people's characters (Dominant)", "To watch between other characters (Voyeur)", "All of the above (Switch)"]
-
-                                pref = options[msg - 1]
-
-                                await msg2.delete()
-
-                            except IndexError:
-
-                                await message.channel.send("That isn't a valid option.")
 
                         except asyncio.TimeoutError:
 
@@ -425,23 +420,9 @@ async def kinkedit(message):
 
                     if pref != "Fail":
 
-                        column_int = kinkindex
-
-                        start_index = 0
-
-                        letter = ""
-
-                        while column_int > 25 + start_index:
-
-                            letter += chr(65 + int((column_int-start_index)/26) - 1)
-
-                            column_int = column_int - (int((column_int-start_index)/26))*26
-
-                        letter += chr(65 - start_index + (int(column_int)))
-
+                        playerKinkData[kinkindex] = pref
                         await message.channel.send(embed = discord.Embed(title = "Edited " + kinkdata[1][kinkindex], description = "You have set it to: " + pref, colour = embcol))
-
-                        sheet.values().update(spreadsheetId = kinksheet, range = str(letter + str(a+1)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[pref]])).execute()
+                        sheet.values().update(spreadsheetId = kinksheet, range = str(f"A{playerIndex + 1}"), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[playerKinkData])).execute()
 
                         await message.delete()
 
@@ -452,8 +433,16 @@ async def kinkedit(message):
             #Edit by menu
 
             elif searchterm == "Search term not found":
-
-                await message.channel.send(embed = discord.Embed(title = "Which kink would you like to edit?", description = "Choose one of the following categories:\n\n`0`: General Preferences\n`1`: Body Parts\n`2`: Relationships\n`3`: Physical Domination\n`4`: Mental Domination\n`5`: Clothing and Toys\n`6`: Kinkyplay\n`7`: Transformation\n`8`: Mind Control\n`9`: Monster Fucking\n`10`: Extreme Kinkplay\n`11`: Additional Kinks and Limits\n\nThis message will timeout after 30 seconds", colour = embcol))
+                               
+                categories, kinksPerCategory, CategoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
+                CategoryIndex[0] = CategoryIndex[0] -1  #To include Pronouns in General Preferences
+                embedstring = "Choose one of the following categories:\n\n"
+                optionCounter = 1
+                for kink in categories:
+                    embedstring = embedstring + f"`{optionCounter}`: {kink}\n"
+                    optionCounter += 1
+                embedstring = embedstring + "\nThis message will timeout after 30 seconds."
+                await message.channel.send(embed = discord.Embed(title = "Which kink would you like to edit?", description = embedstring, colour = embcol))
 
                 try:
                         
@@ -461,9 +450,9 @@ async def kinkedit(message):
 
                     try:
 
-                        kinkcat = ["General Preferences", "Body Parts", "Relationships", "Physical Domination", "Mental Domination", "Clothing and Toys", "Kinkyplay", "Transformation", "Mind Control", "Monster Fucking", "Extreme Kinkplay", "Additional Kinks and Limits"]
+                        #kinkcat = ["General Preferences", "Body Parts", "Relationships", "Physical Domination", "Mental Domination", "Clothing and Toys", "Kinkyplay", "Transformation", "Mind Control", "Monster Fucking", "Extreme Kinkplay", "Additional Kinks and Limits"]
 
-                        kinksel = kinkcat[int(msg.content)]
+                        kinksel = categories[int(msg.content) - 1]
 
                     except IndexError:
 
@@ -486,58 +475,10 @@ async def kinkedit(message):
                     await msg.delete()
 
                 if kinksel != "Fail":
-                    categories, kinksPerCategory, CategoryIndex, playerInformationEntries = getCategoryData(kinkdata)
+
                     
-
                     kinkselector = int(msg.content)
-
-                    if kinkselector == 0:
-
-                        kinkrange = [3, 20]
-
-                    elif kinkselector == 1:
-
-                        kinkrange = [21, 44]
-
-                    elif kinkselector == 2:
-
-                        kinkrange = [45, 56]
-
-                    elif kinkselector == 3:
-
-                        kinkrange = [57,67]
-
-                    elif kinkselector == 4:
-
-                        kinkrange = [68, 74]
-
-                    elif kinkselector == 5:
-
-                        kinkrange = [75, 89]
-
-                    elif kinkselector == 6:
-
-                        kinkrange = [90, 103]
-
-                    elif kinkselector == 7:
-
-                        kinkrange = [104, 119]
-
-                    elif kinkselector == 8:
-
-                        kinkrange = [120, 137]
-
-                    elif kinkselector == 9:
-
-                        kinkrange = [138, 153]
-
-                    elif kinkselector == 10:
-
-                        kinkrange = [154, 167]
-
-                    elif kinkselector == 11:
-
-                        kinkrange = [168, 169]
+                    kinkrange = [CategoryIndex[categories.index(kinksel)], CategoryIndex[categories.index(kinksel) + 1] - 1]
 
                     kinktitles = []
 
@@ -555,7 +496,7 @@ async def kinkedit(message):
 
                     kinktoedit = "Fail"
 
-                    kinkindex0 = ""
+                    kinkindex0 = -1
 
                     try:
 
@@ -581,9 +522,9 @@ async def kinkedit(message):
 
                     pref = "Fail"
 
-                    if kinkindex0 > 3 and not "into it" in kinktoedit:
+                    if kinkindex0 > 3 and not "Role" in kinktoedit:
 
-                        embedstring = f"{message.author.name}, you currently have {kinktoedit} as: {kinkdata[a][kinkindex0]}. What would you like to change this to?\n\n"
+                        embedstring = f"{message.author.name}, you currently have {kinktoedit} as: {playerKinkData[kinkindex0]}. What would you like to change this to?\n\n"
                         for z in range(0, len(kinkOptions)): #Add the answer options to the embed
                             embedstring = embedstring + f"`{z+1}`: {kinkOptions[z]}\n"
                         embedstring = embedstring + "\n\nThis message will timeout in 30 seconds."
@@ -598,9 +539,9 @@ async def kinkedit(message):
 
                             try:
 
-                                options = ["Kink", "Likes", "Unsure or Exploring", "No Strong Emotions", "Soft Limit", "Hard Limit", "Absolute Limit"]
+                                #options = ["Kink", "Likes", "Unsure or Exploring", "No Strong Emotions", "Soft Limit", "Hard Limit", "Absolute Limit"]
 
-                                pref = options[msg - 1]
+                                pref = kinkOptions[msg - 1]
 
                                 await msg2.delete()
 
@@ -618,9 +559,13 @@ async def kinkedit(message):
 
                             await msg2.delete()
 
-                    elif "into it" in kinksel:
-
-                        await message.channel.send(embed = discord.Embed(title = "Editing role in " + kinkdata[0][kinkindex0], description = message.author.name + ", " + kinktoedit + "\n\nCurrently, this is set as: " + kinkdata[a][kinkindex0] + ". What would you like to change this to?\n\n`1`: For my characters (Submissive)\n`2`: For other people's characters (Dominant)\n`3`: To watch between other characters (Voyeur)\n`4`: All of the above (Switch)\n\nThis message will timeout in 30 seconds.", colour = embcol))
+                    elif "Role" in kinktoedit:
+                        
+                        embedstring = f"{message.author.name}, {kinksel}\n\nCurrently, this is set as: {playerKinkData[kinkindex0]}. What would you like to change this to?\n\n"
+                        for z in range(0, len(participationOptions)): #Add the answer options to the embed
+                            embedstring = embedstring + f"`{z+1}`: {participationOptions[z]}\n"
+                        embedstring = embedstring + "\n\nThis message will timeout in 30 seconds."
+                        await message.channel.send(embed = discord.Embed(title = "Editing role in " + kinktoedit.rsplit(" ", 1)[0], description = embedstring, colour = embcol))
 
                         try:
 
@@ -630,9 +575,9 @@ async def kinkedit(message):
 
                             try:
 
-                                options = ["For my characters (Submissive)", "For other people's characters (Dominant)", "To watch between other characters (Voyeur)", "All of the above (Switch)"]
+                                #options = ["For my characters (Submissive)", "For other people's characters (Dominant)", "To watch between other characters (Voyeur)", "All of the above (Switch)"]
 
-                                pref = options[msg - 1]
+                                pref = participationOptions[msg - 1]
 
                                 await msg2.delete()
 
@@ -650,27 +595,15 @@ async def kinkedit(message):
 
                             await msg2.delete()
 
-                    elif kinksel == "Pronouns":
+                    elif kinktoedit == "Pronouns":
 
                         await message.channel.send(embed = discord.Embed(title = "Editing your pronouns", description = message.author.name + ", your pronouns are currently " + kinkdata[a][kinkindex0] + ". What would you like to change them to?\n\nThe format should ideally be the same as He/Him, so Personal Subject Pronoun/ Personal Object Pronoun.\n\nThis message will timeout in 30 seconds.", colour = embcol))
 
                         try:
 
-                            msg2 = await client.wait_for('message', timeout = 30, check = check(message.author))
+                            msg2 = await client.wait_for('message', timeout = 30, check = checkAuthor(message.author))
 
-                            msg = int(msg2.content)
-
-                            try:
-
-                                options = ["For my characters (Submissive)", "For other people's characters (Dominant)", "To watch between other characters (Voyeur)", "All of the above (Switch)"]
-
-                                pref = options[msg - 1]
-
-                                await msg2.delete()
-
-                            except IndexError:
-
-                                await message.channel.send("That isn't a valid option.")
+                            pref = msg2.content
 
                         except asyncio.TimeoutError:
 
@@ -678,23 +611,9 @@ async def kinkedit(message):
 
                     if pref != "Fail":
 
-                        column_int = kinkindex0
-
-                        start_index = 0
-
-                        letter = ""
-
-                        while column_int > 25 + start_index:
-
-                            letter += chr(65 + int((column_int-start_index)/26) - 1)
-
-                            column_int = column_int - (int((column_int-start_index)/26))*26
-
-                        letter += chr(65 - start_index + (int(column_int)))
-
+                        playerKinkData[kinkindex0] = pref
                         await message.channel.send(embed = discord.Embed(title = "Edited " + kinkdata[1][kinkindex0], description = "You have set it to: " + pref, colour = embcol))
-
-                        sheet.values().update(spreadsheetId = kinksheet, range = str(letter + str(a+1)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[pref]])).execute()
+                        sheet.values().update(spreadsheetId = kinksheet, range = str(f"A{playerIndex + 1}"), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[playerKinkData])).execute()
 
                         await message.delete()
 
@@ -981,7 +900,7 @@ async def kinksurvey(message):
             kinkname = kinkdata[1][kinkindex]
 
             #Ask the player about the kink
-            if not "into it" in kinkname and not "Additional" in kinkname:   #Everything but the "If you are into it" questions
+            if not "Role" in kinkname and not "Additional" in kinkname:   #Everything but the "If you are Role" questions
                 if (categorySection == False):  #Every category but "Categories"
                     embedstring = f"What are your feelings about {kinkname}?\n\n"
 
@@ -1033,8 +952,13 @@ async def kinksurvey(message):
                     processFailed = True
                     return
 
-            elif "into it" in kinkname:
-                await threadid.send(embed = discord.Embed(title = f"{categoryName} ({x+1}/{len(categories)}) \nKink {y+1}/{categoryKinkCount}: {kinkname}", description = f"{message.author.name}, {kinkname}\n\n`1`: For my characters (Submissive)\n`2`: For other people's characters (Dominant)\n`3`: To watch between other characters (Voyeur)\n`4`: All of the above (Switch).", colour = embcol))
+            elif "Role" in kinkname:
+
+                splitName = kinkname.rsplit(" ", 1)[0]
+                embedstring = f"{message.author.name}, what is your preferred role in {splitName}\n\n"
+                for z in range(0, len(participationOptions)): #Add the answer options to the embed
+                            embedstring = embedstring + f"`{z+1}`: {participationOptions[z]}\n"
+                await threadid.send(embed = discord.Embed(title = f"{categoryName} ({x+1}/{len(categories)}) \nKink {y+1}/{categoryKinkCount}: {kinkname}", description = embedstring, colour = embcol))
                 try:
                     messagefound = False
                     while messagefound == False:
@@ -1045,8 +969,8 @@ async def kinksurvey(message):
                     msg = int(msg2.content)
 
                     try:
-                        options = ["For my characters (Submissive)", "For other people's characters (Dominant)", "To watch between other characters (Voyeur)", "All of the above (Switch)"]
-                        pref = options[msg - 1]
+                        #options = ["For my characters (Submissive)", "For other people's characters (Dominant)", "To watch between other characters (Voyeur)", "All of the above (Switch)"]
+                        pref = participationOptions[msg - 1]
                         await msg2.delete()
 
 
@@ -1115,7 +1039,7 @@ async def kinksurvey(message):
 
 #Fetches name and ID of author, and loads the kinkdata from the sheet.
 async def getKinkData(message):
-    kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:FN2000", majorDimension='ROWS').execute().get("values")
+    kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
     if "@" in message.content:
 
         targid = int(str(message.content.split("@")[1]).split(" ")[0].replace("!","").replace("&","").replace(">",""))
@@ -1125,9 +1049,8 @@ async def getKinkData(message):
 
         targname = message.author
 
-    namestr = str(targname)
+    namestr = str(targname.name + "#" + targname.discriminator)
     return kinkdata, namestr, targname
-
 
 #Converts loaded kinkdata into numerical values.
 async def getKinkDataNumerical(kinkdata, targname):
@@ -1187,13 +1110,13 @@ async def getCategoryData(kinkdata):
             i = 0
             if (kinkdata[0][x] == "Additional Kinks and Limits"):
                 break
-
+    print(f"kinkdata[1]: {kinkdata[1]}, kinkdata[0] length: {len(kinkdata[0])}, kinkdata[1] length: {len(kinkdata[1])}")
     kinksPerCategory.append(len(kinkdata[1]) - len(kinkdata[0]) + 1) #Length of last category has to be figured out this way because of index bounds.
     categoryIndex.append(categoryIndex[-1] + len(kinkdata[1]) - len(kinkdata[0]) + 1)
 
     while ("" in categories): #Removes the empty entries from the category row so we can use the category list length properly
         categories.remove("")
     categories.remove("Player Information")
-
+    print(f"categories: {categories} \n\n kinksPerCategory: {kinksPerCategory} \n\n categoryIndex: {categoryIndex} \n\n playerInformationEntries: {playerInformationEntries}")
  
     return categories, kinksPerCategory, categoryIndex, playerInformationEntries
