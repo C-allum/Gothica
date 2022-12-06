@@ -7,12 +7,13 @@ participationOptions = ["Submissive", "Dominant", "Voyeur", "Switch", "Submissiv
 async def kinklist(message):
     kinkdata, namestr, targname = await getKinkData(message)
 
+    categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
+
     if not str(targname) in str(kinkdata):
 
         await message.channel.send(embed = discord.Embed(title = "Could not find " + targname.split("#")[0] + "'s kink list", description = "Make sure that <@" + str(targname.id) + "> has completed the (as yet unreleased) kink survey."))
 
     else:
-        kinkdatanum, a = await getKinkDataNumerical(kinkdata, targname)
 
         #Show all kinks
         kinksec = -1
@@ -23,21 +24,54 @@ async def kinklist(message):
 
         kinksegment = []
 
-        kinksegplay = []
-
-        kinkavg = 0
-
         kinktot = 0
 
         kinksum = 0
 
         segid = -2
 
-        kinkavgs = 0
-        for b in range(len(kinkdata[1])):
+        allCategoriesTotal = 4
+
+        kinkres = []
+
+        namestr = str(targname.name + "#" + targname.discriminator)
+
+        playerindex = [row[1] for row in kinkdata].index(namestr)
+
+        print(playerindex)
+        print(namestr)
+
+        for c in range(len(categories)):
+
+            kinksum = 0
+
+            for d in range(kinksPerCategory[c]):
+
+                try:
+
+                    kinkdatanumb = len(kinkOptions) - int(kinkOptions.index(kinkdata[playerindex][allCategoriesTotal]))
+
+                except ValueError:
+
+                    kinkdatanumb = 5
+
+                allCategoriesTotal += 1
+
+                kinksum += kinkdatanumb
 
             try:
+                
+                kinkres.append(kinkOptions[len(kinkOptions) - round(kinksum/kinksPerCategory[c])])
 
+            except ZeroDivisionError:
+
+                kinkres.append(kinkOptions[5])
+
+            
+
+        for b in range(len(categories)):
+
+            try:
                 if kinkdata[0][b] != "":
 
                     kinklist.append("\n".join(kinks))
@@ -48,39 +82,17 @@ async def kinklist(message):
 
                     if kinktot == 0:
 
-                        kinkres = "No Strong Emotions"
+                        kinkres = kinkOptions[5]
 
                     else:
 
-                        kinkavg =kinksum/kinktot
+                        try:
 
-                        if float(kinkavg) >= 2.5:
+                            kinkres = kinkOptions[round(kinksum/kinktot)]
 
-                            kinkres = "Kink"
+                        except ZeroDivisionError:
 
-                        elif float(kinkavg) >= 1.5:
-
-                            kinkres = "Likes"
-
-                        elif float(kinkavg) >= 0.5:
-
-                            kinkres = "Unsure or Exploring"
-
-                        elif float(kinkavg) >= -0.5:
-
-                            kinkres = "No Strong Emotions"
-
-                        elif float(kinkavg) >= -1.5:
-
-                            kinkres = "Soft Limit"
-
-                        elif float(kinkavg) >= -2.5:
-
-                            kinkres = "Hard Limit"
-
-                        else:
-
-                            kinkres = "Absolute Limit"
+                            kinkres = kinkOptions[5]
 
                     kinktot = 0
 
@@ -90,117 +102,73 @@ async def kinklist(message):
 
                     if segid > 2 and segid != 11:
 
-                        kinksegment.append("`" + str(segid) + "`: " + str(kinkdata[0][b] + " - " + str(kinkdata[a][segid+9].replace("Kink", "**Kink**").replace("Hard Limit", "__Hard Limit__").replace("Absolute Limit", "__Absolute Limit__"))))
+                        kinksegment.append("`" + str(segid) + "`: " + str(kinkdata[0][b] + " - " + str(kinkdata[a][segid+9].replace("Fave", "**Fave**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__"))))
 
                         if segid > 3:
 
                             kinksegment[int(segid)-2] = kinksegment[int(segid)-2] + " (" + kinkres + ")"
 
+
                     elif segid > 0:
 
                         kinksegment.append("`" + str(segid) + "`: " + str(kinkdata[0][b]))
 
+
                     segid += 1
 
-                if kinktot == 0:
-
-                    kinkres = "No Strong Emotions"
-
-                else:
-
-                    kinkavg =kinksum/kinktot
-
-                    if float(kinkavg) >= 2.5:
-
-                        kinkres = "Kink"
-
-                    elif float(kinkavg) >= 1.5:
-
-                        kinkres = "Likes"
-
-                    elif float(kinkavg) >= 0.5:
-
-                        kinkres = "Unsure or Exploring"
-
-                    elif float(kinkavg) >= -0.5:
-
-                        kinkres = "No Strong Emotions"
-
-                    elif float(kinkavg) >= -1.5:
-
-                        kinkres = "Soft Limit"
-
-                    elif float(kinkavg) >= -2.5:
-
-                        kinkres = "Hard Limit"
-
-                    else:
-
-                        kinkres = "Absolute Limit"
-
             except IndexError:
+
+                print("IndexError")
 
                 pass
 
             try:
                 
-                kinksum += int(kinkdatanum[b])
+                kinksum += int(kinkdatanumb)
 
-                kinktot += 1
+                kinktot = b
 
             except ValueError:
 
+                print("ValueError")
+
                 pass
 
-            kinks.append("*" + kinkdata[1][b] + ":* " + str(kinkdata[a][b]).replace("Kink", "**Kink**").replace("Hard Limit", "__Hard Limit__").replace("Absolute Limit", "__Absolute Limit__"))
+            kinks.append("*" + kinkdata[1][b] + ":* " + str(kinkdata[a][b]).replace("Fave", "**Fave**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__"))
 
         if kinktot == 0:
 
-            kinkres = "No Strong Emotions"
+            kinkres = kinkOptions[5]
 
         else:
 
-            kinkavg =kinksum/kinktot
+            try:
 
-            if float(kinkavg) >= 2.5:
+                kinkres = kinkOptions[round(kinksum/kinktot)]
 
-                kinkres = "Kink"
+            except ZeroDivisionError:
 
-            elif float(kinkavg) >= 1.5:
-
-                kinkres = "Likes"
-
-            elif float(kinkavg) >= 0.5:
-
-                kinkres = "Unsure or Exploring"
-
-            elif float(kinkavg) >= -0.5:
-
-                kinkres = "No Strong Emotions"
-
-            elif float(kinkavg) >= -1.5:
-
-                kinkres = "Soft Limit"
-
-            elif float(kinkavg) >= -2.5:
-
-                kinkres = "Hard Limit"
-
-            else:
-
-                kinkres = "Absolute Limit"
+                kinkres = kinkOptions[5]
 
             kinksegment[-2] = kinksegment[-2] + " (" + kinkres + ")"
 
         kinklist.append("\n".join(kinks))
-
+        print(f"Kinklist: {kinklist}")
         kinkemb = discord.Embed(title = namestr.split("#")[0] + "'s kink list:", description = "**General Preferences:**\n\n" + str(kinklist[2]) + "\n\n**Kink Overview:**\n" + namestr.split("#")[0] + "'s general thoughts on each category of kink are shown below. We have then taken their average response in each category, and included that information in brackets.\n*As always, you should check with your rp partners regarding hard and soft limits for any particular scene.*\n\n*To see more detail on any of the below categories, type the corresponding number*\n\n" + "\n".join(kinksegment), colour = embcol)
 
         await message.channel.send(embed = kinkemb)
 
         await message.delete()
 
-        msg = await client.wait_for('message', timeout = 30, check = check(message.author))
+        try:
+
+            msg = await client.wait_for('message', timeout = 30, check = check(message.author))
+
+        except asyncio.exceptions.TimeoutError:
+
+            await message.channel.send("Message Timed Out")
+
+            pass
 
         try:
 
@@ -235,6 +203,7 @@ async def kinklist(message):
         except TimeoutError:
 
             pass
+
 
 #Allows to edit the kinklist. Moderators can tag someone and edit someone elses kinks.
 async def kinkedit(message):
