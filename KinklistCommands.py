@@ -236,7 +236,6 @@ async def kinklist(message):
 
             pass
 
-
 #Allows to edit the kinklist. Moderators can tag someone and edit someone elses kinks.
 async def kinkedit(message):
 
@@ -247,6 +246,7 @@ async def kinkedit(message):
         await message.channel.send(embed = discord.Embed(title = "Could not find " + targname.split("#")[0] + "'s kink list", description = "Make sure that <@" + str(targname.id) + "> has completed the (as yet unreleased) kink survey."))
 
     else:
+        #Get player info
         playerIndex = [row[1] for row in kinkdata].index(namestr)
         playerKinkData = kinkdata[playerIndex]
 
@@ -617,7 +617,6 @@ async def kinkedit(message):
 
                         await message.delete()
 
-
 #Takes a kink as a second input and outputs people who like that kink.
 async def kinkplayers(message):
     kinkdata, namestr, targname = await getKinkData(message)
@@ -627,7 +626,6 @@ async def kinkplayers(message):
         await message.channel.send(embed = discord.Embed(title = "Could not find " + targname.split("#")[0] + "'s kink list", description = "Make sure that <@" + str(targname.id) + "> has completed the (as yet unreleased) kink survey."))
 
     else:
-        kinkdatanum = await getKinkDataNumerical(kinkdata, targname)
 
         kinkcolumnindex = []
 
@@ -675,11 +673,11 @@ async def kinkplayers(message):
 
                 for e in range(len(kinkdata)):
 
-                    if kinkdata[e][kinkcolumnindex[sel]] == "Kink":
+                    if kinkdata[e][kinkcolumnindex[sel]] == "Fave":
 
                         if len(", ".join(kinkhavers)) > 3800:
 
-                            await message.channel.send(embed = discord.Embed(title = "People who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a kink:", description = ", ".join(kinkhavers), colour = embcol))
+                            await message.channel.send(embed = discord.Embed(title = "People who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a fave:", description = ", ".join(kinkhavers), colour = embcol))
 
                             kinkhavers = []
 
@@ -687,7 +685,7 @@ async def kinkplayers(message):
 
                         break
 
-                await message.channel.send(embed = discord.Embed(title = "People who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a kink:", description = ", ".join(kinkhavers), colour = embcol))
+                await message.channel.send(embed = discord.Embed(title = "People who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a fave:", description = ", ".join(kinkhavers), colour = embcol))
 
                 await message.delete()
 
@@ -695,17 +693,17 @@ async def kinkplayers(message):
 
                 for e in range(len(kinkdata)):
 
-                    if kinkdata[e][kinkcolumnindex[sel]] == "Kink":
+                    if kinkdata[e][kinkcolumnindex[sel]] == "Fave":
 
                         if len(", ".join(kinkhavers)) > 3800:
 
-                            await message.channel.send(embed = discord.Embed(title = "People who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a kink:", description = ", ".join(kinkhavers), colour = embcol))
+                            await message.channel.send(embed = discord.Embed(title = "People who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a fave:", description = ", ".join(kinkhavers), colour = embcol))
 
                             kinkhavers = []
 
                         kinkhavers.append(kinkdata[e][1])
 
-                await message.channel.send(embed = discord.Embed(title = "People who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a kink:", description = ", ".join(kinkhavers), colour = embcol))
+                await message.channel.send(embed = discord.Embed(title = "People who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a fave:", description = ", ".join(kinkhavers), colour = embcol))
 
                 await message.delete()
 
@@ -715,7 +713,43 @@ async def kinkplayers(message):
 
                 for e in range(len(kinkdata)):
 
-                    if kinkdata[e][kinkcolumnindex[sel]] == "Likes":
+                    if kinkdata[e][kinkcolumnindex[sel]] == "Kink":
+
+                        if len(", ".join(kinkhavers)) > 3800:
+
+                            await message.channel.send(embed = discord.Embed(title = "Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as something they kink:", description = ", ".join(kinkhavers), colour = embcol))
+
+                            kinkhavers = []
+
+                        kinkhavers.append("<@" + str(kinkdata[e][2]) + ">")
+
+                        break
+
+                await message.channel.send(embed = discord.Embed(title = "Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as something they kink:", description = ", ".join(kinkhavers), colour = embcol))
+
+            else:
+
+                for e in range(len(kinkdata)):
+
+                    if kinkdata[e][kinkcolumnindex[sel]] == "Kink":
+
+                        if len(", ".join(kinkhavers)) > 3800:
+
+                            await message.channel.send(embed = discord.Embed(title = "Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as something they kink:", description = ", ".join(kinkhavers), colour = embcol))
+
+                            kinkhavers = []
+
+                        kinkhavers.append(kinkdata[e][1])
+
+                await message.channel.send(embed = discord.Embed(title = "Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as something they kink:", description = ", ".join(kinkhavers), colour = embcol))
+
+            kinkhavers = []
+
+            if message.channel.id == 1009522511844749342:
+
+                for e in range(len(kinkdata)):
+
+                    if kinkdata[e][kinkcolumnindex[sel]] == "Like":
 
                         if len(", ".join(kinkhavers)) > 3800:
 
@@ -733,7 +767,7 @@ async def kinkplayers(message):
 
                 for e in range(len(kinkdata)):
 
-                    if kinkdata[e][kinkcolumnindex[sel]] == "Likes":
+                    if kinkdata[e][kinkcolumnindex[sel]] == "Like":
 
                         if len(", ".join(kinkhavers)) > 3800:
 
@@ -812,6 +846,7 @@ async def kinkencounter(message):
                 kinkinfo = "\n\nNo kinks are needed for this encounter"
 
                 if kinkneeded != None:
+                    playerIndex = [row[1] for row in kinkdata].index(namestr)
 
                     kinksreq = kinkneeded.split(", ")
 
@@ -823,7 +858,7 @@ async def kinkencounter(message):
 
                             if kinkdata[1][d] == kinksreq[e]:
 
-                                kinkthoughts.append(kinkdata[1][d] + ": " + kinkdata[a][d])
+                                kinkthoughts.append(kinkdata[1][d] + ": " + kinkdata[playerIndex][d])
 
                     kinkinfo = "\n\n" + str(targname) + "'s kinks for this encounter:\n\n" + "\n".join(kinkthoughts)
 
@@ -1035,7 +1070,6 @@ async def kinksurvey(message):
 
 
 #---------------------------Helper Functions---------------------------------
-
 
 #Fetches name and ID of author, and loads the kinkdata from the sheet.
 async def getKinkData(message):
