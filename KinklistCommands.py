@@ -907,12 +907,21 @@ async def kinksurvey(message):
                         try:
                             #options = ["Kink", "Likes", "Unsure or Exploring", "No Strong Emotions", "Soft Limit", "Hard Limit", "Absolute Limit"]
                             pref = kinkOptions[msg - 1]
-                            await msg2.delete()
                             continueToNext = True
+                            try:
+                                await msg2.delete()
+                            except discord.errors.DiscordServerError:
+                                await threadid.send(embed = discord.Embed(title = "Oops...", description = f"We experienced an internal error with the eldritch spaghetti monster called discord-api... Trying to continue. If we stop responding, please restart the survey.", colour = embcol))
+
 
                         except IndexError:
                             failcount += 1
-                            await msg2.delete()
+
+                            try:
+                                await msg2.delete()
+                            except discord.errors.DiscordServerError:
+                                await threadid.send(embed = discord.Embed(title = "Oops...", description = f"We experienced an internal error with the eldritch spaghetti monster called discord-api... Trying to continue. If we stop responding, please restart the survey.", colour = embcol))
+
                             if failcount < 3:
                                 await threadid.send(embed = discord.Embed(title = "Not a valid option", description = f"That isn't a valid option. This is fail number {failcount}/3. After 3 wrong selections the survey will cancel. Please try again.", colour = embcol))
 
@@ -927,7 +936,12 @@ async def kinksurvey(message):
 
                     except ValueError:
                         failcount += 1
-                        await msg2.delete()
+
+                        try:
+                            await msg2.delete()
+                        except discord.errors.DiscordServerError:
+                            await threadid.send(embed = discord.Embed(title = "Oops...", description = f"We experienced an internal error with the eldritch spaghetti monster called discord-api... Trying to continue. If we stop responding, please restart the survey.", colour = embcol))
+
                         if failcount < 3:
                             await threadid.send(embed = discord.Embed(title = "Not a valid option", description = f"That isn't a valid option. This is fail number {failcount}/3. After 3 wrong selections the survey will cancel. Please try again.", colour = embcol))
 
@@ -959,8 +973,12 @@ async def kinksurvey(message):
                         try:
                             #options = ["For my characters (Submissive)", "For other people's characters (Dominant)", "To watch between other characters (Voyeur)", "All of the above (Switch)"]
                             pref = participationOptions[msg - 1]
-                            await msg2.delete()
                             continueToNext = True
+                            try:
+                                await msg2.delete()
+                            except discord.errors.DiscordServerError:
+                                await threadid.send(embed = discord.Embed(title = "Oops...", description = f"We experienced an internal error with the eldritch spaghetti monster called discord-api... Trying to continue. If we stop responding, please restart the survey.", colour = embcol))
+
 
 
                         except IndexError:
@@ -1011,7 +1029,12 @@ async def kinksurvey(message):
 
                     kinksel = "Fail"
 
-                    await msg2.delete()
+
+                    try:
+                        await msg2.delete()
+                    except discord.errors.DiscordServerError:
+                        await threadid.send(embed = discord.Embed(title = "Oops...", description = f"We experienced an internal error with the eldritch spaghetti monster called discord-api... Trying to continue. If we stop responding, please restart the survey.", colour = embcol))
+
                     return
 
             await threadid.send(embed = discord.Embed(description = f"Registered {kinkname} as {pref}.", colour = embcol))
