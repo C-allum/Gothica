@@ -1146,6 +1146,12 @@ async def on_message(message):
                     except ValueError:
 
                         giveamount = int(message.content.split(" ")[2].strip("-"))
+                    
+                    if giveamount >= float(int(devdata[1][row])/4):
+
+                        giveamount = math.floor(int(devdata[1][row])/4)
+
+                        await message.channel.send(embed = discord.Embed(title = "You cannot donate that much!", description = "You cannot donate more than 1/4 of the project cost by yourself. We appreciate your generosity, and have set your donation to the maximum of " + str(math.floor(int(devdata[1][row])/4))))
 
                     if giveamount > int(economydata[reciprow-1][1]):
 
