@@ -125,7 +125,7 @@ for i in range(len(headers)):
 
 #channels
 if liveVersion:
-    kinkcreatechannel = "1048376490695327764"
+    kinkcreatechannel = "1050503346374594660"
 else: 
     kinkcreatechannel = "891781900388159528"
 #Sheets
