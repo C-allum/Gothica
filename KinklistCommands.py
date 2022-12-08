@@ -231,7 +231,7 @@ async def kinkedit(message):
 
                     pref = "Fail"
 
-                    if kinkindex > 3 and not "Role" in kinksel:
+                    if kinkindex > 3 and not "Role" in kinksel and not "Additional " in kinksel:
                         
                         embedstring = f"{message.author.name}, you currently have {kinksel} as: {kinkdata[a][kinkindex]}. What would you like to change this to?\n\n"
                         for z in range(0, len(kinkOptions)): #Add the answer options to the embed
@@ -304,7 +304,7 @@ async def kinkedit(message):
 
                     elif kinksel == "Pronouns":
 
-                        await message.channel.send(embed = discord.Embed(title = "Editing your pronouns", description = message.author.name + ", your pronouns are currently " + kinkdata[a][kinkindex] + ". What would you like to change them to?\n\nThe format should ideally be the same as He/Him, so Personal Subject Pronoun/ Personal Object Pronoun.\n\nThis message will timeout in 30 seconds.", colour = embcol))
+                        await message.channel.send(embed = discord.Embed(title = "Editing your pronouns", description = message.author.name + ", your pronouns are currently " + kinkdata[playerIndex][kinkindex] + ". What would you like to change them to?\n\nThe format should ideally be the same as He/Him, so Personal Subject Pronoun/ Personal Object Pronoun.\n\nThis message will timeout in 30 seconds.", colour = embcol))
 
                         try:
 
@@ -312,6 +312,19 @@ async def kinkedit(message):
 
                             pref = msg2.content
 
+
+                        except asyncio.TimeoutError:
+
+                            await message.channel.send("Message timed out")
+
+                    elif "Additional " in kinksel:
+                        await message.channel.send(embed = discord.Embed(title = "Editing your Additional Kinks and Limits", description = message.author.name + f", your {kinksel} are currently " + kinkdata[playerIndex][kinkindex] + ". What would you like to change them to?\n\nThis message will timeout in 30 seconds.", colour = embcol))
+
+                        try:
+
+                            msg2 = await client.wait_for('message', timeout = 30, check = checkAuthor(message.author))
+
+                            pref = msg2.content
 
                         except asyncio.TimeoutError:
 
@@ -425,7 +438,7 @@ async def kinkedit(message):
 
                     pref = "Fail"
 
-                    if kinkindex0 > 3 and not "Role" in kinktoedit:
+                    if kinkindex0 > 3 and not "Role" in kinktoedit and not "Additional " in kinktoedit:
 
                         embedstring = f"{message.author.name}, you currently have {kinktoedit} as: {playerKinkData[kinkindex0]}. What would you like to change this to?\n\n"
                         for z in range(0, len(kinkOptions)): #Add the answer options to the embed
@@ -500,7 +513,20 @@ async def kinkedit(message):
 
                     elif kinktoedit == "Pronouns":
 
-                        await message.channel.send(embed = discord.Embed(title = "Editing your pronouns", description = message.author.name + ", your pronouns are currently " + kinkdata[a][kinkindex0] + ". What would you like to change them to?\n\nThe format should ideally be the same as He/Him, so Personal Subject Pronoun/ Personal Object Pronoun.\n\nThis message will timeout in 30 seconds.", colour = embcol))
+                        await message.channel.send(embed = discord.Embed(title = "Editing your pronouns", description = message.author.name + ", your pronouns are currently " + kinkdata[playerIndex][kinkindex0] + ". What would you like to change them to?\n\nThe format should ideally be the same as He/Him, so Personal Subject Pronoun/ Personal Object Pronoun.\n\nThis message will timeout in 30 seconds.", colour = embcol))
+
+                        try:
+
+                            msg2 = await client.wait_for('message', timeout = 30, check = checkAuthor(message.author))
+
+                            pref = msg2.content
+
+                        except asyncio.TimeoutError:
+
+                            await message.channel.send("Message timed out")
+
+                    elif "Additional " in kinktoedit:
+                        await message.channel.send(embed = discord.Embed(title = "Editing your Additional Kinks and Limits", description = message.author.name + f", your {kinktoedit} are currently " + kinkdata[playerIndex][kinkindex0] + ". What would you like to change them to?\n\nThis message will timeout in 30 seconds.", colour = embcol))
 
                         try:
 
