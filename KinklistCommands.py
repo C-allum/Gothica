@@ -49,10 +49,6 @@ async def kinklist(message):
             generalPrefs.append(f"{kinkdata[1][currentKinkIndex]}: {currentRating}")
             currentKinkIndex += 1
 
-
-        print(f"categoryAverages {categoryAverages}")
-        print(f"General Prefs {generalPrefs}")
-
         #Prepare general preferences for printing
         generalPrefString = ""
         for entry in generalPrefs:
@@ -66,7 +62,7 @@ async def kinklist(message):
             
         #Prepare the category array for printing, containing all categories that need to be listed. Needed later for the category selection
         printCategories = categories.copy() #PrintCategories contains !ALL! categories that need to be printed, average or not
-        print(f"printcategories: {printCategories}")
+
         printCategories.remove("General Preferences")
         printCategories.remove("Categories")
     
@@ -1050,13 +1046,13 @@ async def getCategoryData(kinkdata):
             i = 0
             if (kinkdata[0][x] == "Additional Kinks and Limits"):
                 break
-    print(f"kinkdata[1]: {kinkdata[1]}, kinkdata[0] length: {len(kinkdata[0])}, kinkdata[1] length: {len(kinkdata[1])}")
+
     kinksPerCategory.append(len(kinkdata[1]) - len(kinkdata[0]) + 1) #Length of last category has to be figured out this way because of index bounds.
     categoryIndex.append(categoryIndex[-1] + len(kinkdata[1]) - len(kinkdata[0]) + 1)
 
     while ("" in categories): #Removes the empty entries from the category row so we can use the category list length properly
         categories.remove("")
     categories.remove("Player Information")
-    print(f"categories: {categories} \n\n kinksPerCategory: {kinksPerCategory} \n\n categoryIndex: {categoryIndex} \n\n playerInformationEntries: {playerInformationEntries}")
+
  
     return categories, kinksPerCategory, categoryIndex, playerInformationEntries
