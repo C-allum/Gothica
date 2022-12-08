@@ -792,6 +792,8 @@ async def on_message(message):
                 await KinklistCommands.kinkencounter(message)
             elif message.content.lower().startswith(str(myprefix) + "kinksurvey"):
                 await KinklistCommands.kinksurvey(message)
+            elif message.content.lower().startswith(str(myprefix) + "kinkhelp"):
+                await KinklistCommands.kinkhelp(message)
 
             #Start
             

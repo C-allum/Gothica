@@ -997,7 +997,10 @@ async def kinksurvey(message):
 
     return
 
-
+#Posts an embed with help on the commands.
+async def kinkhelp(message):
+    await message.channel.send(embed = discord.Embed(title = "Kinklist Help", description = f"*To start the kinklist survey, use the %kinksurvey command.\n If you have already filled out the survey, you can look at your kinklist with the %kinklist command, or edit it with the %kinkedit command. Furthermore you can search for users with a certain kink using the %kinkplayers [kink] command, or look at someone else's list with %kinklist [@username].*"))
+    await message.delete()
 
 #---------------------------Helper Functions---------------------------------
 
