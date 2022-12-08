@@ -3,161 +3,94 @@ from CommonDefinitions import *
 
 kinkOptions = ["Fave", "Kink", "Like", "It depends", "Willing to try", "No Strong Emotions", "Never heard of it", "Not my thing", "Soft Limit", "Hard Limit"]
 participationOptions = ["Submissive", "Dominant", "Voyeur", "Switch", "Submissive and Voyeur", "Dominant and Voyeur", "Enthusiast (Role doesn't matter to me)"]
+categoriesWithoutAverage = ['General Preferences', 'Categories', 'Body Parts', 'Relationships', 'Additional Kinks and Limits']
 #Displays the kinklist of the author, or another user if they are tagged.
 async def kinklist(message):
     kinkdata, namestr, targname = await getKinkData(message)
 
     categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
 
+    namestr = str(targname.name + "#" + targname.discriminator)
+
+    playerindex = [row[1] for row in kinkdata].index(namestr)
+
     if not str(targname) in str(kinkdata):
 
         await message.channel.send(embed = discord.Embed(title = "Could not find " + targname.split("#")[0] + "'s kink list", description = "Make sure that <@" + str(targname.id) + "> has completed the (as yet unreleased) kink survey."))
 
     else:
+        generalPrefs = [] #Contains the general preferences
+        categoryAverages = [] #Contains category ratings
+        currentKinkIndex = playerInformationEntries #Begin at the first actual kink after the Player Info
 
-        #Show all kinks
-        kinksec = -1
+        #Fill the category averages array
+        for x in range (0, len(categories)): #Go over all categories
 
-        kinks = []
-
-        kinklist = []
-
-        kinksegment = []
-
-        kinktot = 0
-
-        kinksum = 0
-
-        segid = -2
-
-        allCategoriesTotal = 4
-
-        kinkres = []
-
-        namestr = str(targname.name + "#" + targname.discriminator)
-
-        playerindex = [row[1] for row in kinkdata].index(namestr)
-
-        print(playerindex)
-        print(namestr)
-
-        for c in range(len(categories)):
-
-            kinksum = 0
-
-            for d in range(kinksPerCategory[c]):
+            categoryName = categories[x]
+            categoryKinkCount = kinksPerCategory[x]
+            categorySum = 0
+            for y in range(0, categoryKinkCount): #Go over each kink in a category
 
                 try:
-
-                    kinkdatanumb = len(kinkOptions) - int(kinkOptions.index(kinkdata[playerindex][allCategoriesTotal]))
-
+                    categorySum += len(kinkOptions) - int(kinkOptions.index(kinkdata[playerindex][currentKinkIndex]))     #Invert scale so fave = 10 and hardlimit = 1
                 except ValueError:
-
-                    kinkdatanumb = 5
-
-                allCategoriesTotal += 1
-
-                kinksum += kinkdatanumb
-
+                    categorySum = 5
+                currentKinkIndex += 1
             try:
-                
-                kinkres.append(kinkOptions[len(kinkOptions) - round(kinksum/kinksPerCategory[c])])
-
-            except ZeroDivisionError:
-
-                kinkres.append(kinkOptions[5])
-
+                categoryAverages.append(kinkOptions[len(kinkOptions) - round(categorySum/categoryKinkCount)].replace("Fave", "**Fave**").replace("Kink", "**Kink**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__").replace("Never heard of it", "No Strong Emotions"))
             
-
-        for b in range(len(categories)):
-
-            try:
-                if kinkdata[0][b] != "":
-
-                    kinklist.append("\n".join(kinks))
-
-                    kinks = ""
-
-                    kinks = []
-
-                    if kinktot == 0:
-
-                        kinkres = kinkOptions[5]
-
-                    else:
-
-                        try:
-
-                            kinkres = kinkOptions[round(kinksum/kinktot)]
-
-                        except ZeroDivisionError:
-
-                            kinkres = kinkOptions[5]
-
-                    kinktot = 0
-
-                    kinksum = 0
-
-                    kinksec += 1
-
-                    if segid > 2 and segid != 11:
-
-                        kinksegment.append("`" + str(segid) + "`: " + str(kinkdata[0][b] + " - " + str(kinkdata[a][segid+9].replace("Fave", "**Fave**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__"))))
-
-                        if segid > 3:
-
-                            kinksegment[int(segid)-2] = kinksegment[int(segid)-2] + " (" + kinkres + ")"
-
-
-                    elif segid > 0:
-
-                        kinksegment.append("`" + str(segid) + "`: " + str(kinkdata[0][b]))
-
-
-                    segid += 1
-
-            except IndexError:
-
-                print("IndexError")
-
-                pass
-
-            try:
-                
-                kinksum += int(kinkdatanumb)
-
-                kinktot = b
-
-            except ValueError:
-
-                print("ValueError")
-
-                pass
-
-            kinks.append("*" + kinkdata[1][b] + ":* " + str(kinkdata[a][b]).replace("Fave", "**Fave**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__"))
-
-        if kinktot == 0:
-
-            kinkres = kinkOptions[5]
-
-        else:
-
-            try:
-
-                kinkres = kinkOptions[round(kinksum/kinktot)]
-
             except ZeroDivisionError:
+                kinkres.append(kinkOptions[5])
+            
+        #Fill in general preferences array
+        currentKinkIndex = playerInformationEntries - 1 #Begin at the Pronouns
+        for f in range(0, kinksPerCategory[categories.index("General Preferences")] + 1):
+            currentRating = kinkdata[playerindex][currentKinkIndex].replace("Fave", "**Fave**").replace("Kink", "**Kink**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__")
+            generalPrefs.append(f"{kinkdata[1][currentKinkIndex]}: {currentRating}")
+            currentKinkIndex += 1
 
-                kinkres = kinkOptions[5]
 
-            kinksegment[-2] = kinksegment[-2] + " (" + kinkres + ")"
+        print(f"categoryAverages {categoryAverages}")
+        print(f"General Prefs {generalPrefs}")
 
-        kinklist.append("\n".join(kinks))
-        print(f"Kinklist: {kinklist}")
-        kinkemb = discord.Embed(title = namestr.split("#")[0] + "'s kink list:", description = "**General Preferences:**\n\n" + str(kinklist[2]) + "\n\n**Kink Overview:**\n" + namestr.split("#")[0] + "'s general thoughts on each category of kink are shown below. We have then taken their average response in each category, and included that information in brackets.\n*As always, you should check with your rp partners regarding hard and soft limits for any particular scene.*\n\n*To see more detail on any of the below categories, type the corresponding number*\n\n" + "\n".join(kinksegment), colour = embcol)
+        #Prepare general preferences for printing
+        generalPrefString = ""
+        for entry in generalPrefs:
+            generalPrefString +=f"\n{entry}"
+
+        #Remove Categories that shouldn't have an average in category arrays
+        printCategoriesWithAvg = categories.copy()  #PrintCategoriesWithAvg contains those categories that possess an average.
+        for entry in categoriesWithoutAverage:
+            categoryAverages.pop(printCategoriesWithAvg.index(entry))
+            printCategoriesWithAvg.pop(printCategoriesWithAvg.index(entry))
+            
+        #Prepare the category array for printing, containing all categories that need to be listed. Needed later for the category selection
+        printCategories = categories.copy() #PrintCategories contains !ALL! categories that need to be printed, average or not
+        print(f"printcategories: {printCategories}")
+        printCategories.remove("General Preferences")
+        printCategories.remove("Categories")
+    
+        #This constructs the string containing the categories, the user rating for them, and the averages where they apply.
+        categoryEmbedString = printCategories.copy()
+        categoryAvgIndex = 0    #This is the index for the printCategoriesWithAvg and printCategoriesWithAvg arrays. printCategoriesWithAvg and printCategoriesWithAvg are shorter than categoryEmbedString, hence it needs a different index
+        for entryIndex in range(0, len(categoryEmbedString)):
+            if categoryEmbedString[entryIndex] in printCategoriesWithAvg:
+                tmp = categories.index("Categories")
+                categoryEmbedString[entryIndex] = f"`{entryIndex + 1}`: {categoryEmbedString[entryIndex]} - " + kinkdata[playerindex][categoryIndex[tmp] + categoryAvgIndex].replace("Fave", "**Fave**").replace("Kink", "**Kink**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__")  + f" ({categoryAverages[categoryAvgIndex]})"
+                categoryAvgIndex += 1
+            else:
+                 categoryEmbedString[entryIndex] = f"`{entryIndex + 1}`: {categoryEmbedString[entryIndex]}"
+
+        #Send the embed.
+        kinkemb = discord.Embed(title = namestr + "'s kink list:", description = "**General Preferences:**" +\
+            generalPrefString +\
+            "\n\n**Kink Overview:**\n" +\
+            namestr +\
+            "'s general thoughts on each category of kink are shown below. We have then taken their average response in each category, and included that information in brackets.\n*As always, you should check with your rp partners regarding hard and soft limits for any particular scene.*\n\n*To see more detail on any of the below categories, type the corresponding number*\n\n" +\
+            "\n".join(categoryEmbedString), colour = embcol)
 
         await message.channel.send(embed = kinkemb)
-
+        
         await message.delete()
 
         try:
@@ -174,21 +107,24 @@ async def kinklist(message):
 
             sel = int(msg.content)
 
+            #Prepare the string containing the kinks and their ratings
+            kinkrange = [categoryIndex[categories.index(printCategories[sel-1])], categoryIndex[categories.index(printCategories[sel-1]) + 1]]
+            kinkratingString = ""
+            for index in range(kinkrange[0], kinkrange[1]):
+                rating = kinkdata[playerindex][index].replace("Fave", "**Fave**").replace("Kink", "**Kink**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__")
+                kinkratingString += f"\n{kinkdata[1][index]}: {rating}"
+            
+            
             await msg.delete()
 
             try:
-
-                if sel == 11:
-
-                    kinkemb2 = discord.Embed(title = namestr.split("#")[0] + "'s kink list:", description = "**" + str(kinksegment[sel-1].split(":")[1]) + ":**\n\n" + str(kinklist[sel+3]), colour = embcol)
-
-                elif sel < 3:
-
-                    kinkemb2 = discord.Embed(title = namestr.split("#")[0] + "'s kink list:", description = "**" + str(kinksegment[sel-1].split(":")[1]) + ":**\n\n" + str(kinklist[sel+3]), colour = embcol)
-
+                
+                if printCategories[sel-1] in printCategoriesWithAvg:
+                    avgRating = categoryAverages[printCategoriesWithAvg.index(printCategories[sel-1])]
+                    kinkemb2 = discord.Embed(title = namestr.split("#")[0] + "'s kink list:", description = f"**{printCategories[sel-1]}:**\n\n {kinkratingString} \n\nOverall, " + namestr.split("#")[0] + str(" rates this category as " + str(kinkdata[playerindex][categoryIndex[tmp] + sel -1].replace("Fave", "**Fave**").replace("Kink", "**Kink**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__").replace("as Likes", "as something they generally like"))) + f". On average, these answers sit at {avgRating}" , colour = embcol)
+                
                 else:
-
-                    kinkemb2 = discord.Embed(title = namestr.split("#")[0] + "'s kink list:", description = "**" + str(kinksegment[sel-1].split(":")[1].split(" - ")[0]) + ":**\n\n" + str(kinklist[sel+3]) + "\n\nOverall, " + namestr.split("#")[0] + str(" rates this category as " + str(kinksegment[sel-1].split(":")[1].split(" - ")[1].split(" (")[0])).replace("as Likes", "as something they generally like") + ". On average, these answers sit at " + str(kinksegment[sel-1].split(":")[1].split(" - ")[1].split("(")[1].replace(")","")), colour = embcol)
+                    kinkemb2 = discord.Embed(title = namestr.split("#")[0] + "'s kink list:", description = f"**{printCategories[sel-1]}:**\n\n {kinkratingString}", colour = embcol)
 
             except IndexError:
 
@@ -203,6 +139,7 @@ async def kinklist(message):
         except TimeoutError:
 
             pass
+
 
 
 #Allows to edit the kinklist. Moderators can tag someone and edit someone elses kinks.
@@ -403,8 +340,8 @@ async def kinkedit(message):
 
             elif searchterm == "Search term not found":
                                
-                categories, kinksPerCategory, CategoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
-                CategoryIndex[0] = CategoryIndex[0] -1  #To include Pronouns in General Preferences
+                categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
+                categoryIndex[0] = categoryIndex[0] -1  #To include Pronouns in General Preferences
                 embedstring = "Choose one of the following categories:\n\n"
                 optionCounter = 1
                 for kink in categories:
@@ -447,7 +384,7 @@ async def kinkedit(message):
 
                     
                     kinkselector = int(msg.content)
-                    kinkrange = [CategoryIndex[categories.index(kinksel)], CategoryIndex[categories.index(kinksel) + 1] - 1]
+                    kinkrange = [categoryIndex[categories.index(kinksel)], categoryIndex[categories.index(kinksel) + 1] - 1]
 
                     kinktitles = []
 
