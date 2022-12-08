@@ -929,10 +929,11 @@ async def kinksurvey(message):
 
             elif "Additional" in kinkname: #Additional kinks/limits section
                 try:
+                    print
                     await threadid.send(embed = discord.Embed(title = f"{categoryName} ({x+1}/{len(categories)}): {kinkname}", description = f"Do you have any {kinkname} you want to add? List them here!"))
                     messagefound = False
                     while messagefound == False:
-                        msg2 = await client.wait_for('message',  check = check(message.author))
+                        msg2 = await client.wait_for('message',  check = checkAuthor(message.author))
                         if msg2.channel == threadid:
                             messagefound = True
                     pref = str(msg2.content)
