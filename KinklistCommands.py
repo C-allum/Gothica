@@ -12,13 +12,14 @@ async def kinklist(message):
 
     namestr = str(targname.name + "#" + targname.discriminator)
 
-    playerindex = [row[1] for row in kinkdata].index(namestr)
+    
 
-    if not str(targname) in str(kinkdata):
-
-        await message.channel.send(embed = discord.Embed(title = "Could not find " + targname.split("#")[0] + "'s kink list", description = "Make sure that <@" + str(targname.id) + "> has completed the (as yet unreleased) kink survey."))
+    if not str(namestr) in str(kinkdata):
+        
+        await message.channel.send(embed = discord.Embed(title = "Could not find " + namestr.split("#")[0] + "'s kink list", description = "Make sure that <@" + str(targname.id) + "> has completed the kink survey."))
         
     else:
+        playerindex = [row[1] for row in kinkdata].index(namestr)
         generalPrefs = [] #Contains the general preferences
         categoryAverages = [] #Contains category ratings
         currentKinkIndex = playerInformationEntries #Begin at the first actual kink after the Player Info
@@ -143,9 +144,9 @@ async def kinkedit(message):
 
     kinkdata, namestr, targname = await getKinkData(message)
 
-    if not str(targname) in str(kinkdata):
+    if not str(namestr) in str(kinkdata):
 
-        await message.channel.send(embed = discord.Embed(title = "Could not find " + targname.split("#")[0] + "'s kink list", description = "Make sure that <@" + str(targname.id) + "> has completed the (as yet unreleased) kink survey."))
+        await message.channel.send(embed = discord.Embed(title = "Could not find " + namestr.split("#")[0] + "'s kink list", description = "Make sure that <@" + str(targname.id) + "> has completed the kink survey."))
 
     else:
         #Get player info
@@ -523,9 +524,9 @@ async def kinkedit(message):
 async def kinkplayers(message):
     kinkdata, namestr, targname = await getKinkData(message)
 
-    if not str(targname) in str(kinkdata):
+    if not str(namestr) in str(kinkdata):
 
-        await message.channel.send(embed = discord.Embed(title = "Could not find " + targname.split("#")[0] + "'s kink list", description = "Make sure that <@" + str(targname.id) + "> has completed the (as yet unreleased) kink survey."))
+        await message.channel.send(embed = discord.Embed(title = "Could not find " + namestr.split("#")[0] + "'s kink list", description = "Make sure that <@" + str(targname.id) + "> has completed the kink survey."))
 
     else:
 
@@ -686,9 +687,9 @@ async def kinkencounter(message):
     if ("lorekeeper" in str(message.author.roles).lower() or message.author.name == "C_allum"):
         kinkdata, namestr, targname = await getKinkData(message)
 
-        if not str(targname) in str(kinkdata):
+        if not str(namestr) in str(kinkdata):
 
-            await message.channel.send(embed = discord.Embed(title = "Could not find " + targname.split("#")[0] + "'s kink list", description = "Make sure that <@" + str(targname.id) + "> has completed the (as yet unreleased) kink survey."))
+            await message.channel.send(embed = discord.Embed(title = "Could not find " + namestr.split("#")[0] + "'s kink list", description = "Make sure that <@" + str(targname.id) + "> has completed the kink survey."))
 
         else:
 
