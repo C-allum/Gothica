@@ -2,7 +2,7 @@ from CommonDefinitions import *
 
 
 kinkOptions = ["Fave", "Kink", "Like", "It depends", "Willing to try", "No Strong Emotions", "Never heard of it", "Not my thing", "Soft Limit", "Hard Limit"]
-participationOptions = ["Submissive", "Dominant", "Voyeur", "Switch", "Submissive and Voyeur", "Dominant and Voyeur", "Enthusiast (Role doesn't matter to me)"]
+participationOptions = ["Submissive", "Dominant", "Voyeur", "Switch", "Submissive and Voyeur", "Dominant and Voyeur", "Enthusiast (Role doesn't matter to me)", "None"]
 categoriesWithoutAverage = ['General Preferences', 'Categories', 'Body Parts', 'Relationships', 'Additional Kinks and Limits']
 #Displays the kinklist of the author, or another user if they are tagged.
 async def kinklist(message):
@@ -100,6 +100,7 @@ async def kinklist(message):
 
             pass
 
+        #If the user answered with a number, display the subcategory of the kinksheet.    
         try:
 
             sel = int(msg.content)
@@ -116,9 +117,14 @@ async def kinklist(message):
 
             try:
                 
+                #Perpare the index for the part of the string with the averages.
                 if printCategories[sel-1] in printCategoriesWithAvg:
+                    #Fetch the average and user set rating for this category.
                     avgRating = categoryAverages[printCategoriesWithAvg.index(printCategories[sel-1])]
-                    kinkemb2 = discord.Embed(title = namestr.split("#")[0] + "'s kink list:", description = f"**{printCategories[sel-1]}:**\n\n {kinkratingString} \n\nOverall, " + namestr.split("#")[0] + str(" rates this category as " + str(kinkdata[playerindex][categoryIndex[tmp] + sel -1].replace("Fave", "**Fave**").replace("Kink", "**Kink**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__").replace("as Likes", "as something they generally like"))) + f". On average, these answers sit at {avgRating}" , colour = embcol)
+                    userRating = kinkdata[playerindex][categoryIndex[tmp] + (sel-1) - 2]    #-2 is a magic number and symbolises the amount of categories that (except for Gen Pref and Categories) do not have an average before the first that does. 
+                    #At the time of wrinting this, categories are "General Preferences"[0], "Categories"[1], "Bodyparts"[2], "Relationships"[3], "Physical Dominance"[4]. Gen Pref and Categories are not in our array, so "Bodyparts" and "Relationships" are the 2 categories that need to be skipped.
+
+                    kinkemb2 = discord.Embed(title = namestr.split("#")[0] + "'s kink list:", description = f"**{printCategories[sel-1]}:**\n\n {kinkratingString} \n\nOverall, " + namestr.split("#")[0] + str(" rates this category as " + str(userRating.replace("Fave", "**Fave**").replace("Kink", "**Kink**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__").replace("as Likes", "as something they generally like"))) + f". On average, these answers sit at {avgRating}" , colour = embcol)
                 
                 else:
                     kinkemb2 = discord.Embed(title = namestr.split("#")[0] + "'s kink list:", description = f"**{printCategories[sel-1]}:**\n\n {kinkratingString}", colour = embcol)
@@ -957,7 +963,7 @@ async def kinksurvey(message):
             elif "Additional" in kinkname: #Additional kinks/limits section
                 try:
                     print
-                    await threadid.send(embed = discord.Embed(title = f"{categoryName} ({x+1}/{len(categories)}): {kinkname}", description = f"Do you have any {kinkname} you want to add? List them here!"))
+                    await threadid.send(embed = discord.Embed(title = f"{categoryName} ({x+1}/{len(categories)}): {kinkname}", description = f"Do you have any {kinkname} you want to add? List them here! If there aren't any, put \"none\"."))
                     messagefound = False
                     while messagefound == False:
                         msg2 = await client.wait_for('message',  check = checkAuthor(message.author))
