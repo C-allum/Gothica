@@ -17,7 +17,7 @@ async def kinklist(message):
     if not str(targname) in str(kinkdata):
 
         await message.channel.send(embed = discord.Embed(title = "Could not find " + targname.split("#")[0] + "'s kink list", description = "Make sure that <@" + str(targname.id) + "> has completed the (as yet unreleased) kink survey."))
-
+        
     else:
         generalPrefs = [] #Contains the general preferences
         categoryAverages = [] #Contains category ratings
@@ -40,7 +40,7 @@ async def kinklist(message):
                 categoryAverages.append(kinkOptions[len(kinkOptions) - round(categorySum/categoryKinkCount)].replace("Fave", "**Fave**").replace("Kink", "**Kink**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__").replace("Never heard of it", "No Strong Emotions"))
             
             except ZeroDivisionError:
-                kinkres.append(kinkOptions[5])
+                categoryAverages.append(kinkOptions[5])
             
         #Fill in general preferences array
         currentKinkIndex = playerInformationEntries - 1 #Begin at the Pronouns
