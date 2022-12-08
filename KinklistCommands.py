@@ -820,12 +820,12 @@ async def kinksurvey(message):
 
     threadid = await message.create_thread(name= "Kinklist entry: " + str(len(kinkdata) - 1))
 
-    await threadid.send(embed = discord.Embed(title = "Kink Survey", description = f"Welcome to the kink survey! We will ask you to give us a rating on all sorts of kinks in just a moment. We will go through a couple of categories with plenty of kinks, and when we are done you can look at your kinklist with the %kinklist command, or edit it with the %kinkedit command. Furthermore you can search for users with a certain kink using the %kinkplayers [kink] command, or look at someone else's list with %kinklist [@username]. \n\n **Please note that we go to sleep around <t:1670025600:T> on the night from sunday to monday every week. If you don't finish before that, your progress will be lost!** \n\n Okay, with the formalities out of the way, let us begin..."))
+    await threadid.send(embed = discord.Embed(title = "Kink Survey", description = f"Welcome to the kink survey! We will ask you to give us a rating on all sorts of kinks in just a moment. We will go through a couple of categories with plenty of kinks, and when we are done you can look at your kinklist with the %kinklist command, or edit it with the %kinkedit command. Furthermore you can search for users with a certain kink using the %kinkplayers [kink] command, or look at someone else's list with %kinklist [@username]. \n\n **Please note that we go to sleep around <t:1670025600:T> on the night from sunday to monday every week. If you don't finish before that, your progress will be lost!** \n\n **If you ever want to exit this survey, input a wrong number 3 times in a single question.** \n\n Okay, with the formalities out of the way, let us begin..."))
     
 
     #--------------Prepare variables---------------
     newKinklist = [str(datetime.now()), f"{targname.name}#{targname.discriminator}", f"{targname.id}"] #Contains kink data, will be written into the sheet.
-    processFailed = False #Indicates if there was a problem during the process. Prevents writing to the sheet if true
+    
     categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
 
     #--------------Collect information from the user-------------
@@ -841,14 +841,14 @@ async def kinksurvey(message):
     except asyncio.TimeoutError:
 
         await threadid.channel.send("Message timed out")
-        processFailed = True
+
         kinksel = "Fail"
         return
 
     except ValueError:
 
         await threadid.channel.send("Something went wrong! ValueError.")
-        processFailed = True
+
         kinksel = "Fail"
 
         await msg.delete()
@@ -891,36 +891,49 @@ async def kinksurvey(message):
                         embedstring = embedstring + f"`{z+1}`: {kinkOptions[z]}\n"
                 
                     await threadid.send(embed = discord.Embed(title = f"{categoryName} ({x+1}/{len(categories)}) \nKink {y+1}/{categoryKinkCount}: {kinkname}", description = embedstring, colour = embcol))
-
-                try:
-                    messagefound = False
-                    while messagefound == False:
-                        msg2 = await client.wait_for('message', check = check(message.author))
-                        if msg2.channel == threadid:
-                            messagefound = True
-                    
-                    msg = int(msg2.content)
-
+                
+                continueToNext = False  #This will be set to true when the user entered a correct value
+                failcount = 0
+                while continueToNext == False:
                     try:
-                        #options = ["Kink", "Likes", "Unsure or Exploring", "No Strong Emotions", "Soft Limit", "Hard Limit", "Absolute Limit"]
-                        pref = kinkOptions[msg - 1]
-                        await msg2.delete()
+                        messagefound = False
+                        while messagefound == False:
+                            msg2 = await client.wait_for('message', check = check(message.author))
+                            if msg2.channel == threadid:
+                                messagefound = True
 
-                    except IndexError:
-                        await threadid.send("That isn't a valid option. Kink survey cancelled. Please try again. If this happens again and you don't figure out why, please contact Kendrax or Callum.")
-                        processFailed = True
+                        msg = int(msg2.content)
+
+                        try:
+                            #options = ["Kink", "Likes", "Unsure or Exploring", "No Strong Emotions", "Soft Limit", "Hard Limit", "Absolute Limit"]
+                            pref = kinkOptions[msg - 1]
+                            await msg2.delete()
+                            continueToNext = True
+
+                        except IndexError:
+                            failcount += 1
+                            await msg2.delete()
+                            if failcount < 3:
+                                await threadid.send(embed = discord.Embed(title = "Not a valid option", description = f"That isn't a valid option. This is fail number {failcount}/3. After 3 wrong selections the survey will cancel. Please try again.", colour = embcol))
+
+                            else:
+                                await threadid.send(embed = discord.Embed(title = "Not a valid option", description = "That isn't a valid option. Kink survey cancelled. Please try again. If this happens again and you can't figure out why this happened, please contact Kendrax or Callum.", colour = embcol))
+                                return
+
+                    except asyncio.TimeoutError:
+                        await threadid.send(embed = discord.Embed(description ="Message timed out. Kink survey cancelled. Please try again. If this happens again and you don't figure out why, please contact Kendrax or Callum.", colour = embcol))
+
                         return
 
-                except asyncio.TimeoutError:
-                    await threadid.send("Message timed out. Kink survey cancelled. Please try again. If this happens again and you don't figure out why, please contact Kendrax or Callum.")
-                    processFailed = True
-                    return
+                    except ValueError:
+                        failcount += 1
+                        await msg2.delete()
+                        if failcount < 3:
+                            await threadid.send(embed = discord.Embed(title = "Not a valid option", description = f"That isn't a valid option. This is fail number {failcount}/3. After 3 wrong selections the survey will cancel. Please try again.", colour = embcol))
 
-                except ValueError:
-                    await threadid.send("That isn't a valid integer. Kink survey cancelled. Please try again. If this happens again and you don't figure out why, please contact Kendrax or Callum.")
-                    await msg2.delete()
-                    processFailed = True
-                    return
+                        else:
+                            await threadid.send(embed = discord.Embed(title = "Not a valid option", description = "That isn't a valid integer. Kink survey cancelled. Please try again. If this happens again and you can't figure out why this happened, please contact Kendrax or Callum.", colour = embcol))
+                            return
 
             elif "Role" in kinkname:
 
@@ -929,36 +942,51 @@ async def kinksurvey(message):
                 for z in range(0, len(participationOptions)): #Add the answer options to the embed
                             embedstring = embedstring + f"`{z+1}`: {participationOptions[z]}\n"
                 await threadid.send(embed = discord.Embed(title = f"{categoryName} ({x+1}/{len(categories)}) \nKink {y+1}/{categoryKinkCount}: {kinkname}", description = embedstring, colour = embcol))
-                try:
-                    messagefound = False
-                    while messagefound == False:
-                        msg2 = await client.wait_for('message',  check = check(message.author))
-                        if msg2.channel == threadid:
-                            messagefound = True
 
-                    msg = int(msg2.content)
+                continueToNext = False  #This will be set to true when the user entered a correct value
+                failcount = 0
+                while continueToNext == False:
 
                     try:
-                        #options = ["For my characters (Submissive)", "For other people's characters (Dominant)", "To watch between other characters (Voyeur)", "All of the above (Switch)"]
-                        pref = participationOptions[msg - 1]
-                        await msg2.delete()
+                        messagefound = False
+                        while messagefound == False:
+                            msg2 = await client.wait_for('message',  check = check(message.author))
+                            if msg2.channel == threadid:
+                                messagefound = True
+
+                        msg = int(msg2.content)
+
+                        try:
+                            #options = ["For my characters (Submissive)", "For other people's characters (Dominant)", "To watch between other characters (Voyeur)", "All of the above (Switch)"]
+                            pref = participationOptions[msg - 1]
+                            await msg2.delete()
+                            continueToNext = True
 
 
-                    except IndexError:
-                        await threadid.send("That isn't a valid option. Kink survey cancelled. Please try again. If this happens again and you don't figure out why, please contact Kendrax or Callum.")
-                        processFailed = True
+                        except IndexError:
+                            failcount += 1
+                            await msg2.delete()
+                            if failcount < 3:
+                                await threadid.send(embed = discord.Embed(title = "Not a valid option", description = f"That isn't a valid option. This is fail number {failcount}/3. After 3 wrong selections the survey will cancel. Please try again.", colour = embcol))
+
+                            else:
+                                await threadid.send(embed = discord.Embed(title = "Not a valid option", description = "That isn't a valid option. Kink survey cancelled. Please try again. If this happens again and you can't figure out why this happened, please contact Kendrax or Callum.", colour = embcol))
+                                return
+
+                    except asyncio.TimeoutError:
+                        await threadid.send("Message timed out. Kink survey cancelled. Please try again. If this happens again and you don't figure out why, please contact Kendrax or Callum.")
+
                         return
 
-                except asyncio.TimeoutError:
-                    await threadid.send("Message timed out. Kink survey cancelled. Please try again. If this happens again and you don't figure out why, please contact Kendrax or Callum.")
-                    processFailed = True
-                    return
+                    except ValueError:
+                        failcount += 1
+                        await msg2.delete()
+                        if failcount < 3:
+                            await threadid.send(embed = discord.Embed(title = "Not a valid option", description = f"That isn't a valid option. This is fail number {failcount}/3. After 3 wrong selections the survey will cancel. Please try again.", colour = embcol))
 
-                except ValueError:
-                    await threadid.send("That isn't a valid integer. Kink survey cancelled. Please try again. If this happens again and you don't figure out why, please contact Kendrax or Callum.")
-                    await msg2.delete()
-                    processFailed = True
-                    return
+                        else:
+                            await threadid.send(embed = discord.Embed(title = "Not a valid option", description = "That isn't a valid integer. Kink survey cancelled. Please try again. If this happens again and you can't figure out why this happened, please contact Kendrax or Callum.", colour = embcol))
+                            return
 
             elif "Additional" in kinkname: #Additional kinks/limits section
                 try:
@@ -973,14 +1001,14 @@ async def kinksurvey(message):
                 except asyncio.TimeoutError:
                 
                     await threadid.channel.send("Message timed out")
-                    processFailed = True
+
                     kinksel = "Fail"
                     return
 
                 except ValueError:
                 
                     await threadid.channel.send("Something went wrong! ValueError.")
-                    processFailed = True
+
                     kinksel = "Fail"
 
                     await msg2.delete()
@@ -994,12 +1022,10 @@ async def kinksurvey(message):
 
     await threadid.send(embed = discord.Embed(title = "Kink Survey", description = "That concludes the kink survey! Thank you for your time. If you change your mind on anything I just asked you about, you can request us to change it with %kinkedit."))
 
-    if processFailed == False: #This means nothing went wrong! We can write the results into the kink sheet.
-        kinkdata, namestr, targname = await getKinkData(message)
-        sheet.values().update(spreadsheetId = kinksheet, range = f"A{len(kinkdata)+1}", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[newKinklist])).execute()
+    kinkdata, namestr, targname = await getKinkData(message)
+    sheet.values().update(spreadsheetId = kinksheet, range = f"A{len(kinkdata)+1}", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[newKinklist])).execute()
 
-    else:
-        await threadid.send(embed = discord.Embed(title = "Kink Survey", description = "Something went wrong... Please try again. If this happens again and you don't figure out why, please contact Kendrax or Callum."))
+   
 
     return
 
