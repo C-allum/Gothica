@@ -612,13 +612,13 @@ async def kinkplayers(message):
 
                         if len(", ".join(kinkhavers)) > 3800:
 
-                            await message.channel.send(embed = discord.Embed(title = "People who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a fave:", description = ", ".join(kinkhavers), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}"))
+                            await message.channel.send(embed = discord.Embed(title = "People who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a fave:", description = ", ".join(kinkhavers), colour = embcol))
 
                             kinkhavers = []
 
                         kinkhavers.append("<@" + str(kinkdata[e][2]) + ">")
 
-                await message.channel.send(embed = discord.Embed(title = "People who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a fave:", description = ", ".join(kinkhavers), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}"))
+                await message.channel.send(embed = discord.Embed(title = "People who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a fave:", description = ", ".join(kinkhavers), colour = embcol))
 
                 await message.delete()
 
@@ -630,13 +630,13 @@ async def kinkplayers(message):
 
                         if len(", ".join(kinkhavers)) > 3800:
 
-                            await message.channel.send(embed = discord.Embed(title = "People who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a fave:", description = ", ".join(kinkhavers), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}"))
+                            await message.channel.send(embed = discord.Embed(title = "People who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a fave:", description = ", ".join(kinkhavers), colour = embcol))
 
                             kinkhavers = []
 
                         kinkhavers.append(kinkdata[e][1])
 
-                await message.channel.send(embed = discord.Embed(title = "People who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a fave:", description = ", ".join(kinkhavers), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}"))
+                await message.channel.send(embed = discord.Embed(title = "People who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a fave:", description = ", ".join(kinkhavers), colour = embcol))
 
                 await message.delete()
 
@@ -650,7 +650,7 @@ async def kinkplayers(message):
 
                         if len(", ".join(kinkhavers)) > 3800:
 
-                            await message.channel.send(embed = discord.Embed(title = "Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a kink:", description = ", ".join(kinkhavers), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}"))
+                            await message.channel.send(embed = discord.Embed(title = "Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a kink:", description = ", ".join(kinkhavers), colour = embcol))
 
                             kinkhavers = []
 
@@ -658,7 +658,7 @@ async def kinkplayers(message):
 
                         
 
-                await message.channel.send(embed = discord.Embed(title = "Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a kink:", description = ", ".join(kinkhavers), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}"))
+                await message.channel.send(embed = discord.Embed(title = "Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a kink:", description = ", ".join(kinkhavers), colour = embcol))
 
             else:
 
@@ -668,13 +668,13 @@ async def kinkplayers(message):
 
                         if len(", ".join(kinkhavers)) > 3800:
 
-                            await message.channel.send(embed = discord.Embed(title = "Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a kink:", description = ", ".join(kinkhavers), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}"))
+                            await message.channel.send(embed = discord.Embed(title = "Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a kink:", description = ", ".join(kinkhavers), colour = embcol))
 
                             kinkhavers = []
 
                         kinkhavers.append(kinkdata[e][1])
 
-                await message.channel.send(embed = discord.Embed(title = "Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a kink:", description = ", ".join(kinkhavers), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}"))
+                await message.channel.send(embed = discord.Embed(title = "Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a kink:", description = ", ".join(kinkhavers), colour = embcol))
 
             kinkhavers = []
 
@@ -802,6 +802,7 @@ async def kinkencounter(message):
             else:
 
                 await message.channel.send("Room not found")
+
 
 #Assist the author in generating their kinklist if they don't already have one.
 async def kinksurvey(message):
@@ -1050,10 +1051,95 @@ async def kinksurvey(message):
 
     return
 
+#compares the kinklist of tagged persons
+async def kinkcompare(message):
+    #Fetch relevant data
+    kinkdata, namestr, targname = await getKinkData(message)
+    categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
+    playerIDsToCompare = [] #Contains the ID of the players whose kinklist should be compared
+    commonKinks = []        #Contains common Like/Kink/Faves
+    limits = []             #Contains common Limits
+    maybeAvoid = []         #Contains kinks that should maybe be avoided
+
+
+    print(categories)
+    if not "@" in message.content:
+        await message.channel.send(embed = discord.Embed(title = "Kinklist Compare", description = f"Please tag everyone whose kinklist you want to compare, even yourself if you want to compare yours to someone elses!"))
+        return
+    else:   #If people were tagged, fetch the ID's of the players that need to be compared
+        kinkcompareMessage = message.content
+        while "@" in kinkcompareMessage:
+            playerIDsToCompare.append(kinkcompareMessage.rsplit("@", 1)[1].replace("<", "").replace(">", "").replace(" ", ""))
+            kinkcompareMessage = kinkcompareMessage.rsplit("@", 1)[0]
+
+    #Check if all players have their survey filled out
+    for player in playerIDsToCompare:
+        if not str(player) in str(kinkdata):
+
+            await message.channel.send(embed = discord.Embed(title = "Could not find <@" + player + "> 's kink list", description = "Make sure that <@" + player + "> has completed the kink survey. Try again when they have."))
+            return
+
+    if len(playerIDsToCompare) < 2:
+        await message.channel.send(embed = discord.Embed(title = "Too few players to compare!", description = "Make sure that you tagged at least 2 users to compare their kinklists"))
+        return
+
+    
+    #Fetch the row numbers for the specific people
+    playerIndices = []  #Contains player row indices in kinkdata
+    playerNames = []    #Contains player names
+    
+    for player in playerIDsToCompare:
+        playerIndex = [row[2] for row in kinkdata].index(player)
+        playerIndices.append(playerIndex)
+
+        #find out display name of player
+        if guildvar != None:
+            currMember = guildvar.get_member(int(player))
+        else: 
+            currMember = client.get_guild(847968618167795782).get_member(int(player))
+        playerNames.append(currMember.display_name)
+
+
+    #begin comparing... Mark out all common kinks that are at least a like, and every single soft or hard limit. Extra list for "Not my thing"
+    for i in range(categoryIndex[categories.index("Body Parts")], len(kinkdata[1])):
+        likeOrMoreForAll = True #Stays true if this is a like or better for all people tagged
+        softOrHardLimit = False
+        uncertainElement = False
+        for player in playerIndices:
+            if kinkdata[player][i] != kinkOptions[0] and kinkdata[player][i] != kinkOptions[1] and kinkdata[player][i] != kinkOptions[2]: #If entry is not Fave, Kink or Like, it is not among the common kinks
+                likeOrMoreForAll = False
+
+            if kinkdata[player][i] == kinkOptions[8] or kinkdata[player][i] == kinkOptions[9]:
+                softOrHardLimit = True
+
+            if kinkdata[player][i] == kinkOptions[7] or kinkdata[player][i] == kinkOptions[6]:
+                uncertainElement = True
+
+        #add the kink to the correct category
+        if likeOrMoreForAll == True:
+            commonKinks.append(kinkdata[1][i])
+        if softOrHardLimit == True:
+            limits.append(kinkdata[1][i])
+        if uncertainElement == True:
+            maybeAvoid.append(kinkdata[1][i])
+    
+    #Send embeds
+    await message.channel.send(embed = discord.Embed(title = f"Common Faves/Kinks/Likes of " + ", ".join(playerNames), description = "\n".join(commonKinks), colour = embcol))
+    #await message.channel.send(embed = discord.Embed(title = f"Uncertain Elements shared by " + ", ".join(playerNames), description = "\n".join(maybeAvoid), colour = embcol))
+    await message.channel.send(embed = discord.Embed(title = f"Accumulated Soft and Hard Limits of  " + ", ".join(playerNames), description = "\n".join(limits), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis comparison was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}"))
+    await message.channel.send(embed = discord.Embed(title = f"Reminder!", description = "*Please remember that the kinklist is not a perfect guide. Just because someone has marked something positively or negatively, doesn't mean they have the same understanding of what that thing is as you do. It's important to discuss any element you plan to bring into a scene with your partner.*", colour = embcol))
+
+    await message.delete()
+
+    return
+
 #Posts an embed with help on the commands.
 async def kinkhelp(message):
     await message.channel.send(embed = discord.Embed(title = "Kinklist Help", description = f"*To start the kinklist survey, use the %kinksurvey command.\n If you have already filled out the survey, you can look at your kinklist with the %kinklist command, or edit it with the %kinkedit command. Furthermore you can search for users with a certain kink using the %kinkplayers [kink] command, or look at someone else's list with %kinklist [@username].*").set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}"))
     await message.delete()
+
+
+
 
 #---------------------------Helper Functions---------------------------------
 
@@ -1061,9 +1147,11 @@ async def kinkhelp(message):
 async def getKinkData(message):
     kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
     if "@" in message.content:
-
-        targid = int(str(message.content.split("@")[1]).split(" ")[0].replace("!","").replace("&","").replace(">",""))
-
+        try:
+            targid = int(str(message.content.split("@")[1]).split(" ")[0].replace("!","").replace("&","").replace(">",""))
+        except ValueError:
+            await message.channel.send(embed = discord.Embed(title = "Error!", description = "Make sure that the user you tagged is valid."))
+            return
         targname = await client.fetch_user(targid)
     else:
 
