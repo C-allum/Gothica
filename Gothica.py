@@ -4292,9 +4292,8 @@ async def on_message(message):
                                     print("Automatically created a scene break in " + roomcur + ". The time difference was: " + diff + ", which Gothica read as " + str(diff.split(":")[0]) + " hours.")
 
             #Per message income
-
             if not "verification" in str(message.channel).lower():
-
+                
                 if not isbot:
                     
                     row = 0
@@ -4344,8 +4343,9 @@ async def on_message(message):
                             row = len(economydata) + 1
 
                         else:
-
-                            row = len(economydata) + 4
+                            row = ((int(int(len(economydata) - 1) / 4) + 1) * 4) + 2 #Calculates the next line on the sheet that is divisible by 4. This is a bit of a magic formula. 
+                            #len econdata-1 / 4 gives us the player number of the current last player. that + 1 and * 4 gives us the cell that is one before the last one of that player (because we did -1 earlier). 
+                            #+1 gives us the last line of the currently last registered player, meaning +2 gives us the line the new player's entry needs to start at.
                     
                     try:
 
