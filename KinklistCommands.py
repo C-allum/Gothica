@@ -618,8 +618,6 @@ async def kinkplayers(message):
 
                         kinkhavers.append("<@" + str(kinkdata[e][2]) + ">")
 
-                        break
-
                 await message.channel.send(embed = discord.Embed(title = "People who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a fave:", description = ", ".join(kinkhavers), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}"))
 
                 await message.delete()
@@ -658,7 +656,7 @@ async def kinkplayers(message):
 
                         kinkhavers.append("<@" + str(kinkdata[e][2]) + ">")
 
-                        break
+                        
 
                 await message.channel.send(embed = discord.Embed(title = "Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a kink:", description = ", ".join(kinkhavers), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}"))
 
@@ -694,7 +692,7 @@ async def kinkplayers(message):
 
                         kinkhavers.append("<@" + str(kinkdata[e][2]) + ">")
 
-                        break
+                        
 
                 await message.channel.send(embed = discord.Embed(title = "Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as something they like:", description = ", ".join(kinkhavers), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}"))
 
