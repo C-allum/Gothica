@@ -1094,8 +1094,9 @@ async def kinkcompare(message):
         playerIndices.append(playerIndex)
 
         #find out display name of player
-        if liveVersion == 1:
-            currMember = client.get_guild(828411760365142076).get_member(int(player))
+        localGuild = client.get_guild(828411760365142076)
+        if localGuild != None:
+            currMember = localGuild.get_member(int(player))
         else: 
             currMember = client.get_guild(847968618167795782).get_member(int(player))
         playerNames.append(currMember.display_name)
