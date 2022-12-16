@@ -2386,10 +2386,10 @@ async def on_message(message):
                         if buyquant < 1:
                             buyquant = 0
                     except ValueError:
-                        print("error")
+                        print("Buy function Value Error")
                         buyquant = 1  
                     except TypeError:
-                        print("error typerror")
+                        print("Buy function type error")
                         buyquant = 1  
                 except IndexError:
                     searchterm = "11111111111111" #Something irrelevant cause the search was empty
@@ -2397,8 +2397,6 @@ async def on_message(message):
                 itindex = ""
 
                 
-                print(searchterm)
-                print(buyquant)
                 #try:
                 #    buyquant = int(message.content.split(" ", 1)[1].lower().rsplit(" ", 1)[-1])
                 #except ValueError:

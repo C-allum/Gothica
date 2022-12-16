@@ -696,7 +696,7 @@ async def kinkplayers(message):
 
                 await message.channel.send("Finally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as something they like:\n\n" + ", ".join(kinkhavers))
                                            
-                await message.channel.send("This search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}")
+                await message.channel.send(f"This search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}")
 
             else:
 

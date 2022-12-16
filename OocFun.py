@@ -193,5 +193,5 @@ async def playerreacts(message):
 
             await message.add_reaction(reacts[n])
 
-    if ("nini " in (message.content).lower() or "goodnight" in (message.content).lower() or "good night" in (message.content).lower() or "night" in (message.content).lower()) and "ken" in (message.content).lower() and str(message.channel).lower() == "ooc":
+    if ("nini " in (message.content).lower() or "goodnight" in (message.content).lower() or "good night" in (message.content).lower() or "night" in (message.content).lower()) and "ken" in message.content.lower() and str(message.channel).lower() == "ooc":
         await message.add_reaction("❤️")
