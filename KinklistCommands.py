@@ -612,13 +612,13 @@ async def kinkplayers(message):
 
                         if len(", ".join(kinkhavers)) > 3800:
 
-                            await message.channel.send(embed = discord.Embed(title = "People who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a fave:", description = ", ".join(kinkhavers), colour = embcol))
+                            await message.channel.send("People who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a fave:\n\n" + ", ".join(kinkhavers))
 
                             kinkhavers = []
 
                         kinkhavers.append("<@" + str(kinkdata[e][2]) + ">")
 
-                await message.channel.send(embed = discord.Embed(title = "People who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a fave:", description = ", ".join(kinkhavers), colour = embcol))
+                await message.channel.send("People who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a fave:\n\n" + ".join(kinkhavers))
 
                 await message.delete()
 
@@ -650,7 +650,7 @@ async def kinkplayers(message):
 
                         if len(", ".join(kinkhavers)) > 3800:
 
-                            await message.channel.send(embed = discord.Embed(title = "Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a kink:", description = ", ".join(kinkhavers), colour = embcol))
+                            await message.channel.send("Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a kink:\n\n" + ", ".join(kinkhavers))
 
                             kinkhavers = []
 
@@ -658,7 +658,7 @@ async def kinkplayers(message):
 
                         
 
-                await message.channel.send(embed = discord.Embed(title = "Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a kink:", description = ", ".join(kinkhavers), colour = embcol))
+                await message.channel.send("Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a kink:\n\n" + ", ".join(kinkhavers))
 
             else:
 
@@ -686,7 +686,7 @@ async def kinkplayers(message):
 
                         if len(", ".join(kinkhavers)) > 3800:
 
-                            await message.channel.send(embed = discord.Embed(title = "Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as something they like:", description = ", ".join(kinkhavers), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}"))
+                            await message.channel.send("Finally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as something they like:\n\n" + ", ".join(kinkhavers))
 
                             kinkhavers = []
 
@@ -694,7 +694,9 @@ async def kinkplayers(message):
 
                         
 
-                await message.channel.send(embed = discord.Embed(title = "Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as something they like:", description = ", ".join(kinkhavers), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}"))
+                await message.channel.send("Finally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as something they like:\n\n" + ", ".join(kinkhavers))
+                                           
+                await message.channel.send("This search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}")
 
             else:
 
