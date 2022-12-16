@@ -618,7 +618,7 @@ async def kinkplayers(message):
 
                         kinkhavers.append("<@" + str(kinkdata[e][2]) + ">")
 
-                await message.channel.send("People who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a fave:\n\n" + ".join(kinkhavers))
+                await message.channel.send("People who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a fave:\n\n" + ", ".join(kinkhavers))
 
                 await message.delete()
 
