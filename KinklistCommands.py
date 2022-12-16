@@ -1064,7 +1064,6 @@ async def kinkcompare(message):
     maybeAvoid = []         #Contains kinks that should maybe be avoided
 
 
-    print(categories)
     if not "@" in message.content:
         await message.channel.send(embed = discord.Embed(title = "Kinklist Compare", description = f"Please tag everyone whose kinklist you want to compare, even yourself if you want to compare yours to someone elses!"))
         return
@@ -1095,8 +1094,8 @@ async def kinkcompare(message):
         playerIndices.append(playerIndex)
 
         #find out display name of player
-        if guildvar != None:
-            currMember = guildvar.get_member(int(player))
+        if liveVersion == 1:
+            currMember = client.get_guild(828411760365142076).get_member(int(player))
         else: 
             currMember = client.get_guild(847968618167795782).get_member(int(player))
         playerNames.append(currMember.display_name)
