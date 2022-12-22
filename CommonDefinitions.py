@@ -56,7 +56,7 @@ print(" Initialised {0.user} at ".format(client) + str(datetime.now()).split("."
 #-----------------LIVE VERSION/BETA TOGGLE---------------
 liveVersion = 1
 
-botTokens.gettoken(liveVersion)
+token = ""
 
 #Sheet Locations:
 

@@ -6,6 +6,7 @@ import CommonDefinitions
 from CommonDefinitions import *
 @client.event
 async def on_ready():
+
     print('Logged in as {0.user} at '.format(client) + str(datetime.now()).split(".")[0])
     
 
@@ -4831,4 +4832,6 @@ async def on_message_delete(message):
 
         await client.get_channel(logchannel).send(message.author.name + "'s message was deleted in " + str(message.channel) + ". The message was:\n\n" + message.content.replace("@", "\@") + "\n\nThis message was deleted at " + str(datetime.now()))
 
+        
+token = botTokens.gettoken(liveVersion)
 client.run(token, reconnect=True)
