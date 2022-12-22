@@ -783,7 +783,7 @@ async def on_message(message):
 
             #Kink Functions
             elif message.content.lower().startswith(str(myprefix) + "kinklist"):
-                await KinklistCommands.kinklist(message)
+                await KinklistCommands.kinklist(message, message.channel)
             elif message.content.lower().startswith(str(myprefix) + "kinkedit"):
                 await KinklistCommands.kinkedit(message)
             elif message.content.lower().startswith(str(myprefix) + "kinkplayers"):
@@ -4812,9 +4812,17 @@ async def on_raw_reaction_add(reaction):
 
         await client.get_channel(918257057428279326).send(str(reaction.member.name) + " queried the tupper of " + str(mess.author))
 
-    # else:
+    elif reaction.emoji.name =="kinklist":
 
-    #     print(reaction.emoji.name)
+        dmchannel = await client.fetch_user(int(reaction.member.id))
+
+        mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
+
+        await KinklistCommands.kinklist(mess, dmchannel)
+
+    #else:
+
+        #print(reaction.emoji.name)
 
 @client.event
 async def on_message_delete(message):
