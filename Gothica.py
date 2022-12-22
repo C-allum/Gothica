@@ -10,7 +10,7 @@ async def on_ready():
     print('Logged in as {0.user} at '.format(client) + str(datetime.now()).split(".")[0])
     
 
-    #------------------DezzieAwardPoolReset--------------------
+    #------------------DezzieAwardPoolReset---------------------
 
 
     #Read old dezzie award reset date
