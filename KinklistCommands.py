@@ -4,19 +4,45 @@ from CommonDefinitions import *
 kinkOptions = ["Fave", "Kink", "Like", "It depends", "Willing to try", "No Strong Emotions", "Never heard of it", "Not my thing", "Soft Limit", "Hard Limit"]
 participationOptions = ["Submissive", "Dominant", "Voyeur", "Switch", "Submissive and Voyeur", "Dominant and Voyeur", "Enthusiast (Role doesn't matter to me)", "None"]
 categoriesWithoutAverage = ['General Preferences', 'Categories', 'Body Parts', 'Relationships', 'Additional Kinks and Limits']
+
 #Displays the kinklist of the author, or another user if they are tagged.
-async def kinklist(message):
-    kinkdata, namestr, targname = await getKinkData(message)
+async def kinklist(message, outputchannel):
 
-    categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
+    if "kinklist" in message.content:
 
-    namestr = str(targname.name + "#" + targname.discriminator)
+        kinkdata, namestr, targname = await getKinkData(message)
 
-    
+        categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
+
+        namestr = str(targname.name + "#" + targname.discriminator)
+
+        trigger = "Command"
+
+    else: #Triggered by reaction.
+
+        kinkdata, namestr, targname = await getKinkDataReact(message)
+
+        categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
+
+        namestr = str(targname.name + "#" + targname.discriminator)
+
+        trigger = "Reaction"
 
     if not str(namestr) in str(kinkdata):
+
+        if targname.bot:
+
+            if "Gothica" in targname.name:
+
+                await outputchannel.send(embed = discord.Embed(title = "You have attempted to check our kinks?", description = "Your mind is overwhelmed with possibilities you can scarecly comprehend. Take " + str(random.randint(8, 42)) + " psychic damage.", colour = embcol))
+
+            else:
+
+                await outputchannel.send(embed = discord.Embed(title = "You may not view the kinklist of the server bots.", description = "If the bot you were checking was a tupper, try the tupper's author instead.", colour = embcol))
+
+        else:
         
-        await message.channel.send(embed = discord.Embed(title = "Could not find " + namestr.split("#")[0] + "'s kink list", description = "Make sure that <@" + str(targname.id) + "> has completed the kink survey."))
+            await outputchannel.send(embed = discord.Embed(title = "Could not find " + namestr.split("#")[0] + "'s kink list", description = "Make sure that <@" + str(targname.id) + "> has completed the kink survey.", colour = embcol))
         
     else:
         playerindex = [row[1] for row in kinkdata].index(namestr)
@@ -79,70 +105,65 @@ async def kinklist(message):
                  categoryEmbedString[entryIndex] = f"`{entryIndex + 1}`: {categoryEmbedString[entryIndex]}"
 
         #Send the embed.
-        kinkemb = discord.Embed(title = namestr + "'s kink list:", description = "**General Preferences:**" +\
-            generalPrefString +\
-            "\n\n**Kink Overview:**\n" +\
-            namestr +\
-            "'s general thoughts on each category of kink are shown below. We have then taken their average response in each category, and included that information in brackets.\n*As always, you should check with your rp partners regarding hard and soft limits for any particular scene.*\n\n*To see more detail on any of the below categories, type the corresponding number*\n\n" +\
-            "\n".join(categoryEmbedString), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}")
 
-        await message.channel.send(embed = kinkemb)
-        
-        await message.delete()
+        if trigger == "Command":
 
-        try:
+            kinkemb = discord.Embed(title = namestr + "'s kink list:", description = "**General Preferences:**" +\
+                generalPrefString +\
+                "\n\n**Kink Overview:**\n" +\
+                namestr +\
+                "'s general thoughts on each category of kink are shown below. We have then taken their average response in each category, and included that information in brackets.\n*As always, you should check with your rp partners regarding hard and soft limits for any particular scene.*\n\n*To see more detail on any of the below categories, type the corresponding number*\n\n" +\
+                "\n".join(categoryEmbedString), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}")
 
-            msg = await client.wait_for('message', timeout = 30, check = check(message.author))
+            await message.delete()
 
-        except asyncio.exceptions.TimeoutError:
-
-            await message.channel.send("Message Timed Out")
-
-            pass
-
-        #If the user answered with a number, display the subcategory of the kinksheet.    
-        try:
-
-            sel = int(msg.content)
-
-            #Prepare the string containing the kinks and their ratings
-            kinkrange = [categoryIndex[categories.index(printCategories[sel-1])], categoryIndex[categories.index(printCategories[sel-1]) + 1]]
-            kinkratingString = ""
-            for index in range(kinkrange[0], kinkrange[1]):
-                rating = kinkdata[playerindex][index].replace("Fave", "**Fave**").replace("Kink", "**Kink**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__")
-                kinkratingString += f"\n{kinkdata[1][index]}: {rating}"
-            
-            
-            await msg.delete()
+            await outputchannel.send(embed = kinkemb)
 
             try:
-                
-                #Perpare the index for the part of the string with the averages.
-                if printCategories[sel-1] in printCategoriesWithAvg:
-                    #Fetch the average and user set rating for this category.
-                    avgRating = categoryAverages[printCategoriesWithAvg.index(printCategories[sel-1])]
-                    userRating = kinkdata[playerindex][categoryIndex[tmp] + (sel-1) - 2]    #-2 is a magic number and symbolises the amount of categories that (except for Gen Pref and Categories) do not have an average before the first that does. 
-                    #At the time of wrinting this, categories are "General Preferences"[0], "Categories"[1], "Bodyparts"[2], "Relationships"[3], "Physical Dominance"[4]. Gen Pref and Categories are not in our array, so "Bodyparts" and "Relationships" are the 2 categories that need to be skipped.
 
-                    kinkemb2 = discord.Embed(title = namestr.split("#")[0] + "'s kink list:", description = f"**{printCategories[sel-1]}:**\n\n {kinkratingString} \n\nOverall, " + namestr.split("#")[0] + str(" rates this category as " + str(userRating.replace("Fave", "**Fave**").replace("Kink", "**Kink**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__").replace("as Likes", "as something they generally like"))), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}")
-                
-                else:
-                    kinkemb2 = discord.Embed(title = namestr.split("#")[0] + "'s kink list:", description = f"**{printCategories[sel-1]}:**\n\n {kinkratingString}", colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}")
+                msg = await client.wait_for('message', timeout = 30, check = check(message.author))
 
-            except IndexError:
+            except asyncio.exceptions.TimeoutError:
 
-                kinkemb2 = discord.Embed(title = "That is not a number of a category to view.", description = "The categories range from 1 to 11.", colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}")
+                await message.channel.send("Message Timed Out")
 
-            await message.channel.send(embed = kinkemb2)
+                pass
 
-        except ValueError:
+            try:
 
-            pass
+                sel = int(msg.content)
 
-        except TimeoutError:
+                await msg.delete()
 
-            pass
+            except TimeoutError:
 
+                sel = 0
+
+            except UnboundLocalError:
+
+                sel = 0
+
+            foot = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}"
+
+            await Kinklistdetail(categoryIndex, categories, printCategories, sel, kinkdata, playerindex, printCategoriesWithAvg, categoryAverages, tmp, namestr, outputchannel, foot)
+
+        else:
+
+            kinkemb = discord.Embed(title = namestr + "'s kink list:", description = "**General Preferences:**" +\
+                generalPrefString +\
+                "\n\n**Kink Overview:**\n" +\
+                namestr +\
+                "'s general thoughts on each category of kink are shown below. We have then taken their average response in each category, and included that information in brackets.\n*As always, you should check with your rp partners regarding hard and soft limits for any particular scene.*\n\n" +\
+                "\n".join(categoryEmbedString), colour = embcol)
+
+            await outputchannel.send(embed = kinkemb)
+
+            for cat in range(len(categories)):
+
+                await Kinklistdetail(categoryIndex, categories, printCategories, int(cat)+1, kinkdata, playerindex, printCategoriesWithAvg, categoryAverages, tmp, namestr, outputchannel, "")
+        
+
+        #If the user answered with a number, display the subcategory of the kinksheet.   
 
 
 #Allows to edit the kinklist. Moderators can tag someone and edit someone elses kinks.
@@ -805,7 +826,6 @@ async def kinkencounter(message):
 
                 await message.channel.send("Room not found")
 
-
 #Assist the author in generating their kinklist if they don't already have one.
 async def kinksurvey(message):
     
@@ -1053,7 +1073,7 @@ async def kinksurvey(message):
 
     return
 
-#compares the kinklist of tagged persons
+#Compares the kinklist of tagged persons
 async def kinkcompare(message):
     #Fetch relevant data
     kinkdata, namestr, targname = await getKinkData(message)
@@ -1162,40 +1182,56 @@ async def getKinkData(message):
     namestr = str(targname.name + "#" + targname.discriminator)
     return kinkdata, namestr, targname
 
-#Converts loaded kinkdata into numerical values.
-async def getKinkDataNumerical(kinkdata, targname):
-    for a in range(len(kinkdata)):
-            if a != 0:
-                if str(targname) == str(kinkdata[a][1]):
-                    #Convert to Numbers
-                    kinkdatanum = copy.deepcopy(kinkdata[a])
-                    for b in range(4, len(kinkdata[1])):
-                        try:
-                            if kinkdata[a][b] == "Absolute Limit":
-                                kinkdatanum[b] = -3
-                            elif kinkdata[a][b] == "Hard Limit":
-                                kinkdatanum[b] = -2
-                                
-                            elif kinkdata[a][b] ==  "Soft Limit":
-                                kinkdatanum[b] = -1
-                            
-                            elif kinkdata[a][b] == "No Strong Emotions or Mixed":
-                                kinkdatanum[b] = 0
-                            
-                            elif kinkdata[a][b] == "Unsure or Exploring":
-                                kinkdatanum[b] = 1
-                            
-                            elif kinkdata[a][b] == "Likes":
-                                kinkdatanum[b] = 2
-                            
-                            elif kinkdata[a][b] == "Kink":
-                                kinkdatanum[b] = 3
-                            else:
-                                kinkdatanum[b] = 0
-                        except IndexError:
-                            kinkdatanum[b] = 0
-                    break
-    return kinkdatanum, a
+#Fetches name and ID of author, and loads the kinkdata from the sheet.
+async def getKinkDataReact(message):
+    kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
+
+    targname = message.author
+
+    namestr = str(targname.name + "#" + targname.discriminator)
+    return kinkdata, namestr, targname
+
+#Returns the secondary embed of Kinklist
+async def Kinklistdetail(categoryIndex, categories, printCategories, sel, kinkdata, playerindex, printCategoriesWithAvg, categoryAverages, tmp, namestr, outputchannel, foot):
+
+    #Prepare the string containing the kinks and their ratings
+    try:
+    
+        kinkrange = [categoryIndex[categories.index(printCategories[sel-1])], categoryIndex[categories.index(printCategories[sel-1]) + 1]]
+        kinkratingString = ""
+        for index in range(kinkrange[0], kinkrange[1]):
+            rating = kinkdata[playerindex][index].replace("Fave", "**Fave**").replace("Kink", "**Kink**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__")
+            kinkratingString += f"\n{kinkdata[1][index]}: {rating}"
+
+        try:
+            
+            #Perpare the index for the part of the string with the averages.
+            if printCategories[sel-1] in printCategoriesWithAvg:
+                #Fetch the average and user set rating for this category.
+                avgRating = categoryAverages[printCategoriesWithAvg.index(printCategories[sel-1])]
+                userRating = kinkdata[playerindex][categoryIndex[tmp] + (sel-1) - 2]    #-2 is a magic number and symbolises the amount of categories that (except for Gen Pref and Categories) do not have an average before the first that does. 
+                #At the time of wrinting this, categories are "General Preferences"[0], "Categories"[1], "Bodyparts"[2], "Relationships"[3], "Physical Dominance"[4]. Gen Pref and Categories are not in our array, so "Bodyparts" and "Relationships" are the 2 categories that need to be skipped.
+
+                kinkemb2 = discord.Embed(title = namestr.split("#")[0] + "'s kink list:", description = f"**{printCategories[sel-1]}:**\n\n {kinkratingString} \n\nOverall, " + namestr.split("#")[0] + str(" rates this category as " + str(userRating.replace("Fave", "**Fave**").replace("Kink", "**Kink**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__").replace("as Likes", "as something they generally like"))), colour = embcol).set_footer(text = foot)
+            
+            else:
+                kinkemb2 = discord.Embed(title = namestr.split("#")[0] + "'s kink list:", description = f"**{printCategories[sel-1]}:**\n\n {kinkratingString}", colour = embcol).set_footer(text = foot)
+
+        except IndexError:
+
+            if sel == 0:
+
+                pass
+            
+            else:
+
+                kinkemb2 = discord.Embed(title = "That is not a number of a category to view.", description = "The categories range from 1 to 11.", colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}")
+
+        await outputchannel.send(embed = kinkemb2)
+
+    except IndexError:
+
+        pass
 
 #Returns valuable information about the kinklist itself like categories, kinks per category, the index of each category in the overall kinks and the amount of player information entries.
 async def getCategoryData(kinkdata):
