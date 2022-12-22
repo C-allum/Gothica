@@ -4167,7 +4167,17 @@ async def on_message(message):
 
                 if message.author.name != "C_allum":
 
-                    await message.add_reaction('\N{EYES}')
+                    if random.randint(1,100) != 100:
+
+                        await message.add_reaction('\N{EYES}')
+
+                    else:
+
+                        await message.add_reaction('\N{tentacle}')
+
+                else:
+
+                    await message.add_reaction('\N{hearts}')
 
             #Dating Game
 
