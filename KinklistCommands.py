@@ -100,8 +100,8 @@ async def kinklist(message, outputchannel, trigger):
             else:
                  categoryEmbedString[entryIndex] = f"`{entryIndex + 1}`: {categoryEmbedString[entryIndex]}"
 
-        #Send the embed.
-
+        #Send the embed. Discern between the sources of the request. If requested by command, send the embed to the channel where the command was called and only send the general preferences first with a selector.
+        
         if trigger == "Command":
 
             kinkemb = discord.Embed(title = namestr + "'s kink list:", description = "**General Preferences:**" +\
@@ -112,37 +112,27 @@ async def kinklist(message, outputchannel, trigger):
                 "\n".join(categoryEmbedString), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}")
 
             await message.delete()
-
             await outputchannel.send(embed = kinkemb)
 
             try:
-
                 msg = await client.wait_for('message', timeout = 30, check = check(message.author))
-
             except asyncio.exceptions.TimeoutError:
-
                 await message.channel.send("Message Timed Out")
-
                 pass
 
             try:
-
                 sel = int(msg.content)
-
                 await msg.delete()
-
             except TimeoutError:
-
                 sel = 0
-
             except UnboundLocalError:
-
                 sel = 0
 
             foot = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}"
-
+            #If the user answered with a number, display the subcategory of the kinksheet.
             await Kinklistdetail(categoryIndex, categories, printCategories, sel, kinkdata, playerindex, printCategoriesWithAvg, categoryAverages, tmp, namestr, outputchannel, foot)
 
+        #If the kinklist was summoned by react, we want to send all categories to their DMs
         else:
 
             kinkemb = discord.Embed(title = namestr + "'s kink list:", description = "**General Preferences:**" +\
@@ -155,11 +145,10 @@ async def kinklist(message, outputchannel, trigger):
             await outputchannel.send(embed = kinkemb)
 
             for cat in range(len(categories)):
-
                 await Kinklistdetail(categoryIndex, categories, printCategories, int(cat)+1, kinkdata, playerindex, printCategoriesWithAvg, categoryAverages, tmp, namestr, outputchannel, "")
         
 
-        #If the user answered with a number, display the subcategory of the kinksheet.   
+           
 
 
 #Allows to edit the kinklist. Moderators can tag someone and edit someone elses kinks.
