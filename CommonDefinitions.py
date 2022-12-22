@@ -43,6 +43,8 @@ from pyasn1_modules.rfc2459 import ExtensionPhysicalDeliveryAddressComponents, N
 from pyasn1_modules.rfc5208 import PrivateKeyInfo
 from random import sample
 
+import botTokens
+
 intents = discord.Intents().all()
 
 client = discord.Client(intents = intents)
@@ -54,7 +56,7 @@ print(" Initialised {0.user} at ".format(client) + str(datetime.now()).split("."
 #-----------------LIVE VERSION/BETA TOGGLE---------------
 liveVersion = 1
 
-
+botTokens.gettoken(liveVersion)
 
 #Sheet Locations:
 
@@ -74,8 +76,6 @@ if liveVersion: #Set to 1 to use the real spreadsheets, or 0 to use the testing 
 
     Plotsheet = "17ZTklwFnnrVk1qeZLOnEK6YacNQusRljUxaSXTvPDWU"
 
-    token = "ODc2NDQwOTgwMzU2NzU1NDU2.Gyiw88.iUjK58iowTeWOxVDTcSxyZEPbWj2jMQoFSAGAY" # Main Gothica Bot
-
     logchannel = 918257057428279326
 
 else:
@@ -94,14 +94,9 @@ else:
 
     Plotsheet = "17ZTklwFnnrVk1qeZLOnEK6YacNQusRljUxaSXTvPDWU" #No change as yet
 
-    token = "OTIxNTQwNzQ4MDM2NDExNDYy.Gbz1YS.p3F8XyrZdDHHCQB-XlQ5vAlAwqH6yWA2tcGGa4" # Gothica Beta
-    #token = "MTAzMDU2NjI1MDAxMjc1ODAyNg.GAzgsF.Lu_RbIORriRXr2GEI_bCT6R9ta9YJbjWYQak0M" #Ken Gothy
-
     logchannel = 1031701327169998958 #Test Server
 
 SERVICE_ACCOUNT_FILE = "keys.json"
-
-#SERVICE_ACCOUNT_FILE = "D:\Callum\Documents\\2021\Discord Botting\Hunting\keys.json"
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
