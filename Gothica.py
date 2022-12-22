@@ -784,7 +784,7 @@ async def on_message(message):
 
             #Kink Functions
             elif message.content.lower().startswith(str(myprefix) + "kinklist"):
-                await KinklistCommands.kinklist(message, message.channel)
+                await KinklistCommands.kinklist(message, message.channel, "Command")
             elif message.content.lower().startswith(str(myprefix) + "kinkedit"):
                 await KinklistCommands.kinkedit(message)
             elif message.content.lower().startswith(str(myprefix) + "kinkplayers"):
@@ -4819,7 +4819,7 @@ async def on_raw_reaction_add(reaction):
 
         mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
 
-        await KinklistCommands.kinklist(mess, dmchannel)
+        await KinklistCommands.kinklist(mess, dmchannel, "Reaction")
 
     #else:
 

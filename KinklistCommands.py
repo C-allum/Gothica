@@ -6,7 +6,7 @@ participationOptions = ["Submissive", "Dominant", "Voyeur", "Switch", "Submissiv
 categoriesWithoutAverage = ['General Preferences', 'Categories', 'Body Parts', 'Relationships', 'Additional Kinks and Limits']
 
 #Displays the kinklist of the author, or another user if they are tagged.
-async def kinklist(message, outputchannel):
+async def kinklist(message, outputchannel, trigger):
 
     if "kinklist" in message.content:
 
@@ -16,8 +16,6 @@ async def kinklist(message, outputchannel):
 
         namestr = str(targname.name + "#" + targname.discriminator)
 
-        trigger = "Command"
-
     else: #Triggered by reaction.
 
         kinkdata, namestr, targname = await getKinkDataReact(message)
@@ -25,8 +23,6 @@ async def kinklist(message, outputchannel):
         categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
 
         namestr = str(targname.name + "#" + targname.discriminator)
-
-        trigger = "Reaction"
 
     if not str(namestr) in str(kinkdata):
 
