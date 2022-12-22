@@ -8,7 +8,7 @@ categoriesWithoutAverage = ['General Preferences', 'Categories', 'Body Parts', '
 #Displays the kinklist of the author, or another user if they are tagged.
 async def kinklist(message, outputchannel, trigger):
 
-    if "kinklist" in message.content:
+    if trigger == "Command":
 
         kinkdata, namestr, targname = await getKinkData(message)
 
