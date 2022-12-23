@@ -6,6 +6,7 @@ participationOptions = ["Submissive", "Dominant", "Voyeur", "Switch", "Submissiv
 categoriesWithoutAverage = ['General Preferences', 'Categories', 'Body Parts', 'Relationships', 'Additional Kinks and Limits']
 
 #Displays the kinklist of the author, or another user if they are tagged.
+#NOTE: IF WE EVER APPEND NEW KINKS TO THE KINKLIST, DON'T ADD THEM AT THE END OF A CATEGORY! THAT BREAKS LIST LENGTHS
 async def kinklist(message, outputchannel, trigger):
 
     if trigger == "Command":
@@ -57,7 +58,7 @@ async def kinklist(message, outputchannel, trigger):
                 try:
                     categorySum += len(kinkOptions) - int(kinkOptions.index(kinkdata[playerindex][currentKinkIndex]))     #Invert scale so fave = 10 and hardlimit = 1
                 except ValueError:
-                    categorySum = 5
+                    categorySum += 5
                 currentKinkIndex += 1
             try:
                 categoryAverages.append(kinkOptions[len(kinkOptions) - round(categorySum/categoryKinkCount)].replace("Fave", "**Fave**").replace("Kink", "**Kink**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__").replace("Never heard of it", "No Strong Emotions"))
@@ -118,7 +119,7 @@ async def kinklist(message, outputchannel, trigger):
                 msg = await client.wait_for('message', timeout = 30, check = check(message.author))
             except asyncio.exceptions.TimeoutError:
                 await message.channel.send("Message Timed Out")
-                pass
+                return
 
             try:
                 sel = int(msg.content)
@@ -147,10 +148,6 @@ async def kinklist(message, outputchannel, trigger):
             for cat in range(len(categories)):
                 await Kinklistdetail(categoryIndex, categories, printCategories, int(cat)+1, kinkdata, playerindex, printCategoriesWithAvg, categoryAverages, tmp, namestr, outputchannel, "")
         
-
-           
-
-
 #Allows to edit the kinklist. Moderators can tag someone and edit someone elses kinks.
 async def kinkedit(message):
 
