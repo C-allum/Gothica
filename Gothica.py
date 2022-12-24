@@ -797,7 +797,8 @@ async def on_message(message):
                 await KinklistCommands.kinkhelp(message)
             elif message.content.lower().startswith(str(myprefix) + "kinkcompare"):
                 await KinklistCommands.kinkcompare(message)
-
+            elif message.content.lower().startswith(str(myprefix) + "kinkfill"):
+                await KinklistCommands.kinkfill(message)
             #Start
             
             elif message.content.lower().startswith(str(myprefix) + "start"):
@@ -4168,16 +4169,12 @@ async def on_message(message):
                 if message.author.name != "C_allum":
 
                     if random.randint(1,100) != 100:
-
-                        await message.add_reaction('\N{EYES}')
-
+                        await message.add_reaction('👀')
                     else:
-
-                        await message.add_reaction('\N{tentacle}')
+                        await message.add_reaction('<:tentacle:830675670711402506>')
 
                 else:
-
-                    await message.add_reaction('\N{hearts}')
+                    await message.add_reaction('♥️')
 
             #Dating Game
 

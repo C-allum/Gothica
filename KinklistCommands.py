@@ -176,11 +176,11 @@ async def kinkedit(message):
 
                 if "@" in message.content:
 
-                    searchterm = message.content.lower().split(" ", 2)[2]
+                    searchterm = message.content.lower().split(" ", 2)[2].replace("zation", "sation")
 
                 else:
 
-                    searchterm = message.content.lower().split(" ", 1)[1]
+                    searchterm = message.content.lower().split(" ", 1)[1].replace("zation", "sation")
 
             except IndexError:
 
@@ -814,15 +814,32 @@ async def kinkencounter(message):
 
 #Assist the author in generating their kinklist if they don't already have one.
 async def kinksurvey(message):
-    
+    retakeSurvey = 0    #Flag to mark that the user is taking the survey a second time, overwriting his last results
+    playerIndex = -1 #Contains the line number in the google sheet, in case they are retaking the survey - We need to overwrite the previous result
     kinkdata, namestr, targname = await getKinkData(message)
     if str(message.channel.id) != kinkcreatechannel:
         await message.channel.send(embed = discord.Embed(title = "This is not the place to talk about that.", description = f"We will gladly talk about your deepest desires, <@{targname.id}>. We prefer a bit of privacy for that however. Please use the <#{kinkcreatechannel}> channel to call this command."))
         return
     if str(targname) in str(kinkdata):
 
-        await message.channel.send(embed = discord.Embed(title = "We already know your deepest desires", description = f"Your kinklist is already registered with us, <@{targname.id}>. If you want to edit it, use %kinkedit"))
-        return
+        await message.channel.send(embed = discord.Embed(title = "We already know your deepest desires", description = f"Your kinklist is already registered with us, <@{targname.id}>. If you want to take the whole survey again reply `1`, otherwise reply `0`.\n If you want to edit it a single kink, use %kinkedit."))
+        #See if the user wants to retake the survey
+        try:
+            msg = await client.wait_for('message',  check = check(message.author), timeout=30)
+        except asyncio.TimeoutError:
+            await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+            return
+
+        await msg.delete() 
+
+        #Set the flag to retake the survey, otherwise return
+        if(msg.content == "1"):
+            retakeSurvey = 1
+            playerIndex = [row[1] for row in kinkdata].index(namestr)
+        elif msg.content == "0":
+            return
+        else:
+            return
 
 
     threadid = await message.create_thread(name= "Kinklist Survey: " + namestr.split("#", 1)[0])
@@ -1015,7 +1032,7 @@ async def kinksurvey(message):
 
             elif "Additional" in kinkname: #Additional kinks/limits section
                 try:
-                    print
+                    
                     await threadid.send(embed = discord.Embed(title = f"{categoryName} ({x+1}/{len(categories)}): \nQuestion {y+1}/{categoryKinkCount}: {kinkname}", description = f"Do you have any {kinkname} you want to add? List them here! If there aren't any, put \"none\"."))
                     messagefound = False
                     while messagefound == False:
@@ -1023,6 +1040,8 @@ async def kinksurvey(message):
                         if msg2.channel == threadid:
                             messagefound = True
                     pref = str(msg2.content)
+                    if pref == "":
+                        pref = "none"
                 except asyncio.TimeoutError:
                 
                     await threadid.channel.send("Message timed out")
@@ -1053,8 +1072,10 @@ async def kinksurvey(message):
     await threadid.send(embed = discord.Embed(title = "Kink Survey", description = "That concludes the kink survey! Thank you for your time. If you change your mind on anything I just asked you about, you can request us to change it with %kinkedit."))
 
     kinkdata, namestr, targname = await getKinkData(message)
-    sheet.values().update(spreadsheetId = kinksheet, range = f"A{len(kinkdata)+1}", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[newKinklist])).execute()
-
+    if retakeSurvey == 0:
+        sheet.values().update(spreadsheetId = kinksheet, range = f"A{len(kinkdata)+1}", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[newKinklist])).execute()
+    else:
+        sheet.values().update(spreadsheetId = kinksheet, range = f"A{playerIndex+1}", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[newKinklist])).execute()
    
 
     return
@@ -1146,6 +1167,193 @@ async def kinkhelp(message):
     await message.channel.send(embed = discord.Embed(title = "Kinklist Help", description = f"*This is the %kinkhelp command! To start the kinklist survey, use the %kinksurvey command.\n If you have already filled out the survey, you can look at your kinklist with the %kinklist command, or edit it with the %kinkedit command. Furthermore you can search for users with a certain kink using the %kinkplayers [kink] command, or look at someone else's list with %kinklist [@username]. You can also compare kinklists of two or more people with the %kinkcompare [@username1] [@username2] [@username3 (OPTIONAL] command. You can compare 2 or more peoples kinklist with that to navigate scenes easier. Finally, the %lfg [hours of access] allows you access to the lfg channel for as many hours as you specify. There you can use %kinkplayers [kink] in a different way! We will not only tell you who likes the specified kink, but also tag the people that are also present in the channel, so you have an easier time looking for roleplays with a certain kink.*").set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}"))
     await message.delete()
 
+async def kinkfill(message):
+    kinkdata, namestr, targname = await getKinkData(message)
+    categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
+    playerIndex = [row[1] for row in kinkdata].index(namestr)
+    playerKinkData = kinkdata[playerIndex]
+    missingKinks = []   #list of missing kinks
+
+    #Fill the dictionary
+    for i in range(3, len(kinkdata[1])):
+        if playerKinkData[i] == "":
+            missingKinks.append((i, kinkdata[1][i]))   #Save the number of the kink, and the kinkname in the list.
+
+    if len(missingKinks) == 0:
+        return
+    threadid = await message.create_thread(name= "Kinklist Completion: " + namestr.split("#", 1)[0])
+
+
+    for i in range (0, len(missingKinks)):
+        kinkname = missingKinks[i][1]
+        kinknumber = missingKinks[i][0]
+
+        #present the kink that is missing
+        if not "Role" in kinkname and not "Additional" in kinkname:   #Everything but the "If you are Role" questions
+            embedstring = f"What are your feelings about {kinkname}?\n\n"
+
+            for z in range(0, len(kinkOptions)): #Add the answer options to the embed
+                embedstring = embedstring + f"`{z+1}`: {kinkOptions[z]}\n"
+            await threadid.send(embed = discord.Embed(title = f"({i+1}/{len(missingKinks)}) : {kinkname}", description = embedstring, colour = embcol))
+
+            #Ask for a response
+            continueToNext = False  #This will be set to true when the user entered a correct value
+            failcount = 0
+            while continueToNext == False:
+                try:
+                    messagefound = False
+                    while messagefound == False:
+                        msg2 = await client.wait_for('message', check = check(message.author))
+                        if msg2.channel == threadid:
+                            messagefound = True
+
+                    msg = int(msg2.content)
+
+                    try:
+                        #options = ["Kink", "Likes", "Unsure or Exploring", "No Strong Emotions", "Soft Limit", "Hard Limit", "Absolute Limit"]
+                        pref = kinkOptions[msg - 1]
+                        continueToNext = True
+                        try:
+                            await msg2.delete()
+                        except discord.errors.DiscordServerError:
+                            await threadid.send(embed = discord.Embed(title = "Oops...", description = f"We experienced an internal error with the eldritch spaghetti monster called discord-api... Trying to continue. If we stop responding, please restart the survey.", colour = embcol))
+
+                    except IndexError:
+                        failcount += 1
+
+                        try:
+                            await msg2.delete()
+                        except discord.errors.DiscordServerError:
+                            await threadid.send(embed = discord.Embed(title = "Oops...", description = f"We experienced an internal error with the eldritch spaghetti monster called discord-api... Trying to continue. If we stop responding, please restart the survey.", colour = embcol))
+
+                        if failcount < 3:
+                            await threadid.send(embed = discord.Embed(title = "Not a valid option", description = f"That isn't a valid option. This is fail number {failcount}/3. After 3 wrong selections the survey will cancel. Please try again.", colour = embcol))
+
+                        else:
+                            await threadid.send(embed = discord.Embed(title = "Not a valid option", description = "That isn't a valid option. Kink survey cancelled. Please try again. If this happens again and you can't figure out why this happened, please contact Kendrax or Callum.", colour = embcol))
+                            return
+
+                except asyncio.TimeoutError:
+                    await threadid.send(embed = discord.Embed(description ="Message timed out. Kink survey cancelled. Please try again. If this happens again and you don't figure out why, please contact Kendrax or Callum.", colour = embcol))
+
+                    return
+
+                except ValueError:
+                    failcount += 1
+
+                    try:
+                        await msg2.delete()
+                    except discord.errors.DiscordServerError:
+                        await threadid.send(embed = discord.Embed(title = "Oops...", description = f"We experienced an internal error with the eldritch spaghetti monster called discord-api... Trying to continue. If we stop responding, please restart the survey.", colour = embcol))
+
+                    if failcount < 3:
+                        await threadid.send(embed = discord.Embed(title = "Not a valid option", description = f"That isn't a valid option. This is fail number {failcount}/3. After 3 wrong selections the survey will cancel. Please try again.", colour = embcol))
+
+                    else:
+                        await threadid.send(embed = discord.Embed(title = "Not a valid option", description = "That isn't a valid integer. Kink survey cancelled. Please try again. If this happens again and you can't figure out why this happened, please contact Kendrax or Callum.", colour = embcol))
+                        return
+
+        elif "Role" in kinkname:
+            embedstring = f"What is your preferred role in {kinkname}?\n\n"
+
+            for z in range(0, len(participationOptions)): #Add the answer options to the embed
+                embedstring = embedstring + f"`{z+1}`: {participationOptions[z]}\n"
+            await threadid.send(embed = discord.Embed(title = f"({i+1}/{len(missingKinks)}) : {kinkname}", description = embedstring, colour = embcol))
+
+            #Ask for a response
+            continueToNext = False  #This will be set to true when the user entered a correct value
+            failcount = 0
+            while continueToNext == False:
+                try:
+                    messagefound = False
+                    while messagefound == False:
+                        msg2 = await client.wait_for('message', check = check(message.author))
+                        if msg2.channel == threadid:
+                            messagefound = True
+
+                    msg = int(msg2.content)
+
+                    try:
+                        #options = ["Kink", "Likes", "Unsure or Exploring", "No Strong Emotions", "Soft Limit", "Hard Limit", "Absolute Limit"]
+                        pref = participationOptions[msg - 1]
+                        continueToNext = True
+                        try:
+                            await msg2.delete()
+                        except discord.errors.DiscordServerError:
+                            await threadid.send(embed = discord.Embed(title = "Oops...", description = f"We experienced an internal error with the eldritch spaghetti monster called discord-api... Trying to continue. If we stop responding, please restart the survey.", colour = embcol))
+
+                    except IndexError:
+                        failcount += 1
+
+                        try:
+                            await msg2.delete()
+                        except discord.errors.DiscordServerError:
+                            await threadid.send(embed = discord.Embed(title = "Oops...", description = f"We experienced an internal error with the eldritch spaghetti monster called discord-api... Trying to continue. If we stop responding, please restart the survey.", colour = embcol))
+
+                        if failcount < 3:
+                            await threadid.send(embed = discord.Embed(title = "Not a valid option", description = f"That isn't a valid option. This is fail number {failcount}/3. After 3 wrong selections the survey will cancel. Please try again.", colour = embcol))
+
+                        else:
+                            await threadid.send(embed = discord.Embed(title = "Not a valid option", description = "That isn't a valid option. Kink survey cancelled. Please try again. If this happens again and you can't figure out why this happened, please contact Kendrax or Callum.", colour = embcol))
+                            return
+
+                except asyncio.TimeoutError:
+                    await threadid.send(embed = discord.Embed(description ="Message timed out. Kink survey cancelled. Please try again. If this happens again and you don't figure out why, please contact Kendrax or Callum.", colour = embcol))
+
+                    return
+
+                except ValueError:
+                    failcount += 1
+
+                    try:
+                        await msg2.delete()
+                    except discord.errors.DiscordServerError:
+                        await threadid.send(embed = discord.Embed(title = "Oops...", description = f"We experienced an internal error with the eldritch spaghetti monster called discord-api... Trying to continue. If we stop responding, please restart the survey.", colour = embcol))
+
+                    if failcount < 3:
+                        await threadid.send(embed = discord.Embed(title = "Not a valid option", description = f"That isn't a valid option. This is fail number {failcount}/3. After 3 wrong selections the survey will cancel. Please try again.", colour = embcol))
+
+                    else:
+                        await threadid.send(embed = discord.Embed(title = "Not a valid option", description = "That isn't a valid integer. Kink survey cancelled. Please try again. If this happens again and you can't figure out why this happened, please contact Kendrax or Callum.", colour = embcol))
+                        return
+
+        elif "Additional" in kinkname: 
+            try:
+                embedstring = f"Do you have any {kinkname} you want to add? List them here! If there aren't any, put \"none\"."
+
+                await threadid.send(embed = discord.Embed(title = f"({i+1}/{len(missingKinks)}) : {kinkname}", description = embedstring, colour = embcol))
+                messagefound = False
+                while messagefound == False:
+                    msg2 = await client.wait_for('message',  check = checkAuthor(message.author))
+                    if msg2.channel == threadid:
+                        messagefound = True
+                    pref = str(msg2.content)
+                    if pref == "":
+                        pref = "none"
+            except asyncio.TimeoutError:
+            
+                await threadid.channel.send("Message timed out")
+                kinksel = "Fail"
+                return
+            except ValueError:
+            
+                await threadid.channel.send("Something went wrong! ValueError.")
+                kinksel = "Fail"
+                try:
+                    await msg2.delete()
+                except discord.errors.DiscordServerError:
+                    await threadid.send(embed = discord.Embed(title = "Oops...", description = f"We experienced an internal error with the eldritch spaghetti monster called discord-api... Trying to continue. If we stop responding, please restart the survey.", colour = embcol))
+                return
+        await threadid.send(embed = discord.Embed(description = f"Registering {kinkname} as {pref}.", colour = embcol))
+        playerKinkData[kinknumber] = pref
+
+        
+
+
+    sheet.values().update(spreadsheetId = kinksheet, range = f"A{playerIndex+1}", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[playerKinkData])).execute()
+
+
+    return
 
 
 

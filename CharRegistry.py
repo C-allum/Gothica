@@ -933,7 +933,6 @@ async def charsearch(message):
             await message.channel.send(embed=emb)
 
     if multindexes != []:
-
         try:
 
             auth = message.author
@@ -993,8 +992,29 @@ async def charsearch(message):
 
                         emb.set_footer(text=foot)
 
+                        if imgurl != "":
+
+                            if imglen == 1:
+                            
+                                emb.set_image(url=imgurl)
+
+                            else:
+                            
+                                emb.set_image(url=imgurl[0])
+
+
                         await message.channel.send( embed= emb)
 
+                        
+                        if len(imgurl) > 1:
+
+                            for d in range(imglen-1):
+                            
+                                emb = discord.Embed(title = tit, description = "", colour = embcol)
+
+                                emb.set_image(url = imgurl[d+1])
+
+                                await message.channel.send(embed=emb)
                         break
 
             except TypeError or ValueError:
