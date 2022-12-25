@@ -1170,6 +1170,12 @@ async def kinkhelp(message):
 async def kinkfill(message):
     kinkdata, namestr, targname = await getKinkData(message)
     categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
+    
+    if not str(namestr) in str(kinkdata):
+
+        await message.channel.send(embed = discord.Embed(title = "Could not find " + namestr.split("#")[0] + "'s kink list", description = "Make sure that <@" + str(targname.id) + "> has completed the kink survey."))
+        return
+
     playerIndex = [row[1] for row in kinkdata].index(namestr)
     playerKinkData = kinkdata[playerIndex]
     missingKinks = []   #list of missing kinks
