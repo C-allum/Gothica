@@ -4116,51 +4116,24 @@ async def on_message(message):
 
                         print("Lorekeepers were pinged to run traps")
 
-            elif message.content.lower().startswith(str(myprefix) + "rembed"):
+            #Clone Channel
 
-                #mess = await client.get_channel(1008422338548736060).history(limit=500, oldest_first=True).flatten()
-                mess = [joinedMessages async for joinedMessages in client.get_channel(1008422338548736060).history(limit=500, oldest_first=True).flatten()] #Pebblehost msg history fix
-                for n in range(len(mess)):
-
-                    if mess[n].content != "":
-
-                        messn = mess[n].content.replace("***The Mistress***", "***T̶̡͚͊̒̈́̇̉͑̏͑̚h̴̬̓̔̈́̈́͝ȩ̵̢͖̮̻̻̰̟͔̗̃̈́͝ ̴̡͈̦̯͗̈͋͗̈́̾̍̉̄M̷̰̬̜̜̪͆̉͗̋͑̐̉̚͝͝i̴̡̛̦͍̦͈͉̯̻͇͑̒̊̋̾̔͠s̷̭̫̾͗͒̀́t̷̢͈̜͙̬̦͕͎̣̉̍̈́͋̊̎̾̂̌r̴̢̢͖͚̬̣̩̺̆͒̈́͛ȩ̸̜̠͖͖̼͓͍̯̫́͌͆̕s̶̘̺̻̖̲͔͌̓͗̒̆ͅs̶̛̤̻̭̤̰̅̇͌͗***")
-
-                        if len(messn) >= 2000:
-
-                            messns = messn.split(".")
-
-                            currmess = []
-
-                            for i in range(len(messns)):
-
-                                currmess.append(messns[i])
-
-                                try:
-
-                                    if len(".".join(currmess)) + len(messns[i+1]) > 2000:
-
-                                        rembed = discord.Embed(title = mess[n].author.name, description = ".".join(currmess), colour = embcol)
-
-                                        rembed.set_thumbnail(url = mess[n].author._avatar)
-
-                                        await message.channel.send(embed = rembed)
-
-                                        currmess = []
-
-                                except IndexError:
-
-                                    rembed = discord.Embed(title = mess[n].author.name, description = ".".join(currmess), colour = embcol)
-
-                                    rembed.set_thumbnail(url = mess[n].author._avatar)
-
-                                    await message.channel.send(embed = rembed)
-
-                                    currmess = []
-
-                        else:
-
-                            await message.channel.send(mess[n].author.name + ": " + messn)
+            elif message.content.lower().startswith(str(myprefix) + "clonechannel") and "lorekeeper" in str(message.author.roles).lower():
+                
+                await message.channel.send("Processing, please wait")
+                channelid = int(message.channel.id)
+                #mess = await client.get_channel(channelid).history(limit = None, oldest_first= True).flatten()
+                mess = await [joinedMessages async for joinedMessages in client.get_channel(channelid).history(limit = None, oldest_first= True).flatten()]
+                line = []
+                for a in range(len(mess)):
+                    if mess[a] == message:
+                        break
+                    line.append(mess[a].author.name + ": " + mess[a].content.replace("***The Mistress***", "***T̶̡͚͊̒̈́̇̉͑̏͑̚h̴̬̓̔̈́̈́͝ȩ̵̢͖̮̻̻̰̟͔̗̃̈́͝ ̴̡͈̦̯͗̈͋͗̈́̾̍̉̄M̷̰̬̜̜̪͆̉͗̋͑̐̉̚͝͝i̴̡̛̦͍̦͈͉̯̻͇͑̒̊̋̾̔͠s̷̭̫̾͗͒̀́t̷̢͈̜͙̬̦͕͎̣̉̍̈́͋̊̎̾̂̌r̴̢̢͖͚̬̣̩̺̆͒̈́͛ȩ̸̜̠͖͖̼͓͍̯̫́͌͆̕s̶̘̺̻̖̲͔͌̓͗̒̆ͅs̶̛̤̻̭̤̰̅̇͌͗***"))
+                filename = str(message.channel) + ".txt"
+                with open(filename, "w") as f:
+                    f.write("\n".join(line))
+                await message.channel.send(text = "We have attached a text log of this channel.", file = discord.File(r"" + filename))
+                os.remove(filename)
 
             #Impersonator React
 
