@@ -4122,7 +4122,6 @@ async def on_message(message):
                 
                 await message.channel.send("Processing, please wait")
                 channelid = int(message.channel.id)
-                #mess = await client.get_channel(channelid).history(limit = None, oldest_first= True).flatten()
                 mess = [joinedMessages async for joinedMessages in message.channel.history(limit = None, oldest_first= True)]
                 line = []
                 for a in range(len(mess)):
