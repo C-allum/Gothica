@@ -4132,8 +4132,10 @@ async def on_message(message):
                 filename = str(message.channel) + ".txt"
                 with open(filename, "w") as f:
                     f.write("\n".join(line))
+                f.close()
                 await message.channel.send("We have attached a text log of this channel.", file = discord.File(r"" + filename))
                 os.remove(filename)
+                del mess
 
             #Impersonator React
 
