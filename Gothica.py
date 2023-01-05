@@ -1126,6 +1126,7 @@ async def on_message(message):
             elif message.content.lower().startswith(str(myprefix) + "invest"):
 
                 devdata = sheet.values().get(spreadsheetId = "17ZTklwFnnrVk1qeZLOnEK6YacNQusRljUxaSXTvPDWU", range = "AS1:AX200", majorDimension='COLUMNS').execute().get("values")
+                row = devdata[0].index(str(message.channel))
 
                 if str(message.channel).lower() in str(devdata[0]).lower():
 
@@ -1190,8 +1191,6 @@ async def on_message(message):
                             except IndexError:
 
                                 devconts = ""
-
-                                print(devdata)
                              
                                 devdata[5].append("")
 
