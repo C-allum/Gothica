@@ -76,6 +76,8 @@ if liveVersion: #Set to 1 to use the real spreadsheets, or 0 to use the testing 
 
     Plotsheet = "17ZTklwFnnrVk1qeZLOnEK6YacNQusRljUxaSXTvPDWU"
 
+    Randomlootsheet = "19Dc4PI-E5OubesNroJfB4zKg9bqqqbdPelodjH6ecNw"
+
     logchannel = 918257057428279326
 
 else:
@@ -93,6 +95,8 @@ else:
     gamesheet = "1S8lCkyM5puEKLAR9tNV44kWeECjqaKKBx0BqMdn9ABA" #No change as yet
 
     Plotsheet = "17ZTklwFnnrVk1qeZLOnEK6YacNQusRljUxaSXTvPDWU" #No change as yet
+
+    Randomlootsheet = "19Dc4PI-E5OubesNroJfB4zKg9bqqqbdPelodjH6ecNw"
 
     logchannel = 1031701327169998958 #Test Server
 
@@ -169,6 +173,21 @@ weeklyDezziePoolP3 = 1000
 weeklyDezzieBonusFucksmith = 500
 weeklyDezzieBonusBoost = 100
 weeklyDezzieBonusVeteran = 100
+
+sellpricemultiplier = 0.5 #Use this to change how much things are sold for, relative to their purchase price
+
+#----------------KinkValues----------------
+
+rarities = ["Common", "Uncommon", "Rare", "Very Rare", "Legendary"]
+
+commonpercent = 30
+uncommonpercent = 70
+rarepercent = 95
+veryrarepercent = 98
+
+limitloopmax = 5 #The number of attempts to generate loot if limits are found
+
+races = ["dragonborn", "dwarf", "elf", "gnome", "half-elf", "halfling", "half-orc", "human", "tiefling", "leonin", "satyr", "owlin", "aarakocra", "aasimar", "air genasi", "bugbear", "centaur", "changeling", "deep gnome", "duergar", "earth genasi", "eladrin", "fairy", "firbolg", "fire genasi", "githyanki", "githzerai", "goblin", "goliath", "harengon", "hobgoblin", "kenku", "kobold", "lizardfolk", "minotaur", "orc", "sea elf", "shadar-kai", "shifter", "tabaxi", "tortle", "triton", "water genasi", "yuan-ti", "kalashtar", "warforged", "astral elf", "autognome", "giff", "hadozee", "plasmoid", "loxodon", "simic hybrid", "vedalken", "verdan", "locathah", "grung", "babbage", "seedling", "chakara"]
 
 #---------------------------------------------
 

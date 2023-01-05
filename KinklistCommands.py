@@ -1361,6 +1361,55 @@ async def kinkfill(message):
 
     return
 
+#Generates Random Loot, tailored to kinklist
+async def randloot(message):
+    kinkdata, namestr, targname = await getKinkData(message)
+    playerIndex = [row[1] for row in kinkdata].index(namestr)
+    playerKinkData = kinkdata[playerIndex]
+    try:
+        rarityroll = int(message.content.split(">")[1])
+    except IndexError or ValueError:
+        rarityroll = random.randint(1,100)
+    if rarityroll <= commonpercent:
+        rarity = "Common"
+        rarityrange = "A3:G100"
+    elif rarityroll <= uncommonpercent:
+        rarity = "Uncommon"
+        rarityrange = "I3:O100"
+    elif rarityroll <= rarepercent:
+        rarity = "Rare"
+        rarityrange = "Q3:W100"
+    elif rarityroll <= veryrarepercent:
+        rarity = "Very Rare"
+        rarityrange = "Y3:AE100"
+    else:
+        rarity = "Legendary"
+        rarityrange = "AG3:AM100"
+    randomloot = sheet.values().get(spreadsheetId = Randomlootsheet, range = rarityrange, majorDimension='ROWS').execute().get("values")
+    for a in range(limitloopmax): #Limit avoidance loop
+        lootindex = random.randint(0,len(randomloot)-1)
+        kinks = []
+        try:
+            reqkinks = randomloot[lootindex][6].split("|")
+        except IndexError:
+            reqkinks = ""
+        for b in range(len(reqkinks)):
+            kinks.append(reqkinks[b] + ": " + playerKinkData[kinkdata[1].index(reqkinks[b])])
+        if (not "Limit" in "".join(kinks)) and (not "Not my Thing" in "".join(kinks)):
+            break
+
+    #Loot Randomisation Functions
+    lootTitle = str(randomloot[lootindex][0])
+    lootDesc = str(randomloot[lootindex][3])
+    lootValue = str(randomloot[lootindex][4])
+
+    if ("Limit" in "".join(kinks)) or ("Not my Thing" in "".join(kinks)):
+        await message.channel.send(embed = discord.Embed(title = "Random Loot Generation Failed", description = "We were unable to find a " + rarity + " item that was not a limit for " + namestr + ".\nTry again, specifying the rarity to a different value?\n\nCurrent rarity settings are:\n\nCommon: 1-" + str(commonpercent) + "\nUncommon: " + str(commonpercent+1) + "-" + str(uncommonpercent)+ "\nRare: " + str(uncommonpercent+1) + "-" + str(rarepercent)+ "\nVery Rare: " + str(rarepercent+1) + "-" + str(veryrarepercent)+ "\nLegendary: " + str(veryrarepercent+1) + "-100", colour = embcol))
+    elif reqkinks != "":
+        await message.channel.send(embed = discord.Embed(title = "Random Loot Generation", description = "Random loot generated and compared to " + namestr + "'s kinks:\n\n**" + lootTitle + ":**\n*" + str(randomloot[lootindex][1]) + " - " + rarity + "*\n" + lootDesc + "\n\nIt is worth " + lootValue + dezzieemj + "\n\n-------------------------------------------------------------------------------\n\nHere is how the associated kinks compares with " + namestr + "'s preferences:\n\n" + "\n".join(kinks) + "\n\nRolls: Rarity d100:" + str(rarityroll) + ", Item index: " + str(lootindex), colour = embcol))
+    else:
+        await message.channel.send(embed = discord.Embed(title = "Random Loot Generation", description = "Random loot generated and compared to " + namestr + "'s kinks:\n\n**" + lootTitle + ":**\n*" + str(randomloot[lootindex][1]) + " - " + rarity + "*\n" + lootDesc + "\n\nIt is worth " + lootValue + dezzieemj + "\n\n-------------------------------------------------------------------------------\n\nThere are no kinks associated with this item" + "\n\nRolls: Rarity d100:" + str(rarityroll) + ", Item index: " + str(lootindex), colour = embcol))
+    await message.delete()  
 
 
 #---------------------------Helper Functions---------------------------------
