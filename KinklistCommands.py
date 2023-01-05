@@ -1399,8 +1399,22 @@ async def randloot(message):
             break
 
     #Loot Randomisation Functions
-    lootTitle = str(randomloot[lootindex][0])
-    lootDesc = str(randomloot[lootindex][3])
+    randrace = random.choice(races)
+    randcol = random.choice(colours)
+    #Dice
+    d4 = random.randint(1,4)
+    d6 = random.randint(1,6)
+    d8 = random.randint(1,8)
+    d10 = random.randint(1,10)
+    d12 = random.randint(1,12)
+    d2x4 = random.randint(2,8)
+    d2x6 = random.randint(2,12)
+    d2x8 = random.randint(2,16)
+    d2x10 = random.randint(2,20)
+    d2x12 = random.randint(2,24)
+    
+    lootTitle = str(randomloot[lootindex][0]).replace("[race]", randrace).title()
+    lootDesc = str(randomloot[lootindex][3]).replace("[race]", randrace).replace("[colour]", randcol).replace("[1d4]", str(d4)).replace("[1d6]", str(d6)).replace("[1d8]", str(d8)).replace("[1d10]", str(d10)).replace("[1d12]", str(d12))
     lootValue = str(randomloot[lootindex][4])
 
     if ("Limit" in "".join(kinks)) or ("Not my Thing" in "".join(kinks)):
@@ -1410,6 +1424,21 @@ async def randloot(message):
     else:
         await message.channel.send(embed = discord.Embed(title = "Random Loot Generation", description = "Random loot generated and compared to " + namestr + "'s kinks:\n\n**" + lootTitle + ":**\n*" + str(randomloot[lootindex][1]) + " - " + rarity + "*\n" + lootDesc + "\n\nIt is worth " + lootValue + dezzieemj + "\n\n-------------------------------------------------------------------------------\n\nThere are no kinks associated with this item" + "\n\nRolls: Rarity d100:" + str(rarityroll) + ", Item index: " + str(lootindex), colour = embcol))
     await message.delete()  
+
+    #Update inventory
+    userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ2000", majorDimension = 'ROWS').execute().get("values")
+    for c in range(math.ceil(len(userinvs)/4)):
+        d = 4 * c
+        if str(message.author) in userinvs[d][0]:
+            rowindex = d
+            break
+    if len(userinvs[rowindex]) > 25:
+        collet = chr(65 + math.floor(len(userinvs[rowindex]) / 26))
+    else:
+        collet = ""                        
+    collet += chr(65 + (int(len(userinvs[rowindex]))))
+    lootarray = [lootTitle + "|1", str(randomloot[lootindex][2]), str(randomloot[lootindex][1]) + " - " + rarity + "\n" + lootDesc, lootValue]
+    sheet.values().update(spreadsheetId = EconSheet, range = collet + str(rowindex+6), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[lootarray])).execute()
 
 
 #---------------------------Helper Functions---------------------------------

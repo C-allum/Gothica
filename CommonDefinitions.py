@@ -54,7 +54,7 @@ bot = commands.Bot(command_prefix='%', activity = discord.Game(name="Testing Stu
 print(" Initialised {0.user} at ".format(client) + str(datetime.now()).split(".")[0])
 
 #-----------------LIVE VERSION/BETA TOGGLE---------------
-liveVersion = 0
+liveVersion = 1
 
 token = ""
 
@@ -188,6 +188,7 @@ veryrarepercent = 98
 limitloopmax = 5 #The number of attempts to generate loot if limits are found
 
 races = ["dragonborn", "dwarf", "elf", "gnome", "half-elf", "halfling", "half-orc", "human", "tiefling", "leonin", "satyr", "owlin", "aarakocra", "aasimar", "air genasi", "bugbear", "centaur", "changeling", "deep gnome", "duergar", "earth genasi", "eladrin", "fairy", "firbolg", "fire genasi", "githyanki", "githzerai", "goblin", "goliath", "harengon", "hobgoblin", "kenku", "kobold", "lizardfolk", "minotaur", "orc", "sea elf", "shadar-kai", "shifter", "tabaxi", "tortle", "triton", "water genasi", "yuan-ti", "kalashtar", "warforged", "astral elf", "autognome", "giff", "hadozee", "plasmoid", "loxodon", "simic hybrid", "vedalken", "verdan", "locathah", "grung", "babbage", "seedling", "chakara"]
+colours = ["red", "orange", "yellow", "green", "blue", "indigo", "violet", "black", "white", "transparent", "creamy"]
 
 #---------------------------------------------
 
