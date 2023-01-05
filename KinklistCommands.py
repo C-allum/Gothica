@@ -1426,19 +1426,19 @@ async def randloot(message):
     await message.delete()  
 
     #Update inventory
-    userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ2000", majorDimension = 'ROWS').execute().get("values")
-    for c in range(math.ceil(len(userinvs)/4)):
-        d = 4 * c
-        if str(message.author) in userinvs[d][0]:
-            rowindex = d
-            break
-    if len(userinvs[rowindex]) > 25:
-        collet = chr(65 + math.floor(len(userinvs[rowindex]) / 26))
-    else:
-        collet = ""                        
-    collet += chr(65 + (int(len(userinvs[rowindex]))))
-    lootarray = [lootTitle + "|1", str(randomloot[lootindex][2]), str(randomloot[lootindex][1]) + " - " + rarity + "\n" + lootDesc, lootValue]
-    sheet.values().update(spreadsheetId = EconSheet, range = collet + str(rowindex+6), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[lootarray])).execute()
+    # userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ2000", majorDimension = 'ROWS').execute().get("values")
+    # for c in range(math.ceil(len(userinvs)/4)):
+    #     d = 4 * c
+    #     if str(message.author) in userinvs[d][0]:
+    #         rowindex = d
+    #         break
+    # if len(userinvs[rowindex]) > 25:
+    #     collet = chr(65 + math.floor(len(userinvs[rowindex]) / 26))
+    # else:
+    #     collet = ""                        
+    # collet += chr(65 + (int(len(userinvs[rowindex]))))
+    # lootarray = [lootTitle + "|1", str(randomloot[lootindex][2]), str(randomloot[lootindex][1]) + " - " + rarity + "\n" + lootDesc, lootValue]
+    # sheet.values().update(spreadsheetId = EconSheet, range = collet + str(rowindex+6), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[lootarray])).execute()
 
 
 #---------------------------Helper Functions---------------------------------
