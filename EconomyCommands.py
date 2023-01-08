@@ -377,13 +377,13 @@ async def sellitem(message):
             await message.delete()
             return
     invItemname = str(userinvs[rowindex][columnindex].split("|")[0])
-    price = str(userinvs[rowindex+3][columnindex])
+    price = int(userinvs[rowindex+3][columnindex])
 
     await message.delete()
     #Check quantity to be sold against inventory
     invquant = int(userinvs[rowindex][columnindex].split("|")[1])
     if quant <= invquant:
-        totalprice = int(quant * price) * sellpricemultiplier
+        totalprice = int(quant * price) * float(sellpricemultiplier)
         newitemtotal = invquant - quant
     else:
         #Selling more than they have. Tell them no and set to max.

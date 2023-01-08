@@ -54,7 +54,7 @@ bot = commands.Bot(command_prefix='%', activity = discord.Game(name="Testing Stu
 print(" Initialised {0.user} at ".format(client) + str(datetime.now()).split(".")[0])
 
 #-----------------LIVE VERSION/BETA TOGGLE---------------
-liveVersion = 1
+liveVersion = 0
 
 token = ""
 
@@ -188,7 +188,8 @@ veryrarepercent = 98
 limitloopmax = 5 #The number of attempts to generate loot if limits are found
 
 races = ["dragonborn", "dwarf", "elf", "gnome", "half-elf", "halfling", "half-orc", "human", "tiefling", "leonin", "satyr", "owlin", "aarakocra", "aasimar", "air genasi", "bugbear", "centaur", "changeling", "deep gnome", "duergar", "earth genasi", "eladrin", "fairy", "firbolg", "fire genasi", "githyanki", "githzerai", "goblin", "goliath", "harengon", "hobgoblin", "kenku", "kobold", "lizardfolk", "minotaur", "orc", "sea elf", "shadar-kai", "shifter", "tabaxi", "tortle", "triton", "water genasi", "yuan-ti", "kalashtar", "warforged", "astral elf", "autognome", "giff", "hadozee", "plasmoid", "loxodon", "simic hybrid", "vedalken", "verdan", "locathah", "grung", "babbage", "seedling", "chakara"]
-colours = ["red", "orange", "yellow", "green", "blue", "indigo", "violet", "black", "white", "transparent", "creamy"]
+colours = ["red", "orange", "yellow", "green", "blue", "indigo", "violet", "black", "white", "transparent", "cream", "luminous pink"]
+materials = ["stone", "wood", "brass", "marble", "bone", "glass", "crystalised lust", "a strange glowing material", "solid gold", "beeswax"]
 
 #---------------------------------------------
 
@@ -432,3 +433,19 @@ async def helplist(message):
         helptext = "**Character Registry:** We maintain records of every character in the dungeon, allowing them to be easily accessed and edited. Functions available for this service include:\n\n**Registering a Character:** To register a character, go to #character-creation and type some information about them. This message must start with Name, but after that, you can use as many or as few bits of information as you want. Each should be on its own line. For example:\n\n`Name: Lalontra`\n`Race: Water Genasi`\n\nPossible Fields are:\n\nName, Race, Gender, Pronouns, Age, Class, Level, Sheet, Alignment, Bio, Sexuality, Skin Colour, Hair Colour, Eye Colour, Height, Weight, Summary\n\n**Editing a character:**\n\nTo edit a character, type `" + myprefix + "edit Name Field New-Value`, as a demonstration:\n\n`" + myprefix + "edit Lalontra class Ranger`\n\nCurrently, this will match a character's name if you only use one name, as this function doesn't handle spaces yet.\n\n**Transferring ownership of a character:**For obvious reasons, only the owner of a character can edit them, but there are occasions where you want to give a character to someone else, for example in an auction. To transfer the character, type `" + myprefix + "transfer Name @New-Owner`, for example:\n\n`" + myprefix + "transfer Lalontra @C_allum`\n\n**Listing your characters:**\n\nTo create a list of the characters owned by any particular player, type `" + myprefix + "charlist`. Send the command without any arguments to see your own characters, or add a mention after it to see someone else's. As below:\n\n`" + myprefix + "charlist @C_allum`\n\n**Searching for a character or attribute:**\n\nTo search for a character or attribute, type `" + myprefix + "search Search-term`. If the search term is within the name of a character, it will provide that character's full bio. As an example, to find the bio of Lalontra you might type:\n\n`" + myprefix + "search Lal`\n\nIf the search term is not found in the name of a character, you can instead seach by a data field, done by typing`" + myprefix + "search Field Search-Term`, such as:\n\n`" + myprefix + "search class Ranger`\n\nIf the first argument after the command is neither in the name of a character, nor a field name, it will search the whole database, and provide details on where the word occurs. If you were to type:\n\n`" + myprefix + "search blue`\n\nYou would see information about any characters whos eyes, hair or skin colour (or any other attribute) was blue.\n\n**Retiring a character:**\n\nIf you want to retire a character for any reason, type `" + myprefix + "retire Name`, as per the below example||, which was rather painful to write!||:\n\n`" + myprefix + "retire Lalontra`\n\n**Activating a character:** If you need to activate a previously unavailable character, whether because you made or recieved them as a transfer from another user without having a slot available, once you create space or earn another slot, you can activate them by using`" + myprefix + "activate Name`. Example:\n\n`" + myprefix + "activate Lalontra`\n\n**Deactivating a Character:**"
 
     await message.channel.send(embed = discord.Embed(title = "Help", description = helptext, colour = embcol))
+
+#Dice Converter
+async def diceroll(message):
+    messwords = message.split(" ")
+    words = []
+    for a in range(len(messwords)):
+        if re.search("\[\d{1,}d\d{1,}\]", messwords[a]) != None:
+            numdice = int(messwords[a].split("d")[0].lstrip("["))
+            dicesize = int(messwords[a].split("d")[1].rstrip("]"))
+            dicetot = 0
+            for b in range(numdice):
+                dicetot += random.randint(1, dicesize)
+            words.append(str(dicetot))
+        else:
+            words.append(messwords[a])
+    return(" ".join(words))

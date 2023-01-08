@@ -4032,7 +4032,7 @@ async def on_message(message):
                         sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(row + 1)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[datetime.timestamp(datetime.now())]])).execute()
 
                         sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[dataup])).execute()
-    
+
     except AttributeError:
 
         if not "Direct Message" in str(message.channel):

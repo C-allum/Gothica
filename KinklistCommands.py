@@ -1,6 +1,5 @@
 from CommonDefinitions import *
 
-
 kinkOptions = ["Fave", "Kink", "Like", "It depends", "Willing to try", "No Strong Emotions", "Never heard of it", "Not my thing", "Soft Limit", "Hard Limit"]
 participationOptions = ["Submissive", "Dominant", "Voyeur", "Switch", "Submissive and Voyeur", "Dominant and Voyeur", "Enthusiast (Role doesn't matter to me)", "None"]
 categoriesWithoutAverage = ['General Preferences', 'Categories', 'Body Parts', 'Relationships', 'Additional Kinks and Limits']
@@ -1366,10 +1365,22 @@ async def randloot(message):
     kinkdata, namestr, targname = await getKinkData(message)
     playerIndex = [row[1] for row in kinkdata].index(namestr)
     playerKinkData = kinkdata[playerIndex]
+    rarityletters = ["c", "u", "r", "v", "l", "a"]
+    raritypercents = [1, commonpercent +1, uncommonpercent +1, rarepercent +1, veryrarepercent +1, 101]
     try:
         rarityroll = int(message.content.split(">")[1])
-    except IndexError or ValueError:
+    except ValueError:
+        try:
+            raritext = message.content.split(">")[1].lstrip(" ")
+            if not "-" in raritext:
+                rarityroll = raritypercents[rarityletters.index(raritext[0].lower())] #Get index of first letter in terms of array, then check what value that represents as a percentage.
+            else:
+                rarityroll = random.randint(raritypercents[rarityletters.index(raritext.split("-")[0][0].lower())], raritypercents[rarityletters.index(raritext.split("-")[1][0].lower())])
+        except IndexError:
+            rarityroll = random.randint(1,100)
+    except IndexError:
         rarityroll = random.randint(1,100)
+
     if rarityroll <= commonpercent:
         rarity = "Common"
         rarityrange = "A3:G100"
@@ -1382,9 +1393,12 @@ async def randloot(message):
     elif rarityroll <= veryrarepercent:
         rarity = "Very Rare"
         rarityrange = "Y3:AE100"
-    else:
+    elif rarityroll <= 100:
         rarity = "Legendary"
         rarityrange = "AG3:AM100"
+    else:
+        rarity = "Artifact"
+        rarityrange = "AO3:AU100"
     randomloot = sheet.values().get(spreadsheetId = Randomlootsheet, range = rarityrange, majorDimension='ROWS').execute().get("values")
     for a in range(limitloopmax): #Limit avoidance loop
         lootindex = random.randint(0,len(randomloot)-1)
@@ -1401,29 +1415,37 @@ async def randloot(message):
     #Loot Randomisation Functions
     randrace = random.choice(races)
     randcol = random.choice(colours)
-    #Dice
-    d4 = random.randint(1,4)
-    d6 = random.randint(1,6)
-    d8 = random.randint(1,8)
-    d10 = random.randint(1,10)
-    d12 = random.randint(1,12)
-    d2x4 = random.randint(2,8)
-    d2x6 = random.randint(2,12)
-    d2x8 = random.randint(2,16)
-    d2x10 = random.randint(2,20)
-    d2x12 = random.randint(2,24)
     
-    lootTitle = str(randomloot[lootindex][0]).replace("[race]", randrace).title()
-    lootDesc = str(randomloot[lootindex][3]).replace("[race]", randrace).replace("[colour]", randcol).replace("[1d4]", str(d4)).replace("[1d6]", str(d6)).replace("[1d8]", str(d8)).replace("[1d10]", str(d10)).replace("[1d12]", str(d12))
-    lootValue = str(randomloot[lootindex][4])
+    lootTitle = await diceroll(str(randomloot[lootindex][0]).replace("[race]", randrace).title())
+    lootDesc = await diceroll(str(randomloot[lootindex][3]).replace("[race]", randrace).replace("[colour]", randcol))
+    try:
+        lootValue = await diceroll(str(randomloot[lootindex][4]))
+    except IndexError:
+        try:
+            if randomloot[lootindex][5] != "":
+                typemod = 0.5
+            else:
+                typemod = 1.5
+        except IndexError:
+            typemod = 1.5
+        if rarity == "Common":
+            lootValue = int(((int(await diceroll("[1d6]")) + 1) * 1 * typemod) + int(await diceroll("[1d10]")) + 10)
+        elif rarity == "Uncommon":
+            lootValue = int((int(await diceroll("[1d6]")) * 10 * typemod) + int(await diceroll("[1d10]")) + 20)
+        elif rarity == "Rare":
+            lootValue = int((int(await diceroll("[2d10]")) * 100 * typemod) + int(await diceroll("[1d100]")) + 200)
+        elif rarity == "Very Rare":
+            lootValue = int(((int(await diceroll("[1d4]")) + 1) * 1000 * typemod) + int(await diceroll("[1d100]")) + 2000)
+        elif rarity == "Legendary":
+            lootValue = int((int(await diceroll("[2d6]")) * 2500 * typemod) + int(await diceroll("[1d100]")) + 10000)
 
     if ("Limit" in "".join(kinks)) or ("Not my Thing" in "".join(kinks)):
         await message.channel.send(embed = discord.Embed(title = "Random Loot Generation Failed", description = "We were unable to find a " + rarity + " item that was not a limit for " + namestr + ".\nTry again, specifying the rarity to a different value?\n\nCurrent rarity settings are:\n\nCommon: 1-" + str(commonpercent) + "\nUncommon: " + str(commonpercent+1) + "-" + str(uncommonpercent)+ "\nRare: " + str(uncommonpercent+1) + "-" + str(rarepercent)+ "\nVery Rare: " + str(rarepercent+1) + "-" + str(veryrarepercent)+ "\nLegendary: " + str(veryrarepercent+1) + "-100", colour = embcol))
     elif reqkinks != "":
-        await message.channel.send(embed = discord.Embed(title = "Random Loot Generation", description = "Random loot generated and compared to " + namestr + "'s kinks:\n\n**" + lootTitle + ":**\n*" + str(randomloot[lootindex][1]) + " - " + rarity + "*\n" + lootDesc + "\n\nIt is worth " + lootValue + dezzieemj + "\n\n-------------------------------------------------------------------------------\n\nHere is how the associated kinks compares with " + namestr + "'s preferences:\n\n" + "\n".join(kinks) + "\n\nRolls: Rarity d100:" + str(rarityroll) + ", Item index: " + str(lootindex), colour = embcol))
+        await message.channel.send(embed = discord.Embed(title = "Random Loot Generation", description = "Random loot generated and compared to " + namestr + "'s kinks:\n\n**" + lootTitle + ":**\n*" + str(randomloot[lootindex][1]) + " - " + rarity + "*\n" + lootDesc + "\n\nIt is worth " + str(lootValue) + dezzieemj + "\n\n-------------------------------------------------------------------------------\n\nHere is how the associated kinks compares with " + namestr + "'s preferences:\n\n" + "\n".join(kinks) + "\n\nRolls: Rarity d100:" + str(rarityroll) + ", Item index: " + str(lootindex), colour = embcol))
     else:
-        await message.channel.send(embed = discord.Embed(title = "Random Loot Generation", description = "Random loot generated and compared to " + namestr + "'s kinks:\n\n**" + lootTitle + ":**\n*" + str(randomloot[lootindex][1]) + " - " + rarity + "*\n" + lootDesc + "\n\nIt is worth " + lootValue + dezzieemj + "\n\n-------------------------------------------------------------------------------\n\nThere are no kinks associated with this item" + "\n\nRolls: Rarity d100:" + str(rarityroll) + ", Item index: " + str(lootindex), colour = embcol))
-    await message.delete()  
+        await message.channel.send(embed = discord.Embed(title = "Random Loot Generation", description = "Random loot generated and compared to " + namestr + "'s kinks:\n\n**" + lootTitle + ":**\n*" + str(randomloot[lootindex][1]) + " - " + rarity + "*\n" + lootDesc + "\n\nIt is worth " + str(lootValue) + dezzieemj + "\n\n-------------------------------------------------------------------------------\n\nThere are no kinks associated with this item" + "\n\nRolls: Rarity d100:" + str(rarityroll) + ", Item index: " + str(lootindex), colour = embcol))
+    await message.delete()
 
     #Update inventory
     # userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ2000", majorDimension = 'ROWS').execute().get("values")
@@ -1544,3 +1566,4 @@ async def getCategoryData(kinkdata):
 
  
     return categories, kinksPerCategory, categoryIndex, playerInformationEntries
+
