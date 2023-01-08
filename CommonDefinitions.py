@@ -54,7 +54,7 @@ bot = commands.Bot(command_prefix='%', activity = discord.Game(name="Testing Stu
 print(" Initialised {0.user} at ".format(client) + str(datetime.now()).split(".")[0])
 
 #-----------------LIVE VERSION/BETA TOGGLE---------------
-liveVersion = 0
+liveVersion = 1
 
 token = ""
 
