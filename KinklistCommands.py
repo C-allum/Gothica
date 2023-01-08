@@ -1415,11 +1415,23 @@ async def randloot(message):
     #Loot Randomisation Functions
     randrace = random.choice(races)
     randcol = random.choice(colours)
-    
-    lootTitle = await diceroll(str(randomloot[lootindex][0]).replace("[race]", randrace).title())
-    lootDesc = await diceroll(str(randomloot[lootindex][3]).replace("[race]", randrace).replace("[colour]", randcol))
+
+    playerchar = ""
+    playerrace = ""
+    if "[player" in str(randomloot[lootindex]):
+        chardata = sheet.values().get(spreadsheetId = CharSheet, range = "A1:Z1000" ).execute().get("values")
+        playerrow = random.randint(2, len(chardata))
+        try:
+            playerchar = str(chardata[playerrow][5])
+            playerrace = str(chardata[playerrow][6])
+        except IndexError:
+            playerchar = "Someone"
+            playerrace = "person"
+    lootTitle = await diceroll(str(randomloot[lootindex][0]).replace("[race]", randrace).replace("[playerchar]", playerchar).replace("[playercharrace]", playerrace).title().replace("'S", "'s"))
+    lootDesc = await diceroll(str(randomloot[lootindex][3]).replace("[race]", randrace).replace("[colour]", randcol).replace("[playerchar]", playerchar).replace("[playercharrace]", playerrace).replace("[material]", random.choice(materials)))
+
     try:
-        lootValue = await diceroll(str(randomloot[lootindex][4]))
+        lootValue = str(randomloot[lootindex][4])
     except IndexError:
         try:
             if randomloot[lootindex][5] != "":
