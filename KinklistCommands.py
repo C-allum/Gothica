@@ -1417,8 +1417,8 @@ async def randloot(message):
             for c in range(len(sextoykinks[sextoys.index(randtoy)])):
                 reqkinks.append(sextoykinks[sextoys.index(randtoy)][c])
         if "[gag]" in str(randomloot[lootindex]):
-            for c in range(len(sextoykinks[gags.index(randgag)])):
-                reqkinks.append(sextoykinks[gags.index(randgag)][c])
+            for c in range(len(gagkinks[gags.index(randgag)])):
+                reqkinks.append(gagkinks[gags.index(randgag)][c])
         for b in range(len(reqkinks)):
             kinks.append(reqkinks[b] + ": " + playerKinkData[kinkdata[1].index(reqkinks[b])])
         if (not "Limit" in "".join(kinks)) and (not "Not my Thing" in "".join(kinks)):
