@@ -1400,6 +1400,11 @@ async def randloot(message):
         rarity = "Artifact"
         rarityrange = "AO3:AU100"
     randomloot = sheet.values().get(spreadsheetId = Randomlootsheet, range = rarityrange, majorDimension='ROWS').execute().get("values")
+    #Loot Randomisation Functions
+    randrace = random.choice(races)
+    randcol = random.choice(colours)
+    randtoy = random.choice(sextoys)
+    randgag = random.choice(gags)
     for a in range(limitloopmax): #Limit avoidance loop
         lootindex = random.randint(0,len(randomloot)-1)
         kinks = []
@@ -1407,15 +1412,17 @@ async def randloot(message):
             reqkinks = randomloot[lootindex][6].split("|")
         except IndexError:
             reqkinks = ""
+        #Additional kinks based on randomisation data
+        if "[toy]" in str(randomloot[lootindex]):
+            for c in range(len(sextoykinks[sextoys.index[randtoy]])):
+                reqkinks.append(sextoykinks[sextoys.index[randtoy]][c])
+        if "[gag]" in str(randomloot[lootindex]):
+            for c in range(len(sextoykinks[gags.index[randgag]])):
+                reqkinks.append(sextoykinks[gags.index[randgag]][c])
         for b in range(len(reqkinks)):
             kinks.append(reqkinks[b] + ": " + playerKinkData[kinkdata[1].index(reqkinks[b])])
         if (not "Limit" in "".join(kinks)) and (not "Not my Thing" in "".join(kinks)):
             break
-
-    #Loot Randomisation Functions
-    randrace = random.choice(races)
-    randcol = random.choice(colours)
-
     playerchar = ""
     playerrace = ""
     if "[player" in str(randomloot[lootindex]):
@@ -1427,8 +1434,8 @@ async def randloot(message):
         except IndexError:
             playerchar = "Someone"
             playerrace = "person"
-    lootTitle = await diceroll(str(randomloot[lootindex][0]).replace("[race]", randrace).replace("[playerchar]", playerchar).replace("[playercharrace]", playerrace).title().replace("'S", "'s"))
-    lootDesc = await diceroll(str(randomloot[lootindex][3]).replace("[race]", randrace).replace("[colour]", randcol).replace("[playerchar]", playerchar).replace("[playercharrace]", playerrace).replace("[material]", random.choice(materials)))
+    lootTitle = await diceroll(str(randomloot[lootindex][0]).replace("[race]", randrace).replace("[playerchar]", playerchar).replace("[playercharrace]", playerrace).replace("[toy]", randtoy).replace("[gag]", randgag).title().replace("'S", "'s"))
+    lootDesc = await diceroll(str(randomloot[lootindex][3]).replace("[race]", randrace).replace("[colour]", randcol).replace("[playerchar]", playerchar).replace("[playercharrace]", playerrace).replace("[material]", random.choice(materials)).replace("[toy]", randtoy).replace("[gag]", randgag))
 
     try:
         lootValue = str(randomloot[lootindex][4])
