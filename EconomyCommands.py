@@ -416,3 +416,56 @@ async def sellitem(message):
     else:
         sheet.values().update(spreadsheetId = EconSheet, range = str(collet) + str(rowindex+6), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[[str(invItemname) + "|" + str(newitemtotal)]])).execute()
 
+async def giveitem(message):
+    userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ2000", majorDimension = 'ROWS').execute().get("values")
+    namestr, targid = await getUserNamestr(message)
+
+    if not str(namestr) in str(userinvs):
+        await message.channel.send(embed = discord.Embed(title = "Could not find " + namestr.split("#")[0] + "'s inventory", description = "Make sure that <@" + str(targid) + "> is registered in the economy."))
+        return
+
+    playerindex = [row[0] for row in userinvs[::4]].index(namestr)
+    playerindex *= 4
+    playerinv = userinvs[playerindex]
+ 
+    authorindex = [row[0] for row in userinvs[::4]].index(message.author.name + "#" + message.author.discriminator)
+    authorindex *= 4
+    authorinv = userinvs[authorindex]
+
+    messageParts = message.content.split(" ")
+
+    amount = 0
+    itemName = ""
+    try:
+        amount = int(messageParts[-1])
+        print(f"amounts: {amount}")
+    except ValueError:
+        print("error")
+    return
+
+async def additem(message):
+    userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ2000", majorDimension = 'ROWS').execute().get("values")
+    namestr = getUserNamestr(message)
+    playerindex = [row[0] for row in userinvs].index(namestr)
+    return
+
+
+
+
+#---------Helper functions----------
+
+async def getUserNamestr(message):
+    if "@" in message.content:
+        try:
+            targid = int(str(message.content.split("@")[1]).split(" ")[0].replace("!","").replace("&","").replace(">",""))
+        except ValueError:
+            await message.channel.send(embed = discord.Embed(title = "Error!", description = "Make sure that the user you tagged is valid."))
+            return
+        targname = await client.fetch_user(targid)
+    else:
+
+        targname = message.author
+
+    namestr = str(targname.name + "#" + targname.discriminator)
+
+    return namestr, targid

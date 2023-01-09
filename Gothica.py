@@ -2379,6 +2379,16 @@ async def on_message(message):
                 
                 await EconomyCommands.sellitem(message)
 
+            #Give item
+            elif message.content.lower().startswith(str(myprefix) + "giveitem") or message.content.lower().startswith("$giveitem"):
+                
+                await EconomyCommands.giveitem(message)
+
+            #Add item
+            elif message.content.lower().startswith(str(myprefix) + "additem") or message.content.lower().startswith("$additem"):
+                
+                await EconomyCommands.additem(message)
+
             #Use Item
 
             elif message.content.lower().startswith(str(myprefix) + "use") or message.content.lower().startswith("$use"):
