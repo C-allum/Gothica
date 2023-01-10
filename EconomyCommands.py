@@ -14,16 +14,15 @@ async def buyitem(message):
 
         searchterm = fullMessage.rsplit(" ", 1)[0]
         try:
-            print("buyquantExtract: " + fullMessage.rsplit(" ", 1)[-1])
             buyquant = int(fullMessage.rsplit(" ", 1)[-1]) #Try to extract a buy quantity from the end of the string
             
             if buyquant < 1:
                 buyquant = 0
         except ValueError:
-            print("Buy function Value Error")
+            print("Buy function Value Error. Probably didn't specify amount. Defaulting to 1")
             buyquant = 1  
         except TypeError:
-            print("Buy function type error")
+            print("Buy function type error. Probably didn't specify amount. Defaulting to 1")
             buyquant = 1  
     except IndexError:
         searchterm = "11111111111111" #Something irrelevant cause the search was empty
@@ -267,12 +266,6 @@ async def buyitem(message):
 
                     newbal = int(userinvs[r][1]) - (int(buyquant) * int(itprice))
 
-                    print(userinvs[r][1])
-
-                    print(itprice)
-
-                    print(newbal)
-
                     await message.channel.send(embed = buyemb)
 
                     if itname.replace("'","").replace("’","").lower() in str(userinvs[r]).replace("'","").replace("’","").lower():
@@ -287,7 +280,7 @@ async def buyitem(message):
 
                                 if itno > 25:
 
-                                    collet = chr(65 + math.floor(itno / 26))
+                                    collet = chr(64 + math.floor(itno / 26))
 
                                 else:
 
@@ -309,14 +302,13 @@ async def buyitem(message):
 
                         if itno > 25:
 
-                            collet = chr(65 + math.floor(itno / 26))
+                            collet = chr(64 + math.floor(itno / 26))
 
                         else:
 
                             collet = ""
                         
-                        collet += chr(65 + (int(itno)))
-
+                        collet += chr(65 + (int(itno % 26)))
                         sheet.values().update(spreadsheetId = EconSheet, range = collet + str(r+6), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[itdata])).execute()
 
                     #Set new balance
@@ -360,9 +352,11 @@ async def sellitem(message):
     elif len(matchingItems) == 1:
         columnindex = matchingItems[0]
     else:
+        itemlist = []
         for d in range(len(matchingItems)):
-            itemlist = "`" + str(d+1) + ":` " + userinvs[rowindex][matchingItems[d]].split("|")[0] 
-        await message.channel.send(embed = discord.Embeds(title = "Multiple items found", description = "Select the number of the one you want:\n" + "\n".join(itemlist)))
+            itemlist.append("`" + str(d+1) + ":` " + userinvs[rowindex][matchingItems[d]].split("|")[0])
+        optionStr = "\n".join(itemlist)
+        await message.channel.send(embed = discord.Embed(title = "Multiple items found", description = "Select the number of the one you want:\n" + optionStr, colour = embcol))
         try:
             msg = await client.wait_for('message', timeout = 30, check = check(message.author))
             try:
@@ -397,11 +391,7 @@ async def sellitem(message):
 
     #update sheet
     sheet.values().update(spreadsheetId = EconSheet, range = "B" + str(rowindex+6), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[[newbal]])).execute()
-    if columnindex > 25:
-        collet = chr(65 + math.floor(columnindex / 26))
-    else:
-        collet = ""                        
-    collet += chr(65 + (int(columnindex)))
+    collet = getColumnLetter(columnindex)
     if newitemtotal == 0: #Shift everything else over
         newitemlist = userinvs[rowindex][columnindex+1:]
         newshortdesclist = userinvs[rowindex+1][columnindex+1:]
@@ -418,15 +408,27 @@ async def sellitem(message):
 
 async def giveitem(message):
     userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ2000", majorDimension = 'ROWS').execute().get("values")
-    namestr, targid = await getUserNamestr(message)
 
+    #make sure *someone* is tagged to give the item to.
+    if "@" in message.content:
+        namestr, targid = await getUserNamestr(message)
+    else:
+        await message.channel.send(embed = discord.Embed(title = "Wrong use of the %giveitem command!", description = "Please make sure to stick to the `%giveitem [@user] [item name] [amount]` format! You need to specify a person to give the item to!", colour = embcol))
+        return
+        
+    #prevent giving yourself items
+    if namestr == message.author.name + "#" + message.author.discriminator:
+        await message.channel.send(embed = discord.Embed(title = "No, you can't give yourself an item that you own...", description = "Giving yourself an item is weird. Maybe a case of split personalities?", colour = embcol))
+        return
+    
+    #make sure target is in the economy
     if not str(namestr) in str(userinvs):
         await message.channel.send(embed = discord.Embed(title = "Could not find " + namestr.split("#")[0] + "'s inventory", description = "Make sure that <@" + str(targid) + "> is registered in the economy."))
         return
 
-    playerindex = [row[0] for row in userinvs[::4]].index(namestr)
-    playerindex *= 4
-    playerinv = userinvs[playerindex]
+    targetindex = [row[0] for row in userinvs[::4]].index(namestr)
+    targetindex *= 4
+    targetinv = userinvs[targetindex]
  
     authorindex = [row[0] for row in userinvs[::4]].index(message.author.name + "#" + message.author.discriminator)
     authorindex *= 4
@@ -435,18 +437,280 @@ async def giveitem(message):
     messageParts = message.content.split(" ")
 
     amount = 0
-    itemName = ""
+    #try to retrieve the amount.
     try:
         amount = int(messageParts[-1])
-        print(f"amounts: {amount}")
+        amount = int(messageParts.pop())
     except ValueError:
-        print("error")
-    return
+        amount = 1
+    except IndexError:
+        await message.channel.send(embed = discord.Embed(title = "Wrong use of the %giveitem command!", description = "Please make sure to stick to the `%giveitem [@user] [item name] [amount]` format!", colour = embcol))
+
+    #itemname should be the last parameter after removing the amount.
+    itemName = messageParts.pop()
+
+    #fetch correct item name and handle multiple matches.
+    matchingItems = []
+    for c in range(len(authorinv)):
+        if itemName.lower() in authorinv[c].lower():
+            matchingItems.append(c)
+    if len(matchingItems) == 0:
+        await message.channel.send(embed = discord.Embed(title = "Could not find a matching item", description = "Check the spelling matches that of the item in your `%inventory`", colour = embcol))
+        return
+    elif len(matchingItems) == 1:
+        columnindex = matchingItems[0]
+    else:
+        itemlist = []
+        for d in range(len(matchingItems)):
+            itemlist.append("`" + str(d+1) + ":` " + authorinv[matchingItems[d]].split("|")[0])
+        optionStr = "\n".join(itemlist)
+        await message.channel.send(embed = discord.Embed(title = "Multiple items found", description = "Select the number of the one you want:\n" + optionStr, colour = embcol))
+        try:
+            msg = await client.wait_for('message', timeout = 30, check = check(message.author))
+            try:
+                columnindex = matchingItems[int(msg.content) - 1]
+                await msg.delete()
+            except TypeError or ValueError:
+                await message.channel.send(embed=discord.Embed(title="Selection Invalid",description="You must enter an integer", colour = embcol))
+                await msg.delete()
+                return
+        except asyncio.TimeoutError:
+            await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+            await message.delete()
+            return
+    itemname = str(userinvs[authorindex][columnindex].split("|")[0])
+    invquant = int(userinvs[authorindex][columnindex].split("|")[1])
+    
+    collet = await getColumnLetter(columnindex)
+    itemshortdesc = sheet.values().get(spreadsheetId = EconSheet, range = str(collet) + str(authorindex+7), majorDimension = 'ROWS').execute().get("values")
+
+    #This needs to be none if there is no description, but if there is an item with a short descr. further to the right in that players inventory, it would be [[' ']] instead of none... And google doesn't like that.
+    if itemshortdesc == [[' ']]:
+        itemshortdesc = None
+
+    itemdescr = str(userinvs[authorindex+2][columnindex])
+    price = int(userinvs[authorindex+3][columnindex])
+    
+
+    #TODO: Remove item from msg.author inventory, add to target inventory. Send a log of the transaction to the botchannel
+    #Check quantity to be given against inventory
+
+    if amount > invquant:
+        #Giving more than they have. Tell them no and cancel.
+        await message.channel.send(embed = discord.Embed(title = "You don't have enough of those in your inventory to be able to give " + str(amount), description = "We are fairly sure that " + str(invquant) + " is less than " + str(amount) + ". Please enter a valid amount.", colour = embcol))
+        return
+    newitemtotal = invquant - amount
+    #Check if an item of the same type is already in the recipients inventory
+    targetInvItemIndex = -1
+    for c in range(len(targetinv)):
+        if itemName.lower() in targetinv[c].lower():
+            targetInvItemIndex = c
+            targetinvquant = int(userinvs[targetindex][targetInvItemIndex].split("|")[1])
+
+    #update sheet of the author
+    print(f"Taking {amount} {itemname} from {message.author.display_name}")
+    collet = await getColumnLetter(columnindex)
+    if newitemtotal == 0: #Shift everything else over
+        newitemlist = userinvs[authorindex][columnindex+1:]
+        newshortdesclist = userinvs[authorindex+1][columnindex+1:]
+        newlongdesclist = userinvs[authorindex+2][columnindex+1:]
+        newpricelist = userinvs[authorindex+3][columnindex+1:]
+        newitemlist.append("")
+        newshortdesclist.append("")
+        newlongdesclist.append("")
+        newpricelist.append("")
+        newinvdata = [newitemlist, newshortdesclist, newlongdesclist, newpricelist]
+        sheet.values().update(spreadsheetId = EconSheet, range = str(collet) + str(authorindex+6), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=newinvdata)).execute()
+    else:
+        sheet.values().update(spreadsheetId = EconSheet, range = str(collet) + str(authorindex+6), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[[str(itemname) + "|" + str(newitemtotal)]])).execute()
+    print("Done taking from Author")
+
+    #update the sheet of the target but check if the item is already existent
+    if targetInvItemIndex == -1: #In this case the item is not present in the recipients list.
+        newinvdata = [itemname+"|"+str(amount), itemshortdesc, itemdescr, price]
+        collet = await getColumnLetter(len(userinvs[targetindex]))
+        sheet.values().update(spreadsheetId = EconSheet, range = str(collet) + str(targetindex+6), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[newinvdata])).execute()
+    else:
+        collet = await getColumnLetter(targetInvItemIndex)
+        sheet.values().update(spreadsheetId = EconSheet, range = str(collet) + str(targetindex+6), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[[str(itemname) + "|" + str(targetinvquant + amount)]])).execute()
+
+    print("Done giving to the recipient")
+
+    #Confirm transaction with an embed.
+    givereturnmessage = random.choice(["We hope you washed that first", "We had been looking for one of those ourself..."])
+    targetusername = await message.guild.fetch_member(targid)
+    targetusername = targetusername.display_name
+    await message.channel.send(embed = discord.Embed(title = f"{message.author.display_name} gave " + str(amount) + " " + str(itemname) + f" to " + targetusername, description = givereturnmessage + "\n\n\n<@" + str(targid) + ">, you have been given an item!", colour = embcol))
+
+    
+    await message.delete()
+    
 
 async def additem(message):
     userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ2000", majorDimension = 'ROWS').execute().get("values")
-    namestr = getUserNamestr(message)
-    playerindex = [row[0] for row in userinvs].index(namestr)
+    #make sure *someone* is tagged to give the item to.
+    if "@" in message.content:
+        namestr, targid = await getUserNamestr(message)
+    else:
+        await message.channel.send(embed = discord.Embed(title = "Wrong use of the %additem command!", description = "Please make sure to stick to the `%additem [@user] [item name] [amount]` format! You need to specify a person to give the item to!", colour = embcol))
+        return
+
+    #make sure target is in the economy
+    if not str(namestr) in str(userinvs):
+        await message.channel.send(embed = discord.Embed(title = "Could not find " + namestr.split("#")[0] + "'s inventory", description = "Make sure that <@" + str(targid) + "> is registered in the economy."))
+        return
+
+    targetindex = [row[0] for row in userinvs[::4]].index(namestr)
+    targetindex *= 4
+    targetinv = userinvs[targetindex]
+
+    messageParts = message.content.split(" ")
+
+    amount = 0
+    #try to retrieve the amount.
+    try:
+        amount = int(messageParts[-1])
+        amount = int(messageParts.pop())
+    except ValueError:
+        amount = 1
+    except IndexError:
+        await message.channel.send(embed = discord.Embed(title = "Wrong use of the %giveitem command!", description = "Please make sure to stick to the `%giveitem [@user] [item name] [amount]` format!", colour = embcol))
+
+    #itemname should be the last parameter after removing the amount.
+    searchterm = messageParts.pop()
+
+
+    #Search Shop for item match
+    shopdata = sheet.values().get(spreadsheetId = shopsheet, range = "A1:J1000", majorDimension = 'COLUMNS').execute().get("values")
+    
+    itindex = ""
+
+    
+    #try:
+    #    buyquant = int(message.content.split(" ", 1)[1].lower().rsplit(" ", 1)[-1])
+    #except ValueError:
+    #    buyquant = 1
+
+    #Temp variables to present possible options
+    matchnames = []
+
+    searchnames = []
+
+    matchno = 0
+
+    #Collect all instances of the searched term
+    for n in range(len(shopdata[0])):
+        if searchterm in str(shopdata[1][n]).replace("'","").replace("’","").lower():
+
+            matchno += 1
+
+            matchnames.append("`" + str(matchno) + "` " + shopdata[0][n] + shopdata[1][n] + ", sold at" + shopdata[3][n].replace("#", " ").replace("-", " ").title())
+
+            searchnames.append(shopdata[1][n])
+
+    #Give user a choice which instance they want
+    if matchno > 1:
+        await message.channel.send(embed = discord.Embed(title = "Multiple Matches Found", description = "Type the number of the one you want.\n\n" + "\n".join(matchnames) + "\n\nThis message will timeout after 30 seconds.", colour = embcol))
+
+        try:
+
+            msg = await client.wait_for('message', timeout = 30, check = check(message.author))
+
+            try:
+
+                valu = int(msg.content)
+
+                searchterm = searchnames[valu-1]
+
+                await msg.delete()
+
+            except TypeError or ValueError:
+
+                await message.channel.send(embed=discord.Embed(title="Selection Invalid",description="You must enter an integer", colour = embcol))
+
+                await msg.delete()
+
+        except asyncio.TimeoutError:
+
+            await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+
+            await message.delete()
+
+    elif matchno == 1: #Replace searchterm with the exact item name if only one match is present.
+        searchterm = searchnames[0]
+        
+    #Grab index of the item    
+    for n in range(len(shopdata[0])):
+        if searchterm.replace("'","").replace("’","").lower() == shopdata[1][n].replace("'","").replace("’","").lower():
+            itindex = n
+
+
+    #Get Item and Shop Data
+
+    if itindex != "":
+
+        failpur = 0
+
+        itname = shopdata[1][itindex]
+
+        itprice = shopdata[2][itindex]
+
+        itshop = shopdata[3][itindex]
+
+        itnpc = shopdata[5][itindex]
+
+        itresp = shopdata[6][itindex]
+
+        itrep = shopdata[7][itindex]
+
+
+
+        userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ2000", majorDimension = 'ROWS').execute().get("values")
+
+        for n in range(math.ceil(len(userinvs)/4)):
+
+            r = 4 * n 
+
+            if str(namestr) in userinvs[r][0]:
+
+                if itname.replace("'","").replace("’","").lower() in str(userinvs[r]).replace("'","").replace("’","").lower():
+
+                    for itno in range(len(userinvs[r])):
+
+                        #If item is existing
+
+                        if itname.replace("'","").replace("’","").lower() in userinvs[r][itno].replace("'","").replace("’","").lower():
+
+                            newquant = int(userinvs[r][itno].split("|")[1]) + amount
+
+                            collet = await getColumnLetter(itno)
+
+                            sheet.values().update(spreadsheetId = EconSheet, range = collet + str(r+6), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[[userinvs[r][itno].split("|")[0] + "|" + str(newquant)]])).execute()
+
+                            break
+
+                else:
+
+                    #If item is new
+
+                    itno = len(userinvs[r])
+
+                    itdata = [shopdata[0][itindex] + shopdata[1][itindex] + "|" + str(amount), "", shopdata[4][itindex], shopdata[2][itindex]]
+
+                    collet = await getColumnLetter(itno)
+                    sheet.values().update(spreadsheetId = EconSheet, range = str(collet) + str(r+6), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[itdata])).execute()
+        targetusername = await message.guild.fetch_member(targid)
+        targetusername = targetusername.display_name
+        await message.channel.send(embed = discord.Embed(title = f"Added {itname} to {targetusername}'s inventory!", description= "Congratulations, <@" + str(targid) + ">, you have been given an item!", colour = embcol))
+                 
+    else:
+
+        await message.channel.send(embed = discord.Embed(title = "We couldn't find any items matching that name.", description= "Check the spelling of the item, and look through `" + myprefix + "shop shopname` to ensure it is correct.", colour = embcol))
+
+    await message.delete()
+    #TODO: Make sure to send a log of the item given to the botchannel!
+
+
     return
 
 
@@ -469,3 +733,12 @@ async def getUserNamestr(message):
     namestr = str(targname.name + "#" + targname.discriminator)
 
     return namestr, targid
+
+async def getColumnLetter(columnindex):
+    collet = ""
+    if columnindex > 25:
+        collet = chr(64 + math.floor(columnindex / 26))
+    else:
+        collet = ""                        
+    collet += chr(65 + (int(columnindex % 26)))
+    return collet

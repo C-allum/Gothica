@@ -799,7 +799,7 @@ async def on_message(message):
                 await KinklistCommands.kinkcompare(message)
             elif message.content.lower().startswith(str(myprefix) + "kinkfill"):
                 await KinklistCommands.kinkfill(message)
-            elif message.content.lower().startswith(str(myprefix) + "randloot"):
+            elif message.content.lower().startswith(str(myprefix) + "randloot") and "lorekeeper" in str(message.author.roles).lower():
                 await KinklistCommands.randloot(message)
             #Start
             
@@ -2385,7 +2385,7 @@ async def on_message(message):
                 await EconomyCommands.giveitem(message)
 
             #Add item
-            elif message.content.lower().startswith(str(myprefix) + "additem") or message.content.lower().startswith("$additem"):
+            elif message.content.lower().startswith(str(myprefix) + "additem") or message.content.lower().startswith("$additem") and "lorekeeper" in str(message.author.roles).lower():
                 
                 await EconomyCommands.additem(message)
 
