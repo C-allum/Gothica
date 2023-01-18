@@ -4206,6 +4206,12 @@ async def on_raw_reaction_add(reaction):
 
                     break
 
+        except IndexError:
+
+            if not mess.author.bot:
+
+                await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = str(mess.author) + " is not in the economy.", description = "If this should not be the case, speak to Callum", colour = embcol))
+        try:
             for a in range(math.floor(len(economydata)/4)):
 
                 b = a * 4 + 5
@@ -4215,12 +4221,11 @@ async def on_raw_reaction_add(reaction):
                     giverow = b + 1
 
                     break
-
         except IndexError:
 
             if not mess.author.bot:
-
-                await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = str(mess.author) + " is not in the economy.", description = "If this should not be the case, speak to Callum", colour = embcol))
+                await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = str(givename) + " is not in the economy.", description = "If this should not be the case, speak to Callum", colour = embcol))
+        
 
 
 
