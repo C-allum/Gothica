@@ -3833,7 +3833,8 @@ async def on_message(message):
             #Impersonator React
 
             elif "gothica" in message.content.lower().replace("-","").replace(".","") or "thic goth" in message.content.lower().replace("-","").replace(".","").replace("cc","c") or "gothy" in message.content.lower().replace("-","").replace(".",""):
-
+                if message.channel.id == 1058951770870657166:
+                    return
                 if message.author.name != "C_allum":
 
                     if random.randint(1,100) != 100:
