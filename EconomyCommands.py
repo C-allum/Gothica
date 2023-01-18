@@ -579,33 +579,21 @@ async def additem(message):
     #itemname should be the last parameter after removing the amount.
     searchterm = messageParts.pop()
 
-
     #Search Shop for item match
     shopdata = sheet.values().get(spreadsheetId = shopsheet, range = "A1:J1000", majorDimension = 'COLUMNS').execute().get("values")
     
     itindex = ""
 
-    
-    #try:
-    #    buyquant = int(message.content.split(" ", 1)[1].lower().rsplit(" ", 1)[-1])
-    #except ValueError:
-    #    buyquant = 1
-
     #Temp variables to present possible options
     matchnames = []
-
     searchnames = []
-
     matchno = 0
 
     #Collect all instances of the searched term
     for n in range(len(shopdata[0])):
         if searchterm in str(shopdata[1][n]).replace("'","").replace("’","").lower():
-
             matchno += 1
-
             matchnames.append("`" + str(matchno) + "` " + shopdata[0][n] + shopdata[1][n] + ", sold at" + shopdata[3][n].replace("#", " ").replace("-", " ").title())
-
             searchnames.append(shopdata[1][n])
 
     #Give user a choice which instance they want
@@ -613,27 +601,18 @@ async def additem(message):
         await message.channel.send(embed = discord.Embed(title = "Multiple Matches Found", description = "Type the number of the one you want.\n\n" + "\n".join(matchnames) + "\n\nThis message will timeout after 30 seconds.", colour = embcol))
 
         try:
-
             msg = await client.wait_for('message', timeout = 30, check = check(message.author))
-
             try:
-
                 valu = int(msg.content)
-
                 searchterm = searchnames[valu-1]
-
                 await msg.delete()
 
             except TypeError or ValueError:
-
                 await message.channel.send(embed=discord.Embed(title="Selection Invalid",description="You must enter an integer", colour = embcol))
-
                 await msg.delete()
 
         except asyncio.TimeoutError:
-
             await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
-
             await message.delete()
 
     elif matchno == 1: #Replace searchterm with the exact item name if only one match is present.
@@ -648,63 +627,42 @@ async def additem(message):
     #Get Item and Shop Data
 
     if itindex != "":
-
         failpur = 0
-
         itname = shopdata[1][itindex]
-
         itprice = shopdata[2][itindex]
-
         itshop = shopdata[3][itindex]
-
         itnpc = shopdata[5][itindex]
-
         itresp = shopdata[6][itindex]
-
         itrep = shopdata[7][itindex]
 
 
 
         userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ2000", majorDimension = 'ROWS').execute().get("values")
-
         for n in range(math.ceil(len(userinvs)/4)):
-
             r = 4 * n 
-
             if str(namestr) in userinvs[r][0]:
-
                 if itname.replace("'","").replace("’","").lower() in str(userinvs[r]).replace("'","").replace("’","").lower():
-
                     for itno in range(len(userinvs[r])):
-
+                        
                         #If item is existing
-
                         if itname.replace("'","").replace("’","").lower() in userinvs[r][itno].replace("'","").replace("’","").lower():
-
                             newquant = int(userinvs[r][itno].split("|")[1]) + amount
-
                             collet = await getColumnLetter(itno)
-
                             sheet.values().update(spreadsheetId = EconSheet, range = collet + str(r+6), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[[userinvs[r][itno].split("|")[0] + "|" + str(newquant)]])).execute()
-
                             break
 
                 else:
-
                     #If item is new
-
                     itno = len(userinvs[r])
-
                     itdata = [shopdata[0][itindex] + shopdata[1][itindex] + "|" + str(amount), "", shopdata[4][itindex], shopdata[2][itindex]]
-
                     collet = await getColumnLetter(itno)
                     sheet.values().update(spreadsheetId = EconSheet, range = str(collet) + str(r+6), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[itdata])).execute()
+
         targetusername = await message.guild.fetch_member(targid)
         targetusername = targetusername.display_name
         await message.channel.send(embed = discord.Embed(title = f"Added {itname} to {targetusername}'s inventory!", description= "Congratulations, <@" + str(targid) + ">, you have been given an item!", colour = embcol))
                  
     else:
-
         await message.channel.send(embed = discord.Embed(title = "We couldn't find any items matching that name.", description= "Check the spelling of the item, and look through `" + myprefix + "shop shopname` to ensure it is correct.", colour = embcol))
 
     await message.delete()

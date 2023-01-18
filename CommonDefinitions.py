@@ -159,6 +159,8 @@ selopts = []
 
 column = ["F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","AA","AB"]
 
+artClaimForumID = 1050252064455925790
+
 #----------------EconomyValues----------------
 
 reactdz = 20

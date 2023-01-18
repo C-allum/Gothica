@@ -4314,57 +4314,54 @@ async def on_raw_reaction_add(reaction):
             await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = "You can't use this at the here.", colour = embcol, url = mess.jump_url))
 
 
-
-
     if reaction.emoji.name == "cuffs":
-
+        
         chan = client.get_channel(reaction.channel_id)
-
         mess = await chan.fetch_message(reaction.message_id)
 
-        if reaction.channel_id == 994340109962973204:
+        insideArtForumThread = True
 
-            emb = discord.Embed(title = reaction.member.name + " has claimed this artwork to make a character from.", colour = embcol)
+        try:
+            a = mess.attachments[0]
 
-            user = await client.fetch_user(int(reaction.member.id))
+        except IndexError:
 
-            await user.send("You have claimed this image. If it vanishes from here, it should still be in the channel.")
+            await mess.channel.send("That message doesn't contain an image.")
 
-            try:
-
-                emb.set_thumbnail(url = mess.attachments[0])
-
-                await user.send(mess.attachments[0])
-
-            except IndexError:
-
-                emb.set_thumbnail(url = mess.content)
-
-                await user.send(mess.content)
-
-            meslist = ["CLAIMED"]
-
-            reacts = meslist[random.randint(0,len(meslist)-1)]
-
-            reacts = reactletters(meslist[random.randint(0,len(meslist)-1)])
-
-            for n in range(len(reacts)):
-
-                await mess.add_reaction(reacts[n])
-
+        #Check whether we are in the art claiming forum, or somewhere else in the server
+        if chan.type == discord.ChannelType.public_thread:
+            if chan.parent.id != artClaimForumID:
+                insideArtForumThread = False
         else:
+            insideArtForumThread = False
+        emb = discord.Embed(title = reaction.member.name + " has claimed this artwork to make a character from.", colour = embcol)
+        if insideArtForumThread:
+            #Add the "claimed" tag to the post
+            await chan.add_tags(chan.parent.get_tag(1065081440481574923))       #that number is the id of the "Claimed" tag. See a list of all tags by doing print(chan.parent.available_tags)
+            user = await client.fetch_user(int(reaction.member.id))
+            await mess.channel.send(f"Image claimed by {user.display_name}")
 
-            try:
+            
+        else:
+            emb = discord.Embed(title = reaction.member.name + " has claimed this artwork to make a character from.", colour = embcol)
+            emb.set_thumbnail(url = mess.attachments[0])
+            artForumChannel = client.get_channel(artClaimForumID)
+            user = await client.fetch_user(int(reaction.member.id))
+            if mess.channel.type == discord.ChannelType.public_thread:
+                channelName = mess.channel.parent.name
+            else: channelName = mess.channel.name
 
-                a = mess.attachments[0]
+            await artForumChannel.create_thread(name=f"Claimed from {channelName} by {user.display_name}", content = mess.attachments[0], applied_tags=[artForumChannel.get_tag(1065081440481574923)])
 
-                await client.get_channel(994340109962973204).send(reaction.member.name)
+        await user.send("You have claimed this image. If it vanishes from here, it should still be in the channel.")
+        try:
+            emb.set_thumbnail(url = mess.attachments[0])
+            await user.send(content = mess.attachments[0])
 
-                await client.get_channel(994340109962973204).send(mess.attachments[0].url)
+        except IndexError:
+            emb.set_thumbnail(url = mess.content)
+            await user.send(mess.content)
 
-            except IndexError:
-
-                await mess.channel.send("That message doesn't contain an image.")
 
     elif reaction.emoji.name == "❓":
 
@@ -4432,7 +4429,7 @@ async def on_raw_reaction_add(reaction):
 
                 pass
 
-    if reaction.emoji.name == "cuffs":
+    if reaction.emoji.name == "cuffsx":
 
         chan = client.get_channel(reaction.channel_id)
 
