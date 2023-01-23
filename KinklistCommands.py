@@ -817,11 +817,11 @@ async def kinksurvey(message):
     playerIndex = -1 #Contains the line number in the google sheet, in case they are retaking the survey - We need to overwrite the previous result
     kinkdata, namestr, targname = await getKinkData(message)
     if str(message.channel.id) != kinkcreatechannel:
-        await message.channel.send(embed = discord.Embed(title = "This is not the place to talk about that.", description = f"We will gladly talk about your deepest desires, <@{targname.id}>. We prefer a bit of privacy for that however. Please use the <#{kinkcreatechannel}> channel to call this command."))
+        await message.channel.send(embed = discord.Embed(title = "This is not the place to talk about that.", description = f"We will gladly talk about your deepest desires, <@{targname.id}>. We prefer a bit of privacy for that however. Please use the <#{kinkcreatechannel}> channel to call this command.", colour = embcol))
         return
     if str(targname) in str(kinkdata):
 
-        await message.channel.send(embed = discord.Embed(title = "We already know your deepest desires", description = f"Your kinklist is already registered with us, <@{targname.id}>. If you want to take the whole survey again reply `1`, otherwise reply `0`.\n If you want to edit it a single kink, use %kinkedit."))
+        await message.channel.send(embed = discord.Embed(title = "We already know your deepest desires", description = f"Your kinklist is already registered with us, <@{targname.id}>. If you want to take the whole survey again reply `1`, otherwise reply `0`.\n If you want to edit it a single kink, use %kinkedit.", colour = embcol))
         #See if the user wants to retake the survey
         try:
             msg = await client.wait_for('message',  check = check(message.author), timeout=30)

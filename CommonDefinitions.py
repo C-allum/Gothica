@@ -78,6 +78,8 @@ if liveVersion: #Set to 1 to use the real spreadsheets, or 0 to use the testing 
 
     Randomlootsheet = "19Dc4PI-E5OubesNroJfB4zKg9bqqqbdPelodjH6ecNw"
 
+    IncomeTrackingSheet= "1GKiiWlTPlMDj8FCiNZcNSF_FFJi6J_CKTyimdjoo9GU"
+
     logchannel = 918257057428279326
 
 else:
@@ -97,6 +99,8 @@ else:
     Plotsheet = "17ZTklwFnnrVk1qeZLOnEK6YacNQusRljUxaSXTvPDWU" #No change as yet
 
     Randomlootsheet = "19Dc4PI-E5OubesNroJfB4zKg9bqqqbdPelodjH6ecNw"
+
+    IncomeTrackingSheet= "1OTbBTaQvNYGgktBvyXYxb6TqjhC9XeyHcNAoi92BL68"
 
     logchannel = 1031701327169998958 #Test Server
 
