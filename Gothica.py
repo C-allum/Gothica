@@ -4435,61 +4435,6 @@ async def on_raw_reaction_add(reaction):
 
                 pass
 
-    if reaction.emoji.name == "cuffsx":
-
-        chan = client.get_channel(reaction.channel_id)
-
-        mess = await chan.fetch_message(reaction.message_id)
-
-        if reaction.channel_id == 994340109962973204:
-
-            emb = discord.Embed(title = reaction.member.name + " has claimed this artwork to make a character from.", colour = embcol)
-
-            user = await client.fetch_user(int(reaction.member.id))
-
-            await user.send("You have claimed this image. If it vanishes from here, it should still be in the channel.")
-
-            try:
-
-                emb.set_thumbnail(url = mess.attachments[0])
-
-                await user.send(mess.attachments[0])
-
-            except IndexError:
-
-                emb.set_thumbnail(url = mess.content)
-
-                await user.send(mess.content)
-
-            meslist = ["CLAIMED"]
-
-            reacts = meslist[random.randint(0,len(meslist)-1)]
-
-            reacts = reactletters(meslist[random.randint(0,len(meslist)-1)])
-
-            for n in range(len(reacts)):
-
-                await mess.add_reaction(reacts[n])
-
-        else:
-
-            try:
-
-                a = mess.attachments[0]
-
-                await client.get_channel(994340109962973204).send(reaction.member.name)
-
-                await client.get_channel(994340109962973204).send(mess.attachments[0].url)
-
-            except IndexError:
-
-                await mess.channel.send("That message doesn't contain an image.")
-
-    elif reaction.emoji.name == "❓":
-
-        mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
-
-        await client.get_channel(918257057428279326).send(str(reaction.member.name) + " queried the tupper of " + str(mess.author))
 
     elif reaction.emoji.name =="kinklist":
 
