@@ -2284,7 +2284,7 @@ async def on_message(message):
                                                 try:
                                                     
                                                     #last = await client.get_channel(sceneno).history(limit=1, oldest_first=False).flatten()
-                                                    last = [joinedMessages async for joinedMessages in client.get_channel(sceneno).history(limit=1, oldest_first=False).flatten()] #Fix for pebblehost Await issue
+                                                    last = [joinedMessages async for joinedMessages in client.get_channel(sceneno).history(limit=1, oldest_first=False)] #Fix for pebblehost Await issue
                                                     prevlist.append(str("`" + str(a+1) + "` " + str(prevs[a]) + " - Last message by: " + last[0].author.name))
 
                                                 except AttributeError:
