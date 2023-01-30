@@ -78,8 +78,6 @@ if liveVersion: #Set to 1 to use the real spreadsheets, or 0 to use the testing 
 
     Randomlootsheet = "19Dc4PI-E5OubesNroJfB4zKg9bqqqbdPelodjH6ecNw"
 
-    IncomeTrackingSheet= "1GKiiWlTPlMDj8FCiNZcNSF_FFJi6J_CKTyimdjoo9GU"
-
     logchannel = 918257057428279326
 
 else:
@@ -99,8 +97,6 @@ else:
     Plotsheet = "17ZTklwFnnrVk1qeZLOnEK6YacNQusRljUxaSXTvPDWU" #No change as yet
 
     Randomlootsheet = "19Dc4PI-E5OubesNroJfB4zKg9bqqqbdPelodjH6ecNw"
-
-    IncomeTrackingSheet= "1OTbBTaQvNYGgktBvyXYxb6TqjhC9XeyHcNAoi92BL68"
 
     logchannel = 1031701327169998958 #Test Server
 
@@ -162,8 +158,6 @@ prevchan = 0
 selopts = []
 
 column = ["F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","AA","AB"]
-
-artClaimForumID = 1050252064455925790
 
 #----------------EconomyValues----------------
 
@@ -400,49 +394,169 @@ cardtemp = cardnames
 smallblind = 50
 bigblind = 100
 
-#Help
-
-helptextintro = "**Hello, We are Gothica, the Shoggoth Servants of The Mistress. As part of our duties here in The Dungeon, we keep a registry of all the characters within the Dungeon. You can find those records either in #character-index, or in this archive:**\nhttps://docs.google.com/spreadsheets/d/1iHvP4HC8UQqyiMmC3Xiggx8-17e5SGWJMncEeoiZP1s/edit?usp=sharing"
-helptextreg = "**Registering a character:**\n\nTo register a character, go to #character-creation and type some information about them. This message must start with Name, but after that, you can use as many or as few bits of information as you want. Each should be on its own line. For example:\n\n`Name: Lalontra`\n`Race: Water Genasi`\n\nPossible Fields are:\n\nName\nRace\nGender\nPronouns\nAge\nClass\nLevel\nSheet\nAlignment\nBio\nSexuality\nSkin Colour\nHair Colour\nEye Colour\nHeight\nWeight\nSummary\nImage"
-helptextedit = "**Editing a character:**\n\nTo edit a character, type `" + myprefix + "edit Name Field New-Value`, as a demonstration:\n\n`" + myprefix + "edit Lalontra class Ranger`\n\nThis will match a character's name even if you only use part of the name."
-helptexttrans = "**Transferring ownership of a character:**For obvious reasons, only the owner of a character can edit them, but there are occasions where you want to give a character to someone else, for example in an auction. To transfer the character, type `" + myprefix + "transfer Name @New-Owner`, for example:\n\n`" + myprefix + "transfer Lalontra @C_allum`"
-helptextlist = "**Listing your characters:**\n\nTo create a list of the characters owned by any particular player, type `" + myprefix + "charlist`. Send the command without any arguments to see your own characters, or add a mention after it to see someone else's. As below:\n\n`" + myprefix + "charlist @C_allum`"
-helptextsearch = "**Searching for a character or attribute:**\n\nTo search for a character or attribute, type `" + myprefix + "search Search-term`. If the search term is within the name of a character, it will provide that character's full bio. As an example, to find the bio of Lalontra you might type:\n\n`" + myprefix + "search Lal`\n\nIf the search term is not found in the name of a character, you can instead seach by a data field, done by typing`" + myprefix + "search Field Search-Term`, such as:\n\n`" + myprefix + "search class Ranger`\n\nIf the first argument after the command is neither in the name of a character, nor a field name, it will search the whole database, and provide details on where the word occurs. If you were to type:\n\n`" + myprefix + "search blue`\n\nYou would see information about any characters whos eyes, hair or skin colour (or any other attribute) was blue."
-helptextretire = "**Retiring a character:**\n\nIf you want to retire a character for any reason, type `" + myprefix + "retire Name`, as per the below example||, which was rather painful to write!||:\n\n`" + myprefix + "retire Lalontra`"
-helptextactivate = "**Activating a character:**\n\nIf you need to activate a previously unavailable character, whether because you made or recieved them as a transfer from another user without having a slot available, once you create space or earn another slot, you can activate them by using`" + myprefix + "activate Name`. Example:\n\n`" + myprefix + "activate Lalontra`"
-helptextplothook = "**Generating a plothook:**\n\nWe can generate plothooks from your active characters, picking a scene they might be in, to act as a seed for roleplaying. These hooks are purely optional and can be ignored, even after they have been generated. They are simply ideas. The command is: `" + myprefix + "plothook`. You can also add the name (or part of the name) of one of your characters after the command to generate a plothook for them, for example, C_allum could do `" + myprefix + "plothook lal` to generate a plothook for Lalontra. You can additionally summon a leaderboard to see how many plothooks everyone has seen by using `" + myprefix + "plotleaderboard`"
-helptextrooms = "**Finding an empty room to roleplay in:**\n\nThe `" + myprefix + "room` command will find you a public room that has not been used for a while, and will insert an empty message as a scene break."
-helptextrecents = "**Checking the most recent message in each public room:**\n\nWe peek into each public room, and take a look at the last message there. Summon this check using `" + myprefix + "recent`. Room names written in **bold** have been inactive for more than three hours."
-helptextwild = "**Rolling on the Wild and Lustful Magic Table**\n\nWe roll for you and check the result on the wild and lustful magic table. This is especially useful for people playing wild magic classes in the dungeon, though anyone can use it. To do so, type `" + myprefix + "wildlust`."
-helptextshop = "**Browsing Each Shop:**\n\nWhile you *can* use `$shop` to see all the items available in the whole market, it is often easier to view the list of items for a particular shop. Using `" + myprefix + "shop searchterm`, you can see the catalogue of items from any individual store. You can also use `" + myprefix + "shop` in the shop channel itself.\n\nIn addition to this, we help the shopkeepers personalise a few messages, such as the message when you buy an item."
-helptextembed = "**Generating Custom Embeds:**\n\nYou can create your own embeds with Gothica if you want to create better looking messages for announcing things or setting up private rooms or in campaigns. To do so, use: \n`" + myprefix + 'embed -t =Embed Title= -d =Embed Text=`\nBoth the title and text need equals signs on each side. You can also do -i =image link= or -m =thumbnail link=.\n\nAs an alternative, you can generate simple embeds using by not including a title or text argument, and the embed will generate using whatever you write as your command as the embed body. For example, `' + myprefix + "embed The Mistress is watching you`, will generate an embed that says just that."
-
-helptextmoderator = "And, since you are a dungeon moderator, you also have access to the following:\n(This part of the help section is only visible in #admin-bots)\n\n"
-helptextverify = "**Verifying a user:**\n\nOnce you have confirmation that a user is over 18, type `" + myprefix + "verify @user`. They will have the 'Verified' role added to them, and be made aware that they can close the ticket. We will also post that they have been verifed in the log channel (#server-member-updates) and post a welcome message in #main-camp."
-helptextraid = "**Giving a member a raid role:**\n\nUsing `" + myprefix + "raid 1/2/3/lead @user`, you can grant anyone the ability to participate or run raids."
-helptextlottery = "**Awarding a random player:**\n\nModerators are able to run lotteries, which reward players for registering characters. We take the names of players from the spreadsheet, with every unique name added to a list. A random name is then drawn, and a message shown with the winner. To generate this, run `" + myprefix + "lottery`. You can also add an amount of dezzies after it, for example: `" + myprefix + "lottery 100`, which will say they have won 100 dezzies. You still need to handle the transfer of dezzies yourself, of course. Another function of this command is the ability to give a reason for the lottery. Typing `" + myprefix + "lottery 100 Weekly Givaway` will include that on the embed."
-helptextlogs = "**Gothica's Logs:**\n\nWe record a few things here in the dungeon. The most useful is, of course, #character-index. This stores the bios of any character created in the dungeon, and updates when they are edited. The actual data is stored on this archive:\nhttps://docs.google.com/spreadsheets/d/1iHvP4HC8UQqyiMmC3Xiggx8-17e5SGWJMncEeoiZP1s/edit?usp=sharing\nIf you would like edit access, send Callum your email address. Please don't move columns around without talking to him first.\n\nIn #gothica-logs, we keep track of things like characters being registered under the age of 18, or over level 14. This channel is also used if someone registers more characters than they have slots. On the subject of slots, we track those by searching a person's roles, and finding any with a '+' symbol beside them, and then adding the number beside that to 5.\n\nWe track users that we have verified in the same way that Dungeon Guard did, in #server-member-updates.\n\nWe currently also check the channels for tupperbot breaking, which happens when people edit messages. We ping Callum, who fixes the #alias-bot log channel. We've tried doing it ourselves, but tupper ignores us..\n\nWe also keep track of messages sent in the shops, and ping Lorekeepers if someone sends a message more than three hours after the last one."
-helptextrecentsmoderator = "**Checking the most recent message in each public room:**\n\nWe peek into each public room, and take a look at the last message there. Summon this check using `" + myprefix + "recent`. As you are moderator, you can also add the word `break` after the command, which will insert a scene break in each room that has been inactive for more than three hours, which are also written in bold in the reply."
-
-helpline = "\n\n------------------------------------------------------------------------------------------\n\n"
-
-helptext = helptextintro + helpline + "Currently, we handle the following functions. Each has a helptext command that you can use to get more information about it:\n\n**Character Registration** - `" + myprefix + "help registration`\n**Editing a Character** - `" + myprefix + "help edit`\n**Tranferring Ownership of a Character** - `" + myprefix + "help transfer`\n**Listing a Player's Available Characters** - `" + myprefix + "help charlist`\n**Searching the Database** - `" + myprefix + "help search`\n**Retiring a Character** - `" + myprefix + "help retire`\n**Activating a Character** - `" + myprefix + "help activate`\n**Generating a Potential Plothook** - `" + myprefix + "help plothook`\n**Finding an Empty Public Space** - `" + myprefix + "help room`\n**Checking recent messages** - `" + myprefix + "help recent`\n**Rolling on the Wild and Lustful Magic Table** - `" + myprefix + "help wildlust`\n**Browsing the shops** - `" + myprefix + "help shop`\n**Custom Embeds** - `" + myprefix + "help embed`"
-
-helptext_moderator = helptext + "\n\n" + helptextmoderator + "**Verifying a user** - `" + myprefix + "help verify`\n**Selecting a random player to win** - `" + myprefix +"help lottery`\n**Raid roles** - `" + myprefix + "help raid`\n**Gothica's Logs** - `" + myprefix + "help log`"
-
-helptextintro = "**Hello, We are Gothica, the Shoggoth Servants of The Mistress. As part of our duties here in The Dungeon, we provide a number of services to facilitate your roleplay. These services we manage include:**"
-
-helptextchar = "**Character Registry:** We maintain records of every character in the dungeon, allowing them to be easily accessed and edited. To see the functions we provide for this in detail, do %helpregistry"
-helptextregistry = "**Economy:**We maintain the economy of the server, keeping track of everyone's dezzies and items. Dezzies are our server currency, and are used in the in game shops. "
-
 #Help message
 async def helplist(message):
 
-    if message.content.lower().startswith("%help regis"):
+    helptextmain = ["**Hello, We are Gothica, the Shoggoth Servants of T̶̤̻̘͙̩̖̿ͅḩ̷̲̣̙͚̯̮̐͂̃͜͠e̴̳̦͍̮̹̦̠͛͒̅́ ̵͚̥̯̫̼̦̦̻͌͑̑̑̕Ḿ̷͓̀͗̇̊͆͒̀i̴̻̼̙̺͙͂̃͘͝s̵͖̝͈̤̖͓̬̖͗̃͘ͅt̷̢̫̠̼̭͚́̅͒̐͋̃̈́̂͠r̶̡̧̭͓͇̝̥͖̺͑̆̅͑͂̉̊̋͘͝e̸̦͈̩̠̩̣̔̊̎̀̔͒̊̎͜͝s̵̛̛̭̙̜͑̓̒̾͜ͅs̶̢̝͍̯͚̰͛́̾. We facilitate a number of functions in the dungeon. A summary of some of those functions is given below. If you would like more information on any function, type the number that corresponds to it. You can also specify it when you call the help command, such as by doing `%help registration`**"]
+    
+    helpcategories = ["General Functions", "Character Index Functions", "Roleplay Functions", "Kink Functions", "Economy Functions", "Lorekeeper Only Functions"]
+    helpnames = [
+        ["Start", "Rulebook", "Embed", "Help"],
+        ["Character Registration", "Edit", "Transfer", "Charlist", "Search", "Retire", "Activate", "Deactivate"],
+        ["LFG", "Plothook", "Plotlead", "Room", "Break", "Recent", "Wildlust", "Scenes"],
+        ["Kinklist", "Kinksurvey", "Kinkfill", "KinkEdit", "Kinkplayers"],
+        ["Work", "Slut", "Money", "Inventory", "Give-Money", "Leaderboard", "Shop", "Item", "Buy", "Sell", "GiveItem", "Invest", "Bid", "Spend"],
+        ["Gag", "Emote", "Adventurer", "Verify", "Kinkencounter", "oocembed", "oocmsg", "Add-money", "Remove-Money", "AddItem", "Spellrotation", "RandLoot"]
+    ]
+    helpsummary = [
+        ["Calls up some welcoming information for new members", "Summons a link to the lewd rulebook", "Generates an embed, like this one", "You are here."],
+        ["Registers a character to the index", "Edits a character", "Gives a character to another player", "Lists the characters owned by a player", "Provides the index entry of a character", "Retires a character", "Sets a character temporarily unactive", "Reactivates a deactivated character"],
+        ["Helps you find roleplay partners", "Generates a random plothook for your character", "Checks how many plothooks you have seen", "Suggests an empty room for you to roleplay in.", "Generates a scene break", "Provides the time of the last message in each roleplay channel", "Rolls on the wildlust table", "Stores and recalls your list of active scenes"],
+        ["Summons the kinks of the tagged player", "Allows you to fill out the kink survey", "Fills any holes in the kinksurvey", "Edits a kink", "Summons a list of players with the targeted kink"],
+        ["Earns daily dezzies", "Earns more dezzies, with a risk to lose some instead", "Checks your balance", "Displays your items", "Gives a number of dezzies to someone else", "Shows how rich the richest people on the server are", "Displays the listed shop", "Provides details on a shop or inventory item", "Buys an item", "Sells an item, at a loss.", "Transfers an item to another player", "Spends dezzies on a community project", "Bids on an auction in the Black Market", "Removes Dezzies from yourself"],
+        ["Gags a user in ooc", "Reacts to a message with emote letters", "Grants a player the Adventurer Role", "Confirms that a user is over 18", "Generates a random encounter, respecting the player's kinks", "Generates an embed in ooc", "Sends a message in ooc", "Adds money", "Removes money","Adds an item from the shop to a user's inventory", "Checks Runar's stock of spells", "Generate random loot that fits a player's kinks"]
+    ]
+    helpfull = [
+        ["The `%start` command provides an overview of how new players can start making characters and roleplaying in the dungeon, highlighting how to get roles and create a character and tupper.",
+        "Summons the dropbox link to the latest version of the Lewd Rulebook, as well as some useful quick stats on inhibition and arousal. The command is `%rulebook`",
+        "Allows you to generate a message in a fancy embed. If you simply type `%embed`, followed by your message, it will use the message as the title.\n\nIf you want different fields like descriptions and images, it is a bit more complex. In this mode, to write a title and description, you would do: `%embed -t =Title goes here= -d =Desciption between these equals signs=` You can also add -i =image link= or -m =thumbnail link=. Obviously, this means that you can't use equals signs in the content of your embed.",
+        "Summons this interface. You can use just `%help` on its own, which pulls up the full list of commands, or you can specify the category (So `%help economy` will pull up only the economy commands) or the specific command (`%help help`, for example, will bring up this message)."
+        ],
+        ["To register a character, go to #character-creation and type some information about them. This message must start with Name, but after that, you can use as many or as few bits of information as you want. Each should be on its own line. For example:\n\n`Name: Lalontra`\n`Race: Water Genasi`\n\nDo not use a tupper when creating your character.\n\nPossible Fields are:\n\nName\nRace\nGender\nPronouns\nAge\nClass\nLevel\nSheet\nAlignment\nBio\nSexuality\nSkin Colour\nHair Colour\nEye Colour\nHeight\nWeight\nSummary\nImage",
+        "To edit a character, type `" + myprefix + "edit Name Field New-Value`, as a demonstration:\n\n`" + myprefix + "edit Lalontra class Ranger`\n\nThis will match a character's name even if you only use part of the name.",
+        "For obvious reasons, only the owner of a character can edit them, but there are occasions where you want to give a character to someone else, for example in an auction. To transfer the character, type `" + myprefix + "transfer Name @New-Owner`, for example:\n\n`" + myprefix + "transfer Lalontra @C_allum`",
+        "To create a list of the characters owned by any particular player, type `" + myprefix + "charlist`. Send the command without any arguments to see your own characters, or add a mention after it to see someone else's. As below:\n\n`" + myprefix + "charlist @C_allum`",
+        "To search for a character or attribute, type `" + myprefix + "search Search-term`. If the search term is within the name of a character, it will provide that character's full bio. As an example, to find the bio of Lalontra you might type:\n\n`" + myprefix + "search Lal`\n\nIf the search term is not found in the name of a character, you can instead seach by a data field, done by typing`" + myprefix + "search Field Search-Term`, such as:\n\n`" + myprefix + "search class Ranger`\n\nIf the first argument after the command is neither in the name of a character, nor a field name, it will search the whole database, and provide details on where the word occurs. If you were to type:\n\n`" + myprefix + "search blue`\n\nYou would see information about any characters whos eyes, hair or skin colour (or any other attribute) was blue."
+        "If you want to retire a character for any reason, type `" + myprefix + "retire Name`, as per the below example||, which was rather painful to write!||:\n\n`" + myprefix + "retire Lalontra`",
+        "If you need to activate a previously unavailable character, whether because you made or recieved them as a transfer from another user without having a slot available; or `%deactivated` them temporarily, you can activate them by using`" + myprefix + "activate Name`. Example:\n\n`" + myprefix + "activate Lalontra`",
+        "Deactivating a character means that they will have a ~~strikethough~~ on their name when your character list is called using `%charlist`. This is commonly because they are being used in another scene that you want to finish before starting a new one with them, or can simply be if you're looking for a new scene but don't want to play that specific character at the time."
+        ],
+        ["`%lfg` gives you the Looking for Role Play role, and allows you to see the #looking-for-new-roleplay channel. this role is restricted by time, so you only have access to the channel when you are actively looking for role play. You can also specify a number of hours to be active, by adding them after the command.\n\nRunning the `%kinkplayers` command in this channel will instead ping everyone with the relevant kinks (they'll only see the ping if they are also in the channel though)",
+        "We can generate plothooks from your active characters, picking a scene they might be in, to act as a seed for roleplaying. These hooks are purely optional and can be ignored, even after they have been generated. They are simply ideas. The command is: `" + myprefix + "plothook`. You can also add the name (or part of the name) of one of your characters after the command to generate a plothook for them, for example, C_allum could do `" + myprefix + "plothook lal` to generate a plothook for Lalontra.",
+        "There are a number of plothooks in the system, and by running `%plotleaderboard` you can see how many each person has found.",
+        "`%room` looks at the list of roleplay rooms available, and chooses one that looks quiet enough for you to start a scene in.",
+        "If you want to divide your scene from the previous one, you can run `%break` (or just `%br`). This will tell us to create a division in the room.",
+        "We peek into each public room, and take a look at the last message there. Summon this check using `" + myprefix + "recent`. Room names written in **bold** have been inactive for more than three hours.",
+        "We have a custom wild magic table available to sorcerers in the dungeon. If you type `%wildlust`, Gothica will roll on that table for you.\n\nThe full table can be seen in the lewd rulebook.",
+        "Gothica can track your scenes. Running `%scenes add` followed by a brief description of the scene and then the link to it, will tell us to track that scene. You can then do `%scenes` to summon the list of scenes, and we will inform you who sent the last message in the channel. As an example, you might type: `%scenes add Lalontra and River fight an evil fae #An-Uncomfortable-Reunion` to add that scene to your watchlist. You can also remove scenes with `%scenes remove` and then the number of the one to remove."
+        ],
+        ["This function lists a users kinks. To use it, run `%kinklist @name`. We will then summon the overview of the list of preferences that the user has filled out. You can then select further information on any particular category of kinks, such as mental domination or clothing and toys. Additionally, if you react to a message using the kinklist emote (<:kinklist:1053378814190813304>), we will direct message you their full kinklist.",
+        "`%kinksurvey` is the function that allows you to complete the survey. We will open a thread in which you can tell us all about your kinks and preferences. This command can only be run in the #bots-and-constructs channel. This survey takes some time to run through.",
+        "We sometimes add kinks to our list, based on user feedback. If we have added any kinks since you took your survey, you can run `%kinkfill` to generate a new thread in which to answer those questions.",
+        "If you find that your preferences for a certain thing have changed, you can run `%kinkedit` to update this. Running the command on its own will bring up a navigatable list of kinks, while specifying the name of the kink in the message will edit that one directly.",
+        "If you are looking for someone who is into a particular kink, you can run `%kinkplayers` followed by the name of the kink. For example, `%kinkplayers Handholding` will bring up a long list of degenerates who have that marked as a favourite. Running this in #looking-for-new-roleplay will ping everyone associated with that kink who is also looking to start a scene."
+        ],
+        ["This is the main way that dezzies are earned in the server. Each day, you are able to run `%work`, which awards a random number of dezzies. Running this command every day earns a streak, which gets extra dezzies.",
+        "If working isn't getting enough dezzies, you can also try `%slut`. This has the potential to earn more dezzies, and can be run every six hours. This does also have the risk that you will instead lose dezzies, so use carefully.",
+        "We can help you check your balance in one of two ways. First, we can simply shove you, and if you make the Strength (Athletics) or Dexterity (Acrobatics) check, you do not fall prone. If you would rather we check the balance of your dezzie account, simply use `%money`",
+        "To display the items you have bought, earned or found in the dungeon, you can use `%inventory`. This also displays the number of each that you have and a brief summary of each.",
+        "To transfer dezzies from your account to someone else's, use the command `%give-money @name amount`. This value will be removed from your account and added to that of the targeted player.",
+        "The richest players in the dungeon can be displayed using the `%leaderboard` command.",
+        "The inventories of the various shops in the market can be shown using the `%shop shopname` command, for example running `%shop widow` will pull up the listing for the Widow's Boutique.",
+        "To display the details of an item, either from the shop or one that has been given to you through a quest or other reward, you can run `%item itemname`.",
+        "Buying an item can be done by running `%buy item amount`. We will remove the dezzies and add the item to your inventory. We will also relay a message from the shopkeeper.",
+        "You can sell items from your inventory, based on the cost you paid for them. We will return them to the shop or to other areas of the dungeon for you, and will award you half the dezzies they are worth. To use this command, do `%sell amount itemname`",
+        "To move an item from your inventory to that of another player, you can do `%giveitem @name itemname`.",
+        "We sometimes run community projects - areas of the dungeon that require funding from the denizens within. This allows you to have your characters contribute to these schemes to further the development of the dungeon. In a thread that has been set up as a community project, you simply use `%invest amount`",
+        "When a market is on, you can bid on *wares* using the `%bid amount` command. Your bid will go to the name of the ware in whos thread you bid.",
+        "If you wish to remove dezzies from yourself for some reason (often because a lorekeeper suggests it, or if you are eating them), you can use `%spend amount`."
+        ],
+        ["You can gag a user for 69 seconds in #ooc. This replaces all their messages with mmMhing. The command is `%gag @name`",
+        "Gothica can react to a message with letters. By using `%emote messagelink words`, you can have them react to the linked message with the words of your choice. Be aware that you can only use each letter once per word, so trying to get Gothy to react a word like Callum to a post would end up with the awful seplling of Calum.",
+        "Approving a character sheet for use in the dungeon depths is done through the `%adventurer @name charactername` command. Tagging them allows us to know which user to give the role to.",
+        "The verify command gives a user the Verified role, and welcomes them to the server. This is only available to moderators. The syntax is `%verify @name`",
+        "Generating encouters that are cross referenced with a user's kinks can be done with `%kinkencounter @name`. At the moment, this draws from a limited list and is for a single player, but future plans involve multiple characters and more in depth encounters from a larger list.",
+        "If you want to send an embed to #ooc, you can use `%oocembed` This follows the same rules as `%embed` in terms of adding images, titles and thumbnails.",
+        "We encourage you to send messages as us in ooc to give us a bit of personality. Using `%oocmsg` somewhere hidden like the lorekeeper bot channel, you will be able to type a message without showing as typing, or being able to be queried as a tupper would be.",
+        "If you wish to add dezzies to a player (rather than giving them from your own balance), you can use `%add-money @name amount`.",
+        "Like adding dezzies, you can remove dezzies from a user using the `%remove-money @name amount` command. This is especially useful if they are recieving a custom item from the shops or need to pay a fee in the guild.",
+        "To add an item to a player's inventory from the shop, you can run `%additem @name item`. For example, `%additem @Callum basic ink` would give Callum a basic tattoo.",
+        "The spell scrolls that Runar has available are constantly changing. When someone requests one, you can run `%spellrotation`, which will provide a list of the spells he has in stock, along with their prices.",
+        "To reward a player with randomised loot, you can run the `%randloot @name` command. This generates a piece of loot and compares it to their kinks - so they cannot get a piece of loot that crosses one of their limits. You can also specify the rarity of the item, or a range of rarities to roll from, for example, `%randloot @C_allum very rare` or `%randloot @C_allum common-rare`. It will then ask if you want to cancel, edit the item, or add it to the player's inventory as is."
+        ]
+        ]
 
-        helptext = "**Character Registry:** We maintain records of every character in the dungeon, allowing them to be easily accessed and edited. Functions available for this service include:\n\n**Registering a Character:** To register a character, go to #character-creation and type some information about them. This message must start with Name, but after that, you can use as many or as few bits of information as you want. Each should be on its own line. For example:\n\n`Name: Lalontra`\n`Race: Water Genasi`\n\nPossible Fields are:\n\nName, Race, Gender, Pronouns, Age, Class, Level, Sheet, Alignment, Bio, Sexuality, Skin Colour, Hair Colour, Eye Colour, Height, Weight, Summary\n\n**Editing a character:**\n\nTo edit a character, type `" + myprefix + "edit Name Field New-Value`, as a demonstration:\n\n`" + myprefix + "edit Lalontra class Ranger`\n\nCurrently, this will match a character's name if you only use one name, as this function doesn't handle spaces yet.\n\n**Transferring ownership of a character:**For obvious reasons, only the owner of a character can edit them, but there are occasions where you want to give a character to someone else, for example in an auction. To transfer the character, type `" + myprefix + "transfer Name @New-Owner`, for example:\n\n`" + myprefix + "transfer Lalontra @C_allum`\n\n**Listing your characters:**\n\nTo create a list of the characters owned by any particular player, type `" + myprefix + "charlist`. Send the command without any arguments to see your own characters, or add a mention after it to see someone else's. As below:\n\n`" + myprefix + "charlist @C_allum`\n\n**Searching for a character or attribute:**\n\nTo search for a character or attribute, type `" + myprefix + "search Search-term`. If the search term is within the name of a character, it will provide that character's full bio. As an example, to find the bio of Lalontra you might type:\n\n`" + myprefix + "search Lal`\n\nIf the search term is not found in the name of a character, you can instead seach by a data field, done by typing`" + myprefix + "search Field Search-Term`, such as:\n\n`" + myprefix + "search class Ranger`\n\nIf the first argument after the command is neither in the name of a character, nor a field name, it will search the whole database, and provide details on where the word occurs. If you were to type:\n\n`" + myprefix + "search blue`\n\nYou would see information about any characters whos eyes, hair or skin colour (or any other attribute) was blue.\n\n**Retiring a character:**\n\nIf you want to retire a character for any reason, type `" + myprefix + "retire Name`, as per the below example||, which was rather painful to write!||:\n\n`" + myprefix + "retire Lalontra`\n\n**Activating a character:** If you need to activate a previously unavailable character, whether because you made or recieved them as a transfer from another user without having a slot available, once you create space or earn another slot, you can activate them by using`" + myprefix + "activate Name`. Example:\n\n`" + myprefix + "activate Lalontra`\n\n**Deactivating a Character:**"
+    #Check for lorekeeper channels
+    if message.channel.category.name != "Test":# "﴿─﴾ 𝙻𝚘𝚛𝚎𝚔𝚎𝚎𝚙𝚎𝚛'𝚜 𝙲𝚊𝚋𝚊𝚕 ﴿─﴾":
+        helpcategories = helpcategories[:-1]
+        helpnames = helpnames[:-1]
+        helpsummary = helpsummary[:-1]
+        helpfull = helpfull[:-1]
 
-    await message.channel.send(embed = discord.Embed(title = "Help", description = helptext, colour = embcol))
+
+    if " " in message.content: #User specified query matches category name
+        helpquery = message.content.split(" ", 1)[1].lower().replace("functions", "")
+        if helpquery.lower() in str(helpcategories).lower():
+            catindex = len(helpcategories) +1
+            for a in range(len(helpcategories)):
+                if helpquery.lower() in helpcategories[a].lower():
+                    catindex = a
+                    break
+            helptextcatmain = []
+            index = 0
+            for b in range(len(helpnames[catindex])):
+                index += 1
+                helptextcatmain.append("`" + str(index) + "`: *%" + helpnames[a][b] + ":* " + helpsummary[a][b])
+            await message.channel.send(embed = discord.Embed(title = "Gothica Help: " + helpcategories[catindex], description = "\n".join(helptextcatmain), colour = embcol))
+            try:
+                msg = await client.wait_for('message', timeout = 30, check = check(message.author))
+                try:
+                    helpindex = int(msg.content)-1
+                    await msg.delete()
+                except TypeError or ValueError:
+                    await message.channel.send(embed=discord.Embed(title="Selection Invalid",description="You must enter an integer", colour = embcol))
+                    await msg.delete()
+                    return
+            except asyncio.TimeoutError:
+                await message.channel.send("Selection Timed Out")
+                await message.delete()
+                return
+            try:
+                await message.channel.send(embed=discord.Embed(title = helpnames[catindex][helpindex].title() + " Help", description = helpfull[catindex][helpindex], colour = embcol))
+            except IndexError:
+                await message.channel.send(embed=discord.Embed(title="Selection Invalid",description="You must enter an integer between 1 and " + str(index), colour = embcol))
+            await message.delete()
+        elif helpquery.lower() in str(helpnames).lower(): #User specified query matches command name
+            for a in range(len(helpcategories)):
+                for b in range(len(helpnames[a])):
+                    if helpquery.lower() in helpnames[a][b].lower():
+                      await message.channel.send(embed=discord.Embed(title = helpnames[a][b].title() + " Help", description = helpfull[a][b], colour = embcol))
+        else:
+            await message.channel.send(embed = discord.Embed(title = "Gothica Help", description = "Your search query was not found", colour = embcol))
+    else: #Default Help Menu
+        index = 0
+        for a in range(len(helpcategories)):
+            helptextmain.append("\n**" + helpcategories[a] + ":**")
+            for b in range(len(helpnames[a])):
+                index += 1
+                helptextmain.append("`" + str(index) + "`: *%" + helpnames[a][b] + ":* " + helpsummary[a][b])
+        await message.channel.send(embed = discord.Embed(title = "Gothica Help", description = "\n".join(helptextmain), colour = embcol))
+        try:
+            msg = await client.wait_for('message', timeout = 30, check = check(message.author))
+            try:
+                helpindex = int(msg.content)
+                await msg.delete()
+            except TypeError or ValueError:
+                await message.channel.send(embed=discord.Embed(title="Selection Invalid",description="You must enter an integer", colour = embcol))
+                await msg.delete()
+                return
+        except asyncio.TimeoutError:
+            await message.channel.send("Selection Timed Out")
+            await message.delete()
+            return
+        catindex = len(helpcategories) +1
+        for c in range(len(helpcategories)):
+            if helpindex > len(helpnames[c]):
+                helpindex -= len(helpnames[c])
+            else:
+                catindex = c
+                break
+        helpindex -= 1
+        try:
+            await message.channel.send(embed=discord.Embed(title = helpnames[catindex][helpindex].title() + " Help", description = helpfull[catindex][helpindex], colour = embcol))
+        except IndexError:
+            await message.channel.send(embed=discord.Embed(title="Selection Invalid",description="You must enter an integer between 1 and " + str(index), colour = embcol))
+        await message.delete()
 
 #Dice Converter
 async def diceroll(message):
