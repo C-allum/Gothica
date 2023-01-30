@@ -1,6 +1,7 @@
 
 keys.json
 botTokens.py
-.vscode\*
-.vs\*
-__pycache__\*
+.vscode/*
+.vs/*
+__pycache__/*
+.vscode/launch.json
