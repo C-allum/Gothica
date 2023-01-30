@@ -560,9 +560,9 @@ async def charlist(message):
     if " " in message.content:
 
         if "help" in message.content.lower():
-
-            tit = "Character Registry Help"
-            desc = helptext
+            message.content = "%help charlist"
+            await helplist(message)
+            return
 
         else:
 
@@ -705,7 +705,7 @@ async def charlist(message):
 
     emb = discord.Embed(title = tit, description = desc, colour = embcol)
 
-    if desc != helptext and str(message.author.name) == targname:
+    if str(message.author.name) == targname:
 
         if pcharsact == 1:
 

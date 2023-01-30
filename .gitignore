@@ -5,3 +5,4 @@ botTokens.py
 .vs/*
 __pycache__/*
 .vscode/launch.json
+*.pyc
