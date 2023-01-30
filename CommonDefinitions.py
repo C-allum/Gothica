@@ -402,7 +402,7 @@ async def helplist(message):
     helpcategories = ["General Functions", "Character Index Functions", "Roleplay Functions", "Kink Functions", "Economy Functions", "Lorekeeper Only Functions"]
     helpnames = [
         ["Start", "Rulebook", "Embed", "Help"],
-        ["Character Registration", "Edit", "Transfer", "Charlist", "Search", "Retire", "Activate", "Deactivate"],
+        ["Character Registration", "Edit", "Transfer", "Charlist", "Search", "Retire", "Deactivate", "Activate"],
         ["LFG", "Plothook", "Plotlead", "Room", "Break", "Recent", "Wildlust", "Scenes"],
         ["Kinklist", "Kinksurvey", "Kinkfill", "KinkEdit", "Kinkplayers"],
         ["Work", "Slut", "Money", "Inventory", "Give-Money", "Leaderboard", "Shop", "Item", "Buy", "Sell", "GiveItem", "Invest", "Bid", "Spend"],
