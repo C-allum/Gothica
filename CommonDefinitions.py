@@ -159,6 +159,13 @@ selopts = []
 
 column = ["F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","AA","AB"]
 
+#This defines the art forum channel for the cuffs emote
+artClaimForumID = 1050252064455925790
+
+#These variables define which channels are toggled with %vacation
+LKVacationChannels = [912559434969022534, 996826636358000780, 1058951770870657166, 1008283892177965106]
+ModVacationChannels = [829477815782866956]
+
 #----------------EconomyValues----------------
 
 reactdz = 20
