@@ -1,3 +1,4 @@
+#import readline
 from CommonDefinitions import *
 
 kinkOptions = ["Fave", "Kink", "Like", "It depends", "Willing to try", "No Strong Emotions", "Never heard of it", "Not my thing", "Soft Limit", "Hard Limit"]
@@ -1380,7 +1381,7 @@ async def randloot(message):
             rarityroll = random.randint(1,100)
     except IndexError:
         rarityroll = random.randint(1,100)
-
+    
     if rarityroll <= commonpercent:
         rarity = "Common"
         rarityrange = "A3:G100"
@@ -1405,6 +1406,7 @@ async def randloot(message):
     randcol = random.choice(colours)
     randtoy = random.choice(sextoys)
     randgag = random.choice(gags)
+    randsize = random.choice(sizes)
     for a in range(limitloopmax): #Limit avoidance loop
         lootindex = random.randint(0,len(randomloot)-1)
         kinks = []
@@ -1434,12 +1436,12 @@ async def randloot(message):
         except IndexError:
             playerchar = "Someone"
             playerrace = "person"
-    lootTitle = await diceroll(str(randomloot[lootindex][0]).replace("[race]", randrace).replace("[playerchar]", playerchar).replace("[playercharrace]", playerrace).replace("[toy]", randtoy).replace("[gag]", randgag).title().replace("'S", "'s"))
-    lootDesc = await diceroll(str(randomloot[lootindex][3]).replace("[race]", randrace).replace("[colour]", randcol).replace("[playerchar]", playerchar).replace("[playercharrace]", playerrace).replace("[material]", random.choice(materials)).replace("[toy]", randtoy).replace("[gag]", randgag))
-
+    lootTitle = await diceroll(str(randomloot[lootindex][0]).replace("[race]", randrace).replace("[playerchar]", playerchar).replace("[playercharrace]", playerrace).replace("[toy]", randtoy).replace("[gag]", randgag).replace("[size]", randsize).title().replace("'S", "'s"))
+    lootDesc = await diceroll(str(randomloot[lootindex][3]).replace("[race]", randrace).replace("[colour]", randcol).replace("[playerchar]", playerchar).replace("[playercharrace]", playerrace).replace("[material]", random.choice(materials)).replace("[toy]", randtoy).replace("[gag]", randgag).replace("[size]", randsize))
+    
     try:
-        lootValue = str(randomloot[lootindex][4])
-    except IndexError:
+        lootValue = int(randomloot[lootindex][4])
+    except ValueError:
         try:
             if randomloot[lootindex][5] != "":
                 typemod = 0.5
@@ -1457,29 +1459,108 @@ async def randloot(message):
             lootValue = int(((int(await diceroll("[1d4]")) + 1) * 1000 * typemod) + int(await diceroll("[1d100]")) + 2000)
         elif rarity == "Legendary":
             lootValue = int((int(await diceroll("[2d6]")) * 2500 * typemod) + int(await diceroll("[1d100]")) + 10000)
-
+    lootValue = str(lootValue)
+    
     if ("Limit" in "".join(kinks)) or ("Not my Thing" in "".join(kinks)):
         await message.channel.send(embed = discord.Embed(title = "Random Loot Generation Failed", description = "We were unable to find a " + rarity + " item that was not a limit for " + namestr + ".\nTry again, specifying the rarity to a different value?\n\nCurrent rarity settings are:\n\nCommon: 1-" + str(commonpercent) + "\nUncommon: " + str(commonpercent+1) + "-" + str(uncommonpercent)+ "\nRare: " + str(uncommonpercent+1) + "-" + str(rarepercent)+ "\nVery Rare: " + str(rarepercent+1) + "-" + str(veryrarepercent)+ "\nLegendary: " + str(veryrarepercent+1) + "-100", colour = embcol))
+        await message.delete()
+        return
     elif reqkinks != "":
-        await message.channel.send(embed = discord.Embed(title = "Random Loot Generation", description = "Random loot generated and compared to " + namestr + "'s kinks:\n\n**" + lootTitle + ":**\n*" + str(randomloot[lootindex][1]) + " - " + rarity + "*\n" + lootDesc + "\n\nIt is worth " + str(lootValue) + dezzieemj + "\n\n-------------------------------------------------------------------------------\n\nHere is how the associated kinks compares with " + namestr + "'s preferences:\n\n" + "\n".join(kinks) + "\n\nRolls: Rarity d100:" + str(rarityroll) + ", Item index: " + str(lootindex), colour = embcol))
+        await message.channel.send(embed = discord.Embed(title = "Random Loot Generation", description = "Random loot generated and compared to " + namestr + "'s kinks:\n\n**" + lootTitle + ":**\n*" + str(randomloot[lootindex][1]) + " - " + rarity + "*\n" + lootDesc + "\n\nIt is worth " + str(lootValue) + dezzieemj + "\n\n-------------------------------------------------------------------------------\n\nHere is how the associated kinks compares with " + namestr + "'s preferences:\n\n" + "\n".join(kinks) + "\n\nRolls: Rarity d100:" + str(rarityroll) + ", Item index: " + str(lootindex) + "\n\n-------------------------------------------------------------------------------\n\n" + str(message.author.name) + ", from here, you can:\n\n`1`: Add the item to " + namestr + "'s inventory\n`2`: Edit the item\n`3`: Cancel", colour = embcol))
     else:
-        await message.channel.send(embed = discord.Embed(title = "Random Loot Generation", description = "Random loot generated and compared to " + namestr + "'s kinks:\n\n**" + lootTitle + ":**\n*" + str(randomloot[lootindex][1]) + " - " + rarity + "*\n" + lootDesc + "\n\nIt is worth " + str(lootValue) + dezzieemj + "\n\n-------------------------------------------------------------------------------\n\nThere are no kinks associated with this item" + "\n\nRolls: Rarity d100:" + str(rarityroll) + ", Item index: " + str(lootindex), colour = embcol))
+        await message.channel.send(embed = discord.Embed(title = "Random Loot Generation", description = "Random loot generated and compared to " + namestr + "'s kinks:\n\n**" + lootTitle + ":**\n*" + str(randomloot[lootindex][1]) + " - " + rarity + "*\n" + lootDesc + "\n\nIt is worth " + str(lootValue) + dezzieemj + "\n\n-------------------------------------------------------------------------------\n\nThere are no kinks associated with this item" + "\n\nRolls: Rarity d100:" + str(rarityroll) + ", Item index: " + str(lootindex) + "\n\n-------------------------------------------------------------------------------\n\n" + str(message.author.name) + ", from here, you can:\n\n`1`: Add the item to " + namestr + "'s inventory\n`2`: Edit the item\n`3`: Cancel", colour = embcol))
     await message.delete()
-
+    itemtype = str(randomloot[lootindex][1])
+    shortdesc = str(randomloot[lootindex][2])
+    while 1: #Editing loop
+        try:
+            msg = await client.wait_for('message', timeout = 60, check = check(message.author))
+            try:
+                lootindex = int(msg.content)
+                await msg.delete()
+            except TypeError or ValueError:
+                await message.channel.send(embed=discord.Embed(title="Selection Invalid",description="You must enter an integer", colour = embcol))
+                await msg.delete()
+                return
+        except asyncio.TimeoutError:
+            await message.channel.send("Selection Timed Out")
+            await message.delete()
+            return
+        if lootindex == 1:
+            break
+        elif lootindex == 2:
+            await message.channel.send(embed = discord.Embed(title = "Editing Randomised Loot for " + namestr, description = "Here are the options you can edit:\n\n`1`: Name - *" + lootTitle + "*\n`2`: Item Type - *" + itemtype + "*\n`3`: Rarity - *" + rarity + "*\n`4`: Short Description - *" + shortdesc + "*\n`5`: Description" + lootDesc + "\n`6`: Value - *" + str(lootValue) + "*", colour = embcol))
+            try:
+                msg = await client.wait_for('message', timeout = 60, check = check(message.author))
+                try:
+                    editindex = int(msg.content)
+                    await msg.delete()
+                except TypeError or ValueError:
+                    await message.channel.send(embed=discord.Embed(title="Selection Invalid",description="You must enter an integer", colour = embcol))
+                    await msg.delete()
+                    return
+            except asyncio.TimeoutError:
+                await message.channel.send("Selection Timed Out")
+                await message.delete()
+                return
+            await message.channel.send(embed = discord.Embed(title = "Editing", description = "Please input the new value now.\n\nThis message has a longer timeout than most, so will timeout in two minutes.", colour = embcol))
+            try:
+                msg2 = await client.wait_for('message', timeout = 120, check = checkstr(message.author))
+                if editindex == 1:
+                    lootTitle = msg2.content
+                elif editindex == 2:
+                    itemtype = msg2.content
+                elif editindex == 3:
+                    rarity = msg2.content
+                elif editindex == 4: 
+                    lootDesc = msg2.content
+                elif editindex == 5:
+                    shortdesc = msg2.content
+                elif editindex == 6:
+                    lootValue = msg2.content
+                await message.channel.send(embed = discord.Embed(title = lootTitle, description = "*" + itemtype + "* - " + rarity + "\n\n" + lootDesc + "\n\n" + str(lootValue) + dezzieemj  + "\n\n-------------------------------------------------------------------------------\n\n" + str(message.author.name) + ", from here, you can:\n\n`1`: Add the item to " + namestr + "'s inventory\n`2`: Edit the item\n`3`: Cancel", colour = embcol))
+            except asyncio.TimeoutError:
+                await message.channel.send("Selection Timed Out")
+        else:
+            return
+    try:
+        await message.channel.send(embed = discord.Embed(title = "Choose Destination Channel", description = "Type the link to the channel you want the item to be sent to. You can also type DM to have it sent to the player via direct messages instead.", colour = embcol))
+        msg3 = await client.wait_for('message', timeout = 30, check = checkstr(message.author))
+    except asyncio.TimeoutError:
+        await message.channel.send("Selection Timed Out")
+        return
+    if msg3.content.lower() == "dm":
+        destchannel = await client.fetch_user(int(targname.id))
+    else:
+        try:
+            channelid = int(msg3.content.split("#")[1].split(">")[0])
+            destchannel = client.get_channel(channelid)
+        except IndexError:
+            await message.channel.send("That is not a valid channel?")
+    await destchannel.send(embed = discord.Embed(title = namestr + ", you have found an item!", description = "**" + lootTitle + "**\n\n*" + itemtype + " - " + rarity + "*\n" + lootDesc + "\n\nIt is worth " + str(lootValue) + dezzieemj + "\n\nIt has not yet been added to your inventory, but *soon*...", colour = embcol))
+    await message.channel.send("Sent Loot")
     #Update inventory
-    # userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ2000", majorDimension = 'ROWS').execute().get("values")
-    # for c in range(math.ceil(len(userinvs)/4)):
-    #     d = 4 * c
-    #     if str(message.author) in userinvs[d][0]:
-    #         rowindex = d
-    #         break
-    # if len(userinvs[rowindex]) > 25:
-    #     collet = chr(65 + math.floor(len(userinvs[rowindex]) / 26))
-    # else:
-    #     collet = ""                        
-    # collet += chr(65 + (int(len(userinvs[rowindex]))))
-    # lootarray = [lootTitle + "|1", str(randomloot[lootindex][2]), str(randomloot[lootindex][1]) + " - " + rarity + "\n" + lootDesc, lootValue]
-    # sheet.values().update(spreadsheetId = EconSheet, range = collet + str(rowindex+6), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[lootarray])).execute()
+    userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ2000", majorDimension = 'ROWS').execute().get("values")
+    targetindex = [row[0] for row in userinvs[::4]].index(namestr)
+    targetindex *= 4
+    targetinv = userinvs[targetindex]
+    if lootTitle.replace("'","").replace("’","").lower() in str(userinvs[targetindex]).replace("'","").replace("’","").lower():
+        for itno in range(len(userinvs[targetindex+5])):
+            
+            #If item is existing
+            if lootTitle.replace("'","").replace("’","").lower() in userinvs[r][itno].replace("'","").replace("’","").lower():
+                newquant = int(userinvs[targetindex][itno].split("|")[1]) + 1
+                collet = await getColumnLetter(itno)
+                lootarray = [lootTitle + "|" + str(newquant), shortdesc, lootDesc, str(lootValue)]
+                sheet.values().update(spreadsheetId = EconSheet, range = collet + str(targetindex+6), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[lootarray])).execute()
+                break
+
+    else:
+        #If item is new
+        itno = len(userinvs[targetindex])
+        lootarray = [lootTitle + "|" + str(1), shortdesc, lootDesc, str(lootValue)]
+        collet = await getColumnLetter(itno)
+        sheet.values().update(spreadsheetId = EconSheet, range = str(collet) + str(targetindex+6), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[lootarray])).execute()
 
 
 #---------------------------Helper Functions---------------------------------
@@ -1586,3 +1667,12 @@ async def getCategoryData(kinkdata):
  
     return categories, kinksPerCategory, categoryIndex, playerInformationEntries
 
+#Returns the column letter
+async def getColumnLetter(columnindex):
+    collet = ""
+    if columnindex > 25:
+        collet = chr(64 + math.floor(columnindex / 26))
+    else:
+        collet = ""                        
+    collet += chr(65 + (int(columnindex % 26)))
+    return collet
