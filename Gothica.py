@@ -664,7 +664,7 @@ async def on_message(message):
 
             #Verify Command
 
-            elif message.content.lower().startswith(str(myprefix) + "verify") and ("moderator" in str(message.author.roles).lower() or message.author.name == "C_allum"):
+            elif message.content.lower().startswith("%verify") and ("moderator" in str(message.author.roles).lower() or message.author.name == "C_allum"):
 
                 vertarget = message.content.split("@")[1]
 
@@ -4153,7 +4153,7 @@ async def on_raw_reaction_add(reaction):
 
         elif reaction.emoji.name == "❌" and mess.author.bot:
 
-            await client.get_channel(logchannel).send(str(reaction.member.name) + " deleted the following message from " + str(mess.author.name) + " in " + str(mess.channel))
+            await client.get_channel(channel).send(str(reaction.member.name) + " deleted the following message from " + str(mess.author.name) + " in " + str(mess.channel))
 
             try:
 

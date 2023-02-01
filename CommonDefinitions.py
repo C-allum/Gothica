@@ -55,7 +55,6 @@ print(" Initialised {0.user} at ".format(client) + str(datetime.now()).split("."
 
 #-----------------LIVE VERSION/BETA TOGGLE---------------
 liveVersion = 1
-
 token = ""
 
 #Sheet Locations:
@@ -194,6 +193,7 @@ sextoys = ["dildo", "butt-plug", "set of anal beads", "cock-sleeve", "penis ring
 sextoykinks = [["Dildos", "Strap-Ons"], ["Butt Plugs"], ["Butt Plugs"], [], [], ["Male Chastity Devices"], ["Dildos", "Female:Female"], ["Light Torture"]]
 gags = ["ball", "bit", "butterfly", "cleave", "dildo", "bandit", "fornophilic" "inflatable", "knotted", "mouth corset", "mouthguard", "muzzle", "ring", "rope", "spider", "tube"]
 gagkinks = [[], ["Ponyplay"], [], ["Bondage"], ["Dildos"], [], ["Objectification"], [], [], ["Bondage"], [], ["Petplay"], ["Male Oral Sex (Blowjob/Fellatio)"], ["Bondage"], ["Male Oral Sex (Blowjob/Fellatio)"], ["Male Oral Sex (Blowjob/Fellatio)"]]
+sizes = ["tiny", "small", "medium", "large", "huge", "gargantuan", "fucking gigantic"]
 
 #---------------------------------------------
 
@@ -206,6 +206,14 @@ def check(author):
             return True 
         except ValueError: 
             return False
+    return inner_check
+
+def checkstr(author):
+    def inner_check(message): 
+        if message.author != author:
+            return False
+        str(message.content) 
+        return True 
     return inner_check
 
 def checkAuthor(author):
