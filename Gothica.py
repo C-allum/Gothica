@@ -2339,22 +2339,21 @@ async def on_message(message):
                                         try:
 
                                             scenenum = int(scenerechoice.content)
-
-                                            prevscenelist = prevscenelist[:scenenum-1] + prevscenelist[scenenum:]
+                                            prevs = prevs[:scenenum-1] + prevs[scenenum:]
 
                                             await message.channel.send(embed = discord.Embed(title = "Scene removed", description = "The requested scene has been removed from your tracked scene list.", colour = embcol))
 
-                                            if len(prevscenelist) > 1:
+                                            if len(prevs) > 1:
 
-                                                sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(4*n+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[["|".join(prevscenelist)]])).execute()
+                                                sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(4*n+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[["|".join(prevs)]])).execute()
 
-                                            elif len(prevscenelist) == 0:
+                                            elif len(prevs) == 0:
 
                                                 sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(4*n+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[""]])).execute()
 
                                             else:
 
-                                                sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(4*n+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[prevscenelist[0]]])).execute()
+                                                sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(4*n+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[prevs[0]]])).execute()
 
                                         except TypeError:
 
@@ -2371,8 +2370,6 @@ async def on_message(message):
                                     try: 
                                         scenerechoice = await client.wait_for('message', timeout = 30, check = check(message.author))
                                         scenenum = int(scenerechoice.content) - 1
-                                        
-                                        
                                         
                                         try:
                                             trackedStatus = prevs[scenenum].split(" ")[-1]
@@ -4096,10 +4093,10 @@ async def on_message(message):
                     if not "?edit" in message.content:
                         f = lambda x: [""]if x == [] else x
                         columnZero = [ f(x)[0] for x in economydata]
-    
                         for a in range(math.floor((len(economydata))/4) - 1):
                             playerindex = a * 4 + 5
                             scenedataIndex =  playerindex + 2
+
                             if str(message.channel.id) in columnZero[scenedataIndex]:
                                 scenearray = columnZero[scenedataIndex].split("|")
                                 sceneindex = [idx for idx, s in enumerate(scenearray) if str(message.channel.id) in s][0]
@@ -4108,8 +4105,10 @@ async def on_message(message):
                                 if trackedStatus == "Notifications:Enabled":
                                     user = discord.utils.get(client.guilds[0].members, name = economydata[playerindex][0].split("#")[0], discriminator = economydata[playerindex][0].split("#")[1])
                                     await user.send(f"New message in <#{message.channel.id}> by {message.channel.last_message.author.name}")
+
                                 elif trackedStatus == "Notifications:Disabled":
-                                    return
+                                    pass
+                                
                                 else:
                                     scenearray[sceneindex] = scenearray[sceneindex] + (" Notifications:Disabled")
                                     dataup = "|".join(scenearray)
