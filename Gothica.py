@@ -2277,20 +2277,21 @@ async def on_message(message):
 
                                 prevscenelist = []
 
-                                for a in range(len(prevs)):
+                                for a in range(0, len(prevs)):
 
                                     if "#" in prevs[a]:
 
                                         try:
 
-                                            sceneno = int(prevs[a].split("#")[1].strip(">"))
+                                            sceneno = int(prevs[a].split("#")[1].split(">")[0])
 
-                                            if not "remove" in message.content and not "notif" in message.content:
+                                            if (not "remove" in message.content) and (not "notif" in message.content):
 
                                                 try:
                                                     
                                                     #last = await client.get_channel(sceneno).history(limit=1, oldest_first=False).flatten()
                                                     last = [joinedMessages async for joinedMessages in client.get_channel(sceneno).history(limit=1, oldest_first=False)] #Fix for pebblehost Await issue
+                                                   
                                                     prevlist.append(str("`" + str(a+1) + "` " + str(prevs[a]) + " - Last message by: " + last[0].author.name))
 
                                                 except AttributeError:
