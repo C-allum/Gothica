@@ -835,7 +835,7 @@ async def on_message(message):
 
                     roomchannel = discord.utils.get(client.get_all_channels(), name = roll)
 
-                    roomlatest = [joinedMessages async for joinedMessages in client.get_channel(roomchannel.id).history(limit=2, oldest_first=False).flatten()] #Fix for pebblehost Await issue
+                    roomlatest = [joinedMessages async for joinedMessages in client.get_channel(roomchannel.id).history(limit=2, oldest_first=False)] #Fix for pebblehost Await issue
                     #roomlatest = await client.get_channel(roomchannel.id).history(limit=2, oldest_first=False).flatten()
 
                     if roomlatest[0].author == client.user:
@@ -1087,7 +1087,7 @@ async def on_message(message):
                     roomchannel = discord.utils.get(client.get_all_channels(), name = rooms[n])
 
                     #roomlatest = await client.get_channel(roomchannel.id).history(limit=2, oldest_first=False).flatten()
-                    roomlatest = [joinedMessages async for joinedMessages in client.get_channel(roomchannel.id).history(limit=2, oldest_first=False).flatten()] #Fix for pebblehost Await issue
+                    roomlatest = [joinedMessages async for joinedMessages in client.get_channel(roomchannel.id).history(limit=2, oldest_first=False)] #Fix for pebblehost Await issue
 
                     if roomlatest[0].author == client.user:
 
@@ -2109,7 +2109,7 @@ async def on_message(message):
                     bidchannel = 1010566688326045797
 
                     #bidlatest = await client.get_channel(bidchannel).history(limit=1, oldest_first=True).flatten()
-                    bidlatest = [joinedMessages async for joinedMessages in client.get_channel(bidchannel).history(limit=1, oldest_first=True).flatten()] #Fix for pebblehost Await issue
+                    bidlatest = [joinedMessages async for joinedMessages in client.get_channel(bidchannel).history(limit=1, oldest_first=True)] #Fix for pebblehost Await issue
 
                     bids = bidlatest[0].content.split("\n")
 
@@ -2285,7 +2285,7 @@ async def on_message(message):
 
                                             sceneno = int(prevs[a].split("#")[1].strip(">"))
 
-                                            if not "remove" in message.content:
+                                            if not "remove" in message.content and not "notif" in message.content:
 
                                                 try:
                                                     
@@ -2300,10 +2300,11 @@ async def on_message(message):
                                                     prevlist.append(str("`" + str(a+1) + "` " + str(prevs[a]) + " - Thread archived or channel deleted."))
 
                                             else:
-
+                                                
                                                 prevlist.append(str("`" + str(a+1) + "` " + str(prevs[a])))
 
                                                 prevscenelist.append(str(prevs[a]))
+                                                
 
                                         except ValueError:
 
@@ -2363,8 +2364,51 @@ async def on_message(message):
 
                                         await message.channel.send("Selection Timed Out")
 
-                                else:
+                                elif "notif" in message.content:
+                                    #Make user choose the scene to toggle
+                                    scenetemp = await message.channel.send(embed = discord.Embed(title = "Type the number of the scene to toggle notifications for", description= "\n".join(prevlist), colour = embcol))
 
+                                    try: 
+                                        scenerechoice = await client.wait_for('message', timeout = 30, check = check(message.author))
+                                        scenenum = int(scenerechoice.content) - 1
+                                        
+                                        
+                                        
+                                        try:
+                                            trackedStatus = prevs[scenenum].split(" ")[-1]
+                                            if trackedStatus == "Notifications:Enabled":
+                                                splitScene = prevs[scenenum].rsplit(" ", 1)
+                                                splitScene [-1]= " Notifications:Disabled"
+                                                prevs[scenenum] = "".join(splitScene)
+                                                await message.channel.send(embed = discord.Embed(title = "Scene notifications disabled", description = "The notfication function for the requested scene has been toggled. It is now disabled and we will not notify you of new messages for that scene.", colour = embcol))
+
+                                            
+                                            elif trackedStatus == "Notifications:Disabled":
+                                                splitScene = prevs[scenenum].rsplit(" ", 1)
+                                                splitScene [-1]= " Notifications:Enabled"
+                                                prevs[scenenum] = "".join(splitScene)
+                                                await message.channel.send(embed = discord.Embed(title = "Scene notifications enabled", description = "The notfication function for the requested scene has been toggled. It is now enabled and we will notify you of new messages for that scene.", colour = embcol))
+
+                                            else:
+                                                prevs[scenenum] = prevs[scenenum] + (" Notifications:Enabled")
+                                                await message.channel.send(embed = discord.Embed(title = "Scene notifications enabled", description = "The notfication function for the requested scene has been toggled. It is now enabled and we will notify you of new messages for that scene.", colour = embcol))
+                                            
+                                            #Save new scenes field to sheet.
+                                            if len(prevs) > 1:
+                                                sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(4*n+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[["|".join(prevs)]])).execute()
+                                                
+                                            elif len(prevs) == 0:
+                                                sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(4*n+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[""]])).execute()
+
+                                            else:
+                                                sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(4*n+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[prevs[0]]])).execute()
+
+                                        except TypeError:
+                                            await message.channel.send("Value not recognised")
+
+                                    except TimeoutError:
+                                        await message.channel.send("Selection Timed Out")
+                                else:
                                     await message.channel.send(embed = discord.Embed(title = message.author.name + "'s tracked scenes", description= "\n".join(prevlist), colour = embcol))
 
                         break
@@ -3930,7 +3974,7 @@ async def on_message(message):
                     if message.channel != roomchannel and message.channel.name != "alias-bot":
 
                         #roomlatest = await client.get_channel(roomchannel.id).history(limit=2, oldest_first=False).flatten()
-                        roomlatest = [joinedMessages async for joinedMessages in client.get_channel(roomchannel.id).history(limit=2, oldest_first=False).flatten()] #Fix for pebblehost Await issue
+                        roomlatest = [joinedMessages async for joinedMessages in client.get_channel(roomchannel.id).history(limit=2, oldest_first=False)] #Fix for pebblehost Await issue
 
                         if roomlatest[0].author == client.user:
 
@@ -3973,12 +4017,13 @@ async def on_message(message):
                                     await client.get_channel(roomchannel.id).send("```\u200b```")
 
                                     print("Automatically created a scene break in " + roomcur + ". The time difference was: " + diff + ", which Gothica read as " + str(diff.split(":")[0]) + " hours.")
-
-            #Per message income
+            
+            #Per message income and Scene tracker pings.
             if not "verification" in str(message.channel).lower():
-                
+
                 if not isbot:
-                    
+
+
                     row = 0
 
                     newtot = 0
@@ -3988,12 +4033,12 @@ async def on_message(message):
                     #Existing Member
 
                     if str(message.author) in str(economydata):
-
+                        
                         for a in range(math.floor(len(economydata)/4)):
 
                             b = a * 4 + 5
 
-                            if "safe passages" in str(message.channel.category).lower() or "the market" in str(message.channel.category).lower() or "keyholder" in str(message.channel.category).lower() or "dangerous depths" in str(message.channel.category).lower() or "outside adventures" in str(message.channel.category).lower() or "quests" in str(message.channel.category).lower():
+                            if "safe passages" in str(message.channel.category).lower() or "the market" in str(message.channel.category).lower() or "denizen dwellings" in str(message.channel.category).lower() or"keyholder" in str(message.channel.category).lower() or "dangerous depths" in str(message.channel.category).lower() or "outside adventures" in str(message.channel.category).lower() or "quests" in str(message.channel.category).lower():
 
                                 mult = 1
 
@@ -4022,24 +4067,20 @@ async def on_message(message):
                         print(str(message.author) + " has been added to the economy at " + str(datetime.now()))
 
                         if (int(len(economydata) - 1) / 4).is_integer():
-
                             row = len(economydata) + 1
 
                         else:
                             row = ((int(int(len(economydata) - 1) / 4) + 1) * 4) + 2 #Calculates the next line on the sheet that is divisible by 4. This is a bit of a magic formula. 
                             #len econdata-1 / 4 gives us the player number of the current last player. that + 1 and * 4 gives us the cell that is one before the last one of that player (because we did -1 earlier). 
                             #+1 gives us the last line of the currently last registered player, meaning +2 gives us the line the new player's entry needs to start at.
-                    
-                    try:
 
+                    try:
                         prevtime = int(str(economydata[row][0]))
 
                     except IndexError:
-
                         prevtime = 0
 
                     except ValueError:
-
                         prevtime = 0
 
                     dataup = [str(message.author), str(newtot)]
@@ -4049,6 +4090,33 @@ async def on_message(message):
                         sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(row + 1)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[datetime.timestamp(datetime.now())]])).execute()
 
                         sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[dataup])).execute()
+
+                    #Ping user for a tracked scene.
+                
+                    f = lambda x: [""]if x == [] else x
+                    columnZero = [ f(x)[0] for x in economydata]
+
+                    for a in range(math.floor((len(economydata))/4) - 1):
+                        playerindex = a * 4 + 5
+                        scenedataIndex =  playerindex + 2
+                        if str(message.channel.id) in columnZero[scenedataIndex]:
+                            scenearray = columnZero[scenedataIndex].split("|")
+                            sceneindex = [idx for idx, s in enumerate(scenearray) if str(message.channel.id) in s][0]
+                            trackedStatus = scenearray[sceneindex].split(" ")[-1]
+                            
+                            if trackedStatus == "Notifications:Enabled":
+                                user = discord.utils.get(client.guilds[0].members, name = economydata[playerindex][0].split("#")[0], discriminator = economydata[playerindex][0].split("#")[1])
+                                await user.send(f"New message in <#{message.channel.id}> by {message.channel.last_message.author.name}")
+                            elif trackedStatus == "Notifications:Disabled":
+                                return
+                            else:
+                                scenearray[sceneindex] = scenearray[sceneindex] + (" Notifications:Disabled")
+                                dataup = "|".join(scenearray)
+                                row = scenedataIndex + 1
+                                sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[dataup]])).execute()
+
+
+
 
     except AttributeError:
 

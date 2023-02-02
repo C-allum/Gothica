@@ -58,5 +58,3 @@ async def staffVacation(message):
         role = discord.utils.get(author.guild.roles, name="Staff Vacation")
         print(role)
         await author.add_roles(role)
-
-    return
