@@ -835,7 +835,7 @@ async def on_message(message):
 
                     roomchannel = discord.utils.get(client.get_all_channels(), name = roll)
 
-                    roomlatest = [joinedMessages async for joinedMessages in client.get_channel(roomchannel.id).history(limit=2, oldest_first=False)] #Fix for pebblehost Await issue
+                    roomlatest = [joinedMessages async for joinedMessages in client.get_channel(roomchannel.id).history(limit=2, oldest_first=False).flatten()] #Fix for pebblehost Await issue
                     #roomlatest = await client.get_channel(roomchannel.id).history(limit=2, oldest_first=False).flatten()
 
                     if roomlatest[0].author == client.user:
@@ -1087,7 +1087,7 @@ async def on_message(message):
                     roomchannel = discord.utils.get(client.get_all_channels(), name = rooms[n])
 
                     #roomlatest = await client.get_channel(roomchannel.id).history(limit=2, oldest_first=False).flatten()
-                    roomlatest = [joinedMessages async for joinedMessages in client.get_channel(roomchannel.id).history(limit=2, oldest_first=False)] #Fix for pebblehost Await issue
+                    roomlatest = [joinedMessages async for joinedMessages in client.get_channel(roomchannel.id).history(limit=2, oldest_first=False).flatten()] #Fix for pebblehost Await issue
 
                     if roomlatest[0].author == client.user:
 
@@ -2109,7 +2109,7 @@ async def on_message(message):
                     bidchannel = 1010566688326045797
 
                     #bidlatest = await client.get_channel(bidchannel).history(limit=1, oldest_first=True).flatten()
-                    bidlatest = [joinedMessages async for joinedMessages in client.get_channel(bidchannel).history(limit=1, oldest_first=True)] #Fix for pebblehost Await issue
+                    bidlatest = [joinedMessages async for joinedMessages in client.get_channel(bidchannel).history(limit=1, oldest_first=True).flatten()] #Fix for pebblehost Await issue
 
                     bids = bidlatest[0].content.split("\n")
 
@@ -3970,11 +3970,11 @@ async def on_message(message):
                     roomcur = rooms[n]
 
                     roomchannel = discord.utils.get(client.get_all_channels(), name = roomcur)
-
-                    if message.channel != roomchannel and message.channel.name != "alias-bot":
+                    #TODO: FETCHING THE HISTORY HERE IS BROKEN. DISABLING UNTIL FIXED!
+                    if 0: #message.channel != roomchannel and message.channel.name != "alias-bot":
 
                         #roomlatest = await client.get_channel(roomchannel.id).history(limit=2, oldest_first=False).flatten()
-                        roomlatest = [joinedMessages async for joinedMessages in client.get_channel(roomchannel.id).history(limit=2, oldest_first=False)] #Fix for pebblehost Await issue
+                        roomlatest = [joinedMessages async for joinedMessages in client.get_channel(roomchannel.id).history(limit=2, oldest_first=False).flatten()] #Fix for pebblehost Await issue
 
                         if roomlatest[0].author == client.user:
 
@@ -4093,27 +4093,28 @@ async def on_message(message):
 
                     #Ping user for a tracked scene.
                 
-                    f = lambda x: [""]if x == [] else x
-                    columnZero = [ f(x)[0] for x in economydata]
-
-                    for a in range(math.floor((len(economydata))/4) - 1):
-                        playerindex = a * 4 + 5
-                        scenedataIndex =  playerindex + 2
-                        if str(message.channel.id) in columnZero[scenedataIndex]:
-                            scenearray = columnZero[scenedataIndex].split("|")
-                            sceneindex = [idx for idx, s in enumerate(scenearray) if str(message.channel.id) in s][0]
-                            trackedStatus = scenearray[sceneindex].split(" ")[-1]
-                            
-                            if trackedStatus == "Notifications:Enabled":
-                                user = discord.utils.get(client.guilds[0].members, name = economydata[playerindex][0].split("#")[0], discriminator = economydata[playerindex][0].split("#")[1])
-                                await user.send(f"New message in <#{message.channel.id}> by {message.channel.last_message.author.name}")
-                            elif trackedStatus == "Notifications:Disabled":
-                                return
-                            else:
-                                scenearray[sceneindex] = scenearray[sceneindex] + (" Notifications:Disabled")
-                                dataup = "|".join(scenearray)
-                                row = scenedataIndex + 1
-                                sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[dataup]])).execute()
+                    if not "?edit" in message.content:
+                        f = lambda x: [""]if x == [] else x
+                        columnZero = [ f(x)[0] for x in economydata]
+    
+                        for a in range(math.floor((len(economydata))/4) - 1):
+                            playerindex = a * 4 + 5
+                            scenedataIndex =  playerindex + 2
+                            if str(message.channel.id) in columnZero[scenedataIndex]:
+                                scenearray = columnZero[scenedataIndex].split("|")
+                                sceneindex = [idx for idx, s in enumerate(scenearray) if str(message.channel.id) in s][0]
+                                trackedStatus = scenearray[sceneindex].split(" ")[-1]
+                                
+                                if trackedStatus == "Notifications:Enabled":
+                                    user = discord.utils.get(client.guilds[0].members, name = economydata[playerindex][0].split("#")[0], discriminator = economydata[playerindex][0].split("#")[1])
+                                    await user.send(f"New message in <#{message.channel.id}> by {message.channel.last_message.author.name}")
+                                elif trackedStatus == "Notifications:Disabled":
+                                    return
+                                else:
+                                    scenearray[sceneindex] = scenearray[sceneindex] + (" Notifications:Disabled")
+                                    dataup = "|".join(scenearray)
+                                    row = scenedataIndex + 1
+                                    sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[dataup]])).execute()
 
 
 
