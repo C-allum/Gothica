@@ -79,6 +79,8 @@ if liveVersion: #Set to 1 to use the real spreadsheets, or 0 to use the testing 
 
     logchannel = 918257057428279326
 
+    bridgechannel = 996826636358000780
+
 else:
 
     CharSheet = "1Vgxa8C5j5XnEUGhaGqAANVhsWSIOra87wCE2f5C75tQ"
@@ -98,6 +100,8 @@ else:
     Randomlootsheet = "19Dc4PI-E5OubesNroJfB4zKg9bqqqbdPelodjH6ecNw"
 
     logchannel = 1031701327169998958 #Test Server
+
+    bridgechannel = 891781900388159528
 
 SERVICE_ACCOUNT_FILE = "keys.json"
 

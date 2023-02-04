@@ -238,104 +238,8 @@ async def on_message(message):
                 await CharRegistry.chardeactivate(message)
 
             #Help Command
-            
             elif message.content.lower().startswith(str(myprefix) + "help"):
-
                 await CommonDefinitions.helplist(message)
-
-                # msgarg = message.content.lower()
-
-                # tit = "Gothica Help"
-
-                # if "reg" in msgarg:
-
-                #     desc = helptextreg
-
-                # elif "edit" in msgarg:
-
-                #     desc = helptextedit
-
-                # elif "tran" in msgarg:
-
-                #     desc = helptexttrans
-
-                # elif "list" in msgarg:
-
-                #     desc = helptextlist
-
-                # elif "search" in msgarg:
-
-                #     desc = helptextsearch
-
-                # elif "retire" in msgarg:
-
-                #     desc = helptextretire
-
-                # elif "activ" in msgarg:
-
-                #     desc = helptextactivate
-
-                # elif "plot" in msgarg:
-
-                #     desc = helptextplothook
-
-                # elif "room" in msgarg:
-
-                #     desc = helptextrooms
-
-                # elif "wildlust" in msgarg:
-
-                #     desc = helptextwild
-
-                # elif "recent" in msgarg:
-
-                #     if message.channel.id == 828519271466008586:
-
-                #         desc = helptextrecentsmoderator
-
-                #     else:
-
-                #         desc = helptextrecents
-
-                # elif "shop" in msgarg:
-
-                #     desc = helptextshop
-
-                # elif "veri" in msgarg and "moderator" in str(authroles).lower():
-
-                #     desc = helptextverify
-
-                # elif "log" in msgarg and "moderator" in str(authroles).lower():
-
-                #     desc = helptextlogs
-
-                # elif "lott" in msgarg and "moderator" in str(authroles).lower():
-
-                #     desc = helptextlottery
-
-                # elif "raid" in msgarg:
-
-                #     desc = helptextraid
-
-                # elif "embed" in msgarg:
-
-                #     desc = helptextembed
-
-                # elif "moderator" in str(authroles).lower() and message.channel.id == 828519271466008586:
-
-                #     desc = helptext_moderator
-
-                # else:
-
-                #     desc = helptext
-
-                # emb = discord.Embed(title=tit, description=desc, colour = embcol)
-
-                # print(message.author.name + " ran a help command")
-
-                # await message.channel.send(embed=emb)
-
-                # await message.delete()
 
             #Plothook Command
 
@@ -702,7 +606,6 @@ async def on_message(message):
             #Staff Vacation Command
             elif message.content.lower().startswith(str(myprefix) + "vacation") and ("lorekeeper" in str(message.author.roles).lower()):
                 await MiscellaneuosCommands.staffVacation(message)                                                           
-
 
             #Guild Adventurer Command
 
@@ -3872,29 +3775,70 @@ async def on_message(message):
 
                         print("Lorekeepers were pinged to play shops")
 
-            elif message.channel.id == 845498061459554334 or message.channel.id == 845498746870693898 or message.channel.id == 861688038928023583 or message.channel.id == 838821621913223229 or message.channel.id == 955144068386664479 or message.channel.id == 951666605568458752 or message.channel.id == 951666822636273674 or message.channel.id == 951666912272732270:
+            elif message.channel.category.name == "﴿──﴾ 𝙳𝚊𝚗𝚐𝚎𝚛𝚘𝚞𝚜 𝙳𝚎𝚙𝚝𝚑𝚜 ﴿──﴾" and not isbot:
 
-                if not isbot and not message.content.startswith("%") and not message.content.startswith("$"):
-
-                    if random.randint(1,200) == 1:
-
-                        ping = True
-
+                if message.channel.type == discord.ChannelType.text and random.randint(1,200) == 1 and not "lorekeeper" in str(authroles).lower():
+                    room = "<#" + str(message.channel.id) + ">"
+                    limits = await KinklistCommands.getLimits(str(message.author.name) + "#" + str(message.author.discriminator))
+                    encounters = sheet.values().get(spreadsheetId = encountersheet, range = "A2:R50", majorDimension='COLUMNS').execute().get("values")
+                                        
+                    if message.channel.name == "trapped-corridors":
+                        columnadd = 2
+                    elif message.channel.name == "moaning-hallways":
+                        columnadd = 4
+                    elif message.channel.name == "unlicensed-fights":
+                        columnadd = 6
+                    elif message.channel.name == "sparring-pits":
+                        columnadd = 8
+                    elif message.channel.name == "kobold-dens":
+                        columnadd = 10
+                    elif message.channel.name == "wild-gardens":
+                        columnadd = 12
+                    elif message.channel.name == "twilight-groves":
+                        columnadd = 14
+                    elif message.channel.name == "sirens-grotto":
+                        columnadd = 16
+                    elif message.channel.name == "the-dollhouse":
+                        columnadd = 18
+                    elif message.channel.name == "frostveil-tundra":
+                        columnadd = 20
                     else:
+                        columnadd = 10
 
-                        ping = False
+                    for a in range(len(encounters[0])):
+                        encounters[columnadd].append(encounters[0][a])
+                        encounters[columnadd+1].append(encounters[1][a])
 
-                    if "lorekeeper" in str(authroles).lower():
+                    for a in range(len(limits)):
+                        
+                        if limits[a] in str(encounters[1+columnadd]):
 
-                        ping = False
+                            for b in range(len(encounters[columnadd])):
+                                try:
+                                    if limits[a] in encounters[1 + columnadd][b]:
+                                        del encounters[columnadd][b]
+                                        del encounters[columnadd + 1][b]
+                                        b -= 1
+                                except IndexError:
+                                    break
+                    encounterindex = random.randint(0, len(encounters[columnadd])-1)
+                    enctext = await CommonDefinitions.diceroll(encounters[columnadd][encounterindex].replace("[race]", random.choice(races)))
+                    try:
+                        enckinks = encounters[columnadd+1][encounterindex].split("|")
+                    except IndexError:
+                        enckinks = ""
+                    kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
+                    playerIndex = [row[1] for row in kinkdata].index(str(message.author.name) + "#" + str(message.author.discriminator))
+                    kinkops = []
 
-                    if ping:
+                    for c in range(len(enckinks)):
+                        try:
+                            kinkops.append(kinkdata[1][kinkdata[1].index(str(enckinks[c]))] + ": " + str(kinkdata[playerIndex][kinkdata[1].index(str(enckinks[c]))]))
+                        except ValueError:
+                            kinkops.append("No kinks required")
 
-                        room = "<#" + str(message.channel.id) + ">"
-
-                        await client.get_channel(996826636358000780).send(str(message.author.name.split("#")[0] + " has sent a message in " + room + ". We think a <@&912552597041340416> should go and torment them.\n\nWe suggest... Um, tentacles? That's all we've got at the moment, but this will be expanded as room specific things are added. Also need to check kinks. There are some *weirdos* out there *not* into tentacles?\n\nThis has a one in 200 chance of appearing on any given message. Let Callum know if you think that's too much or too little?"))
-
-                        print("Lorekeepers were pinged to run traps")
+                    await client.get_channel(bridgechannel).send(str(message.author.name.split("#")[0] + " has sent a message in " + room + ". We think a <@&912552597041340416> should go and torment them.\n\n " + enctext + "\n\n" + message.author.name + "'s relevant kinks are: " + "\n".join(kinkops) + "\n\nThis has a one in 200 chance of appearing on any given message. Let Callum know if you think that's too much or too little?"))
+                    print("Lorekeepers were pinged to run traps")
 
             #Clone Channel
 
@@ -3997,64 +3941,31 @@ async def on_message(message):
             #Shop Break Command
 
             else:
-
                 messcomm = 0
-
-                rooms = ["🏺the-golden-jackal🏺", "🐍venom-ink🐍", "🧵widows-boutique🧵", "🍄sophies-garden🍄", "📜menagerie-magiks📜", "🔔the-polished-knob🔔"]
-
+                rooms = ["🏺the-golden-jackal🏺", "🐍venom-ink🐍", "🧵widows-boutique🧵", "🍄sophies-garden🍄", "📜menagerie-magiks📜", "🔔the-polished-knob🔔", "🐾purrfect-petshop🐾", "🏥the-clinic🏥", "💰adventurers-guild💰", "⛓black-market⛓"]
+                
                 for n in range(len(rooms)):
-
                     roomcur = rooms[n]
-
                     roomchannel = discord.utils.get(client.get_all_channels(), name = roomcur)
-                    #TODO: FETCHING THE HISTORY HERE IS BROKEN. DISABLING UNTIL FIXED!
-                    if 0: #message.channel != roomchannel and message.channel.name != "alias-bot":
 
-                        #roomlatest = await client.get_channel(roomchannel.id).history(limit=2, oldest_first=False).flatten()
-                        roomlatest = [joinedMessages async for joinedMessages in client.get_channel(roomchannel.id).history(limit=2, oldest_first=False).flatten()] #Fix for pebblehost Await issue
-
+                    if message.channel != roomchannel and message.channel.name != "alias-bot":
+                        roomlatest = [joinedMessages async for joinedMessages in client.get_channel(roomchannel.id).history(limit=2, oldest_first=False)] #Fix for pebblehost Await issue
+                        
                         if roomlatest[0].author == client.user:
-
                             roomlatest[0] = roomlatest[1]
-
                             scenebroken = True
-
                         else:
-
                             scenebroken = False
+                        rtimestamp = datetime.timestamp(roomlatest[0].created_at)
+                        mestimestamp = datetime.timestamp(message.created_at)
+                        diff = int(math.floor(mestimestamp - rtimestamp))
+                        
+                        if diff >= 3*60*60:
+                            if not scenebroken:
+                                await client.get_channel(roomchannel.id).send("```\u200b```")
+                                await client.get_channel(logchannel).send("Automatically created a scene break in " + roomcur + ". The time difference was: " + str(diff) + " seconds, which equates to " + str(float(diff/3600)) + " hours.")
 
-                        rtimestamp = roomlatest[0].created_at
 
-                        mestimestamp = message.created_at
-
-                        diff = str(mestimestamp - rtimestamp)
-
-                        if int(str(rtimestamp).split(":")[0].split(" ")[1]) >= 3:
-
-                            if "day" in diff and not "-" in diff:
-
-                                if not scenebroken:
-
-                                    await client.get_channel(roomchannel.id).send("```\u200b```")
-
-                                    print("Automatically created a scene break in " + roomcur + ". The time difference was: " + diff + ", which Gothica read as " + str(diff.split(":")[0]) + " hours.")
-
-                            elif "-" in diff:
-
-                                pass
-
-                            elif int(diff.split(":")[0]) == 0:
-
-                                pass
-
-                            elif int(diff.split(":")[0]) >= 3:
-
-                                if not scenebroken:
-
-                                    await client.get_channel(roomchannel.id).send("```\u200b```")
-
-                                    print("Automatically created a scene break in " + roomcur + ". The time difference was: " + diff + ", which Gothica read as " + str(diff.split(":")[0]) + " hours.")
-            
             #Per message income and Scene tracker pings.
             if not "verification" in str(message.channel).lower():
 
