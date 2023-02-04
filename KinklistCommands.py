@@ -1576,7 +1576,6 @@ async def getKinkData(message):
             return
         targname = await client.fetch_user(targid)
     else:
-
         targname = message.author
 
     namestr = str(targname.name + "#" + targname.discriminator)
@@ -1676,3 +1675,14 @@ async def getColumnLetter(columnindex):
         collet = ""                        
     collet += chr(65 + (int(columnindex % 26)))
     return collet
+
+#Returns the limits of the member as a string
+async def getLimits(player):
+    kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
+    playerIndex = [row[1] for row in kinkdata].index(player)
+    limits = []
+
+    for a in range(len(kinkdata[1])):
+        if "limit" in kinkdata[playerIndex][a].lower() or "not my thing" in kinkdata[playerIndex][a].lower():
+            limits.append(kinkdata[1][a])
+    return limits
