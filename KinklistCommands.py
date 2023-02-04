@@ -35,7 +35,7 @@ async def kinklist(message, outputchannel, trigger):
 
             elif "Avrae" in targname.name:
 
-                await outputchannel.send(embed = discord.Embed(title = "From what we know of Avrae", description = "They're into sadism and torture.", colour = embcol))
+                await outputchannel.send(embed = discord.Embed(title = "From what we know of Avrae", description = "They're into sadism and torture. Ask Fish in the River about it, he knows.", colour = embcol))
 
             else:
 

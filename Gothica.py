@@ -2364,6 +2364,45 @@ async def on_message(message):
 
                                         await message.channel.send("Selection Timed Out")
 
+                                elif "notif" in message.content and "all" in message.content:
+                                    for scenenum in range(0, len(prevs)):
+                                        try:
+                                            trackedStatus = prevs[scenenum].split(" ")[-1]
+                                            if "off" in message.content:
+                                                splitScene = prevs[scenenum].rsplit(" ", 1)
+                                                splitScene [-1]= " Notifications:Disabled"
+                                                prevs[scenenum] = "".join(splitScene)
+
+                                            
+                                            elif "on" in message.content:
+                                                splitScene = prevs[scenenum].rsplit(" ", 1)
+                                                splitScene [-1]= " Notifications:Enabled"
+                                                prevs[scenenum] = "".join(splitScene)
+
+                                            else:
+                                                if "off" in message.content:
+                                                    prevs[scenenum] = prevs[scenenum] + (" Notifications:Disabled")
+
+                                                if "on" in message.content:
+                                                    prevs[scenenum] = prevs[scenenum] + (" Notifications:Enabled")
+                                            
+                                            
+                                        except TypeError:
+                                            await message.channel.send("Value not recognised")
+                                    #Save new scenes field to sheet.
+                                    if len(prevs) > 1:
+                                        sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(4*n+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[["|".join(prevs)]])).execute()
+                                                
+                                    elif len(prevs) == 0:
+                                        sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(4*n+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[""]])).execute()
+
+                                    else:
+                                        sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(4*n+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[prevs[0]]])).execute()
+                                    if "off" in message.content:
+                                        await message.channel.send(embed = discord.Embed(title = "Scene notifications disabled on all tracked scenes", description = "The notfication function for the all scenes has been disabled. It is now enabled and we will notify you of new messages for your scenes.", colour = embcol))
+                                    if "on" in message.content:
+                                        await message.channel.send(embed = discord.Embed(title = "Scene notifications enabled on all tracked scenes", description = "The notfication function for the all scenes has been enabled. It is now enabled and we will notify you of new messages for your scenes.", colour = embcol))
+
                                 elif "notif" in message.content:
                                     #Make user choose the scene to toggle
                                     scenetemp = await message.channel.send(embed = discord.Embed(title = "Type the number of the scene to toggle notifications for", description= "\n".join(prevlist), colour = embcol))
