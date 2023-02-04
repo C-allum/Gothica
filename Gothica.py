@@ -4145,6 +4145,7 @@ async def on_message(message):
                                 if trackedStatus == "Notifications:Enabled":
                                     if economydata[playerindex][0] != message.author.name + "#" + message.author.discriminator:
                                         user = discord.utils.get(client.guilds[0].members, name = economydata[playerindex][0].split("#")[0], discriminator = economydata[playerindex][0].split("#")[1])
+                                        time.sleep(1.5)
                                         await user.send(f"New message in <#{message.channel.id}> by {message.channel.last_message.author.name}")
 
                                 elif trackedStatus == "Notifications:Disabled":
