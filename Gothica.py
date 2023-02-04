@@ -2368,22 +2368,22 @@ async def on_message(message):
                                     for scenenum in range(0, len(prevs)):
                                         try:
                                             trackedStatus = prevs[scenenum].split(" ")[-1]
-                                            if "off" in message.content:
+                                            if " off" in message.content:
                                                 splitScene = prevs[scenenum].rsplit(" ", 1)
                                                 splitScene [-1]= " Notifications:Disabled"
                                                 prevs[scenenum] = "".join(splitScene)
 
                                             
-                                            elif "on" in message.content:
+                                            elif " on" in message.content:
                                                 splitScene = prevs[scenenum].rsplit(" ", 1)
                                                 splitScene [-1]= " Notifications:Enabled"
                                                 prevs[scenenum] = "".join(splitScene)
 
                                             else:
-                                                if "off" in message.content:
+                                                if " off" in message.content:
                                                     prevs[scenenum] = prevs[scenenum] + (" Notifications:Disabled")
 
-                                                if "on" in message.content:
+                                                if " on" in message.content:
                                                     prevs[scenenum] = prevs[scenenum] + (" Notifications:Enabled")
                                             
                                             
@@ -2398,9 +2398,9 @@ async def on_message(message):
 
                                     else:
                                         sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(4*n+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[prevs[0]]])).execute()
-                                    if "off" in message.content:
+                                    if " off" in message.content:
                                         await message.channel.send(embed = discord.Embed(title = "Scene notifications disabled on all tracked scenes", description = "The notfication function for the all scenes has been disabled. It is now enabled and we will notify you of new messages for your scenes.", colour = embcol))
-                                    if "on" in message.content:
+                                    if " on" in message.content:
                                         await message.channel.send(embed = discord.Embed(title = "Scene notifications enabled on all tracked scenes", description = "The notfication function for the all scenes has been enabled. It is now enabled and we will notify you of new messages for your scenes.", colour = embcol))
 
                                 elif "notif" in message.content:
