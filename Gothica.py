@@ -3802,8 +3802,6 @@ async def on_message(message):
                         columnadd = 18
                     elif message.channel.name == "frostveil-tundra":
                         columnadd = 20
-                    else:
-                        columnadd = 10
 
                     for a in range(len(encounters[0])):
                         encounters[columnadd].append(encounters[0][a])
