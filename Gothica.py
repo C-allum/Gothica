@@ -3958,7 +3958,7 @@ async def on_message(message):
                         mestimestamp = datetime.timestamp(message.created_at)
                         diff = int(math.floor(mestimestamp - rtimestamp))
                         
-                        if diff >= 3*60*60:
+                        if diff >= 3*60*60*24:
                             if not scenebroken:
                                 await client.get_channel(roomchannel.id).send("```\u200b```")
                                 await client.get_channel(logchannel).send("Automatically created a scene break in " + roomcur + ". The time difference was: " + str(diff) + " seconds, which equates to " + str(float(diff/3600)) + " hours.")
