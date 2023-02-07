@@ -724,96 +724,37 @@ async def on_message(message):
 
             elif message.content.lower().startswith(str(myprefix) + "room"):
 
-                rooms = ["unlit-passageways", "trapped-corridors", "moaning-hallways", "salamander-hot-springs", "monster-girl-cantina", "the-ole-burlesque", "backstage-burlesque", "library-of-carnal-knowledge", "the-cathedral", "sparring-pit", "spectators-stands", "unlicensed-fights", "💎the-gobblin-bazaar💎", "🏺the-golden-jackal🏺", "🐍venom-ink🐍", "🧵widows-boutique🧵", "🍄sophies-garden🍄", "📜menagerie-magiks📜", "🔔the-polished-knob🔔"]
+                saferooms = ["bot-testing"]
+                shops = ["ooc", "character-creation"]
+                depths = ["test"]
 
-                if not "explorer" in str(authroles).lower():
+                rooms = []
+                roomlastmess = []
+                for a in range(len(saferooms)):
+                    rooms.append(saferooms[a])
+                for b in range(len(shops)):
+                    rooms.append(shops[b])
 
-                    rooms.remove("sparring-pit")
-                    rooms.remove("spectators-stands")
-                    rooms.remove("unlicensed-fights")
-
-                while 1:
-
-                    roll = random.choice(rooms)
-
-                    roomchannel = discord.utils.get(client.get_all_channels(), name = roll)
-
-                    roomlatest = [joinedMessages async for joinedMessages in client.get_channel(roomchannel.id).history(limit=2, oldest_first=False).flatten()] #Fix for pebblehost Await issue
-                    #roomlatest = await client.get_channel(roomchannel.id).history(limit=2, oldest_first=False).flatten()
-
-                    if roomlatest[0].author == client.user:
-
-                        roomlatest[0] = roomlatest[1]
-
-                        scenebroken = True
-
-                    else:
-
-                        scenebroken = False
-
-                    rtimestamp = roomlatest[0].created_at
-
-                    mestimestamp = message.created_at
-
-                    diff = str(mestimestamp - rtimestamp)
-
-                    if "day" in diff:
-
-                        tit = str("You could roleplay in the " + roll.replace("-", " ").title()).replace("the the", "the")
-
-                        if "days" in diff:
-
-                            diffplu = str(diff.split(" day")[0]) +  " days."
+                if not "adventurer" in str(authroles).lower():
+                    for c in range(len(depths)):
+                        rooms.append(depths[c])
                         
-                        else:
+                for d in range(len(rooms)):
+                    roomchannel = discord.utils.get(client.get_all_channels(), name = rooms[d])
+                    roomlast = [joinedMessages async for joinedMessages in client.get_channel(roomchannel.id).history(limit=2, oldest_first=False)]
 
-                            diffplu = "a day."
-
-                        desc = "It has been inactive for over " + diffplu
-
-                        if not scenebroken:
-
-                            await client.get_channel(roomchannel.id).send("```\u200b```")
-
-                        break
-
+                    if roomlast[0].author == client.user:
+                        roomlastmess.append(datetime.timestamp(roomlast[1].created_at))
                     else:
+                        roomlastmess.append(datetime.timestamp(roomlast[0].created_at))
 
-                        hours = int(diff.split(":")[0])
+                sortedrooms = [e for _, e in sorted(zip(roomlastmess, rooms))]
+                roomlastmess.sort()
+                randindex = random.randint(0,2)
+                await message.channel.send(embed = discord.Embed(title = "We generated a random room for you.", description = "You could roleplay in the " + str(sortedrooms[randindex]) + ". It hasn't been used for " + str(math.floor((datetime.timestamp(datetime.now())-int(roomlastmess[randindex]))/3600)) + " hours", colour = embcol))
 
-                        if hours >= 3:
 
-                            tit = str("You could roleplay in the " + roll.replace("-", " ").title()).replace("the the", "the")
-
-                            desc = "It has been inactive for over " + str(hours) + " hours."
-
-                            if not scenebroken:
-
-                                await client.get_channel(roomchannel.id).send("```\u200b```")
-
-                            break
-
-                        else:
-
-                            rooms.remove(roll)
-
-                            if len(rooms) == 0:
-
-                                tit = "All public rooms have been used within the last few hours. Check if any have recently moved to threads, ask if you can join an active scene, or go straight to a private thread?"
-
-                                desc = "We hadn't expected to need this message.."
-
-                                break
-
-                roomemb = discord.Embed(title = tit, description = desc, colour = embcol)
-
-                roomemb.set_footer(text = "----------------------------------------------------------\n\nThis suggestion was made in response to a command from " + message.author.name)
-
-                print(message.author.name + " used the room command, getting: " + roll)
-
-                await message.channel.send(embed = roomemb)
-
-                await message.delete()
+                
 
             #Scene Break Command
 

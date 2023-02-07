@@ -54,7 +54,7 @@ bot = commands.Bot(command_prefix='%', activity = discord.Game(name="Testing Stu
 print(" Initialised {0.user} at ".format(client) + str(datetime.now()).split(".")[0])
 
 #-----------------LIVE VERSION/BETA TOGGLE---------------
-liveVersion = 1
+liveVersion = 0
 token = ""
 
 #Sheet Locations:
@@ -412,6 +412,10 @@ cardtemp = cardnames
 
 smallblind = 50
 bigblind = 100
+
+saferooms = ["unlit-passageways", "salamander-hot-springs", "monster-girl-cantina", "the-ole-burlesque", "backstage-burlesque", "library-of-carnal-knowledge", "the-cathedral", "mermaid-cove-resort", "spectators-stands"]
+shops = ["💎the-gobblin-bazaar💎", "🏺the-golden-jackal🏺", "🐍venom-ink🐍", "🧵widows-boutique🧵", "🍄sophies-garden🍄", "📜menagerie-magiks📜", "🐾purrfect-petshop🐾", "🔔the-polished-knob🔔", "🏥the-clinic🏥", "💰adventurers-guild💰", "⛓black-market⛓"]
+depths = ["trapped-corridors", "moaning-hallways", "unlicensed-fights", "sparring-pit", "kobold-dens", "wild-gardens", "twilight-groves", "sirens-grotto", "the-dollhouse", "frostveil-tundra"]
 
 #Help message
 async def helplist(message):
