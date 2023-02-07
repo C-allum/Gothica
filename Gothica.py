@@ -5,11 +5,14 @@ import KinklistCommands
 import CommonDefinitions
 import MiscellaneuosCommands
 from CommonDefinitions import *
+import TransactionsDatabaseInterface
+
 @client.event
 async def on_ready():
 
     print('Logged in as {0.user} at '.format(client) + str(datetime.now()).split(".")[0])
     
+    TransactionsDatabaseInterface.initTransactionsDataBase()
 
     #------------------DezzieAwardPoolReset---------------------
 
@@ -1023,6 +1026,8 @@ async def on_message(message):
                         if not (str(message.author) == "C_allum#5225" and "-" in message.content):
 
                             sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipnewtot]])).execute()
+
+                            TransactionsDatabaseInterface.addTransaction(targname + "#" + str(target.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.Invest, int(-giveamount))
 
                         if str(message.channel).lower() in str(devdata).lower():
 
@@ -2662,6 +2667,8 @@ async def on_message(message):
 
                                 sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newtot]])).execute()
 
+                                TransactionsDatabaseInterface.addTransaction(message.author.name + "#" + str(message.author.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.Work, int(pay))
+
                                 sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(row+1)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[str(datetime.timestamp(datetime.now()))]])).execute()
 
                             else:
@@ -2726,6 +2733,8 @@ async def on_message(message):
 
                                 sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newtot]])).execute()
 
+                                TransactionsDatabaseInterface.addTransaction(message.author.name + "#" + str(message.author.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.Slut, int(slutreward))
+
                                 sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(row+2)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[str(datetime.timestamp(datetime.now())).split(".")[0]]])).execute()
 
                             else:
@@ -2743,6 +2752,8 @@ async def on_message(message):
                                 await message.delete()
 
                                 sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newtot]])).execute()
+
+                                TransactionsDatabaseInterface.addTransaction(message.author.name + "#" + str(message.author.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.Slut, int(-slutfine))
 
                                 sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(row+2)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[str(datetime.timestamp(datetime.now())).split(".")[0]]])).execute()
 
@@ -2965,8 +2976,12 @@ async def on_message(message):
                             recipnewtot = int(economydata[reciprow-1][1]) + int(giveamount)
 
                             sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipnewtot]])).execute()
+                    
+                            TransactionsDatabaseInterface.addTransaction(targname + "#" + str(target.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.Give, int(giveamount))
 
                             sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(giverrow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[givernewtot]])).execute()
+
+                            TransactionsDatabaseInterface.addTransaction(message.author.name + "#" + str(message.author.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.Give, int(-giveamount))
 
                             await message.channel.send(embed=discord.Embed(title = message.author.name + " has given " + str(giveamount) + dezzieemj + " to " + targname, description = message.author.name + " has " + str(givernewtot) + dezzieemj + "\n\n" + targname + " has " + str(recipnewtot) + dezzieemj, colour = embcol))
 
@@ -3021,6 +3036,8 @@ async def on_message(message):
                     recipnewtot = int(economydata[reciprow-1][1]) + int(giveamount)
 
                     sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipnewtot]])).execute()
+
+                    TransactionsDatabaseInterface.addTransaction(targname + "#" + str(target.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.Add, int(giveamount))
 
                     await message.channel.send(embed=discord.Embed(title = str(giveamount) + dezzieemj + " has been given to " + targname, description = targname + " now has " + str(recipnewtot) + dezzieemj, colour = embcol))
 
@@ -3086,6 +3103,8 @@ async def on_message(message):
 
                         sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipnewtot]])).execute()
 
+                        TransactionsDatabaseInterface.addTransaction(targname + "#" + str(target.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.Remove, int(-giveamount))
+
                         await message.channel.send(embed=discord.Embed(title = str(giveamount) + dezzieemj + " has been taken from " + message.author.name, description = message.author.name + " now has " + str(recipnewtot) + dezzieemj, colour = embcol))
 
                     await message.delete()
@@ -3115,6 +3134,8 @@ async def on_message(message):
                     else:
 
                         sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipnewtot]])).execute()
+
+                        TransactionsDatabaseInterface.addTransaction(targname + "#" + str(target.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.Remove, int(-giveamount))
 
                         await message.channel.send(embed=discord.Embed(title = str(giveamount) + dezzieemj + " has been taken from " + targname, description = targname + " now has " + str(recipnewtot) + dezzieemj, colour = embcol))
 
@@ -4073,6 +4094,8 @@ async def on_raw_reaction_add(reaction):
 
             sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipnewtot]])).execute()
 
+            TransactionsDatabaseInterface.addTransaction(target.name + '#' + target.discriminator, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
+
             if reaction.member.name == targetName:
 
                 await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(recipnewtot) + dezzieemj + "\n\nNot sure why they're awarding dezzies to themself like this, but ok.", colour = embcol, url = mess.jump_url))    
@@ -4236,6 +4259,9 @@ async def on_raw_reaction_add(reaction):
                     recipNewTot = int(economydata[reciprow-1][1]) + int(giveamount)
                     newDezziePool = prevDezziePool - giveamount
                     sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipNewTot]])).execute()
+                    
+                    TransactionsDatabaseInterface.addTransaction(target.name + '#' + target.discriminator, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
+
                     sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(giverow+3)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newDezziePool]])).execute()
 
                     if newDezziePool == 0:
@@ -4252,6 +4278,9 @@ async def on_raw_reaction_add(reaction):
                     giveamount = prevDezziePool
                     recipNewTot = int(economydata[reciprow-1][1]) + int(giveamount)
                     sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipNewTot]])).execute()
+                    
+                    TransactionsDatabaseInterface.addTransaction(target.name + '#' + target.discriminator, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
+
                     sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(giverow+3)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newDezziePool]])).execute()
                     await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
                     await client.get_channel(918257057428279326).send(givename + " awarded Dezzies to " + targetName)

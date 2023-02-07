@@ -1,4 +1,5 @@
 from CommonDefinitions import *
+from TransactionsDatabaseInterface import addTransaction, DezzieMovingAction
 
 #Buy Item
 async def buyitem(message):
@@ -315,6 +316,8 @@ async def buyitem(message):
                     
                     sheet.values().update(spreadsheetId = EconSheet, range = "B" + str(r+6), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[[newbal]])).execute()
 
+                    addTransaction(message.author.name + "#" + str(message.author.discriminator), DezzieMovingAction.Buy, int(-(int(buyquant) * int(itprice))))
+
     else:
 
         await message.channel.send(embed = discord.Embed(title = "We couldn't find any items matching that name.", description= "Check the spelling of the item, and look through `" + myprefix + "shop shopname` to ensure it is correct.", colour = embcol))
@@ -391,6 +394,7 @@ async def sellitem(message):
 
     #update sheet
     sheet.values().update(spreadsheetId = EconSheet, range = "B" + str(rowindex+6), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[[newbal]])).execute()
+    addTransaction(message.author.name + "#" + str(message.author.discriminator), DezzieMovingAction.Sell, int(totalprice))
     collet = getColumnLetter(columnindex)
     if newitemtotal == 0: #Shift everything else over
         newitemlist = userinvs[rowindex][columnindex+1:]

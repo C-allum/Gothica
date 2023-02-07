@@ -1,8 +1,9 @@
 
 keys.json
 botTokens.py
+CLDTransactions.db
+__pycache__/*
 .vscode/*
 .vs/*
-__pycache__/*
 .vscode/launch.json
 *.pyc

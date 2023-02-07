@@ -87,7 +87,7 @@ else:
 
     EconSheet = "1mmWxHhDUPI0PjLC2UXJZmj5wNqXnucFMz-er9NpVC2c"
 
-    shopsheet = "1r_1tYCGtmanRkTGsfAz4WrOSUoi6roO-zYRHACQBD90"
+    shopsheet = "1tj64lIs9qvfv3wUDjU5AHplhRoXU4i-qgHj21-Q7olk"
 
     encountersheet = "1poNQfcqLqkiK9NaKBqNOk_DDUsTr8GuBEVQP_uQcjeg" #No change as yet
 
