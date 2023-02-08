@@ -3908,7 +3908,7 @@ async def on_message(message):
                     roomcur = rooms[n]
                     roomchannel = discord.utils.get(client.get_all_channels(), name = roomcur)
 
-                    if message.channel != roomchannel and message.channel.name != "alias-bot":
+                    if message.channel != roomchannel and message.channel.name != "alias-bot" and roomchannel != None:
                         roomlatest = [joinedMessages async for joinedMessages in client.get_channel(roomchannel.id).history(limit=2, oldest_first=False)] #Fix for pebblehost Await issue
                         
                         if roomlatest[0].author == client.user:
@@ -4016,7 +4016,7 @@ async def on_message(message):
                                 if trackedStatus == "Notifications:Enabled":
                                     if economydata[playerindex][0] != message.author.name + "#" + message.author.discriminator:
                                         user = discord.utils.get(client.guilds[0].members, name = economydata[playerindex][0].split("#")[0], discriminator = economydata[playerindex][0].split("#")[1])
-                                        time.sleep(1.5)
+                                        timeos.sleep(1.5)
                                         await user.send(f"New message in <#{message.channel.id}> by {message.channel.last_message.author.name}")
 
                                 elif trackedStatus == "Notifications:Disabled":
@@ -4411,7 +4411,7 @@ async def on_raw_reaction_add(reaction):
                 pass
 
 
-    elif reaction.emoji.name =="kinklist":
+    if reaction.emoji.name =="kinklist":
 
         dmchannel = await client.fetch_user(int(reaction.member.id))
 

@@ -18,7 +18,7 @@ import re
 import asyncio
 import math
 import copy
-
+import time as timeos
 import datetime, time
 from discord import message
 from discord import guild
