@@ -395,7 +395,7 @@ async def sellitem(message):
     #update sheet
     sheet.values().update(spreadsheetId = EconSheet, range = "B" + str(rowindex+6), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[[newbal]])).execute()
     addTransaction(message.author.name + "#" + str(message.author.discriminator), DezzieMovingAction.Sell, int(totalprice))
-    collet = getColumnLetter(columnindex)
+    collet = await getColumnLetter(columnindex)
     if newitemtotal == 0: #Shift everything else over
         newitemlist = userinvs[rowindex][columnindex+1:]
         newshortdesclist = userinvs[rowindex+1][columnindex+1:]
