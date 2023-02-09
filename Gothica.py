@@ -2232,9 +2232,9 @@ async def on_message(message):
                                                 if " off" in message.content:
                                                     prevs[scenenum] = prevs[scenenum] + (" Notifications:Disabled")
 
-                                                if " on" in message.content:
+                                                elif " on" in message.content:
                                                     prevs[scenenum] = prevs[scenenum] + (" Notifications:Enabled")
-                                            
+                                                else: message.channel.send("Include `on` or `off` at the end of this command to specify how you want all scenes toggled.")                                            
                                             
                                         except TypeError:
                                             await message.channel.send("Value not recognised")

@@ -183,6 +183,15 @@ async def playerreacts(message):
 
             await message.add_reaction(reacts[n])
 
+    if message.author.name == "Rozaria" and str(message.channel).lower() == "ooc" and random.randint(1,50) == 50:
+        meslist = ["CAT", "MEOW", "🐈"]
+        reacts = meslist[random.randint(0,len(meslist)-1)]
+        reacts = reactletters(meslist[random.randint(0,len(meslist)-1)])
+
+        for n in range(len(reacts)):
+            await message.add_reaction(reacts[n])
+
+
     if message.author.name == "C_allum" and str(message.author) != "C_allum#5225":
 
         meslist = ["FAKE", "LIAR", "FALSE", "NOTREAL", "EVIL", "NOTCAL", "LIES", "NO", "STOPMIXED"]
