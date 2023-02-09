@@ -2217,22 +2217,22 @@ async def on_message(message):
                                     for scenenum in range(0, len(prevs)):
                                         try:
                                             trackedStatus = prevs[scenenum].split(" ")[-1]
-                                            if " off" in message.content:
+                                            if " off" in message.content and "Enabled" in trackedStatus:
                                                 splitScene = prevs[scenenum].rsplit(" ", 1)
                                                 splitScene [-1]= " Notifications:Disabled"
                                                 prevs[scenenum] = "".join(splitScene)
 
                                             
-                                            elif " on" in message.content:
+                                            elif " on" in message.content and "Disabled" in trackedStatus:
                                                 splitScene = prevs[scenenum].rsplit(" ", 1)
                                                 splitScene [-1]= " Notifications:Enabled"
                                                 prevs[scenenum] = "".join(splitScene)
 
-                                            else:
+                                            elif not "Enabled" in trackedStatus and not "Disabled" in trackedStatus:
                                                 if " off" in message.content:
                                                     prevs[scenenum] = prevs[scenenum] + (" Notifications:Disabled")
 
-                                                if "on" in message.content:
+                                                if " on" in message.content:
                                                     prevs[scenenum] = prevs[scenenum] + (" Notifications:Enabled")
                                             
                                             
