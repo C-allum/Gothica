@@ -598,7 +598,7 @@ async def on_message(message):
 
                     verping = "<@" + vertarget
 
-                    rand = random.randint(1,10)
+                    rand = random.randint(0,9)
 
                     titles = ["Say hello to " + str(vername) + "!", "Look - we found someone new - " + str(vername) + "!", "Can someone look after " + str(vername) + "?", str(vername) + " just turned up!", "We caught " + str(vername) + " trying to sneak in!", str(vername) + " just dropped in!", str(vername) + " could use some help", str(vername) + " has discovered a portal into the Dungeon!", "Helpfully discovering a hole in our ceiling, here's " + str(vername), str(vername) + " has swung in!"]
 
