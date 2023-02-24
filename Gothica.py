@@ -727,9 +727,9 @@ async def on_message(message):
 
             elif message.content.lower().startswith(str(myprefix) + "room"):
 
-                saferooms = ["bot-testing"]
-                shops = ["ooc", "character-creation"]
-                depths = ["test"]
+                # saferooms = ["bot-testing"]
+                # shops = ["ooc", "character-creation"]
+                # depths = ["test"]
 
                 rooms = []
                 roomlastmess = []
@@ -756,8 +756,9 @@ async def on_message(message):
                 randindex = random.randint(0,2)
                 await message.channel.send(embed = discord.Embed(title = "We generated a random room for you.", description = "You could roleplay in the " + str(sortedrooms[randindex]) + ". It hasn't been used for " + str(math.floor((datetime.timestamp(datetime.now())-int(roomlastmess[randindex]))/3600)) + " hours", colour = embcol))
 
-
-                
+            #Command to set the scene for roleplay
+            elif message.content.lower().startswith(str(myprefix) + "setting"):
+                pass                    
 
             #Scene Break Command
 
@@ -914,64 +915,54 @@ async def on_message(message):
             #Recent Activity Command
 
             elif message.content.lower().startswith(str(myprefix) + "recent"):
-
                 delay = await message.channel.send("We are processing your request now")
-
-                if "break" in message.content.lower() and "moderator" in authroles.lower():
-
-                    rbreak = True
-
-                else:
-
-                    rbreak = False
-
-                rooms = ["💎the-gobblin-bazaar💎", "🏺the-golden-jackal🏺", "🐍venom-ink🐍", "🧵widows-boutique🧵", "🍄sophies-garden🍄", "📜menagerie-magiks📜", "🔔the-polished-knob🔔", "💰-adventurers-guild-💰", "unlit-passageways", "salamander-hot-springs", "monster-girl-cantina", "the-ole-burlesque", "backstage-burlesque", "library-of-carnal-knowledge", "the-cathedral", "spectators-stands", "trapped-corridors", "moaning-hallways",  "unlicensed-fights", "sparring-pit", "kobold-dens", "wild-gardens", "twilight-groves", "sirens-grotto"]
-
                 meslatest = []
-
-                for n in range(len(rooms)):
-                    
+                rooms = []
+                rooms.extend(saferooms)
+                rooms.extend(shops)
+                rooms.extend(depths)
+                for n in range(len(rooms)):                    
                     roomchannel = discord.utils.get(client.get_all_channels(), name = rooms[n])
-
-                    #roomlatest = await client.get_channel(roomchannel.id).history(limit=2, oldest_first=False).flatten()
-                    roomlatest = [joinedMessages async for joinedMessages in client.get_channel(roomchannel.id).history(limit=2, oldest_first=False).flatten()] #Fix for pebblehost Await issue
+                    roomlatest = [joinedMessages async for joinedMessages in roomchannel.history(limit=2, oldest_first=False)]
 
                     if roomlatest[0].author == client.user:
-
                         roomlatest[0] = roomlatest[1]
-
                         scenebroken = True
-
                     else:
-
                         scenebroken = False
-
-                    rtimestamp = roomlatest[0].created_at
-
-                    mestimestamp = message.created_at
-
-                    diff = str(mestimestamp - rtimestamp)
-
-                    meslatest.append(rooms[n] + " - Last used " + diff.split(":")[0] + " hours and " + diff.split(":")[1] + " minutes ago.")
-
-                    if not "day" in diff:
-
-                        hours = int(diff.split(":")[0])
-
-                        if hours >= 3 and not scenebroken and rbreak:
-
-                            await client.get_channel(roomchannel.id).send("```\u200b```")
-
-                    elif not scenebroken and rbreak:
-
-                        await client.get_channel(roomchannel.id).send("```\u200b```")
-
+                    rtimestamp = datetime.timestamp(roomlatest[0].created_at)
+                    mestimestamp = datetime.timestamp(datetime.now())
+                    diff = float(mestimestamp - rtimestamp)
+                    days = math.floor(diff/86400)
+                    diffstr = []
+                    if days == -1:
+                        days = 0
+                    elif days == 1:
+                        diffstr.append(str(days) + " day")
+                    else:
+                        diffstr.append(str(days) + " days")
+                    hours = math.floor((diff-(days*86400))/3600)
+                    if hours == -1:
+                        hours = 0
+                    elif hours == 1:
+                        diffstr.append(str(hours) + " hour")
+                    else:
+                        diffstr.append(str(hours) + " hours")
+                    minutes = math.floor((diff-(days*86400)-(hours*3600))/60)
+                    if minutes == -1:
+                        minutes = 0
+                    elif minutes == 1:
+                        diffstr.append(str(minutes) + " minute")
+                    else:
+                        diffstr.append(str(minutes) + " minutes")
+                    if diffstr == []:
+                        meslatest.append("<#" + str(roomchannel.id) + "> - Last used within the last minute.")
+                    else:
+                        meslatest.append("<#" + str(roomchannel.id) + "> - Last used " + ", ".join(diffstr).replace("hours, ", "hours and ") + " ago.")
+                    meslatest.append(str(len(roomchannel.threads)) + " Active threads.\n")
                 print(message.author.name + " ran the recent activity command")
-
                 await message.channel.send(embed = discord.Embed(title = "Last messages in each public room:", description = "\n".join(meslatest), colour = embcol))
-
                 await message.delete()
-
                 await delay.delete()
 
             #Invest Command
@@ -1914,10 +1905,12 @@ async def on_message(message):
             #Rulebook Command
 
             elif (message.content.lower().startswith(str(myprefix) + "rulebook")):
-
                 await message.delete()
+                await message.channel.send(embed = discord.Embed(title = "Here's a link to the Lewd Rulebook", description = "https://www.dropbox.com/sh/q2wt7nsihxldam2/AAB1yTPUsPo57BNkapEXgxxya/00%20Full%20Lewd%20handbook%20%28WIP%29.pdf?dl=0", colour = embcol))
 
-                await message.channel.send(embed = discord.Embed(title = "Here's a link to the Lewd Rulebook", description = "https://www.dropbox.com/s/cl1w7a55onzjpnk/00%20Full%20Lewd%20handbook%20%28WIP%29.pdf?dl=0", colour = embcol))
+            elif (message.content.lower().startswith(str(myprefix) + "lewdreference")):
+                await message.delete()
+                await message.channel.send(embed = discord.Embed(title = "A quick reference sheet for the lewd rules in the dungeon", description = "**Full Rulebook:** https://www.dropbox.com/sh/q2wt7nsihxldam2/AAB1yTPUsPo57BNkapEXgxxya/00%20Full%20Lewd%20handbook%20%28WIP%29.pdf?dl=0\n\n**Inhibition:** 10 + Proficiency Bonus + Your choice of mental stat modifier\n**Arousal Maximum:** Rolled Hit Dice (or rounded average) plus Con mod per level\n**Climaxing:** DC 15 Inhibition save, fail halves arousal and incapacitates for 1d4 rounds (unless overstimulating)\n\n**Conditions:**\n    *Hyperaroused:* Disadvantage on saves against indirect advances and direct advances against the creature have advantage\n    *Edged:* Hyperaroused, Must save against climaxing, drops items, falls prone, disadvantage on anything but seeking release, faltering speech, advances do maximal stimulation.\n    *Denied:* Automatic success on climax saves, success on a save reduces maximum arousal by 1d4.\n    *Infatuated:* Charmed by the source, willing for all advances by charmer, commands and suggestions require checks.\n    *Intoxicated:* Disadvantage on mental saves\n    *Uninhibited:* Inhibition score at 0. Hyperaroused, intoxicated, willing for all stimulation, disadvantage on checks and saves that are not sexual advances. Uses their turn to move towards and stimulate others, or themself.\n\n**Natural Implements:**\n    *Cock:*\n      Tiny: 1d4 Piercing\n      Small: 1d6 Piercing\n      Medium: 1d8 Piercing\n      Large: 1d10 Piercing\n      Huge: 1d12 Piercing\n      Gargantuan: 2d8 Piercing\n    Tits: 1d6 Bludgeoning\n    Pussy: 1d8 Bludgeoning\n    Ass: 1d8 Bludgeoning\n    Mouth: 1d4 Bludgeoning\n    Hand: 1d4 Bludgeoning\n    Tail: 1d4 Piercing\n    Tentacle: 1d6 Piercing\n    Pseudopod: 1d6 Bludgeoning", colour = embcol))
 
             #Bid Command
 
@@ -2432,227 +2425,126 @@ async def on_message(message):
             elif message.content.lower().startswith(str(myprefix) + "work") or message.content.lower().startswith("$work"):
 
                 economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ2000", majorDimension='ROWS').execute().get("values")
-
                 for a in range(math.floor(len(economydata)/4)):
-
                     b = a * 4 + 5
-
                     workreward = random.randint(20,250)
-
                     try:
 
                         if str(message.author) in str(economydata[b][0]):
-
                             try:
-                                
                                 workdiff = int(datetime.timestamp(datetime.now())) - int(economydata[b+1][1])
-
                             except IndexError:
-
                                 workdiff = 86401
-
                             except ValueError:
-
                                 workdiff = 86401
 
                             if int(workdiff) > 84600:
-
                                 row = b + 1
-
                                 newtot = int(economydata[b][1]) + int(workreward)
-
                                 workresptemp = str(random.choice(workhooks[0]))
-
                                 workresp = workresptemp.replace("[amount]", str(workreward) + dezzieemj)
-
                                 roles = str(authroles).lower()
-
                                 pay = 0
-
                                 payroles = []
 
                                 if "admin" in roles:
-
                                     pay += 100
-
                                     payroles.append("Admin")
-
                                 if "mvp" in roles:
-
                                     pay += 150
-
                                     payroles.append("MVP")
-
                                 if "moderator" in roles:
-
                                     pay += 100
-
                                     payroles.append("Dungeon moderator")
-
                                 if "lorekeeper" in roles:
-
                                     pay += 200
-
                                     payroles.append("Lorekeeper")
-                            
                                 if "pet" in roles:
-
                                     pay += 50
-
                                     payroles.append("Dungeon Pet")
-
                                 if "fucksmith" in roles:
-
                                     pay += 25
-
                                     payroles.append("Licensed Fucksmith")
-
                                 if pay == 0:
-
                                     paymess = ""
-
                                 else:
 
                                     if len(payroles) == 1:
-
                                         paylist = str(payroles[0])
-
                                     else:
-
                                         paylist = ", ".join(payroles[:-1]) + " and " + payroles[-1]
 
                                     if str(workdiff) == "day" or not "days" in str(workdiff):
-
                                         paymess = "\n\nYou also collect your role-based income for today, from your work as " + paylist + ": " + str(pay)+ dezzieemj
-
                                         newtot += pay
                                     
                                     else:
-
                                         if int(str(workdiff).split(" day")[0]) > 4:
-
                                             days = 4
-
                                             paymess = "\n\nYou also collect your role-based income since you last worked (over 4 days ago), from your work as " + paylist + ": " + str(pay * int(days)) + dezzieemj
-
                                             newtot += pay * 4
 
                                         else:
-
                                             days = str(str(workdiff).split(" day")[0])
-
                                             paymess = "\n\nYou also collect your role-based income since you last worked (" + days + " days ago), from your work as " + paylist + ": " + str(pay * int(days)) + dezzieemj
-
                                             newtot += pay * int(str(workdiff).split(" day")[0])
 
                                 crit = random.randint(1,20)
 
                                 if crit == 1:
-
                                     critresp = "\n\nBut you rolled a critical failure for this work, so the amount is halved to " + str(math.floor(workreward / 2)) + "!"
-
                                     newtot = newtot - math.ceil(workreward / 2)
-
                                 elif crit == 20:
-
                                     critresp = "\n\nAnd you rolled a natural 20 for the work, doubling the amount to " + str(workreward * 2) + "!"
-
                                     newtot = newtot + workreward
-
                                 else:
-
                                     critresp = "\n\nYou rolled a " + str(crit) + ", which doesn't do anything special."
-
+                                
                                 if workdiff < 172800:
-
                                     try:
-
                                         streakmess = "\n\nYou now have a " + str(int(economydata[b+3][1]) + 1) + " day streak!"
 
                                         if (int(economydata[b+3][1]) + 1) % 7 == 0:
-
                                             if (int(economydata[b+3][1]) + 1) / 7 >= 4:
-
                                                 streakbonus = 200
-
                                             else:
-
                                                 streakbonus = ((int(economydata[b+3][1]) + 1) / 7) * 50
-
                                             if ((int(economydata[b+3][1]) + 1) / 7) == 1:
-
                                                 streakmess += " That's a full week without missing a day! Keep it up! Here's an extra 50" + dezzieemj + "!"
-
                                             else:
-
                                                 streakmess += " That's " + str(int(math.floor((int(economydata[b+3][1]) + 1) / 7))) + " full weeks! You've earned an extra " + str(streakbonus) + dezzieemj + "!"
-
                                             newtot += int(streakbonus)
-
                                         elif (int(economydata[b+3][1]) + 1) == 69:
-
                                             streakmess += " ***Nice***. You've earned an extra 69" + dezzieemj
-
                                             newtot += 69
-
                                         streakdays = str(int(economydata[b+3][1]) + 1)
-
                                     except ValueError:
-
                                         streakmess = "\n\nWork every day to build a streak!"
-
                                         streakdays = 1
-
                                     except IndexError:
-
                                         streakmess = "\n\nWork every day to build a streak!"
-
                                         streakdays = 1
-
                                 else:
-
                                     streakmess = "\n\nWork every day to build a streak!"
-
                                     streakdays = 1
 
                                 randbal = str(random.choice([message.author.display_name + " now has " + str(newtot) + dezzieemj, "According to our records, " + message.author.display_name + " now has " + str(newtot) + dezzieemj, str(newtot) + dezzieemj + ". " + message.author.display_name + " has " + str(newtot) + dezzieemj + ".", "This work brings " + message.author.display_name + "'s balance to.. " + str(newtot) + dezzieemj + ".", message.author.display_name + " should really go and visit the Gobblin Bazzar. They have " + str(newtot) + dezzieemj + " to spend."]))
-
                                 balresp = "\n\n---------------------------------------------------------\n\n" + randbal
-
                                 worktit = random.choice([message.author.display_name + " earned some dezzies with the work command!", message.author.display_name + " has been hard at work!", "Working hard, or hardly working, " + message.author.display_name + "?", "You guys are getting paid? Well, " + message.author.display_name + " is, anyway.", message.author.display_name + " did some work.", message.author.display_name + " decided to do some work. It's about time they pitched in."])
-
-                                if (message.author.name == "Mailin" or message.author.name == "ELeif") and workreward < 100 and crit != 1 and crit != 20:
-
-                                    if random.randint(1,20) == 1:
-
-                                        wrong = await message.channel.send(embed = discord.Embed(title = worktit, description = workresptemp.replace("[amount]", str(604) + dezzieemj) + critresp + paymess + streakmess + "\n\n---------------------------------------------------------\n\n" +  message.author.display_name + " now has " + str(int(economydata[b][1]) + 604 + pay) + dezzieemj, colour = embcol))
-
-                                        time.sleep(4)
-
-                                        await message.channel.send(embed = discord.Embed(title = "Wait.. that's not right.", description = "That should have only been " + str(workreward) + "... Let me try that again for my records.", colour = embcol))
-
-                                        await wrong.edit(embed = discord.Embed(title = "~~" + worktit + "~~", description = "~~" + workresptemp.replace("[amount]", str(604) + dezzieemj) + "~~" + critresp + paymess + streakmess + "\n\n---------------------------------------------------------\n\n~~" +  message.author.display_name + " now has " + str(int(economydata[b][1]) + 604 + pay) + dezzieemj + "~~", colour = embcol))
-
                                 await message.channel.send(embed = discord.Embed(title = worktit, description = workresp + critresp + paymess + streakmess + balresp, colour = embcol))
-
                                 await message.delete()
-
                                 sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(row+3)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[streakdays]])).execute()
-
                                 sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newtot]])).execute()
-
                                 TransactionsDatabaseInterface.addTransaction(message.author.name + "#" + str(message.author.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.Work, int(pay))
-
                                 sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(row+1)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[str(datetime.timestamp(datetime.now()))]])).execute()
-
                             else:
-
-                                await message.channel.send(embed = discord.Embed(title = message.author.name + " cannot work at this time!", description = "You last worked at <t:" + str(economydata[b+1][1]) + ">.\n The work command can only be used once per day.\n\n Try again " + "<t:" + str(int(economydata[b+1][1]) + 84600) + ":R>", colour = embcol))
-
+                                await message.channel.send(embed = discord.Embed(title = message.author.name + " cannot work at this time!", description = "You last worked at <t:" + str(economydata[b+1][1]) + ">.\n The work command can only be used once per day.\n\n Try again " + "<t:" + str(int(economydata[b+1][1]) + 84600) + ":R>\nWe'll send you a direct message when you are able to.", colour = embcol))
                                 await message.delete()
-
+                                remainingsecs = int(economydata[b+1][1]) + 84600 - int(datetime.timestamp(datetime.now()))
+                                await asyncio.sleep(remainingsecs)
+                                dmchan = await client.fetch_user(int(message.author.id))
+                                await dmchan.send(embed = discord.Embed(title = "You can now work", description = "It has been a day since you last worked, so you can now `%work` again on Celia's Lewd Dungeon.", colour = embcol))
                     except IndexError:
-
                         pass
 
             #Slut Command
