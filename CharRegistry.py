@@ -775,7 +775,7 @@ async def charsearch(message):
 
     for f in str(searchedName.lower()):
 
-        if ord(f) >= 97 and ord(f) <= 122:
+        if ord(f) >= 97 and ord(f) <= 122 or f == " ":
 
             fieldappend += f
     
