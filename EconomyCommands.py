@@ -416,7 +416,7 @@ async def sellitem(message):
     shopItemName = invItemname[1:]
     for n in range(len(shopdata[0])):
         if shopItemName == shopdata[1][n]:
-            newStock = int(shopdata[8][n]) + 1
+            newStock = int(shopdata[8][n]) + quant
             sheet.values().update(spreadsheetId = shopsheet, range = "I" + str(n + 1), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[[str(newStock)]])).execute()
 
             return
