@@ -765,22 +765,25 @@ async def charsearch(message):
     pnames = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B1000" ).execute().get("values")
 
     cargs = sheet.values().get(spreadsheetId = CharSheet, range = "F1:Z1000" ).execute().get("values")
-
-    count = str(cnames).lower().replace("ì", "i").count(msgspl[1].lower())
+    searchedName = " ".join(msgspl[1:]).lower()
+    
+    count = 0
 
     multindexes = []
 
     fieldappend = ""
 
-    for f in str(msgspl[1].lower()):
+    for f in str(searchedName.lower()):
 
         if ord(f) >= 97 and ord(f) <= 122:
 
             fieldappend += f
     
-    msgspl[1] = fieldappend
+    searchedName = fieldappend
 
-    if msgspl[1] == "dragon" or msgspl[1] == "slime" or msgspl[1] == "bard":
+    count = str(cnames).lower().replace("ì", "i").count(searchedName)
+    
+    if searchedName == "dragon" or searchedName == "slime" or searchedName == "bard":
 
         count = 0
 
@@ -790,7 +793,7 @@ async def charsearch(message):
 
         for i in range(len(cnames)):
 
-            if msgspl[1].lower() in str(cnames[i]).lower().replace("ì", "i"):
+            if searchedName.lower() in str(cnames[i]).lower().replace("ì", "i"):
 
                 cname = str(cnames[i][0])
 
@@ -822,13 +825,13 @@ async def charsearch(message):
 
     elif count > 1:
 
-        tit = "Multiple characters found who's names contain '" + msgspl[1] + "':"
+        tit = "Multiple characters found who's names contain '" + searchedName + "':"
 
         c = 0
 
         for i in range(len(cnames)):
 
-            if str(msgspl[1]).lower() in str(cnames[i]).lower():
+            if str(searchedName).lower() in str(cnames[i]).lower():
 
                 if c == 0:
 
@@ -842,7 +845,7 @@ async def charsearch(message):
 
         foot = "\n----------------------------------------------\n\nThis message will timeout after 30 seconds."
 
-    elif str(msgspl[1]).lower() in str(headers).lower():
+    elif str(searchedName).lower() in str(headers).lower():
 
         #Search by field
 
@@ -866,7 +869,7 @@ async def charsearch(message):
 
         for i in range(len(headers)):       
 
-            if msgspl[1].lower() in headers[i].lower():
+            if searchedName.lower() in headers[i].lower():
 
                 tit = "Characters who's " + headers[i].lower() + " contains " + searchterm.lower()
 
@@ -880,7 +883,7 @@ async def charsearch(message):
 
                     tit = "Could not find any characters who's " + headers[i].lower() + " contains " + searchterm.lower()
 
-    elif msgspl[1].lower() in str(cargs).lower():
+    elif searchedName.lower() in str(cargs).lower():
 
         #Search by loose search term
 
@@ -888,15 +891,15 @@ async def charsearch(message):
 
             for j in range(len(cnames)):
 
-                if msgspl[1].lower() in cargs[j][i-1].lower():
+                if searchedName.lower() in cargs[j][i-1].lower():
 
-                    tit = "Found '" + msgspl[1].lower() + "' in:"
+                    tit = "Found '" + searchedName.lower() + "' in:"
 
                     cdata.append("The " + str(headers[i]).lower() + " of " + str(pnames[j][0]) + "'s " + str(cnames[j][0]))
 
     else:
 
-        tit = "Could not find " + msgspl[1] + " in the character registry"
+        tit = "Could not find " + searchedName + " in the character registry"
 
         cdata.append("Maybe try a different search term?")
 
