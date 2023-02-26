@@ -327,16 +327,16 @@ async def sellitem(message):
 
     #Divide String
     mess = message.content.split(" ")
+    itemname = ""
     try:
-        itemname = " ".join(mess[2:])
-    except IndexError:
+        quant = int(mess[-1])
+    except (IndexError, ValueError) as e:
+        quant = 1
         itemname = " ".join(mess[1:])
-    try:
-        quant = int(mess[1])
-    except IndexError:
-        quant = 1
-    except ValueError:
-        quant = 1
+
+    if itemname == "":
+        itemname = " ".join(mess[1:-1])
+
 
     #Check Inventory
     userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ2000", majorDimension = 'ROWS').execute().get("values")
@@ -346,7 +346,7 @@ async def sellitem(message):
             rowindex = b
             break
     matchingItems = []
-    for c in range(len(userinvs[rowindex])):
+    for c in range(len(2, userinvs[rowindex])):
         if itemname.lower() in userinvs[rowindex][c].lower():
             matchingItems.append(c)
     if len(matchingItems) == 0:
@@ -409,6 +409,17 @@ async def sellitem(message):
         sheet.values().update(spreadsheetId = EconSheet, range = str(collet) + str(rowindex+6), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=newinvdata)).execute()
     else:
         sheet.values().update(spreadsheetId = EconSheet, range = str(collet) + str(rowindex+6), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[[str(invItemname) + "|" + str(newitemtotal)]])).execute()
+
+    #update stock on the shop it came from
+    shopdata = sheet.values().get(spreadsheetId = shopsheet, range = "A1:J1000", majorDimension = 'COLUMNS').execute().get("values")
+
+    shopItemName = invItemname[1:]
+    for n in range(len(shopdata[0])):
+        if shopItemName == shopdata[1][n]:
+            newStock = int(shopdata[8][n]) + 1
+            sheet.values().update(spreadsheetId = shopsheet, range = "I" + str(n + 1), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[[str(newStock)]])).execute()
+
+            return
 
 async def giveitem(message):
     userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ2000", majorDimension = 'ROWS').execute().get("values")
