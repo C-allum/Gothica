@@ -58,8 +58,8 @@ def clearTransactions():
         print("Clearing aborted.")
 
 
-#Add a transaction to the database: Takes a person, an action, an amount and optionally a date in datetime format to write to the Database
-def addTransaction(person:str, action:DezzieMovingAction, amount:int, date:datetime.datetime = None):
+#Add a transaction to the database: Takes a person, an action, an amount of dezzies and optionally a list of item details (shopName, itemName, itemAmount) as well as a date in datetime format to write to the Database
+def addTransaction(person:str, action:DezzieMovingAction, amountDz:int, itemData:list = None, date:datetime.datetime = None):
     try:
         transactionsConnection = sqlite3.connect('CLDTransactions.db')
         transactionsCursor = transactionsConnection.cursor()
@@ -67,7 +67,12 @@ def addTransaction(person:str, action:DezzieMovingAction, amount:int, date:datet
         if date == None:
             date = datetime.datetime.now()
 
-        transactionsCursor.execute(f'''INSERT INTO Transactions VALUES ('{date}', '{person}', '{action.name}', '{amount}')''')
+        #Is an item supplied in the function call?
+        if itemData == None:
+            transactionsCursor.execute(f'''INSERT INTO Transactions VALUES ('{date}', '{person}', '{action.name}', '{amountDz}')''')
+        else:
+            transactionsCursor.execute(f'''INSERT INTO Transactions VALUES ('{date}', '{person}', '{action.name} - {itemData[0]} {itemData[1]} x {itemData[2]}', '{amountDz}')''')
+
         transactionsConnection.commit()
         transactionsConnection.close()
 

@@ -316,7 +316,7 @@ async def buyitem(message):
                     
                     sheet.values().update(spreadsheetId = EconSheet, range = "B" + str(r+6), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[[newbal]])).execute()
 
-                    addTransaction(message.author.name + "#" + str(message.author.discriminator), DezzieMovingAction.Buy, int(-(int(buyquant) * int(itprice))))
+                    addTransaction(message.author.name + "#" + str(message.author.discriminator), DezzieMovingAction.Buy, int(-(int(buyquant) * int(itprice))), [itname, buyquant, itshop])
 
     else:
 
@@ -394,7 +394,7 @@ async def sellitem(message):
 
     #update sheet
     sheet.values().update(spreadsheetId = EconSheet, range = "B" + str(rowindex+6), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[[newbal]])).execute()
-    addTransaction(message.author.name + "#" + str(message.author.discriminator), DezzieMovingAction.Sell, int(totalprice))
+    addTransaction(message.author.name + "#" + str(message.author.discriminator), DezzieMovingAction.Sell, int(totalprice), [invItemname, quant])
     collet = await getColumnLetter(columnindex)
     if newitemtotal == 0: #Shift everything else over
         newitemlist = userinvs[rowindex][columnindex+1:]
