@@ -1917,63 +1917,56 @@ async def on_message(message):
             elif (message.content.lower().startswith(str(myprefix) + "bid")):
 
                 if isbot:
-
                     await message.delete()
+
+                elif "setup" in message.content.lower() and "lorekeeper" in str(message.author.roles).lower():
+                    for a in range(len(message.content.split(" ", 1)[1].split("|"))):
+                        bidstock.append(message.content.split(" ", 1)[1].split("|")[a])
+                        bidprice.append(0)
+                        bidders.append("")
+                    global bidthread
+                    bidthreadseed = await message.channel.send(embed = discord.Embed(title = "Bidding is open!", description = "This weekend's slaves are:\n" + "\n".join(bidstock), colour = embcol))
+                    bidthread = await bidthreadseed.create_thread(name = "Bids")
+                
+                elif "results" in message.content.lower():
+                    bidsummary = []
+                    auctiontot = 0
+                    for c in range(len(bidstock)):
+                        if bidders[c] != "":
+                            bidsummary.append(bidstock[c] + ": " + str(bidprice[c]) + dezzieemj + ", " + bidders[c].name)
+                            auctiontot += bidprice[c]
+                        else:
+                            bidsummary.append(bidstock[c] + ": No bids yet")
+                    await message.channel.send(embed = discord.Embed(title = "Current bids for this weekend's auctions", description = "\n".join(bidsummary) + "\n\nIn total, " + str(auctiontot) + " is being spent at this auction.",  colour = embcol))
 
                 else:
 
-                    bidchannel = 1010566688326045797
+                    if len(message.content.split(" ")) >= 3:
+                        bidtarget = " ".join(message.content.split(" ")[1:-1])
+                        try:
+                            bidamount = int(message.content.split(" ")[-1])
 
-                    #bidlatest = await client.get_channel(bidchannel).history(limit=1, oldest_first=True).flatten()
-                    bidlatest = [joinedMessages async for joinedMessages in client.get_channel(bidchannel).history(limit=1, oldest_first=True).flatten()] #Fix for pebblehost Await issue
-
-                    bids = bidlatest[0].content.split("\n")
-
-                    prevbids = []
-
-                    for a in range(len(bids)):
-
-                        if str(message.content.split(" ")[1]) in bids[a]:
-
-                            try:
-                                
-                                if int(message.content.split(" ")[2]) > int(bids[a].split(" | ")[2]):
-
-                                    bids[a] = str(bids[a].split(" | ")[0]) + " | " + str(message.author.name) + " | " + str(message.content.split(" ")[2])
-
-                                    await message.channel.send(message.author.name + " has bid " + str(message.content.split(" ")[2]) + dezzieemj + " on " + str(message.channel))
-
+                            if bidtarget.lower() in str(bidstock).lower():
+                                for b in range(len(bidstock)):
+                                    if bidtarget.lower() in bidstock[b].lower():
+                                        slaveindex = b
+                                        break
+                                if bidamount <= bidprice[slaveindex]:
+                                    await message.channel.send(embed = discord.Embed(title = "You need to bid more than that!", description = "The current bid for " + bidstock[slaveindex] + " is " + str(bidprice[slaveindex]) + dezzieemj + ", bid by " + bidders[slaveindex].name, colour = embcol))
                                 else:
+                                    await message.channel.send(embed = discord.Embed(title = "Bid successful!", description = "You have bid " + str(bidamount) + dezzieemj + " for " + bidstock[slaveindex], colour = embcol))                                    
+                                    bidders[slaveindex] = message.author
+                                    bidprice[slaveindex] = bidamount
+                                    await bidthread.send(message.author.name + " has bid " + str(bidamount) + dezzieemj + " on " + bidstock[slaveindex])
 
-                                    await message.channel.send("Your bid is too low, the current bid is: " + str(bids[a].split(" | ")[2]) + dezzieemj)
+                            else:
+                                await message.channel.send(embed = discord.Embed(title = "Could not find a slave of that name.", description = "Current slaves for sale are:\n\n" + "\n".join(bidstock), colour = embcol))
 
-                            except IndexError:
+                        except ValueError:
+                            await message.channel.send(embed = discord.Embed(title = "The price you bid needs to be an integer  ", description = "", colour = embcol))
 
-                                await message.channel.send("Incorrect format. Use %bid name amount.")
-
-                            except ValueError:
-
-                                await message.channel.send(message.content.split(" ")[2] + " is not an integer. Use %bid name amount.")
-
-                        if not "setup" in bids[a]:
-
-                            prevbids.append(bids[a])
-
-                    if ("lorekeeper" in str(message.author.roles).lower() or message.author.name == "C_allum") and "set" in message.content:
-
-                        prevbids.append(str((message.content.split(" ")[1]) + " | No Bids Yet | " + "0"))
-
-                        await message.delete()
-
-                    try:
-                        
-                        await bidlatest[0].edit("\n".join(prevbids))
-
-                    except discord.errors.Forbidden:
-
-                        await bidlatest[0].delete()
-
-                        await client.get_channel(bidchannel).send("\n".join(prevbids))            
+                    else:
+                        await message.channel.send(embed = discord.Embed(title = "You didn't format that correctly.", description = "It needs to be `%bid slavename amount`.", colour = embcol))                            
 
             #Easter egg hunt
 
@@ -3339,7 +3332,7 @@ async def on_message(message):
 
                     if " " in message.content:
 
-                        shopnames = ["the-golden-jackal", "venom-ink", "widows-boutique", "sophies-garden", "menagerie-magiks", "the-polished-knob", "moo-mellon-auction", "purrfect-petshop"]
+                        shopnames = ["the-golden-jackal", "venom-ink", "widows-boutique", "sophies-garden", "menagerie-magiks", "the-polished-knob", "moo-mellon-auction", "purrfect-petshop", "black-market", "gobblin-bazzar"]
 
                         for a in range(len(shopnames)):
 
@@ -3352,6 +3345,71 @@ async def on_message(message):
                             else:
 
                                 shopchan = "No shop selected"
+
+                        if shopchan == "the-golden-jackal":
+
+                            shopintro = "Hey, how's it going. You've been to The Jackal before. You know how it goes, you break it, I break you.\n------------------------------------------------------------"
+                            shopcolour = 0xded233
+                            npcthumb = "https://cdn.discordapp.com/attachments/1064988615899365529/1064988616465588334/tumblr_p34e41lrbz1v08ecmo1_1280.jpg"
+
+                        elif shopchan == "venom-ink":
+
+                            shopintro = "Alright there? Don't mind the snakes, they won't bite. I might, but that's another matter\n------------------------------------------------------------"
+                            shopcolour = 0x18cdd3
+                            npcthumb = "https://cdn.discordapp.com/attachments/1064985693601923082/1069656250415067287/token_6.png"
+
+                        elif shopchan == "widows-boutique":
+
+                            shopintro = "Welcome to the Widow's Boutique. Mind your manners, and feel free to look at the displays for something you like.\n------------------------------------------------------------"
+                            shopcolour = 0x222222
+                            npcthumb = "https://cdn.discordapp.com/attachments/1064982322392346645/1064982323503829093/webb_avatar.png"
+
+                        elif shopchan == "sophies-garden":
+
+                            shopintro = "Oh hello, dear. Welcome to my own little garden, Sophie's Garden, might we find you a friend today?\n------------------------------------------------------------"
+                            shopcolour = 0xaed318
+                            npcthumb = "https://cdn.discordapp.com/attachments/1064988177271619785/1064988177741393990/the_mushroom_witch_by_lenleg_dd2iqi8-pre.png"
+
+                        elif shopchan == "menagerie-magiks":
+
+                            shopintro = "Huh, oh, right Sophie told me what to say, one moment. Ahem. Welcome to Menagerie Magiks, I am Runar and may I interest you in something?\n------------------------------------------------------------"
+                            shopcolour = 0x4a97df
+                            npcthumb = "https://cdn.discordapp.com/attachments/1064989250698870935/1069654057872003153/token_1_7.png"
+                        
+                        elif shopchan == "the-polished-knob":
+
+                            shopintro = "Good day. Feel free to browse. Don't touch, ask first.\n------------------------------------------------------------"
+                            shopcolour = 0x96470c
+                            npcthumb = "https://cdn.discordapp.com/attachments/912758732142837761/921654371903750144/D-9576iWwAAPgcP.jpeg"
+
+                        elif shopchan == "purrfect-petshop":
+
+                            shopintro = "Oh, hey! Welcome. Are you looking for a new friend or companion today?\n------------------------------------------------------------"
+                            shopcolour = 0x96470c
+                            npcthumb = "https://cdn.discordapp.com/attachments/1064993147035324436/1064993147580579921/unknown.png"
+
+                        elif shopchan == "black-market":
+
+                            shopintro = "Yeah... we've got some gear to shift. But you didn't get it from us, you hear?\n------------------------------------------------------------"
+                            shopcolour = 0x96470c
+                            npcthumb = "https://cdn.discordapp.com/attachments/912559434969022534/1085358587703988265/d36mb03-8d1973ea-41ad-4193-8566-9cb508d62344.jpg"
+
+                        elif shopchan == "gobblin-bazzar":
+
+                            #shopintro = "Good day. Feel free to browse. Don't touch, ask first.\n------------------------------------------------------------"
+                            shopcolour = 0x3B0B80
+                            npcthumb = "https://cdn.discordapp.com/attachments/912559434969022534/1085358508314210384/3725ee96-4249-4c32-810c-060b1c9efd83.webp"
+
+                        elif shopchan == "moo-mellon-auction":
+
+                            shopcolour = 0xcccbbb
+                            npcthumb = ""
+
+                        else:
+
+                            shopintro = ""
+                            shopcolour = 0x000000
+                            npcthumb = ""
 
                     else:
 
@@ -3367,6 +3425,11 @@ async def on_message(message):
 
                                 npc = shopdata[5][n]
 
+                            if (len("\n".join(itlist)) + len(shopdata[1][n] + "**\n*" + str(shopdata[2][n]) + "*<:dz:844365871350808606>" + shopdata[0][n] + "  **" + shopdata[1][n] + "**\n*" + str(shopdata[2][n]) + "*<:dz:844365871350808606>")) >= 4000:
+
+                                await message.channel.send(embed = discord.Embed(title = shopdata[3][n].strip("#").replace("-", " ").title(), description = shopintro + "\n" + "\n".join(sorted(itlist)).replace("Bimbonomicon", "The Bimbonomicon").replace("Doctor", "The Doctor").replace("Widow", "The Widow").replace("Tome of Imps", "The Tome of Imps"), colour = shopcolour))
+                                itlist = []
+
                             if "The" in shopdata[1][n]:
 
                                 itlist.append(shopdata[0][n] + "  **" + shopdata[1][n].lstrip("The ").replace("ome of Imps", "Tome of Imps") + "**\n*" + str(shopdata[2][n]) + "*<:dz:844365871350808606>")
@@ -3376,54 +3439,6 @@ async def on_message(message):
                                 itlist.append(shopdata[0][n] + "  **" + shopdata[1][n] + "**\n*" + str(shopdata[2][n]) + "*<:dz:844365871350808606>")
 
                             shoptit = shopdata[3][n].strip("#").replace("-", " ").title()
-
-                        if npc == "Nubia":
-
-                            shopintro = "Hey, how's it going. You've been to The Jackal before. You know how it goes, you break it, I break you.\n------------------------------------------------------------"
-                            shopcolour = 0xded233
-                            npcthumb = "https://cdn.discordapp.com/attachments/912879579260125184/917863713514590228/Nubia-icon.png"
-
-                        elif npc == "Nessa":
-
-                            shopintro = "Alright there? Don't mind the snakes, they won't bite. I might, but that's another matter\n------------------------------------------------------------"
-                            shopcolour = 0x18cdd3
-                            npcthumb = "https://cdn.discordapp.com/attachments/912882341091876915/917863626151456818/Nessa.png"
-
-                        elif npc == "Madame Webb":
-
-                            shopintro = "Welcome to the Widow's Boutique. Mind your manners, and feel free to look at the displays for something you like.\n------------------------------------------------------------"
-                            shopcolour = 0x222222
-                            npcthumb = "https://cdn.discordapp.com/attachments/917870118342647808/917878405473656862/webb_avatar.png"
-
-                        elif npc == "Sophie":
-
-                            shopintro = "Oh hello, dear. Welcome to my own little garden, Sophie's Garden, might we find you a friend today?\n------------------------------------------------------------"
-                            shopcolour = 0xaed318
-                            npcthumb = "https://cdn.discordapp.com/attachments/918575985669062727/919379824986976356/sophie_avatar.png"
-
-                        elif npc == "Runar":
-
-                            shopintro = "Huh, oh, right Sophie told me what to say, one moment. Ahem. Welcome to Menagerie Magiks, I am Runar and may I interest you in something?\n------------------------------------------------------------"
-                            shopcolour = 0x4a97df
-                            npcthumb = "https://cdn.discordapp.com/attachments/912759640008298577/926340769344798730/RunarToken.png"
-                        
-                        elif npc == "Voivode":
-
-                            shopintro = "Good day. Feel free to browse. Don't touch, ask first.\n------------------------------------------------------------"
-                            shopcolour = 0x96470c
-                            npcthumb = "https://cdn.discordapp.com/attachments/912758732142837761/921654371903750144/D-9576iWwAAPgcP.jpeg"
-
-                        elif npc == "Amelia":
-
-                            shopintro = "Oh hello, dear. Welcome to my own little garden, Sophie's Garden, might we find you a friend today?\n------------------------------------------------------------"
-                            shopcolour = 0x9ac7fc
-                            npcthumb = ""
-
-                        else:
-
-                            shopintro = ""
-                            shopcolour = 0x000000
-                            npcthumb = ""
 
                     print(message.author.name + " summoned a shop")
 
@@ -3766,30 +3781,30 @@ async def on_message(message):
 
             #Shop Break Command
 
-            else:
-                messcomm = 0
-                rooms = ["🏺the-golden-jackal🏺", "🐍venom-ink🐍", "🧵widows-boutique🧵", "🍄sophies-garden🍄", "📜menagerie-magiks📜", "🔔the-polished-knob🔔", "🐾purrfect-petshop🐾", "🏥the-clinic🏥", "💰adventurers-guild💰", "⛓black-market⛓"]
+            # else:
+            #     messcomm = 0
+            #     rooms = ["🏺the-golden-jackal🏺", "🐍venom-ink🐍", "🧵widows-boutique🧵", "🍄sophies-garden🍄", "📜menagerie-magiks📜", "🔔the-polished-knob🔔", "🐾purrfect-petshop🐾", "🏥the-clinic🏥", "💰adventurers-guild💰", "⛓black-market⛓"]
                 
-                for n in range(len(rooms)):
-                    roomcur = rooms[n]
-                    roomchannel = discord.utils.get(client.get_all_channels(), name = roomcur)
+            #     for n in range(len(rooms)):
+            #         roomcur = rooms[n]
+            #         roomchannel = discord.utils.get(client.get_all_channels(), name = roomcur)
 
-                    if message.channel != roomchannel and message.channel.name != "alias-bot" and roomchannel != None:
-                        roomlatest = [joinedMessages async for joinedMessages in client.get_channel(roomchannel.id).history(limit=2, oldest_first=False)] #Fix for pebblehost Await issue
+            #         if message.channel != roomchannel and message.channel.name != "alias-bot" and roomchannel != None:
+            #             roomlatest = [joinedMessages async for joinedMessages in client.get_channel(roomchannel.id).history(limit=2, oldest_first=False)] #Fix for pebblehost Await issue
                         
-                        if roomlatest[0].author == client.user:
-                            roomlatest[0] = roomlatest[1]
-                            scenebroken = True
-                        else:
-                            scenebroken = False
-                        rtimestamp = datetime.timestamp(roomlatest[0].created_at)
-                        mestimestamp = datetime.timestamp(message.created_at)
-                        diff = int(math.floor(mestimestamp - rtimestamp))
+            #             if roomlatest[0].author == client.user:
+            #                 roomlatest[0] = roomlatest[1]
+            #                 scenebroken = True
+            #             else:
+            #                 scenebroken = False
+            #             rtimestamp = datetime.timestamp(roomlatest[0].created_at)
+            #             mestimestamp = datetime.timestamp(message.created_at)
+            #             diff = int(math.floor(mestimestamp - rtimestamp))
                         
-                        if diff >= 3*60*60*24:
-                            if not scenebroken:
-                                await client.get_channel(roomchannel.id).send("```\u200b```")
-                                await client.get_channel(logchannel).send("Automatically created a scene break in " + roomcur + ". The time difference was: " + str(diff) + " seconds, which equates to " + str(float(diff/3600)) + " hours.")
+            #             if diff >= 3*60*60*24:
+            #                 if not scenebroken:
+            #                     await client.get_channel(roomchannel.id).send("```\u200b```")
+            #                     await client.get_channel(logchannel).send("Automatically created a scene break in " + roomcur + ". The time difference was: " + str(diff) + " seconds, which equates to " + str(float(diff/3600)) + " hours.")
 
 
             #Per message income and Scene tracker pings.
