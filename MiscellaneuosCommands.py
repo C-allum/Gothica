@@ -83,7 +83,7 @@ async def crunch(message):
     if numbrolls > 12:
         numbrolls = 12
     dezcost = numbrolls * 10
-    userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ2000", majorDimension = 'ROWS').execute().get("values")
+    userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ4000", majorDimension = 'ROWS').execute().get("values")
     authorindex = [row[0] for row in userinvs[::4]].index(message.author.name + "#" + message.author.discriminator)
     authorindex *= 4
     authorinv = userinvs[authorindex]

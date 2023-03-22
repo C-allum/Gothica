@@ -50,7 +50,7 @@ async def on_ready():
        
         
         #On reboot refresh dezzie pool of users
-        economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:A2000", majorDimension='ROWS').execute().get("values")
+        economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:A4000", majorDimension='ROWS').execute().get("values")
 
         for i in range(5, len(economydata)-1, 4):            
             #Grab the name on the member
@@ -104,7 +104,7 @@ async def on_ready():
 
 
         #update dezzie pools
-        sheet.values().update(spreadsheetId = EconSheet, range = "A1:A2000", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=economydata)).execute()
+        sheet.values().update(spreadsheetId = EconSheet, range = "A1:A4000", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=economydata)).execute()
 
         #update sheet with new refresh time
         sheet.values().update(spreadsheetId = EconSheet, range = "D2", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=newResetValue)).execute()
@@ -974,7 +974,7 @@ async def on_message(message):
 
                 if str(message.channel).lower() in str(devdata[0]).lower():
 
-                    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ2000", majorDimension='ROWS').execute().get("values")
+                    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
                     reciprow = ""
 
@@ -1206,7 +1206,7 @@ async def on_message(message):
 
                 gamedata = sheet.values().get(spreadsheetId = gamesheet, range = "A1:F1000").execute().get("values")
 
-                econdata =  sheet.values().get(spreadsheetId = EconSheet, range = "A6:B2000", majorDimension = 'ROWS').execute().get("values")
+                econdata =  sheet.values().get(spreadsheetId = EconSheet, range = "A6:B4000", majorDimension = 'ROWS').execute().get("values")
 
                 for n in range(math.ceil(len(econdata)/4)):
 
@@ -2029,7 +2029,7 @@ async def on_message(message):
 
                 waitmess = await message.channel.send("We are processing your request now.")
 
-                econdata = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ2000", majorDimension = 'ROWS').execute().get("values")
+                econdata = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ4000", majorDimension = 'ROWS').execute().get("values")
 
                 row = 0
 
@@ -2296,7 +2296,7 @@ async def on_message(message):
 
             elif message.content.lower().startswith(str(myprefix) + "use") or message.content.lower().startswith("$use"):
 
-                userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ2000", majorDimension = 'ROWS').execute().get("values")
+                userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ4000", majorDimension = 'ROWS').execute().get("values")
 
                 shopdata = sheet.values().get(spreadsheetId = shopsheet, range = "A1:J1000", majorDimension = 'COLUMNS').execute().get("values")
 
@@ -2424,7 +2424,7 @@ async def on_message(message):
 
             elif message.content.lower().startswith(str(myprefix) + "work") or message.content.lower().startswith("$work"):
 
-                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ2000", majorDimension='ROWS').execute().get("values")
+                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
                 for a in range(math.floor(len(economydata)/4)):
                     b = a * 4 + 5
                     workreward = random.randint(20,250)
@@ -2551,7 +2551,7 @@ async def on_message(message):
 
             elif message.content.lower().startswith(str(myprefix) + "slut") or message.content.lower().startswith("$slut"):
 
-                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ2000", majorDimension='ROWS').execute().get("values")
+                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
                 for a in range(math.floor(len(economydata)/4)):
 
@@ -2703,7 +2703,7 @@ async def on_message(message):
 
             elif message.content.lower().startswith(str(myprefix) + "leaderboard") or message.content.lower().startswith("$leaderboard"):
 
-                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ2000", majorDimension='ROWS').execute().get("values")
+                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
                 balancesobj = []
 
@@ -2763,7 +2763,7 @@ async def on_message(message):
 
             elif message.content.lower().startswith(str(myprefix) + "give-money") or message.content.lower().startswith(str(myprefix) + "give-dezzies") or message.content.lower().startswith("$give-money"):
 
-                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ2000", majorDimension='ROWS').execute().get("values")
+                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
                 reciprow = ""
 
@@ -2857,7 +2857,7 @@ async def on_message(message):
 
             elif (message.content.lower().startswith(str(myprefix) + "add-money") or message.content.lower().startswith(str(myprefix) + "add-dezzies") or message.content.lower().startswith("$add-money")) and not isbot:
 
-                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ2000", majorDimension='ROWS').execute().get("values")
+                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
                 reciprow = ""
 
@@ -2913,7 +2913,7 @@ async def on_message(message):
 
             elif (message.content.lower().startswith(str(myprefix) + "remove-money") or message.content.lower().startswith(str(myprefix) + "remove-dezzies") or message.content.lower().startswith(str(myprefix) + "take-money") or message.content.lower().startswith(str(myprefix) + "take-dezzies") or message.content.lower().startswith(str(myprefix) + "spend") or message.content.lower().startswith("$add-money")) and not isbot:
 
-                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ2000", majorDimension='ROWS').execute().get("values")
+                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
                 reciprow = ""
 
@@ -3163,7 +3163,7 @@ async def on_message(message):
 
                 if not itfound:
 
-                    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ2000", majorDimension='ROWS').execute().get("values")
+                    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
                     if message.content.split(" ")[1].lower() in str(economydata).lower():
 
@@ -3802,7 +3802,7 @@ async def on_message(message):
 
                     newtot = 0
 
-                    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ2000", majorDimension='ROWS').execute().get("values")
+                    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
                     #Existing Member
 
@@ -3914,7 +3914,7 @@ async def on_raw_reaction_add(reaction):
 
         if reaction.emoji.name == "dz" or reaction.emoji.name == "cashmoney" or reaction.emoji.name == "makeitrain" or reaction.emoji.name == "DzCrit":
 
-            economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ2000", majorDimension='ROWS').execute().get("values")
+            economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
             reciprow = ""
 
@@ -4031,7 +4031,7 @@ async def on_raw_reaction_add(reaction):
 
         mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
 
-        economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ2000", majorDimension='ROWS').execute().get("values")
+        economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
         reciprow = ""
 

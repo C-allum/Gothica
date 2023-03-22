@@ -245,7 +245,7 @@ async def buyitem(message):
 
         sheet.values().update(spreadsheetId = shopsheet, range = str("I" + str(itindex + 1)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[stockupdate]])).execute()
 
-        userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ2000", majorDimension = 'ROWS').execute().get("values")
+        userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ4000", majorDimension = 'ROWS').execute().get("values")
 
         for n in range(math.ceil(len(userinvs)/4)):
 
@@ -339,7 +339,7 @@ async def sellitem(message):
 
 
     #Check Inventory
-    userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ2000", majorDimension = 'ROWS').execute().get("values")
+    userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ4000", majorDimension = 'ROWS').execute().get("values")
     for a in range(math.ceil(len(userinvs)/4)):
         b = 4 * a 
         if str(message.author) in userinvs[b][0]:
@@ -422,7 +422,7 @@ async def sellitem(message):
             return
 
 async def giveitem(message):
-    userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ2000", majorDimension = 'ROWS').execute().get("values")
+    userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ4000", majorDimension = 'ROWS').execute().get("values")
 
     #make sure *someone* is tagged to give the item to.
     if "@" in message.content:
@@ -562,7 +562,7 @@ async def giveitem(message):
     
 
 async def additem(message):
-    userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ2000", majorDimension = 'ROWS').execute().get("values")
+    userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ4000", majorDimension = 'ROWS').execute().get("values")
     #make sure *someone* is tagged to give the item to.
     if "@" in message.content:
         namestr, targid = await getUserNamestr(message)
@@ -652,7 +652,7 @@ async def additem(message):
 
 
 
-        userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ2000", majorDimension = 'ROWS').execute().get("values")
+        userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ4000", majorDimension = 'ROWS').execute().get("values")
         for n in range(math.ceil(len(userinvs)/4)):
             r = 4 * n 
             if str(namestr) in userinvs[r][0]:
