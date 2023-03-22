@@ -186,6 +186,13 @@ weeklyDezzieBonusVeteran = 100
 
 sellpricemultiplier = 0.5 #Use this to change how much things are sold for, relative to their purchase price
 
+global bidstock
+global bidders
+global bidprice
+bidstock = []
+bidders = []
+bidprice = []
+
 #----------------KinkValues----------------
 
 rarities = ["Common", "Uncommon", "Rare", "Very Rare", "Legendary"]
