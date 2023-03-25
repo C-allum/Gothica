@@ -4184,8 +4184,7 @@ async def on_raw_reaction_add(reaction):
 
     elif reaction.emoji.name == "cuffs" and mess.channel.name != "Server Economy":
 
-        print("B")
-        
+    
         chan = client.get_channel(reaction.channel_id)
         mess = await chan.fetch_message(reaction.message_id)
 
@@ -4313,9 +4312,9 @@ async def on_raw_reaction_add(reaction):
         role = discord.utils.get(reaction.member.guild.roles, name="Guild Applicant")
         await reaction.member.add_roles(role)
 
-    else:
+    #else:
 
-        print(reaction.emoji.name)
+    #    print(reaction.emoji.name)
 
 @client.event
 async def on_raw_reaction_remove(reaction):
