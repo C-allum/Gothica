@@ -184,6 +184,11 @@ weeklyDezzieBonusFucksmith = 500
 weeklyDezzieBonusBoost = 100
 weeklyDezzieBonusVeteran = 100
 
+weeklyDezzieBonusPatronT1 = 100
+weeklyDezzieBonusPatronT2 = 100
+weeklyDezzieBonusPatronT3 = 100
+weeklyDezzieBonusPatronT4 = 100
+
 sellpricemultiplier = 0.5 #Use this to change how much things are sold for, relative to their purchase price
 
 global bidstock

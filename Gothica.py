@@ -91,6 +91,14 @@ async def on_ready():
                     dezziePool += weeklyDezzieBonusVeteran
                 if "lorekeeper" in str(roles).lower() or "lorekeeper" in str(roles).lower() or "admin" in str(roles).lower():
                     dezziePool = 100000
+                if "patron tier 1" in str(roles).lower():
+                    dezziePool += weeklyDezzieBonusPatronT1
+                if "patron tier 2" in str(roles).lower():
+                    dezziePool += weeklyDezzieBonusPatronT2
+                if "patron tier 3" in str(roles).lower():
+                    dezziePool += weeklyDezzieBonusPatronT3
+                if "cult of the mistress" in str(roles).lower():
+                    dezziePool += weeklyDezzieBonusPatronT3
 
             try:
                 economydata[i+3][0] = dezziePool
