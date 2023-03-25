@@ -194,6 +194,11 @@ async def on_message(message):
             if message.channel.name.lower() == "ooc":
 
                 await OocFun.playerreacts(message)
+
+            #Player Based Reactions - On OocFun and Working
+            if message.content.lower().startswith(str(myprefix) + "curse") and "lorekeeper" in str(message.author.roles).lower():
+
+                await OocFun.emotecurse(message)
             
             #Character Index Update - On CharRegistry, untested
             elif message.content.lower().startswith(str(myprefix) + "indexupdate") and "moderator" in str(authroles):
@@ -3923,6 +3928,8 @@ async def on_message(message):
 @client.event
 async def on_raw_reaction_add(reaction):
 
+    mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
+
     if "lorekeeper" in str(reaction.member.roles).lower() or "ghostwriter" in str(reaction.member.roles).lower():
 
         mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
@@ -4042,7 +4049,7 @@ async def on_raw_reaction_add(reaction):
                 pass
 
     #Dezzie Reacts with weekly pool
-    elif reaction.emoji.name == "dz" or reaction.emoji.name == "cashmoney" or reaction.emoji.name == "makeitrain" or reaction.emoji.name == "DzCrit":
+    if reaction.emoji.name == "dz" or reaction.emoji.name == "cashmoney" or reaction.emoji.name == "makeitrain" or reaction.emoji.name == "DzCrit":
 
         mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
 
@@ -4175,8 +4182,9 @@ async def on_raw_reaction_add(reaction):
         else:
             await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = "You can't use this at the here.", colour = embcol, url = mess.jump_url))
 
+    elif reaction.emoji.name == "cuffs" and mess.channel.name != "Server Economy":
 
-    if reaction.emoji.name == "cuffs":
+        print("B")
         
         chan = client.get_channel(reaction.channel_id)
         mess = await chan.fetch_message(reaction.message_id)
@@ -4224,16 +4232,13 @@ async def on_raw_reaction_add(reaction):
             emb.set_thumbnail(url = mess.content)
             await user.send(mess.content)
 
-
     elif reaction.emoji.name == "❓":
 
         mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
 
         await client.get_channel(918257057428279326).send(str(reaction.member.name) + " queried the tupper of " + str(mess.author))
-
-
     
-    if "lorekeeper" in str(reaction.member.roles).lower() or "moderator" in str(reaction.member.roles).lower():   
+    elif "lorekeeper" in str(reaction.member.roles).lower() or "moderator" in str(reaction.member.roles).lower():   
 
         if reaction.emoji.name == "💰":
 
@@ -4291,7 +4296,6 @@ async def on_raw_reaction_add(reaction):
 
                 pass
 
-
     if reaction.emoji.name =="kinklist":
 
         dmchannel = await client.fetch_user(int(reaction.member.id))
@@ -4300,9 +4304,29 @@ async def on_raw_reaction_add(reaction):
 
         await KinklistCommands.kinklist(mess, dmchannel, "Reaction")
 
-    #else:
+    #Black market react
+    elif mess.id == 1089020124025061406 and reaction.emoji.name == "cuffs":
+        role = discord.utils.get(reaction.member.guild.roles, name="Black Market Shopper")
+        await reaction.member.add_roles(role)
 
-        #print(reaction.emoji.name)
+    elif mess.id == 1084012997397184512 and reaction.emoji.name == "🖋️":
+        role = discord.utils.get(reaction.member.guild.roles, name="Guild Applicant")
+        await reaction.member.add_roles(role)
+
+    else:
+
+        print(reaction.emoji.name)
+
+@client.event
+async def on_raw_reaction_remove(reaction):
+    mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
+    memb = client.get_guild(reaction.guild_id).get_member(reaction.user_id)
+    if mess.id == 1088954915361144963 and reaction.emoji.name == "cuffs":
+        role = discord.utils.get(memb.guild.roles, name="Black Market Shopper")
+        await memb.remove_roles(role)
+    elif mess.id == 1084012997397184512 and reaction.emoji.name == "🖋️":
+        role = discord.utils.get(memb.guild.roles, name="Guild Applicant")
+        await memb.remove_roles(role)
 
 @client.event
 async def on_message_delete(message):

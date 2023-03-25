@@ -427,6 +427,10 @@ saferooms = ["unlit-passageways", "salamander-hot-springs", "monster-girl-cantin
 shops = ["💎the-gobblin-bazaar💎", "🏺the-golden-jackal🏺", "🐍venom-ink🐍", "🧵widows-boutique🧵", "🍄sophies-garden🍄", "📜menagerie-magiks📜", "🐾purrfect-petshop🐾", "🔔the-polished-knob🔔", "🏥the-clinic🏥", "💰adventurers-guild💰", "⛓black-market⛓"]
 depths = ["trapped-corridors", "moaning-hallways", "unlicensed-fights", "sparring-pit", "kobold-dens", "wild-gardens", "twilight-groves", "sirens-grotto", "the-dollhouse", "frostveil-tundra"]
 
+emoteCursed = []
+emoteCurses = []
+emoteCursechance = []
+
 #Help message
 async def helplist(message):
 
