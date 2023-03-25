@@ -4049,7 +4049,7 @@ async def on_raw_reaction_add(reaction):
                 pass
 
     #Dezzie Reacts with weekly pool
-    if reaction.emoji.name == "dz" or reaction.emoji.name == "cashmoney" or reaction.emoji.name == "makeitrain" or reaction.emoji.name == "DzCrit":
+    elif reaction.emoji.name == "dz" or reaction.emoji.name == "cashmoney" or reaction.emoji.name == "makeitrain" or reaction.emoji.name == "DzCrit":
 
         mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
 
