@@ -585,7 +585,7 @@ async def on_message(message):
 
             #Verify Command
 
-            elif message.content.lower().startswith(str(myprefix) + "verify") and ("moderator" in str(message.author.roles).lower() or message.author.name == "C_allum"):
+            elif message.content.lower().startswith(str(myprefix) + "verify") and ("moderator" in str(message.author.roles).lower() or "bouncer" in str(message.author.roles).lower() or message.author.name == "C_allum"):
 
                 vertarget = message.content.split("@")[1]
 
