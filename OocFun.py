@@ -225,3 +225,18 @@ async def emotecurse(message):
     emoteCurses.append(curselist)
     await message.channel.send(embed = discord.Embed(title = "You have cursed " + str(cursememb), description = "Those cursed this week are:\n\n" + "\n".join(emoteCursed), colour= embcol))
     await message.delete()
+
+async def emoteuncurse(message):
+    if not " " in message.content:
+        targ = message.author.name + "#" + str(message.author.discriminator)
+    elif "lorekeeper" in str(message.author.roles).lower():
+        target = client.get_guild(message.channel.guild.id).get_member(int(message.content.split(" ")[1].lstrip("<@").rstrip(">")))
+        targ = target.name + "#" + str(target.discriminator)
+    global emoteCursed
+    global emoteCursechance
+    global emoteCurses
+    curseindex = emoteCursed.index(targ)
+    emoteCursed.pop(curseindex)
+    emoteCursechance.pop(curseindex)
+    emoteCurses.pop(curseindex)
+    await message.channel.send("Curse removed. Current Cursed People are:\n\n" + "\n".join(emoteCursed))

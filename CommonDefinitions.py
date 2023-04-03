@@ -234,6 +234,15 @@ def check(author):
             return False
     return inner_check
 
+def checkreact(message):
+    print(message)
+    def inner_check(message, react):
+        if message.id == int(eggsfound[-1]):
+            return True
+        else:
+            return False
+    return inner_check
+
 def checkstr(author):
     def inner_check(message): 
         if message.author != author:
@@ -435,6 +444,13 @@ depths = ["trapped-corridors", "moaning-hallways", "unlicensed-fights", "sparrin
 emoteCursed = []
 emoteCurses = []
 emoteCursechance = []
+
+eggtimer = 0
+egglimit = 0
+eggfinders = []
+eggsfound = []
+eggnexttime = 0
+eggwaittimer = 300
 
 #Help message
 async def helplist(message):
