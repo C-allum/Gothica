@@ -915,6 +915,44 @@ async def on_message(message):
 
                 await message.channel.send("Embed sent to ooc.")
 
+            #Embed Edit
+            elif message.content.lower().startswith(str(myprefix) + "edembed") and "lorekeeper" in str(message.author.roles).lower():
+                chan = message.content.split(" ")[1].split("/")[5]
+                messid = message.content.split(" ")[1].split("/")[6]
+                messchan = client.get_channel(int(chan))
+                mess = messchan.get_partial_message(int(messid))
+                await mess.edit(embed = discord.Embed(title = "Edited", description = "A"))
+                img = ""
+                thum = ""
+
+                if "-t" in message.content and "-d" in message.content:
+                    if '=' in message.content:
+                        tit = message.content.split("-t")[1].split('=')[1]
+                        des = message.content.split("-d")[1].split('=')[1]
+                    elif "=" in message.content:
+                        tit = message.content.split("-t")[1].split("=")[1]
+                        des = message.content.split("-d")[1].split("=")[1]
+                    else:
+                        tit = "You need to use equals signs around both the Title and Description"
+                        des = "Surround each argument with ="
+                    if "-i" in message.content:
+                        img = message.content.split("-i")[1].split('=')[1]
+                    if "-m" in message.content:
+                        thum = message.content.split("-m")[1].split('=')[1]
+                else:
+                    tit = ""
+                    des = message.content.split(" ",1)[1]
+                cusemb = discord.Embed(title = tit, description = des.replace("The Mistress", "T̴̯̳̳̠͚͓͚̂͗̽̾̈́͌̐̅͠ͅh̸̨̫͓͖͎͍͔̠͇̊̂̏͝ę̶͎͇͍̲̮̠̭̮͛̃̈́͑̓̔̚ ̸͙̺̦̮͈̹̮̑̿̊̀̂́͂̿͒̚͜M̶̬͇̤̾͐̊̽̈́̀̀̕͘͝í̸̬͎͔͍̠͓̋͜͠͝s̶̡̡̧̪̺͍̞̲̬̮͆͋̇̐͋͌̒̋͛̕t̷̤̲̠̠̄̊͌̀͂̈́̊̎̕ȓ̶̼̂̿̇͛̚e̶̹̪̣̫͎͉̫̫͗s̸̟͉̱͈̞̬̽̽̒̔́̉s̸̛̖̗̜̻̻͚̭͇̈́̀̄͒̅̎"), colour = embcol)
+                if not "moderator" in str(authroles).lower():
+                    await client.get_channel(logchannel).send(str(message.author) + " generated an embed in " + str(message.channel.name))
+                if not img == "":
+                    cusemb.set_image(url = img)
+                if not thum == "":
+                    cusemb.set_thumbnail(url = thum)
+                print(message.author.name + " edited an embed")
+                await mess.edit(embed = cusemb)
+                await message.delete()
+
             elif message.content.lower().startswith(str(myprefix) + "oocmsg") and ("lorekeeper" in str(message.author.roles).lower() or str(message.author) == "C_allum#5225"):
 
                 await client.get_channel(832435243117445131).send(message.content.split(" ", 1)[1].replace("The Mistress", "T̴̯̳̳̠͚͓͚̂͗̽̾̈́͌̐̅͠ͅh̸̨̫͓͖͎͍͔̠͇̊̂̏͝ę̶͎͇͍̲̮̠̭̮͛̃̈́͑̓̔̚ ̸͙̺̦̮͈̹̮̑̿̊̀̂́͂̿͒̚͜M̶̬͇̤̾͐̊̽̈́̀̀̕͘͝í̸̬͎͔͍̠͓̋͜͠͝s̶̡̡̧̪̺͍̞̲̬̮͆͋̇̐͋͌̒̋͛̕t̷̤̲̠̠̄̊͌̀͂̈́̊̎̕ȓ̶̼̂̿̇͛̚e̶̹̪̣̫͎͉̫̫͗s̸̟͉̱͈̞̬̽̽̒̔́̉s̸̛̖̗̜̻̻͚̭͇̈́̀̄͒̅̎"))
@@ -1981,6 +2019,27 @@ async def on_message(message):
                         egglist.append(findersort[a] + ": " + str(sorted(eggsfound)[a]))
                     egglist.reverse()
                     await message.channel.send(embed = discord.Embed(title = "Mimic Eggs Found", description = "\n".join(egglist), colour = embcol))
+
+                elif "set" in message.content.lower() or not "lorekeeper" in str(message.author.roles).lower():
+                    eggname = " ".join(message.content.split(" ")[2:-1])
+                    eggno = message.content.split(" ")[-1]
+                    if eggname in str(eggfinders):
+                        eggsfound[eggfinders.index(eggname)] = int(eggno)
+                        egglist = []
+                        for a in range(len(eggfinders)):
+                            findersort = [x for _,x in sorted(zip(eggsfound,eggfinders))]
+                            egglist.append(findersort[a] + ": " + str(sorted(eggsfound)[a]))
+                        egglist.reverse()
+                        await message.channel.send(embed = discord.Embed(title = "Mimic Eggs Found", description = "\n".join(egglist), colour = embcol))
+                    else:
+                        eggfinders.append(eggname)
+                        eggsfound.append(int(eggno))
+                        egglist = []
+                        for a in range(len(eggfinders)):
+                            findersort = [x for _,x in sorted(zip(eggsfound,eggfinders))]
+                            egglist.append(findersort[a] + ": " + str(sorted(eggsfound)[a]))
+                        egglist.reverse()
+                        await message.channel.send(embed = discord.Embed(title = "Mimic Eggs Found", description = "\n".join(egglist), colour = embcol))
 
                 else:
                     global eggtimer
@@ -3579,73 +3638,74 @@ async def on_message(message):
 
                         print("Lorekeepers were pinged to play shops")
 
-            elif message.channel.category.name == "﴿──﴾ 𝙳𝚊𝚗𝚐𝚎𝚛𝚘𝚞𝚜 𝙳𝚎𝚙𝚝𝚑𝚜 ﴿──﴾":
+            elif message.channel.category.name == "﴿──﴾ 𝙳𝚊𝚗𝚐𝚎𝚛𝚘𝚞𝚜 𝙳𝚎𝚙𝚝𝚑𝚜 ﴿──﴾" or message.channel.name == "💎the-gobblin-bazaar💎" or message.channel.name == "unlit-passageways" or message.channel.name == "mermaid-cove-resort":
                     
-                if not message.author.bot:
+                # if not message.author.bot:
 
-                    if message.channel.type == discord.ChannelType.text and random.randint(1,200) == 1 and not "lorekeeper" in str(authroles).lower():
-                        room = "<#" + str(message.channel.id) + ">"
-                        limits = await KinklistCommands.getLimits(str(message.author.name) + "#" + str(message.author.discriminator))
-                        encounters = sheet.values().get(spreadsheetId = encountersheet, range = "A2:R50", majorDimension='COLUMNS').execute().get("values")
+                #     if message.channel.type == discord.ChannelType.text and random.randint(1,200) == 1 and not "lorekeeper" in str(authroles).lower():
+                #         room = "<#" + str(message.channel.id) + ">"
+                #         limits = await KinklistCommands.getLimits(str(message.author.name) + "#" + str(message.author.discriminator))
+                #         encounters = sheet.values().get(spreadsheetId = encountersheet, range = "A2:R50", majorDimension='COLUMNS').execute().get("values")
                                             
-                        if message.channel.name == "trapped-corridors":
-                            columnadd = 2
-                        elif message.channel.name == "moaning-hallways":
-                            columnadd = 4
-                        elif message.channel.name == "unlicensed-fights":
-                            columnadd = 6
-                        elif message.channel.name == "sparring-pits":
-                            columnadd = 8
-                        elif message.channel.name == "kobold-dens":
-                            columnadd = 10
-                        elif message.channel.name == "wild-gardens":
-                            columnadd = 12
-                        elif message.channel.name == "twilight-groves":
-                            columnadd = 14
-                        elif message.channel.name == "sirens-grotto":
-                            columnadd = 16
-                        elif message.channel.name == "the-dollhouse":
-                            columnadd = 18
-                        elif message.channel.name == "frostveil-tundra":
-                            columnadd = 20
+                #         if message.channel.name == "trapped-corridors":
+                #             columnadd = 2
+                #         elif message.channel.name == "moaning-hallways":
+                #             columnadd = 4
+                #         elif message.channel.name == "unlicensed-fights":
+                #             columnadd = 6
+                #         elif message.channel.name == "sparring-pits":
+                #             columnadd = 8
+                #         elif message.channel.name == "kobold-dens":
+                #             columnadd = 10
+                #         elif message.channel.name == "wild-gardens":
+                #             columnadd = 12
+                #         elif message.channel.name == "twilight-groves":
+                #             columnadd = 14
+                #         elif message.channel.name == "sirens-grotto":
+                #             columnadd = 16
+                #         elif message.channel.name == "the-dollhouse":
+                #             columnadd = 18
+                #         elif message.channel.name == "frostveil-tundra":
+                #             columnadd = 20
 
-                        for a in range(len(encounters[0])):
-                            encounters[columnadd].append(encounters[0][a])
-                            encounters[columnadd+1].append(encounters[1][a])
+                #         for a in range(len(encounters[0])):
+                #             encounters[columnadd].append(encounters[0][a])
+                #             encounters[columnadd+1].append(encounters[1][a])
 
-                        for a in range(len(limits)):
+                #         for a in range(len(limits)):
                             
-                            if limits[a] in str(encounters[1+columnadd]):
+                #             if limits[a] in str(encounters[1+columnadd]):
 
-                                for b in range(len(encounters[columnadd])):
-                                    try:
-                                        if limits[a] in encounters[1 + columnadd][b]:
-                                            del encounters[columnadd][b]
-                                            del encounters[columnadd + 1][b]
-                                            b -= 1
-                                    except IndexError:
-                                        break
-                        encounterindex = random.randint(0, len(encounters[columnadd])-1)
-                        enctext = await CommonDefinitions.diceroll(encounters[columnadd][encounterindex].replace("[race]", random.choice(races)))
-                        try:
-                            enckinks = encounters[columnadd+1][encounterindex].split("|")
-                        except IndexError:
-                            enckinks = ""
-                        kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
-                        playerIndex = [row[1] for row in kinkdata].index(str(message.author.name) + "#" + str(message.author.discriminator))
-                        kinkops = []
+                #                 for b in range(len(encounters[columnadd])):
+                #                     try:
+                #                         if limits[a] in encounters[1 + columnadd][b]:
+                #                             del encounters[columnadd][b]
+                #                             del encounters[columnadd + 1][b]
+                #                             b -= 1
+                #                     except IndexError:
+                #                         break
+                #         encounterindex = random.randint(0, len(encounters[columnadd])-1)
+                #         enctext = await CommonDefinitions.diceroll(encounters[columnadd][encounterindex].replace("[race]", random.choice(races)))
+                #         try:
+                #             enckinks = encounters[columnadd+1][encounterindex].split("|")
+                #         except IndexError:
+                #             enckinks = ""
+                #         kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
+                #         playerIndex = [row[1] for row in kinkdata].index(str(message.author.name) + "#" + str(message.author.discriminator))
+                #         kinkops = []
 
-                        for c in range(len(enckinks)):
-                            try:
-                                kinkops.append(kinkdata[1][kinkdata[1].index(str(enckinks[c]))] + ": " + str(kinkdata[playerIndex][kinkdata[1].index(str(enckinks[c]))]))
-                            except ValueError:
-                                kinkops.append("No kinks required")
+                #         for c in range(len(enckinks)):
+                #             try:
+                #                 kinkops.append(kinkdata[1][kinkdata[1].index(str(enckinks[c]))] + ": " + str(kinkdata[playerIndex][kinkdata[1].index(str(enckinks[c]))]))
+                #             except ValueError:
+                #                 kinkops.append("No kinks required")
 
-                        await client.get_channel(bridgechannel).send(str(message.author.name.split("#")[0] + " has sent a message in " + room + ". We think a <@&912552597041340416> should go and torment them.\n\n " + enctext + "\n\n" + message.author.name + "'s relevant kinks are: " + "\n".join(kinkops) + "\n\nThis has a one in 200 chance of appearing on any given message. Let Callum know if you think that's too much or too little?"))
-                        print("Lorekeepers were pinged to run traps")
+                #         await client.get_channel(bridgechannel).send(str(message.author.name.split("#")[0] + " has sent a message in " + room + ". We think a <@&912552597041340416> should go and torment them.\n\n " + enctext + "\n\n" + message.author.name + "'s relevant kinks are: " + "\n".join(kinkops) + "\n\nThis has a one in 200 chance of appearing on any given message. Let Callum know if you think that's too much or too little?"))
+                #         print("Lorekeepers were pinged to run traps")
 
                 #Easter Egg Function
-                else:
+                if message.author.bot:
+
                     if liveVersion == 0:
                         eggemoji = ":EasterEgg:1092228117977890856"
                     else:
@@ -3908,9 +3968,6 @@ async def on_message(message):
                                     dataup = "|".join(scenearray)
                                     row = scenedataIndex + 1
                                     sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[dataup]])).execute()
-
-
-
 
     except AttributeError:
 
@@ -4332,10 +4389,7 @@ async def on_raw_reaction_remove(reaction):
 @client.event
 async def on_message_delete(message):
 
-    if "@" in message.content and not message.content.startswith("%") and not " " in message.content:
+    await client.get_channel(logchannel).send(message.author.name + "'s message was deleted in " + str(message.channel) + ". The message was:\n\n" + message.content.replace("@", "\@") + "\n\nThis message was deleted at " + str(datetime.now()))
 
-        await client.get_channel(logchannel).send(message.author.name + "'s message was deleted in " + str(message.channel) + ". The message was:\n\n" + message.content.replace("@", "\@") + "\n\nThis message was deleted at " + str(datetime.now()))
-
-        
 token = botTokens.gettoken(liveVersion)
 client.run(token, reconnect=True)

@@ -1,5 +1,6 @@
 from CommonDefinitions import *
 import random
+import CommonDefinitions
 
 async def staffVacation(message):
     #Toggle Lorekeeper chat Permissions
