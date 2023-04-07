@@ -240,7 +240,7 @@ async def on_message(message):
             #Search Subroutine - On CharRegistry, untested            
             elif (message.content.lower().startswith(str(myprefix) + "search") or message.content.lower().startswith(str(myprefix) + "char")or message.content.lower().startswith(str(myprefix) + "show")) and not isbot:
 
-                await CharRegistry.charsearch(message)
+                await CharRegistry.charsearch(message, message.channel)
 
             #Retire Command - On CharRegistry, untested         
             elif message.content.lower().startswith(str(myprefix) + "retire") and not isbot:
@@ -4282,12 +4282,6 @@ async def on_raw_reaction_add(reaction):
         except IndexError:
             emb.set_thumbnail(url = mess.content)
             await user.send(mess.content)
-
-    elif reaction.emoji.name == "❓":
-
-        mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
-
-        await client.get_channel(918257057428279326).send(str(reaction.member.name) + " queried the tupper of " + str(mess.author))
     
     elif "lorekeeper" in str(reaction.member.roles).lower() or "moderator" in str(reaction.member.roles).lower():   
 
@@ -4354,6 +4348,11 @@ async def on_raw_reaction_add(reaction):
         mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
 
         await KinklistCommands.kinklist(mess, dmchannel, "Reaction")
+
+    elif reaction.emoji.name == "❓":
+        dmchannel = await client.fetch_user(int(reaction.member.id))
+        await client.get_channel(logchannel).send(str(reaction.member.name) + " queried the tupper of " + str(mess.author.name))
+        await CharRegistry.charsearch("%search " + mess.author.name, dmchannel)
 
     #Black market react
     elif mess.id == 1089020124025061406 and reaction.emoji.name == "cuffs":
