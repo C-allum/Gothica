@@ -3638,7 +3638,7 @@ async def on_message(message):
 
                         print("Lorekeepers were pinged to play shops")
 
-            elif message.channel.category.name == "﴿──﴾ 𝙳𝚊𝚗𝚐𝚎𝚛𝚘𝚞𝚜 𝙳𝚎𝚙𝚝𝚑𝚜 ﴿──﴾" or message.channel.name == "💎the-gobblin-bazaar💎" or message.channel.name == "unlit-passageways" or message.channel.name == "mermaid-cove-resort":
+            elif message.channel.category.name == "﴿──﴾ 𝙳𝚊𝚗𝚐𝚎𝚛𝚘𝚞𝚜 𝙳𝚎𝚙𝚝𝚑𝚜 ﴿──﴾" or message.channel.name == "💎the-gobblin-bazaar💎" or message.channel.category.name == "﴿───﴾ 𝚂𝚊𝚏𝚎 𝙿𝚊𝚜𝚜𝚊𝚐𝚎𝚜 ﴿───﴾":
                     
                 # if not message.author.bot:
 
@@ -3717,6 +3717,7 @@ async def on_message(message):
                         except UnboundLocalError:
                             nextegg = 0
                         if datetime.timestamp(datetime.now()) >= int(nextegg):
+                            eggnexttime = int(datetime.timestamp(datetime.now()) + int(eggtimer))
                             await message.add_reaction(eggemoji)
                             reacts = []
                             while 1:
@@ -3736,7 +3737,6 @@ async def on_message(message):
                                         eggfinders.append(reacts[a][1].name)
                                         currentEggFinders.append(reacts[a][1].name)
                                         eggsfound.append(1)
-                                        eggnexttime = int(datetime.timestamp(datetime.now()) + int(eggtimer))
                                     else:
                                         eggindex = eggfinders.index(reacts[a][1].name)
                                         currentEggFinders.append(reacts[a][1].name)
