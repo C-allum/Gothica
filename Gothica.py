@@ -3876,6 +3876,10 @@ async def on_message(message):
                     timemod = -14
                 
                 hour = int(message.content.split(" ")[1].split(":")[0]) + timemod
+                if hour >= 24:
+                    hour -= 24
+                elif hour < 0:
+                    hour = 24 + hour
                 if message.content.count(":") > 1:
                     combhour = str(hour) + ":" + ":".join(message.content.split(" ")[1].split(":")[1:])
                     inittime = str(message.content.split(" ")[1].split(":")[0]) + ":" + str(message.content.split(" ")[1].split(":")[1])
