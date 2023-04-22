@@ -3815,29 +3815,82 @@ async def on_message(message):
             #Timestamp Message
             elif message.content.lower().startswith(str(myprefix) + "timestamp"):
 
-                print("A")
-
                 try:
-
                     timezone = message.content.split(" ")[2]
-
                 except IndexError:
-
                     timezone = "GMT"
 
-                print(timezone)
+                if timezone == "GMT+12":
+                    timemod = 12
+                elif timezone == "GMT+11" or timezone == "SST":
+                    timemod = 11
+                elif timezone == "GMT+10" or timezone == "HST" or timezone == "HDT":
+                    timemod = 10
+                elif timezone == "GMT+9" or timezone == "AKST" or timezone == "AKDT":
+                    timemod = 9
+                elif timezone == "GMT+8" or timezone == "PST" or timezone == "PDT":
+                    timemod = 8
+                elif timezone == "GMT+7" or timezone == "MST" or timezone == "MDT":
+                    timemod = 7
+                elif timezone == "GMT+6" or timezone == "CST" or timezone == "CDT":
+                    timemod = 6
+                elif timezone == "GMT+5" or timezone == "EST" or timezone == "EDT":
+                    timemod = 5
+                elif timezone == "GMT+4" or timezone == "AST" or timezone == "ADT":
+                    timemod = 4
+                elif timezone == "GMT+3":
+                    timemod = 3
+                elif timezone == "GMT+2":
+                    timemod = 2
+                elif timezone == "GMT+1":
+                    timemod = 1
+                elif timezone == "GMT" or timezone == "UTC" or timezone == "BST" or timezone == "WET":
+                    timemod = 0
+                elif timezone == "GMT-1" or timezone == "CET" or timezone == "CEST" or timezone == "WAT":
+                    timemod = -1
+                elif timezone == "GMT-2" or timezone == "CAT" or timezone == "EET" or timezone == "SAST":
+                    timemod = -2
+                elif timezone == "GMT-3" or timezone == "EAT" or timezone == "MSK":
+                    timemod = -3
+                elif timezone == "GMT-4":
+                    timemod = -4
+                elif timezone == "GMT-5" or timezone == "PKT":
+                    timemod = -5
+                elif timezone == "GMT-6":
+                    timemod = -6
+                elif timezone == "GMT-7" or timezone == "WIB":
+                    timemod = -7
+                elif timezone == "GMT-8" or timezone == "CST":
+                    timemod = -8
+                elif timezone == "GMT-9" or timezone == "KST" or timezone == "JST":
+                    timemod = -9
+                elif timezone == "GMT-10" or timezone == "AEST":
+                    timemod = -10
+                elif timezone == "GMT-11":
+                    timemod = -11
+                elif timezone == "GMT-12" or timezone == "NZST":
+                    timemod = -12
+                elif timezone == "GMT-13":
+                    timemod = -13
+                elif timezone == "GMT-14":
+                    timemod = -14
+                
+                hour = int(message.content.split(" ")[1].split(":")[0]) + timemod
+                if message.content.count(":") > 1:
+                    combhour = str(hour) + ":" + ":".join(message.content.split(" ")[1].split(":")[1:])
+                    inittime = str(message.content.split(" ")[1].split(":")[0]) + ":" + str(message.content.split(" ")[1].split(":")[1])
+                else:
+                    combhour = str(hour) + ":" + str(message.content.split(" ")[1].split(":")[1]) + ":00"
+                    inittime = str(message.content.split(" ")[1].split(":")[0]) + ":" + str(message.content.split(" ")[1].split(":")[1])
+                time = datetime.time(datetime.strptime(combhour, "%H:%M:%S"))
+                dt = datetime.combine(datetime.today(), time)
+                dtsp = str(datetime.timestamp(dt)).split(".")[0]
 
-                try:
+                if int(datetime.timestamp(datetime.now())) >= int(dtsp):
+                    dtsp = str(int(dtsp) + 86400)
 
-                    time = datetime.time(message.content.split(" ")[7])
-
-                except IndexError:
-
-                    time = str(datetime.timestamp(datetime.now())).split(".")[0]
-
-                print(time)
-
-                await message.channel.send(embed = discord.Embed(title = "Timestamp Converter", description = "<t:" + str(time) + ":T>" , colour = embcol))
+                await message.channel.send(embed = discord.Embed(title = "Timestamp Converter", description = str(inittime) + " in " + str(timezone) + " is <t:" + str(dtsp) + ":T>. It will next be " + str(inittime) + " in that timezone in " + "<t:" + str(dtsp) + ":R>", colour = embcol))
+                await message.delete()
 
             #Shop Break Command
 
