@@ -4028,7 +4028,7 @@ async def on_message(message):
 
 
                 else:   #Things we want to do if a bot posted the message
-                    if not(client.user == message.author) and not("Avrae" == message.author.name) and message.channel.category_id in [917234637359702057, 1058839161735483462, 831894394877509682, 952251327143084092, 1071447563447840918] and not (message.channel.type == discord.ChannelType.private_thread):
+                    if not(client.user == message.author) and not("Avrae" == message.author.name) and message.channel.category_id in [952251327143084092] and not (message.channel.type == discord.ChannelType.private_thread):
                         if(random.randint(1, 500) == 1):
                             await MiscellaneuosCommands.fiendTomeSpawn(message)
 
