@@ -128,3 +128,45 @@ async def crunch(message):
         await message.channel.send(embed = discord.Embed(title="You ate some dezzies!", description= "\n\n".join(dezresults), colour = embcol))
         sheet.values().update(spreadsheetId = EconSheet, range = "B" + str(authorindex+6), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[[(int(authorinv[1]) - dezcost)]])).execute()
         await message.delete()
+
+async def impTomeSpawn(message):
+    tomeWeilder = await client.fetch_user(imptomeWielder)
+    #await client.get_channel(logchannel).send(f"imp tome wielder {tomeWeilder.display_name} got notified that their tome got found.")
+    outputchannel = await client.fetch_user(imptomeWielder)
+
+    #This is a very good way of seeing how buttons work. You need to create a view class as you can see at the bottom of the code. 
+    #In there we define our button, and behaviour of that button when clicked in the button_callback function. A message can carry a view
+    view2 = ImpTomeView()
+    sentmsg = await outputchannel.send(embed = discord.Embed(title = f"Hello {tomeWeilder.display_name}!", description = f"The imp tome possibly got found in the dungeon in channel {message.jump_url}. You have an hour to respond to this!", colour = embcol), view=view2)
+
+    #This waits for either the button to be clicked, or for it to timeout (see impTomeView class.)
+    await view2.wait()
+    impTomeDescr = '''The air fills with the crackling of fire. A brimstone smell fills the air, and only a splitsecond later, a scarlet portal opens in the ceiling.
+     Looking into it, there is an endless landscape of red rock, fires and towers made of bones here and there.
+     You don't get a long look at it though, as a book falls out of the portal and hits the floor with a thump.
+     It is a tome bound in leather, infernal symbols on it as well as lewd depictions of succubi, cambions and imps. What could possibly go wrong picking it up?'''
+    #Check if the button was clicked, and the value therefore was set to true
+    if view2.value == True:
+        await message.channel.send(embed = discord.Embed(title = f"And infernal crackling appears...", description = impTomeDescr, colour = embcol))
+    #If the button timed out, it will display this!
+    else:
+        await sentmsg.edit(embed = discord.Embed(title = f"Hello {tomeWeilder.display_name}", description = f"The imp tome possibly was found in the dungeon in channel {message.jump_url}. The timer expired and the scene probably moved on.", colour = embcol))
+    
+
+#----------------View Classes----------------
+
+#This is the view class for a simple accept button.
+class ImpTomeView(discord.ui.View):
+    #init initialises everything about the button. Here we give it a timeout, and a value so we know whether the button was pressed or not.
+    def __init__(self):
+        super().__init__(timeout=5)
+        self.value = None
+    #This defines the button. The button_calback function defines what happened when we click it. We save the click in the variable to make sure
+    # that we can later see if the button was actually pressed.´
+    # The interaction.response is important as otherwise the interaction (button) will be seen as failed.
+    # You can also silently acknowledge the interaction with interaction.response.defer()
+    @discord.ui.button(label="Spawn Imp Tome!", style = discord.ButtonStyle.green)
+    async def button_callback(self, interaction, item):
+        await interaction.response.send_message("Imp tome spawning...")
+        self.value = True
+        self.stop()

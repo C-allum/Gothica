@@ -3969,6 +3969,14 @@ async def on_message(message):
                                     row = scenedataIndex + 1
                                     sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[dataup]])).execute()
 
+
+                else:   #Things we want to do if a bot posted the message
+                    if not(client.user == message.author) and not("Avrae" == message.author.name) and message.channel.category_id in [917234637359702057, 1058839161735483462, 831894394877509682, 952251327143084092, 1071447563447840918] and not (message.channel.type == discord.ChannelType.private_thread):
+                        if(random.randint(1, 500) == 1):
+                            await MiscellaneuosCommands.fiendTomeSpawn(message)
+
+
+
     except AttributeError:
 
         if not "Direct Message" in str(message.channel):
@@ -4367,6 +4375,8 @@ async def on_raw_reaction_add(reaction):
         role = discord.utils.get(reaction.member.guild.roles, name="Dungeon Denizen")
         await reaction.member.add_roles(role)
 
+    elif reaction.emoji.name == "🟣":
+        await MiscellaneuosCommands.fiendTomeSpawn(mess)
     #if liveVersion == 0:
         #print(reaction)
 
