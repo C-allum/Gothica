@@ -141,7 +141,7 @@ async def impTomeSpawn(message):
 
     #This waits for either the button to be clicked, or for it to timeout (see impTomeView class.)
     await view2.wait()
-    impTomeDescr = '''The air fills with the crackling of fire. A brimstone smell fills the air, and only a splitsecond later, a scarlet portal opens in the ceiling.
+    impTomeDescr = '''The air fills with the crackling of fire. A brimstone scent fills the air, and only a splitsecond later, a scarlet portal opens in the ceiling.
      Looking into it, there is an endless landscape of red rock, fires and towers made of bones here and there.
      You don't get a long look at it though, as a book falls out of the portal and hits the floor with a thump.
      It is a tome bound in leather, infernal symbols on it as well as lewd depictions of succubi, cambions and imps. What could possibly go wrong picking it up?'''
@@ -159,7 +159,7 @@ async def impTomeSpawn(message):
 class ImpTomeView(discord.ui.View):
     #init initialises everything about the button. Here we give it a timeout, and a value so we know whether the button was pressed or not.
     def __init__(self):
-        super().__init__(timeout=5)
+        super().__init__(timeout=3600*2)
         self.value = None
     #This defines the button. The button_calback function defines what happened when we click it. We save the click in the variable to make sure
     # that we can later see if the button was actually pressed.´

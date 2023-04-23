@@ -3895,6 +3895,17 @@ async def on_message(message):
 
                 await message.channel.send(embed = discord.Embed(title = "Timestamp Converter", description = str(inittime) + " in " + str(timezone) + " is <t:" + str(dtsp) + ":T>. It will next be " + str(inittime) + " in that timezone in " + "<t:" + str(dtsp) + ":R>", colour = embcol))
                 await message.delete()
+            #Manually spawn Imp Tome
+            elif message.content.lower().startswith(str(myprefix) + "imptome") and message.author.id == imptomeWielder:
+                messageLink = message.content.rsplit(" ")[1]
+                splitLink = messageLink.split('/')
+                server_id = int(splitLink[4])
+                channel_id = int(splitLink[5])
+                msg_id = int(splitLink[6])
+                guild = client.get_guild(server_id)
+                channel = client.get_channel(channel_id)
+                msg = await channel.fetch_message(msg_id)
+                await MiscellaneuosCommands.impTomeSpawn(msg)
 
             #Shop Break Command
 
