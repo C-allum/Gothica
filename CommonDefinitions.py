@@ -54,7 +54,7 @@ bot = commands.Bot(command_prefix='%', activity = discord.Game(name="Testing Stu
 print(" Initialised {0.user} at ".format(client) + str(datetime.now()).split(".")[0])
 
 #-----------------LIVE VERSION/BETA TOGGLE---------------
-liveVersion = 1
+liveVersion = 0
 token = ""
 
 #Sheet Locations:
@@ -462,7 +462,7 @@ async def helplist(message):
     
     helpcategories = ["General Functions", "Character Index Functions", "Roleplay Functions", "Kink Functions", "Economy Functions", "Lorekeeper Only Functions"]
     helpnames = [
-        ["Start", "Rulebook", "LewdReference", "Embed", "Help"],
+        ["Start", "Rulebook", "LewdReference", "Embed", "Help", "Timestamp"],
         ["Character Registration", "Edit", "Transfer", "Charlist", "Search", "Retire", "Deactivate", "Activate"],
         ["LFG", "Plothook", "Plotlead", "Room", "Break", "Recent", "Wildlust", "Gobblin", "Scenes"],
         ["Kinklist", "Kinksurvey", "Kinkfill", "KinkEdit", "Kinkplayers"],
@@ -470,7 +470,7 @@ async def helplist(message):
         ["Gag", "Emote", "Adventurer", "Verify", "Kinkencounter", "oocembed", "oocmsg", "Add-money", "Remove-Money", "AddItem", "Spellrotation", "RandLoot"]
     ]
     helpsummary = [
-        ["Calls up some welcoming information for new members", "Summons a link to the lewd rulebook", "Summons a quick reference sheet of the main rules for Sexual Advances", "Generates an embed, like this one", "You are here."],
+        ["Calls up some welcoming information for new members", "Summons a link to the lewd rulebook", "Summons a quick reference sheet of the main rules for Sexual Advances", "Generates an embed, like this one", "You are here.", "Compares timezones"],
         ["Registers a character to the index", "Edits a character", "Gives a character to another player", "Lists the characters owned by a player", "Provides the index entry of a character", "Retires a character", "Sets a character temporarily unactive", "Reactivates a deactivated character"],
         ["Helps you find roleplay partners", "Generates a random plothook for your character", "Checks how many plothooks you have seen", "Suggests an empty room for you to roleplay in.", "Generates a scene break", "Provides the time of the last message in each roleplay channel", "Rolls on the wildlust table", "Eats a dezzie", "Stores and recalls your list of active scenes and can DM you whenever a new message is sent in them"],
         ["Summons the kinks of the tagged player", "Allows you to fill out the kink survey", "Fills any holes in the kinksurvey", "Edits a kink", "Summons a list of players with the targeted kink"],
@@ -482,7 +482,8 @@ async def helplist(message):
         "Summons the dropbox link to the latest version of the Lewd Rulebook, as well as some useful quick stats on inhibition and arousal. The command is `%rulebook`",
         "Summons a reference sheet for things like lewd statuses, natural implement stimulation values, and other common things needing to be looked up. The command is %LewdReference",
         "Allows you to generate a message in a fancy embed. If you simply type `%embed`, followed by your message, it will use the message as the title.\n\nIf you want different fields like descriptions and images, it is a bit more complex. In this mode, to write a title and description, you would do: `%embed -t =Title goes here= -d =Desciption between these equals signs=` You can also add -i =image link= or -m =thumbnail link=. Obviously, this means that you can't use equals signs in the content of your embed.",
-        "Summons this interface. You can use just `%help` on its own, which pulls up the full list of commands, or you can specify the category (So `%help economy` will pull up only the economy commands) or the specific command (`%help help`, for example, will bring up this message)."
+        "Summons this interface. You can use just `%help` on its own, which pulls up the full list of commands, or you can specify the category (So `%help economy` will pull up only the economy commands) or the specific command (`%help help`, for example, will bring up this message).",
+        "This command allows you to specify a time and timezone, for which we will create an embed that shows that time in the timezone as a timestamp that is correct for anyone reading it. The syntax is `%timestamp HH:MM code`, where HH:MM is the hour and minute and code is the code for the timezone."
         ],
         ["To register a character, go to #character-creation and type some information about them. This message must start with Name, but after that, you can use as many or as few bits of information as you want. Each should be on its own line. For example:\n\n`Name: Lalontra`\n`Race: Water Genasi`\n\nDo not use a tupper when creating your character.\n\nPossible Fields are:\n\nName\nRace\nGender\nPronouns\nAge\nClass\nLevel\nSheet\nAlignment\nBio\nSexuality\nSkin Colour\nHair Colour\nEye Colour\nHeight\nWeight\nSummary\nImage",
         "To edit a character, type `" + myprefix + "edit Name Field New-Value`, as a demonstration:\n\n`" + myprefix + "edit Lalontra class Ranger`\n\nThis will match a character's name even if you only use part of the name.",
@@ -559,7 +560,10 @@ async def helplist(message):
             index = 0
             for b in range(len(helpnames[catindex])):
                 index += 1
-                helptextcatmain.append("`" + str(index) + "`: *%" + helpnames[a][b] + ":* " + helpsummary[a][b])
+                if helpnames[a][b] == "Character Registration":
+                    helptextcatmain.append("`" + str(index) + "`: *" + helpnames[a][b] + ":* " + helpsummary[a][b])
+                else:
+                    helptextcatmain.append("`" + str(index) + "`: *%" + helpnames[a][b] + ":* " + helpsummary[a][b])
             await message.channel.send(embed = discord.Embed(title = "Gothica Help: " + helpcategories[catindex], description = "\n".join(helptextcatmain), colour = embcol))
             try:
                 msg = await client.wait_for('message', timeout = 30, check = check(message.author))

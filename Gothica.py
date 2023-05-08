@@ -6,6 +6,9 @@ import CommonDefinitions
 import MiscellaneuosCommands
 from CommonDefinitions import *
 import TransactionsDatabaseInterface
+import time
+from discord import Webhook
+import aiohttp
 
 @client.event
 async def on_ready():
@@ -122,9 +125,6 @@ async def on_ready():
     #----------------------------------------------------------
 
 
-
-
-
 #Main Loop
 
 @client.event
@@ -175,8 +175,7 @@ async def on_message(message):
 
             #Prevent replying to own messages.
             if message.author == client.user:
-
-                pass
+                return
 
             #Voyeur's Lounge Redirect - On OocFun and Working
             if isbot and (str(message.channel).lower() == "ooc") and not (message.author.name == "Gothica" or message.author.name == "Gothica Beta"):
@@ -202,6 +201,27 @@ async def on_message(message):
             if message.channel.name.lower() == "ooc" and not message.content.startswith(myprefix):
 
                 await OocFun.playerreacts(message)
+
+            #Test
+            if message.content.lower().startswith("%test") and "bot gods" in str(message.author.roles).lower():
+                if len(await message.channel.webhooks()) == 0:
+                    hookasset = await message.channel.create_webhook(name= message.channel.name + " Webhook")
+                else:
+                    print(await message.channel.webhooks())
+                    hookasset = await message.channel.webhooks()
+                print(hookasset.url)
+                author_avatar = message.author.avatar
+                async with aiohttp.ClientSession() as session:
+                    #sessionhook=(await message.channel.webhooks())[0] #get the first channel webhook
+                    #print(sessionhook)
+                    whook = Webhook.from_url(hookasset.url, session = session)
+                    await whook.send(message.content, username = message.author.name, avatar_url = author_avatar)
+
+                await session.close()
+
+                # uwumess = await MiscellaneuosCommands.beasttongue(message, "cat")
+                # await message.channel.send(uwumess)
+        
 
             #Curse
             if message.content.lower().startswith(str(myprefix) + "curse") and "lorekeeper" in str(message.author.roles).lower():
@@ -4481,10 +4501,10 @@ async def on_raw_reaction_remove(reaction):
         role = discord.utils.get(memb.guild.roles, name="Dungeon Denizen")
         await memb.remove_roles(role)
 
-@client.event
-async def on_message_delete(message):
+# @client.event
+# async def on_message_delete(message):
 
-    await client.get_channel(logchannel).send(message.author.name + "'s message was deleted in " + str(message.channel) + ". The message was:\n\n" + message.content.replace("@", "\@") + "\n\nThis message was deleted at " + str(datetime.now()))
+#     await client.get_channel(logchannel).send(message.author.name + "'s message was deleted in " + str(message.channel) + ". The message was:\n\n" + message.content.replace("@", "\@") + "\n\nThis message was deleted at " + str(datetime.now()))
 
 token = botTokens.gettoken(liveVersion)
 client.run(token, reconnect=True)
