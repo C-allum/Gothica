@@ -1976,6 +1976,7 @@ async def on_message(message):
 
             #Bid Command
             elif (message.content.lower().startswith(str(myprefix) + "bid")):
+                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='COLUMNS').execute().get("values")
 
                 if isbot:
                     await message.delete()
@@ -1986,7 +1987,7 @@ async def on_message(message):
                         bidprice.append(0)
                         bidders.append("")
                     global bidthread
-                    bidthreadseed = await message.channel.send(embed = discord.Embed(title = "Bidding is open!", description = "This weekend's slaves are:\n" + "\n".join(bidstock), colour = embcol))
+                    bidthreadseed = await message.channel.send(embed = discord.Embed(title = "Bidding is open!", description = "This weekend's ~~slaves~~ *wares* are:\n" + "\n".join(bidstock), colour = embcol))
                     bidthread = await bidthreadseed.create_thread(name = "Bids")
 
                 elif "results" in message.content.lower():
@@ -2000,12 +2001,72 @@ async def on_message(message):
                             bidsummary.append(bidstock[c] + ": No bids yet")
                     await message.channel.send(embed = discord.Embed(title = "Current bids for this weekend's auctions", description = "\n".join(bidsummary) + "\n\nIn total, " + str(auctiontot) + " is being spent at this auction.",  colour = embcol))
 
-                else:
+                elif "end" in message.content.lower() and "lorekeeper" in str(message.author.roles).lower():
+                    bidtotal = sum(bidprice)
+                    bidsfinal = []
+                    bidwinners = []
+                    for d in range(len(bidstock)):
+                        if str(bidders[d]) in str(bidwinners):
+                            try:
+                                bidsfinal[bidwinners.index(bidders[d])] += bidprice[d]
+                            except ValueError:
+                                pass
+                        else:
+                            bidwinners.append(bidders[d])
+                            bidsfinal.append(bidprice[d]) 
+                    bidstatement = []
 
+                    indexes = []
+                    newbal = []
+                    balances = []
+
+                    for e in range(len(bidsfinal)):
+                        indexes.append(economydata[0].index(str(bidwinners[e].name) + "#" + bidwinners[e].discriminator))
+                        newbal.append(int(economydata[1][economydata[0].index(str(bidwinners[e].name) + "#" + str(bidwinners[e].discriminator))]) - int(bidsfinal[e]))
+                        bidstatement.append(str(bidwinners[e]) + ": " + str(bidsfinal[e]))
+
+                    for f in range(max(indexes)+1):
+                        if f in indexes:
+                            balances.append(newbal[indexes.index(f)])
+                        else:
+                            balances.append(economydata[1][f])
+                        
+                    sheet.values().update(spreadsheetId = EconSheet, range = str("B1:B" + str(max(indexes)+1)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[balances])).execute()
+                    await message.channel.send(embed = discord.Embed(title = "Bidding concluded", description = "The following dezzies have been removed:\n\n" + "\n".join(bidstatement), colour = embcol))
+
+                elif "reset" in message.content.lower() and "lorekeeper" in str(message.author.roles).lower():
+                    if len(message.content.split(" ")) > 2:
+                        bidtarget = " ".join(message.content.split(" ")[1:])
+                        try:
+                            if bidtarget.lower() in str(bidstock).lower():
+                                for b in range(len(bidstock)):
+                                    if bidtarget.lower() in bidstock[b].lower():
+                                        slaveindex = b
+                                        break
+                                await message.channel.send(embed = discord.Embed(title = "Reset successful!", description = "You have reset the bid for " + bidstock[slaveindex], colour = embcol))
+                                bidders[slaveindex] = ""
+                                bidprice[slaveindex] = 0
+                                await bidthread.send(message.author.name + " has reset the bid for " + bidstock[slaveindex])
+
+                            else:
+                                await message.channel.send(embed = discord.Embed(title = "Could not find a slave of that name.", description = "Current slaves for sale are:\n\n" + "\n".join(bidstock), colour = embcol))
+
+                        except ValueError:
+                            await message.channel.send(embed = discord.Embed(title = "The price you bid needs to be an integer  ", description = "", colour = embcol))
+                    
+                    else:
+                        await message.channel.send(embed = discord.Embed(title = "You didn't format that correctly.", description = "It needs to be `%bid reset slavename`.", colour = embcol))
+
+                else:
                     if len(message.content.split(" ")) >= 3:
                         bidtarget = " ".join(message.content.split(" ")[1:-1])
                         try:
                             bidamount = int(message.content.split(" ")[-1])
+                            bidattempt = bidamount
+                            if message.author.name in str(bidders):
+                                for e in range(len(bidstock)):
+                                    if bidders[e] == message.author:
+                                        bidattempt += bidprice[e]
 
                             if bidtarget.lower() in str(bidstock).lower():
                                 for b in range(len(bidstock)):
@@ -2014,6 +2075,10 @@ async def on_message(message):
                                         break
                                 if bidamount <= bidprice[slaveindex]:
                                     await message.channel.send(embed = discord.Embed(title = "You need to bid more than that!", description = "The current bid for " + bidstock[slaveindex] + " is " + str(bidprice[slaveindex]) + dezzieemj + ", bid by " + bidders[slaveindex].name, colour = embcol))
+                                elif bidattempt > int(economydata[1][economydata[0].index(str(message.author.name) + "#" + str(message.author.discriminator))]):
+                                    await message.channel.send(embed = discord.Embed(title = "You can't bid that much.", description = "You only have " + economydata[1][economydata[0].index(str(message.author.name) + "#" + message.author.discriminator)] + dezzieemj + ".", colour = embcol))
+                                elif bidamount < 1000:
+                                    await message.channel.send(embed = discord.Embed(title = "The minimum bid is 1000" + dezzieemj, description = "Please increase your bid.", colour = embcol))
                                 else:
                                     await message.channel.send(embed = discord.Embed(title = "Bid successful!", description = "You have bid " + str(bidamount) + dezzieemj + " for " + bidstock[slaveindex], colour = embcol))
                                     bidders[slaveindex] = message.author
