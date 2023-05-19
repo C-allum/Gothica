@@ -202,26 +202,40 @@ async def on_message(message):
 
                 await OocFun.playerreacts(message)
 
-            #Test
-            if message.content.lower().startswith("%test") and "bot gods" in str(message.author.roles).lower():
-                if len(await message.channel.webhooks()) == 0:
-                    hookasset = await message.channel.create_webhook(name= message.channel.name + " Webhook")
-                else:
-                    print(await message.channel.webhooks())
-                    hookasset = await message.channel.webhooks()
-                print(hookasset.url)
+            #Speech curses
+            if message.author.name in str(speechcursed) and message.author.bot:
+                print("Replacing Tupper")
+                #await message.delete()
+                hook = await message.channel.create_webhook(name= message.channel.name + " Webhook")
+                mess = message
                 author_avatar = message.author.avatar
-                async with aiohttp.ClientSession() as session:
-                    #sessionhook=(await message.channel.webhooks())[0] #get the first channel webhook
-                    #print(sessionhook)
-                    whook = Webhook.from_url(hookasset.url, session = session)
-                    await whook.send(message.content, username = message.author.name, avatar_url = author_avatar)
+                try:
+                    curse = speechcurses[speechcursed.index(message.author.name)]
+                    if curse == "uwu":
+                        msg = await MiscellaneuosCommands.uwutongue(mess)
+                    elif curse == "cat":
+                        msg = await MiscellaneuosCommands.beasttongue(mess, "cat")
+                    elif curse == "dog":
+                        msg = await MiscellaneuosCommands.beasttongue(mess, "dog")
+                    else:
+                        msg = mess.content
+                    speechcurses.pop(speechcursed.index(message.author.name))
+                    speechcursed.pop(speechcursed.index(message.author.name))
+                    async with aiohttp.ClientSession() as session:
+                        whook = Webhook.from_url(hook.url, session = session)
+                        await whook.send(msg, username = message.author.name, avatar_url = author_avatar)
+                    await session.close()
+                    await hook.delete()
+                    await asyncio.sleep(10)
+                    speechcursed.append(message.author.name)
+                    speechcurses.append(curse)
+                except ValueError:
+                    return
 
-                await session.close()
-
-                # uwumess = await MiscellaneuosCommands.beasttongue(message, "cat")
-                # await message.channel.send(uwumess)
-        
+            if message.content.lower().startswith(str(myprefix) + "speechcurse") and "lorekeeper" in str(message.author.roles).lower():
+                print(message.content)
+                speechcursed.append(message.content.split(" ")[1:-1])
+                speechcurses.append(message.content.split(" ")[-1])
 
             #Curse
             if message.content.lower().startswith(str(myprefix) + "curse") and "lorekeeper" in str(message.author.roles).lower():
@@ -2056,6 +2070,27 @@ async def on_message(message):
                     
                     else:
                         await message.channel.send(embed = discord.Embed(title = "You didn't format that correctly.", description = "It needs to be `%bid reset slavename`.", colour = embcol))
+                
+                elif "set" in message.content.lower() and "lorekeeper" in str(message.author.roles).lower():
+                    bidsections = message.content.split(" ")[1].split("|")
+                    try:
+                        if bidsections[0].lower() in str(bidstock).lower():
+                            for b in range(len(bidstock)):
+                                if bidtarget.lower() in bidstock[b].lower():
+                                    slaveindex = b
+                                    bidders[b] = bidsections[1]
+                                    bidprice[b] = bidsections[2]
+                                    break
+                        else:
+                            bidstock.append(bidsections[0])
+                            bidders.append(bidsections[1])
+                            bidprice.append(bidsections[2])
+                            slaveindex = -1
+
+                        await message.channel.send(embed = discord.Embed(title = "Success!", description = "You have set the bid for " + bidstock[slaveindex] + " to " + bidprice[slaveindex] + " bid by " + bidders[slaveindex], colour = embcol))
+
+                    except ValueError:
+                        await message.channel.send(embed = discord.Embed(title = "The price you bid needs to be an integer  ", description = "", colour = embcol))
 
                 else:
                     if len(message.content.split(" ")) >= 3:
