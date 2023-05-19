@@ -2072,7 +2072,7 @@ async def on_message(message):
                         await message.channel.send(embed = discord.Embed(title = "You didn't format that correctly.", description = "It needs to be `%bid reset slavename`.", colour = embcol))
                 
                 elif "set" in message.content.lower() and "lorekeeper" in str(message.author.roles).lower():
-                    bidsections = message.content.split(" ")[1].split("|")
+                    bidsections = message.content.split(" ", 1)[1].split("|")
                     try:
                         if bidsections[0].lower() in str(bidstock).lower():
                             for b in range(len(bidstock)):
