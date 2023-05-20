@@ -205,12 +205,11 @@ async def on_message(message):
             #Speech curses
             if message.author.name in str(speechcursed) and message.author.bot:
                 print("Replacing Tupper")
-                #await message.delete()
                 hook = await message.channel.create_webhook(name= message.channel.name + " Webhook")
                 mess = message
                 author_avatar = message.author.avatar
                 try:
-                    curse = speechcurses[speechcursed.index(message.author.name)]
+                    curse = speechcurses[speechcursed[0].index(message.author.name)]
                     if curse == "uwu":
                         msg = await MiscellaneuosCommands.uwutongue(mess)
                     elif curse == "cat":
@@ -219,8 +218,9 @@ async def on_message(message):
                         msg = await MiscellaneuosCommands.beasttongue(mess, "dog")
                     else:
                         msg = mess.content
-                    speechcurses.pop(speechcursed.index(message.author.name))
-                    speechcursed.pop(speechcursed.index(message.author.name))
+                    speechcurses.pop(speechcursed[0].index(message.author.name))
+                    speechcursed.pop(speechcursed[0].index(message.author.name))
+                    await message.delete()
                     async with aiohttp.ClientSession() as session:
                         whook = Webhook.from_url(hook.url, session = session)
                         await whook.send(msg, username = message.author.name, avatar_url = author_avatar)
@@ -233,9 +233,14 @@ async def on_message(message):
                     return
 
             if message.content.lower().startswith(str(myprefix) + "speechcurse") and "lorekeeper" in str(message.author.roles).lower():
-                print(message.content)
                 speechcursed.append(message.content.split(" ")[1:-1])
                 speechcurses.append(message.content.split(" ")[-1])
+                await message.channel.send("Curse Confirmed")
+
+            elif message.content.lower().startswith(str(myprefix) + "removecurse"):
+                speechcurses.pop(speechcursed.index(message.author.name))
+                speechcursed.pop(speechcursed.index(message.author.name))
+                await message.channel.send("Done")
 
             #Curse
             if message.content.lower().startswith(str(myprefix) + "curse") and "lorekeeper" in str(message.author.roles).lower():
