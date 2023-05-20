@@ -2078,12 +2078,13 @@ async def on_message(message):
                             for b in range(len(bidstock)):
                                 if bidtarget.lower() in bidstock[b].lower():
                                     slaveindex = b
-                                    bidders[b] = bidsections[1]
+                                    bidders[b] = await client.get_user(bidsections[1])
                                     bidprice[b] = bidsections[2]
                                     break
                         else:
                             bidstock.append(bidsections[0])
-                            bidders.append(bidsections[1])
+                            biduser = await client.get_user(bidsections[1])
+                            bidders.append(biduser)
                             bidprice.append(bidsections[2])
                             slaveindex = -1
 
@@ -2091,6 +2092,9 @@ async def on_message(message):
 
                     except ValueError:
                         await message.channel.send(embed = discord.Embed(title = "The price you bid needs to be an integer  ", description = "", colour = embcol))
+
+                elif "thread" in message.content.lower() and "lorekeeper" in str(message.author.roles).lower():
+                    bidthread = message.channel
 
                 else:
                     if len(message.content.split(" ")) >= 3:
