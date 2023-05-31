@@ -763,11 +763,11 @@ async def charsearch(message, outputchannel):
 
     cdata = ["\n"]
 
-    cnames = sheet.values().get(spreadsheetId = CharSheet, range = "F1:F1000").execute().get("values")
+    cnames = sheet.values().get(spreadsheetId = CharSheet, range = "F1:F2000").execute().get("values")
 
-    pnames = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B1000" ).execute().get("values")
+    pnames = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B2000" ).execute().get("values")
 
-    cargs = sheet.values().get(spreadsheetId = CharSheet, range = "F1:Z1000" ).execute().get("values")
+    cargs = sheet.values().get(spreadsheetId = CharSheet, range = "F1:Z2000" ).execute().get("values")
     searchedName = " ".join(msgspl[1:]).lower()
     
     count = 0
