@@ -15,7 +15,7 @@ async def kinklist(message, outputchannel, trigger):
 
         categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
 
-        namestr = str(targname.name + "#" + targname.discriminator)
+        namestr = str(targname.name)# + "#" + targname.discriminator)
 
     else: #Triggered by reaction.
 
@@ -23,7 +23,7 @@ async def kinklist(message, outputchannel, trigger):
 
         categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
 
-        namestr = str(targname.name + "#" + targname.discriminator)
+        namestr = str(targname.name)# + "#" + targname.discriminator)
 
     if not str(namestr) in str(kinkdata):
 
@@ -43,10 +43,13 @@ async def kinklist(message, outputchannel, trigger):
 
         else:
         
-            await outputchannel.send(embed = discord.Embed(title = "Could not find " + namestr.split("#")[0] + "'s kink list", description = "Make sure that <@" + str(targname.id) + "> has completed the kink survey.", colour = embcol))
+            await outputchannel.send(embed = discord.Embed(title = "Could not find " + namestr + "'s kink list", description = "Make sure that <@" + str(targname.id) + "> has completed the kink survey.", colour = embcol))
         
     else:
-        playerindex = [row[1] for row in kinkdata].index(namestr)
+        try:
+            playerindex = [row[1] for row in kinkdata].index(namestr)
+        except ValueError:
+            playerindex = [row[1] for row in kinkdata].index(namestr + "#" + targname.discriminator)
         generalPrefs = [] #Contains the general preferences
         categoryAverages = [] #Contains category ratings
         currentKinkIndex = playerInformationEntries #Begin at the first actual kink after the Player Info
@@ -133,7 +136,7 @@ async def kinklist(message, outputchannel, trigger):
             except UnboundLocalError:
                 sel = 0
 
-            foot = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}"
+            foot = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name} / {message.author.display_name}"
             #If the user answered with a number, display the subcategory of the kinksheet.
             await Kinklistdetail(categoryIndex, categories, printCategories, sel, kinkdata, playerindex, printCategoriesWithAvg, categoryAverages, tmp, namestr, outputchannel, foot)
 
@@ -703,7 +706,7 @@ async def kinkplayers(message):
 
                 await message.channel.send("Finally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as something they like:\n\n" + ", ".join(kinkhavers))
                                            
-                await message.channel.send(f"This search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}")
+                await message.channel.send(f"This search was summoned by {message.author.name}/ {message.author.display_name}")
 
             else:
 
@@ -848,7 +851,7 @@ async def kinksurvey(message):
     
 
     #--------------Prepare variables---------------
-    newKinklist = [str(datetime.now()), f"{targname.name}#{targname.discriminator}", f"{targname.id}"] #Contains kink data, will be written into the sheet.
+    newKinklist = [str(datetime.now()), f"{targname.name}", f"{targname.id}"] #Contains kink data, will be written into the sheet.
     
     categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
 
@@ -1578,7 +1581,7 @@ async def getKinkData(message):
     else:
         targname = message.author
 
-    namestr = str(targname.name + "#" + targname.discriminator)
+    namestr = str(targname.name)
     return kinkdata, namestr, targname
 
 #Fetches name and ID of author, and loads the kinkdata from the sheet.
@@ -1587,7 +1590,7 @@ async def getKinkDataReact(message):
 
     targname = message.author
 
-    namestr = str(targname.name + "#" + targname.discriminator)
+    namestr = str(targname.name)
     return kinkdata, namestr, targname
 
 #Returns the secondary embed of Kinklist

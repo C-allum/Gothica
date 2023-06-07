@@ -177,6 +177,14 @@ async def on_message(message):
             if message.author == client.user:
                 return
 
+            try:
+                newname = message.author.discriminator
+            except ValueError:
+                newname = true
+
+            if message.content.lower().startswith(myprefix + "test"):
+                pass
+
             #Voyeur's Lounge Redirect - On OocFun and Working
             if isbot and (str(message.channel).lower() == "ooc") and not (message.author.name == "Gothica" or message.author.name == "Gothica Beta"):
 
