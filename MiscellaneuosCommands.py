@@ -1,6 +1,7 @@
 from CommonDefinitions import *
 import random
 import CommonDefinitions
+from TransactionsDatabaseInterface import updatePerson, printTransactions
 
 async def staffVacation(message):
     #Toggle Lorekeeper chat Permissions
@@ -152,7 +153,71 @@ async def impTomeSpawn(message):
     else:
         await sentmsg.edit(embed = discord.Embed(title = f"Hello {tomeWeilder.display_name}", description = f"The imp tome possibly was found in the dungeon in channel {message.jump_url}. The timer expired and the scene probably moved on.", colour = embcol))
     
+async def migrateAcc(message):
+    userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension = 'ROWS').execute().get("values")
+    kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
+    charreg = sheet.values().get(spreadsheetId = CharSheet, range = "A2:AA2000", majorDimension='ROWS').execute().get("values")
+    user = message.author
+    #flags = user.fetchFlags().toArray()
+    
+    if str(user.id) in str(kinkdata):
+        playerIndex = [row[2] for row in kinkdata].index(str(user.id))
+        oldPlayerName = kinkdata[playerIndex][1]
+        newPlayerName = user.name
+        oldPlayerNameSplit = oldPlayerName.split('#', 1)
+        #Check if player is already migrated. If they are not, they will have a delimiter and the length of the split is 2
+        if len(oldPlayerNameSplit) == 2:
+            #replace the name in the kinklist. Nothing else needed here.
+            kinkdata[playerIndex][1] = newPlayerName
+            
+            #Replace name in every character of the person
+            for char in charreg:
+                if str(char[0]) == str(oldPlayerNameSplit[0]):
+                    char[0] = newPlayerName
+                if str(char[1]) == str(oldPlayerNameSplit[0]):
+                    char[1] = newPlayerName
+            
+            #merge the economy accounts
+            oldEconomyIndex = -1
+            for a in range(math.ceil((len(userinvs)-5)/4)):
+                b = 4 * a + 5
+                if str(oldPlayerName) in userinvs[b][0]:
+                    oldEconomyIndex = b
+                    break
+            
+            newEconomyIndex = -1
+            for a in range(math.ceil((len(userinvs)-5)/4)):
+                b = 4 * a + 5
+                if str(newPlayerName) in userinvs[b][0]:
+                    newEconomyIndex = b
+                    break
+                
+            newBalance = int(userinvs[oldEconomyIndex][1]) + int(userinvs[newEconomyIndex][1])
+            
+            userinvs[oldEconomyIndex][1] = newBalance
+            userinvs[oldEconomyIndex][0] = newPlayerName + "#0"
+            sheetLen = math.ceil((len(userinvs)-5)/4) * 4 + 5
+            del userinvs[newEconomyIndex:newEconomyIndex+4]
+            
+            #Fix the database
+            printTransactions()
+            updatePerson(oldPlayerName, newPlayerName)
+            printTransactions()
+            #write back the sheets
+            sheet.values().update(spreadsheetId = EconSheet, range = "A1", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=userinvs)).execute()
+            sheet.values().clear(spreadsheetId = EconSheet, range = f"A{sheetLen-4}:ZZ{sheetLen}").execute()
+            
+            sheet.values().update(spreadsheetId = kinksheet, range = "A1", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=kinkdata)).execute()
+            sheet.values().update(spreadsheetId = CharSheet, range = "A2", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=charreg)).execute()
 
+
+
+         
+
+
+            
+        else:
+            await message.channel.send(embed = discord.Embed(title = "Migration already complete", description = "Your account is already migrated"))
 #----------------View Classes----------------
 
 #This is the view class for a simple accept button.

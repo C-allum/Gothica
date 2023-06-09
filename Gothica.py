@@ -188,6 +188,7 @@ async def on_message(message):
 
                 await OocFun.gag(message)
                 
+                
             #Set Gag - On OocFun and Working
             if message.content.lower().startswith(myprefix + "gag") and "lorekeeper" in str(message.author.roles).lower():
 
@@ -260,6 +261,10 @@ async def on_message(message):
             #Help Command
             elif message.content.lower().startswith(str(myprefix) + "help"):
                 await CommonDefinitions.helplist(message)
+
+            #account migration command
+            elif message.content.lower().startswith(str(myprefix) + "migrateme") and not isbot:
+                await MiscellaneuosCommands.migrateAcc(message)
 
             #Plothook Command
             elif message.content.lower().startswith(str(myprefix) + "plothook") and not isbot:

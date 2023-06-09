@@ -74,6 +74,21 @@ def addTransaction(person:str, action:DezzieMovingAction, amount:int, date:datet
     except sqlite3.Error as error:
         print('Error occured while adding a transaction to the database - ', error)
 
+
+#Add a transaction to the database: Takes a person, an action, an amount and optionally a date in datetime format to write to the Database
+def updatePerson(oldPerson:str, newPerson:str):
+    try:
+        transactionsConnection = sqlite3.connect('CLDTransactions.db')
+        transactionsCursor = transactionsConnection.cursor()
+
+        transactionsCursor.execute(f'''UPDATE Transactions SET person = '{newPerson}' WHERE person = '{oldPerson}' ''')
+        transactionsConnection.commit()
+        transactionsConnection.close()
+
+    except sqlite3.Error as error:
+        print('Error occured while updating a person in the database - ', error)
+
+
 #Prints contents of the transactions table to the console
 def printTransactions():
     print("Data in table Transactions:")
