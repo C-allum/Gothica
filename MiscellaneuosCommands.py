@@ -159,7 +159,12 @@ async def migrateAcc(message):
     kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
     charreg = sheet.values().get(spreadsheetId = CharSheet, range = "A2:AA2000", majorDimension='ROWS').execute().get("values")
     user = message.author
-    
+    try:
+        if user.discriminator != "0" :
+            await message.channel.send(embed = discord.Embed(title = f"{user.name}, you have to wait for your discord migration!", description = f"Your account is not been migrated to the new unique username system that discord introduced. Try again when you have your new username!"))
+    except:
+        await message.channel.send(embed = discord.Embed(title = f"I can't access discriminators anymore. Contact Ken.", description = f"Something went wrong..."))
+
     if str(user.id) in str(kinkdata):
         playerIndex = [row[2] for row in kinkdata].index(str(user.id))
         oldPlayerName = kinkdata[playerIndex][1]
@@ -213,9 +218,9 @@ async def migrateAcc(message):
             sheet.values().update(spreadsheetId = EconSheet, range = "A1", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=userinvs)).execute()
             sheet.values().update(spreadsheetId = kinksheet, range = "A1", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=kinkdata)).execute()
             sheet.values().update(spreadsheetId = CharSheet, range = "A2", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=charreg)).execute()
-            await message.channel.send(embed = discord.Embed(title = "Migration completed", description = "Your account is now migrated to the new Discord username system"))
+            await message.channel.send(embed = discord.Embed(title = "{newPlayerName}: Migration completed!", description = "Your account is now migrated to the new Discord username system"))
         else:
-            await message.channel.send(embed = discord.Embed(title = "Migration already complete", description = "Your account is already migrated"))
+            await message.channel.send(embed = discord.Embed(title = f"{newPlayerName} Migration not possible", description = f"Your account is either already migrated, {oldPlayerName} is not in the economy or you haven't filled in your kinklist. Please contact mods to resolve this."))
 
 async def manualMigrateAcc(message):
     userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension = 'ROWS').execute().get("values")
@@ -289,9 +294,9 @@ async def manualMigrateAcc(message):
             sheet.values().update(spreadsheetId = EconSheet, range = "A1", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=userinvs)).execute() #rewrite the econ sheet
             sheet.values().update(spreadsheetId = kinksheet, range = "A1", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=kinkdata)).execute()
             sheet.values().update(spreadsheetId = CharSheet, range = "A2", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=charreg)).execute()
-            await message.channel.send(embed = discord.Embed(title = "Migration completed", description = "Your account is now migrated to the new Discord username system"))
+            await message.channel.send(embed = discord.Embed(title = "{newPlayerName}: Migration completed!", description = "Your account is now migrated to the new Discord username system"))
         else:
-            await message.channel.send(embed = discord.Embed(title = "Migration already complete", description = f"Your account is already migrated or {oldPlayerName} is not in the economy"))
+            await message.channel.send(embed = discord.Embed(title = f"{newPlayerName} Migration already completed", description = f"Your account is already migrated or {oldPlayerName} is not in the economy"))
 #----------------View Classes----------------
 
 #This is the view class for a simple accept button.

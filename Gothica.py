@@ -313,7 +313,7 @@ async def on_message(message):
                 await MiscellaneuosCommands.migrateAcc(message)
 
             #manual account migration command
-            elif message.content.lower().startswith(str(myprefix) + "manualmigrate") and not isbot:
+            elif message.content.lower().startswith(str(myprefix) + "manualmigrate") and not isbot and "lorekeeper" in str(message.author.roles).lower():
                 await MiscellaneuosCommands.manualMigrateAcc(message)
 
             #Plothook Command
