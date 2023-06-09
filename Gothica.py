@@ -309,8 +309,12 @@ async def on_message(message):
                 await CommonDefinitions.helplist(message)
 
             #account migration command
-            elif message.content.lower().startswith(str(myprefix) + "migrateme") and not isbot:
+            elif message.content.lower().startswith(str(myprefix) + "migrate") and not isbot:
                 await MiscellaneuosCommands.migrateAcc(message)
+
+            #manual account migration command
+            elif message.content.lower().startswith(str(myprefix) + "manualmigrate") and not isbot:
+                await MiscellaneuosCommands.manualMigrateAcc(message)
 
             #Plothook Command
             elif message.content.lower().startswith(str(myprefix) + "plothook") and not isbot:

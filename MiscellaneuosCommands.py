@@ -154,11 +154,11 @@ async def impTomeSpawn(message):
         await sentmsg.edit(embed = discord.Embed(title = f"Hello {tomeWeilder.display_name}", description = f"The imp tome possibly was found in the dungeon in channel {message.jump_url}. The timer expired and the scene probably moved on.", colour = embcol))
     
 async def migrateAcc(message):
+
     userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension = 'ROWS').execute().get("values")
     kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
     charreg = sheet.values().get(spreadsheetId = CharSheet, range = "A2:AA2000", majorDimension='ROWS').execute().get("values")
     user = message.author
-    #flags = user.fetchFlags().toArray()
     
     if str(user.id) in str(kinkdata):
         playerIndex = [row[2] for row in kinkdata].index(str(user.id))
@@ -191,7 +191,8 @@ async def migrateAcc(message):
                 if str(newPlayerName) in userinvs[b][0]:
                     newEconomyIndex = b
                     break
-                
+            if oldEconomyIndex == -1 or newEconomyIndex == -1:
+                await message.channel.send(embed = discord.Embed(title = "Not in Economy!", description = "Your new account name is not in the economy. Write something in OOC to get registered!"))
             newBalance = int(userinvs[oldEconomyIndex][1]) + int(userinvs[newEconomyIndex][1])
             
             userinvs[oldEconomyIndex][1] = newBalance
@@ -200,24 +201,97 @@ async def migrateAcc(message):
             del userinvs[newEconomyIndex:newEconomyIndex+4]
             
             #Fix the database
-            printTransactions()
             updatePerson(oldPlayerName, newPlayerName)
-            printTransactions()
+
             #write back the sheets
-            sheet.values().update(spreadsheetId = EconSheet, range = "A1", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=userinvs)).execute()
-            sheet.values().clear(spreadsheetId = EconSheet, range = f"A{sheetLen-4}:ZZ{sheetLen}").execute()
+            rangeAll = 'A1:ZZ8000'
+            body = {}
+            sheet.values().clear(spreadsheetId = EconSheet, range = "Sheet2!"+rangeAll, body = body).execute()    #Delete the copy sheet
+            sheet.values().update(spreadsheetId = EconSheet, range = "Sheet2!A1", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=userinvs)).execute() #save a copy
             
+            sheet.values().clear(spreadsheetId = EconSheet, range = rangeAll, body = body).execute()    #Delete the sheet to rewrite if the copy is successful
+            sheet.values().update(spreadsheetId = EconSheet, range = "A1", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=userinvs)).execute()
             sheet.values().update(spreadsheetId = kinksheet, range = "A1", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=kinkdata)).execute()
             sheet.values().update(spreadsheetId = CharSheet, range = "A2", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=charreg)).execute()
-
-
-
-         
-
-
-            
+            await message.channel.send(embed = discord.Embed(title = "Migration completed", description = "Your account is now migrated to the new Discord username system"))
         else:
             await message.channel.send(embed = discord.Embed(title = "Migration already complete", description = "Your account is already migrated"))
+
+async def manualMigrateAcc(message):
+    userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension = 'ROWS').execute().get("values")
+    kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
+    charreg = sheet.values().get(spreadsheetId = CharSheet, range = "A2:AA2000", majorDimension='ROWS').execute().get("values")
+    newPlayerName = message.content.split()[1]
+    oldPlayerName = message.content.split()[2]
+
+    localGuild = client.get_guild(828411760365142076)
+    if localGuild != None:
+        user = localGuild.get_member_named(newPlayerName)
+    else: 
+        user = client.get_guild(847968618167795782).get_member_named(newPlayerName)
+    
+    if oldPlayerName in str(userinvs):
+        oldPlayerNameSplit = oldPlayerName.split('#', 1)
+        skipkinklist = False
+        try:
+            playerIndex = [row[2] for row in kinkdata].index(str(user.id))
+        except:
+            await message.channel.send(embed = discord.Embed(title = "No Kinklist found", description = f"{oldPlayerName} doesn't have an entry in the kinklist - Skipping kinklist migration"))
+            skipkinklist = True
+
+        #Check if player is already migrated. If they are not, they will have a delimiter and the length of the split is 2
+        if len(oldPlayerNameSplit) == 2:
+            #replace the name in the kinklist. Nothing else needed here.
+            if skipkinklist == False:
+                kinkdata[playerIndex][1] = newPlayerName
+            
+            #Replace name in every character of the person
+            for char in charreg:
+                if str(char[0]) == str(oldPlayerNameSplit[0]):
+                    char[0] = newPlayerName
+                if str(char[1]) == str(oldPlayerNameSplit[0]):
+                    char[1] = newPlayerName
+            
+            #merge the economy accounts
+            oldEconomyIndex = -1
+            for a in range(math.ceil((len(userinvs)-5)/4)):
+                b = 4 * a + 5
+                if str(oldPlayerName) in userinvs[b][0]:
+                    oldEconomyIndex = b
+                    break
+            
+            newEconomyIndex = -1
+            for a in range(math.ceil((len(userinvs)-5)/4)):
+                b = 4 * a + 5
+                if str(newPlayerName) in userinvs[b][0]:
+                    newEconomyIndex = b
+                    break
+            if oldEconomyIndex == -1 or newEconomyIndex == -1:
+                await message.channel.send(embed = discord.Embed(title = "Not in Economy!", description = "Your new account name is not in the economy. Write something in OOC to get registered!"))
+                return
+            newBalance = int(userinvs[oldEconomyIndex][1]) + int(userinvs[newEconomyIndex][1])
+            
+            userinvs[oldEconomyIndex][1] = newBalance
+            userinvs[oldEconomyIndex][0] = newPlayerName + "#0"
+            sheetLen = math.ceil((len(userinvs)-5)/4) * 4 + 5
+            del userinvs[newEconomyIndex:newEconomyIndex+4]
+            
+            #Fix the database
+            updatePerson(oldPlayerName, newPlayerName)
+
+            #write back the sheets - WE NEED TO COMPLETELY WIPE THE SHEET HERE BECAUSE LISTS ARE STUPID! IT HAS SOMETHING TO DO WITH DIFFERENT INVENTORY LENGTHS! ASK KEN IF SOMETHING COMES UP AND YOU AREN'T SURE
+            rangeAll = 'A1:ZZ8000'
+            body = {}
+            sheet.values().clear(spreadsheetId = EconSheet, range = "Sheet2!"+rangeAll, body = body).execute()    #Delete the copy sheet
+            sheet.values().update(spreadsheetId = EconSheet, range = "Sheet2!A1", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=userinvs)).execute() #save a copy
+            
+            sheet.values().clear(spreadsheetId = EconSheet, range = rangeAll, body = body).execute()    #Delete the sheet to rewrite if the copy is successful
+            sheet.values().update(spreadsheetId = EconSheet, range = "A1", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=userinvs)).execute() #rewrite the econ sheet
+            sheet.values().update(spreadsheetId = kinksheet, range = "A1", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=kinkdata)).execute()
+            sheet.values().update(spreadsheetId = CharSheet, range = "A2", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=charreg)).execute()
+            await message.channel.send(embed = discord.Embed(title = "Migration completed", description = "Your account is now migrated to the new Discord username system"))
+        else:
+            await message.channel.send(embed = discord.Embed(title = "Migration already complete", description = f"Your account is already migrated or {oldPlayerName} is not in the economy"))
 #----------------View Classes----------------
 
 #This is the view class for a simple accept button.
