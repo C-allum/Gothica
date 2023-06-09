@@ -235,3 +235,53 @@ class ImpTomeView(discord.ui.View):
         await interaction.response.send_message("Imp tome spawning...")
         self.value = True
         self.stop()
+
+async def uwutongue(message):
+    chunks = message.content.split('"')
+    result = []
+    for a in range(len(chunks)):
+        if (not chunks[a].startswith(" ")) and not chunks[a].endswith(" "):
+            outputtext = []
+            chunks[a] = chunks[a].lower()
+            for b in range(len(chunks[a])):
+                if chunks[a][b] == "l" or chunks[a][b] == "r":
+                    outputtext.append("w")
+                elif chunks[a][b] == "o" and (chunks[a][b-1] == "n" or chunks[a][b-1] == "m"):
+                    outputtext.append("yo")
+                elif random.randint(0,5) == 5 and chunks[a][b] == ".":
+                    outputtext.append(random.choice([" owo", " uwu", " xD", " (*^.^*)", " 〜☆"]))
+                else:
+                    outputtext.append(chunks[a][b])
+            result.append("".join(outputtext))
+        else:
+            result.append(chunks[a])
+    return('"'.join(result))
+
+async def beasttongue(message, animal):
+    if animal.lower() == "dog":
+        noises = ["woof", "ruf", "gruf", "yrif", "wruof"]
+    elif animal.lower() == "cat":
+        noises = ["meow", "mrrow", "mow", "nya", "mmeow", "rrrr", "grr", "mreeow"]
+    elif animal.lower() == "horse":
+        noises = ["neigh"]
+    chunks = message.content.split('"')
+    beastresult = []
+    for a in range(len(chunks)):
+        outputtex = []
+        if (not chunks[a].startswith(" ")) and not chunks[a].endswith(" "):
+            wordno = math.ceil(len(chunks[a])/6)
+            for b in range(wordno):
+                word = random.choice(noises)
+                replacedword = ""
+                for c in range(len(word)):
+                    if random.randint(0,6) > 4:
+                        for d in range(random.randint(1,4)):
+                            replacedword += word[c]
+                    else:
+                        replacedword += word[c]
+                newword = "".join(replacedword)
+                outputtex.append("".join(newword).title())
+            beastresult.append(" ".join(outputtex))
+        else:
+            beastresult.append(chunks[a])
+    return('"'.join(beastresult))
