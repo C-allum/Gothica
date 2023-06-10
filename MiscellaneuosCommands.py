@@ -162,8 +162,9 @@ async def migrateAcc(message):
     try:
         if user.discriminator != "0" :
             await message.channel.send(embed = discord.Embed(title = f"{user.name}, you have to wait for your discord migration!", description = f"Your account is not been migrated to the new unique username system that discord introduced. Try again when you have your new username!"))
+            return
     except:
-        await message.channel.send(embed = discord.Embed(title = f"I can't access discriminators anymore. Contact Ken.", description = f"Something went wrong..."))
+        await message.channel.send(embed = discord.Embed(title = f"I can't access discriminators anymore. Contact Ken.", description = f"Something went wrong... Nothing critical, continuing"))
 
     if str(user.id) in str(kinkdata):
         playerIndex = [row[2] for row in kinkdata].index(str(user.id))
