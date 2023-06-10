@@ -14,6 +14,17 @@ import aiohttp
 async def on_ready():
 
     print('Logged in as {0.user} at '.format(client) + str(datetime.now()).split(".")[0])
+    startmessage = await client.get_channel(logchannel).send('Logged in as {0.user} at '.format(client) + str(datetime.now()).split(".")[0])
+
+    server = startmessage.guild
+    MVProle = discord.utils.get(server.roles, name="MVP")
+    LFGrole = discord.utils.get(server.roles, name="LFG")
+    for a in server.members:
+        if MVProle in a.roles:
+            await a.remove_roles(MVProle)
+        if LFGrole in a.roles:
+            await a.remove_roles(LFGrole)
+
 
     TransactionsDatabaseInterface.initTransactionsDataBase()
 
@@ -177,13 +188,8 @@ async def on_message(message):
             if message.author == client.user:
                 return
 
-            try:
-                newname = message.author.discriminator
-            except ValueError:
-                newname = true
-
             if message.content.lower().startswith(myprefix + "test"):
-                pass
+                print("Running Tests")              
 
             #Voyeur's Lounge Redirect - On OocFun and Working
             if isbot and (str(message.channel).lower() == "ooc") and not (message.author.name == "Gothica" or message.author.name == "Gothica Beta"):
