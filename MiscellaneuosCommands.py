@@ -199,6 +199,7 @@ async def migrateAcc(message):
                     break
             if oldEconomyIndex == -1 or newEconomyIndex == -1:
                 await message.channel.send(embed = discord.Embed(title = "Not in Economy!", description = "Your new account name is not in the economy. Write something in OOC to get registered!"))
+                return
             newBalance = int(userinvs[oldEconomyIndex][1]) + int(userinvs[newEconomyIndex][1])
             
             userinvs[oldEconomyIndex][1] = newBalance

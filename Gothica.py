@@ -76,10 +76,16 @@ async def on_ready():
 
             #Get Roles of the member. Attribute Error if they are not in the specified Guild (server)
             try:
-                roles = client.get_guild(828411760365142076).get_member_named(name).roles
+                if len(name.split('#')[1]) == 4:
+                    roles = client.get_guild(828411760365142076).get_member_named(name).roles
+                else:
+                    roles = client.get_guild(828411760365142076).get_member_named(name.split('#')[0]).roles
             except AttributeError:
                 try:
-                    roles = client.get_guild(847968618167795782).get_member_named(name).roles
+                    if len(name.split('#')[1]) == 4:
+                        roles = client.get_guild(847968618167795782).get_member_named(name).roles
+                    else:
+                        roles = client.get_guild(847968618167795782).get_member_named(name.split('#')[0]).roles
                 except AttributeError:
                     userStillOnServer = 0
 
@@ -2822,7 +2828,7 @@ async def on_message(message):
             #Money Command
             elif message.content.lower().startswith(str(myprefix) + "money") or message.content.lower().startswith("$money") or message.content.lower().startswith(str(myprefix) + "wallet") or message.content.lower().startswith("$wallet"):
 
-                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ2000", majorDimension='ROWS').execute().get("values")
+                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
                 balances = []
 
@@ -2844,7 +2850,7 @@ async def on_message(message):
 
                     b = a * 4 + 5
 
-                    if str(message.author) in str(economydata[b][0]):
+                    if str(message.author.name + "#" + message.author.discriminator) in str(economydata[b][0]):
 
                         for c in range(len(balances)):
 
