@@ -191,7 +191,6 @@ async def playerreacts(message):
         for n in range(len(reacts)):
             await message.add_reaction(reacts[n])
 
-
     if message.author.name == "C_allum" and str(message.author) != "C_allum#5225":
 
         meslist = ["FAKE", "LIAR", "FALSE", "NOTREAL", "EVIL", "NOTCAL", "LIES", "NO", "STOPMIXED"]
@@ -202,5 +201,42 @@ async def playerreacts(message):
 
             await message.add_reaction(reacts[n])
 
+    if str(message.author) in emoteCursed:
+        curseindex = emoteCursed.index(str(message.author))
+        if random.randint(1,100) <= emoteCursechance[curseindex]:
+            meslist = emoteCurses[curseindex].split("|")
+            reacts = reactletters(meslist[random.randint(0,len(meslist)-1)])
+            for n in range(len(reacts)):
+                await message.add_reaction(reacts[n])
+    
     if ("sleep well " in (message.content).lower() or "sleep tight " in (message.content).lower() or"gute nacht " in (message.content).lower() or "nini " in (message.content).lower() or "goodnight" in (message.content).lower() or "good night" in (message.content).lower() or "night" in (message.content).lower() or "gn " in (message.content).lower()) and " ken" in message.content.lower() and str(message.channel).lower() == "ooc":
         await message.add_reaction("❤️")
+
+async def emotecurse(message):
+    curseparts = message.content.split(" ")[1:]
+    cursememb = client.get_guild(message.channel.guild.id).get_member(int(curseparts[0].lstrip("<@").rstrip(">")))
+    cursechance = int(curseparts[1])
+    curselist = curseparts[2].upper()
+    global emoteCursed
+    global emoteCursechance
+    global emoteCurses
+    emoteCursed.append(str(cursememb))
+    emoteCursechance.append(cursechance)
+    emoteCurses.append(curselist)
+    await message.channel.send(embed = discord.Embed(title = "You have cursed " + str(cursememb), description = "Those cursed this week are:\n\n" + "\n".join(emoteCursed), colour= embcol))
+    await message.delete()
+
+async def emoteuncurse(message):
+    if not " " in message.content:
+        targ = message.author.name + "#" + str(message.author.discriminator)
+    elif "lorekeeper" in str(message.author.roles).lower():
+        target = client.get_guild(message.channel.guild.id).get_member(int(message.content.split(" ")[1].lstrip("<@").rstrip(">")))
+        targ = target.name + "#" + str(target.discriminator)
+    global emoteCursed
+    global emoteCursechance
+    global emoteCurses
+    curseindex = emoteCursed.index(targ)
+    emoteCursed.pop(curseindex)
+    emoteCursechance.pop(curseindex)
+    emoteCurses.pop(curseindex)
+    await message.channel.send("Curse removed. Current Cursed People are:\n\n" + "\n".join(emoteCursed))

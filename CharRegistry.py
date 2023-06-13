@@ -748,23 +748,26 @@ async def charlist(message):
     await waitmess.delete()
 
 #Search Subroutine
-async def charsearch(message):
+async def charsearch(message, outputchannel):
 
     tit = None
     desc = None
-    foot = "Searched for by " + message.author.name
+    try:
+        foot = "Searched for by " + message.author.name
+        msgspl = message.content.split(" ")
+    except AttributeError:
+        foot = ""
+        msgspl = message.split(" ")
     imgurl = ""
     imglen = 0
 
     cdata = ["\n"]
 
-    msgspl = message.content.split(" ")
+    cnames = sheet.values().get(spreadsheetId = CharSheet, range = "F1:F2000").execute().get("values")
 
-    cnames = sheet.values().get(spreadsheetId = CharSheet, range = "F1:F1000").execute().get("values")
+    pnames = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B2000" ).execute().get("values")
 
-    pnames = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B1000" ).execute().get("values")
-
-    cargs = sheet.values().get(spreadsheetId = CharSheet, range = "F1:Z1000" ).execute().get("values")
+    cargs = sheet.values().get(spreadsheetId = CharSheet, range = "F1:Z2000" ).execute().get("values")
     searchedName = " ".join(msgspl[1:]).lower()
     
     count = 0
@@ -821,7 +824,10 @@ async def charsearch(message):
 
                             imglen = carg.count("|") + 1
 
-                foot = "---------------------------------------------------------\n\nOwned by " + str(pnames[i][0] + ". Searched for by " + message.author.name)
+                try:
+                    foot = "---------------------------------------------------------\n\nOwned by " + str(pnames[i][0] + ". Searched for by " + message.author.name)
+                except AttributeError:
+                    foot = ""
 
     elif count > 1:
 
@@ -921,9 +927,7 @@ async def charsearch(message):
     if foot != None:
         emb.set_footer(text=foot)
 
-    print(message.author.name + " searched for: " + message.content.split(" ",1)[1])
-
-    await message.channel.send(embed=emb)
+    await outputchannel.send(embed=emb)
 
     if len(imgurl) > 1 and count == 1:
 
@@ -933,7 +937,7 @@ async def charsearch(message):
 
             emb.set_image(url = imgurl[d+1])
 
-            await message.channel.send(embed=emb)
+            await outputchannel.send(embed=emb)
 
     if multindexes != []:
         try:
@@ -984,7 +988,10 @@ async def charsearch(message):
                         if cdata != None:
                             desc = "\n".join(cdata)
 
-                        foot = "---------------------------------------------------------\n\nOwned by " + str(pnames[multindexes[w]][0] + ". Searched for by " + message.author.name)
+                        try:    
+                            foot = "---------------------------------------------------------\n\nOwned by " + str(pnames[multindexes[w]][0] + ". Searched for by " + message.author.name)
+                        except AttributeError:
+                            foot = ""
 
                         multsort = 1
 
@@ -1006,7 +1013,7 @@ async def charsearch(message):
                                 emb.set_image(url=imgurl[0])
 
 
-                        await message.channel.send( embed= emb)
+                        await outputchannel.send( embed= emb)
 
                         
                         if len(imgurl) > 1:
@@ -1017,20 +1024,22 @@ async def charsearch(message):
 
                                 emb.set_image(url = imgurl[d+1])
 
-                                await message.channel.send(embed=emb)
+                                await outputchannel.send(embed=emb)
                         break
 
             except TypeError or ValueError:
 
-                await message.channel.send(embed=discord.Embed(title="Selection Invalid",description="You must enter an integer", colour = embcol))
+                await outputchannel.send(embed=discord.Embed(title="Selection Invalid",description="You must enter an integer", colour = embcol))
 
         except asyncio.TimeoutError:
 
-            await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+            await outputchannel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
 
         await msg.delete()
-    
-    await message.delete()
+    try:
+        await message.delete()
+    except AttributeError:
+        pass
     
 #Retire Command
 async def charretire(message):

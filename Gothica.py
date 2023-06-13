@@ -6,12 +6,26 @@ import CommonDefinitions
 import MiscellaneuosCommands
 from CommonDefinitions import *
 import TransactionsDatabaseInterface
+import time
+from discord import Webhook
+import aiohttp
 
 @client.event
 async def on_ready():
 
     print('Logged in as {0.user} at '.format(client) + str(datetime.now()).split(".")[0])
-    
+    startmessage = await client.get_channel(logchannel).send('Logged in as {0.user} at '.format(client) + str(datetime.now()).split(".")[0])
+
+    server = startmessage.guild
+    MVProle = discord.utils.get(server.roles, name="MVP")
+    LFGrole = discord.utils.get(server.roles, name="LFG")
+    for a in server.members:
+        if MVProle in a.roles:
+            await a.remove_roles(MVProle)
+        if LFGrole in a.roles:
+            await a.remove_roles(LFGrole)
+
+
     TransactionsDatabaseInterface.initTransactionsDataBase()
 
     #------------------DezzieAwardPoolReset---------------------
@@ -22,17 +36,17 @@ async def on_ready():
 
     #Grab current date and time
     today = datetime.now()
- 
+
     #Prepare dates for Dezzie Award Pool Reset
     try:
         oldResetDateTime = int(economyResetDate[0][0])
-    except: 
+    except:
         #Happens if the date isn't initialized on the econ sheet. Initialize it then.
         print("Initial reset date added!")
         resetDateInitVal = [[int(datetime.timestamp(datetime(2022, 10, 22)))]]
         sheet.values().update(spreadsheetId = EconSheet, range = "D2", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=resetDateInitVal)).execute()
         oldResetDateTime = resetDateInitVal[0][0]
-        
+
     if oldResetDateTime < datetime.timestamp(today):
 
         #Calculate new timestamp
@@ -47,12 +61,12 @@ async def on_ready():
         print("Last reset timestamp:" + str(datetime.fromtimestamp(oldResetDateTime)))
         print("Next reset timestamp:" + str(datetime.fromtimestamp(newResetDateTimestamp)))
 
-       
-        
-        #On reboot refresh dezzie pool of users
-        economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:A2000", majorDimension='ROWS').execute().get("values")
 
-        for i in range(5, len(economydata)-1, 4):            
+
+        #On reboot refresh dezzie pool of users
+        economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:A4000", majorDimension='ROWS').execute().get("values")
+
+        for i in range(5, len(economydata)-1, 4):
             #Grab the name on the member
             try:
                 name = economydata[i][0]
@@ -62,10 +76,16 @@ async def on_ready():
 
             #Get Roles of the member. Attribute Error if they are not in the specified Guild (server)
             try:
-                roles = client.get_guild(828411760365142076).get_member_named(name).roles
+                if len(name.split('#')[1]) == 4:
+                    roles = client.get_guild(828411760365142076).get_member_named(name).roles
+                else:
+                    roles = client.get_guild(828411760365142076).get_member_named(name.split('#')[0]).roles
             except AttributeError:
                 try:
-                    roles = client.get_guild(847968618167795782).get_member_named(name).roles
+                    if len(name.split('#')[1]) == 4:
+                        roles = client.get_guild(847968618167795782).get_member_named(name).roles
+                    else:
+                        roles = client.get_guild(847968618167795782).get_member_named(name.split('#')[0]).roles
                 except AttributeError:
                     userStillOnServer = 0
 
@@ -91,10 +111,18 @@ async def on_ready():
                     dezziePool += weeklyDezzieBonusVeteran
                 if "lorekeeper" in str(roles).lower() or "lorekeeper" in str(roles).lower() or "admin" in str(roles).lower():
                     dezziePool = 100000
+                if "patron tier 1" in str(roles).lower():
+                    dezziePool += weeklyDezzieBonusPatronT1
+                if "patron tier 2" in str(roles).lower():
+                    dezziePool += weeklyDezzieBonusPatronT2
+                if "patron tier 3" in str(roles).lower():
+                    dezziePool += weeklyDezzieBonusPatronT3
+                if "cult of the mistress" in str(roles).lower():
+                    dezziePool += weeklyDezzieBonusPatronT3
 
             try:
                 economydata[i+3][0] = dezziePool
-            except IndexError:  
+            except IndexError:
                 #Occurs when Dezzie pool is null. Initialize dezzie pool
                 try:
                     economydata[i+3] = [dezziePool]
@@ -104,7 +132,7 @@ async def on_ready():
 
 
         #update dezzie pools
-        sheet.values().update(spreadsheetId = EconSheet, range = "A1:A2000", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=economydata)).execute()
+        sheet.values().update(spreadsheetId = EconSheet, range = "A1:A4000", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=economydata)).execute()
 
         #update sheet with new refresh time
         sheet.values().update(spreadsheetId = EconSheet, range = "D2", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=newResetValue)).execute()
@@ -112,9 +140,6 @@ async def on_ready():
     else:
         print("It is not dezzie award pool reset time yet!")
     #----------------------------------------------------------
-
-
-    
 
 
 #Main Loop
@@ -167,19 +192,21 @@ async def on_message(message):
 
             #Prevent replying to own messages.
             if message.author == client.user:
-                
-                pass
+                return
+
+            if message.content.lower().startswith(myprefix + "test"):
+                print("Running Tests")              
 
             #Voyeur's Lounge Redirect - On OocFun and Working
             if isbot and (str(message.channel).lower() == "ooc") and not (message.author.name == "Gothica" or message.author.name == "Gothica Beta"):
 
                 await OocFun.VoyRedirect(message)
-            
+
             #Gag - On OocFun and Working
             if not isbot and str(message.channel).lower() == "ooc" and "gagged" in str(message.author.roles).lower():
 
                 await OocFun.gag(message)
-                
+
             #Set Gag - On OocFun and Working
             if message.content.lower().startswith(myprefix + "gag") and "lorekeeper" in str(message.author.roles).lower():
 
@@ -191,12 +218,65 @@ async def on_message(message):
                 await OocFun.emote(message)
 
             #Player Based Reactions - On OocFun and Working
-            if message.channel.name.lower() == "ooc":
+            if message.channel.name.lower() == "ooc" and not message.content.startswith(myprefix):
 
                 await OocFun.playerreacts(message)
-            
+
+            #Speech curses
+            if message.author.name in str(speechcursed) and message.author.bot:
+                print("Replacing Tupper")
+                hook = await message.channel.create_webhook(name= message.channel.name + " Webhook")
+                mess = message
+                author_avatar = message.author.avatar
+                try:
+                    curse = speechcurses[speechcursed[0].index(message.author.name)]
+                    if curse == "uwu":
+                        msg = await MiscellaneuosCommands.uwutongue(mess)
+                    elif curse == "cat":
+                        msg = await MiscellaneuosCommands.beasttongue(mess, "cat")
+                    elif curse == "dog":
+                        msg = await MiscellaneuosCommands.beasttongue(mess, "dog")
+                    else:
+                        msg = mess.content
+                    speechcurses.pop(speechcursed[0].index(message.author.name))
+                    speechcursed.pop(speechcursed[0].index(message.author.name))
+                    await message.delete()
+                    async with aiohttp.ClientSession() as session:
+                        whook = Webhook.from_url(hook.url, session = session)
+                        await whook.send(msg, username = message.author.name, avatar_url = author_avatar)
+                    await session.close()
+                    await hook.delete()
+                    await asyncio.sleep(10)
+                    speechcursed.append(message.author.name)
+                    speechcurses.append(curse)
+                except ValueError:
+                    return
+
+            if message.content.lower().startswith(str(myprefix) + "speechcurse") and "lorekeeper" in str(message.author.roles).lower():
+                speechcursed.append(message.content.split(" ")[1:-1])
+                speechcurses.append(message.content.split(" ")[-1])
+                await message.channel.send("Curse Confirmed")
+
+            elif message.content.lower().startswith(str(myprefix) + "removecurse"):
+                speechcurses.pop(speechcursed.index(message.author.name))
+                speechcursed.pop(speechcursed.index(message.author.name))
+                await message.channel.send("Done")
+
+            #Curse
+            if message.content.lower().startswith(str(myprefix) + "curse") and "lorekeeper" in str(message.author.roles).lower():
+
+                await OocFun.emotecurse(message)
+
+            elif message.content.lower().startswith(str(myprefix) + "uncurse"):
+
+                await OocFun.emoteuncurse(message)
+
+            #manual Dezzie reward pool reset
+            elif message.content.lower().startswith(str(myprefix) + "rewardpoolreset") and "moderator" in str(authroles).lower():
+                await MiscellaneuosCommands.manualDezPoolReset(message)
+
             #Character Index Update - On CharRegistry, untested
-            elif message.content.lower().startswith(str(myprefix) + "indexupdate") and "moderator" in str(authroles):
+            elif message.content.lower().startswith(str(myprefix) + "indexupdate") and "moderator" in str(authroles).lower():
 
                 await CharRegistry.updatereg(message)
 
@@ -210,32 +290,32 @@ async def on_message(message):
 
                 await CharRegistry.charedit(message)
 
-            #Character Transfer Subroutine - On CharRegistry, untested            
+            #Character Transfer Subroutine - On CharRegistry, untested
             elif message.content.lower().startswith(str(myprefix) + "transfer") and not isbot:
 
                 await CharRegistry.chartransfer(message)
-                
-            #Character List Subroutine - On CharRegistry, untested            
+
+            #Character List Subroutine - On CharRegistry, untested
             elif (message.content.lower().startswith(str(myprefix) + "charlist") or message.content.lower().startswith(str(myprefix) + "list")) and not isbot:
 
                 await CharRegistry.charlist(message)
 
-            #Search Subroutine - On CharRegistry, untested            
+            #Search Subroutine - On CharRegistry, untested
             elif (message.content.lower().startswith(str(myprefix) + "search") or message.content.lower().startswith(str(myprefix) + "char")or message.content.lower().startswith(str(myprefix) + "show")) and not isbot:
 
-                await CharRegistry.charsearch(message)
+                await CharRegistry.charsearch(message, message.channel)
 
-            #Retire Command - On CharRegistry, untested         
+            #Retire Command - On CharRegistry, untested
             elif message.content.lower().startswith(str(myprefix) + "retire") and not isbot:
 
                 await CharRegistry.charretire(message)
 
-            #Activate Command - On CharRegistry, untested            
+            #Activate Command - On CharRegistry, untested
             elif message.content.lower().startswith(str(myprefix) + "activate") and not isbot:
 
                 await CharRegistry.charactivate(message)
 
-            #Deactivate Command - On CharRegistry, untested             
+            #Deactivate Command - On CharRegistry, untested
             elif message.content.lower().startswith(str(myprefix) + "deactivate") and not isbot:
 
                 await CharRegistry.chardeactivate(message)
@@ -244,8 +324,15 @@ async def on_message(message):
             elif message.content.lower().startswith(str(myprefix) + "help"):
                 await CommonDefinitions.helplist(message)
 
-            #Plothook Command
+            #account migration command
+            elif message.content.lower().startswith(str(myprefix) + "migrate") and not isbot:
+                await MiscellaneuosCommands.migrateAcc(message)
 
+            #manual account migration command
+            elif message.content.lower().startswith(str(myprefix) + "manualmigrate") and not isbot and "lorekeeper" in str(message.author.roles).lower():
+                await MiscellaneuosCommands.manualMigrateAcc(message)
+
+            #Plothook Command
             elif message.content.lower().startswith(str(myprefix) + "plothook") and not isbot:
 
                 delay = await message.channel.send("We are processing your request now")
@@ -447,7 +534,7 @@ async def on_message(message):
                                 hook = plothooks[j][k]
 
                                 thook = hook.replace("£", pronoun).replace("$", determiner).replace("¬", pluraliser).replace("they is", "they are").replace("they has", "they have").replace("him's","his").replace("her's", "her").replace("they's", "their").replace("they was", "they were")
-                                
+
                                 temphook = thook.split("_")
 
                                 for n in range(len(temphook)):
@@ -455,7 +542,7 @@ async def on_message(message):
                                     temphook[n] = temphook[n].capitalize()
 
                                 hook = " ".join(temphook).replace("^", cname.title())
-                                
+
                                 room = sheet.values().get(spreadsheetId = "17ZTklwFnnrVk1qeZLOnEK6YacNQusRljUxaSXTvPDWU", range = "A1:O1", majorDimension='COLUMNS').execute().get("values")
 
                                 selroom = room[j][0]
@@ -469,7 +556,7 @@ async def on_message(message):
                                 print(message.author.name + " got a plothook")
 
                                 tit = cname + " is in " + selroom + "!"
-                                
+
                                 desc = hook
 
                     phemd = discord.Embed(title = tit, description = desc, colour = embcol)
@@ -481,7 +568,7 @@ async def on_message(message):
                         seenno += prevlist[pind][sn+1].count("1")
 
                     if message.author.name != "C_allum":
-                    
+
                         phemd.set_footer(text ="-------------------------------------------------------------------\n\n" + auth + " has seen " + str(seenno) + " out of " + str(hookquant) + " potential plothooks!")
 
                     else:
@@ -495,7 +582,6 @@ async def on_message(message):
                     await delay.delete()
 
             #Plothook Leaderboard
-
             elif message.content.lower().startswith(str(myprefix) + "plotlead"):
 
                 delay = await message.channel.send("We are processing your request now")
@@ -571,8 +657,7 @@ async def on_message(message):
                 await message.channel.send(embed = discord.Embed(title = "Plothook Leaderboard", description = "\n".join(sortlist), colour = embcol))
 
             #Verify Command
-
-            elif message.content.lower().startswith(str(myprefix) + "verify") and ("moderator" in str(message.author.roles).lower() or message.author.name == "C_allum"):
+            elif message.content.lower().startswith(str(myprefix) + "verify") and ("moderator" in str(message.author.roles).lower() or "bouncer" in str(message.author.roles).lower()):
 
                 vertarget = message.content.split("@")[1]
 
@@ -608,10 +693,9 @@ async def on_message(message):
 
             #Staff Vacation Command
             elif message.content.lower().startswith(str(myprefix) + "vacation") and ("lorekeeper" in str(message.author.roles).lower()):
-                await MiscellaneuosCommands.staffVacation(message)                                                           
+                await MiscellaneuosCommands.staffVacation(message)
 
             #Guild Adventurer Command
-
             elif message.content.lower().startswith(str(myprefix) + "adventurer") and ("lorekeeper" in str(message.author.roles).lower() or "licensed fucksmith" in str(message.author.roles).lower() or message.author.name == "C_allum"):
 
                 adventarget = message.content.split("@")[1]
@@ -665,7 +749,6 @@ async def on_message(message):
                     await message.channel.send(embed = discord.Embed(title = random.choice(["Approved"]), description = random.choice(["You are now an adventurer"]) + charappend, colour = embcol))
 
             #Looking for RP
-
             elif message.content.lower().startswith("%lfg"):
 
                 vermemb = message.author
@@ -714,17 +797,16 @@ async def on_message(message):
             elif message.content.lower().startswith(str(myprefix) + "randloot") and "lorekeeper" in str(message.author.roles).lower():
                 await KinklistCommands.randloot(message)
             #Start
-            
+
             elif message.content.lower().startswith(str(myprefix) + "start"):
 
-                welcdesc = "This guide was created to streamline the process of joining the general roleplay in the server.\n\n**Role Selection:** The first thing you should do is head up to " + str(client.get_channel(880605891366375435).mention) + ", where you can choose roles based on what you're interested in and how you define yourself. To see the roleplay channels, you'll need the RP-Intro (<:gem:944690539553513492>) role.\n\nAfter that, you'll need to go to " + str(client.get_channel(895531096350011442).mention) + ". This contains an overview of the lore of the setting, as well as the rules for roleplaying within it. Once you've read through that, click the D20 (" + critemj + ") to accept the rules. This will allow to to access the public roleplay channels.\n\n**Generating Stats:** Now that you can access the " + str(client.get_channel(828412055228514325).mention) + " channel, you can create a character to play as. We allow characters up to level 14, though we recommend being between 4 and 10 due to balance on certain things. You can use any method to roll stats that you would like, as long as it is within reason. If you want to roll (4D6, dropping the lowest is the usual way), you can use the " + str(client.get_channel(903415692693475348).mention) + " thread. We use Avrae on the server for dice rolls, and we have the prefix for it set to: &. This means that to roll 4d6 dropping the lowest, you would do: `&r 4d6kh3`. Avrae also has `&randchar`, which will generate all 6 stats for you in this method. Sheets are only really used for certain things like raids (combat events in the dungeon), so it is possible to not use stats at all.\n\n**Character Creation:** To create your character, provide some information about them, starting with their name. There is a template pinned in " + str(client.get_channel(828412055228514325).mention) + ", which includes all the possible bits of information you can use, though you don't need to use all of these. You can also include an image here to show everyone what your character looks like.\n\n**Tuppers:** Most people in the dungeon roleplay using tuppers - aliases which replace your message with those of your character's. To set one up, head to: " + str(client.get_channel(903416425706831902).mention) + " and use the `?register` command. This has the following format: `?register name [text]`, where name is the name of your character as you want it to appear (in quotes if you have a space) and the brackets around the word 'text' can be anything, on either side of the word, and is how you trigger the bot to replace your message. For example, one of the brackets I use is £text, which replaces any of my messages which start with a £ symbol. If it's a character I use less often, I will use their name and a colon. You should include your image in this command as well, or add it to the tupper later using `?avatar name` and adding the link or attaching the image.\n\n**Arranging role-play:** Use the " + str(client.get_channel(832435243117445131).mention) + " channel to arrange scenes with people, or simply drop your character into one of the common rooms and someone will likely join you.\n\nHave fun!" 
+                welcdesc = "This guide was created to streamline the process of joining the general roleplay in the server.\n\n**Role Selection:** The first thing you should do is head up to " + str(client.get_channel(880605891366375435).mention) + ", where you can choose roles based on what you're interested in and how you define yourself. To see the roleplay channels, you'll need the RP-Intro (<:gem:944690539553513492>) role.\n\nAfter that, you'll need to go to " + str(client.get_channel(895531096350011442).mention) + ". This contains an overview of the lore of the setting, as well as the rules for roleplaying within it. Once you've read through that, click the D20 (" + critemj + ") to accept the rules. This will allow to to access the public roleplay channels.\n\n**Generating Stats:** Now that you can access the " + str(client.get_channel(828412055228514325).mention) + " channel, you can create a character to play as. We allow characters up to level 14, though we recommend being between 4 and 10 due to balance on certain things. You can use any method to roll stats that you would like, as long as it is within reason. If you want to roll (4D6, dropping the lowest is the usual way), you can use the " + str(client.get_channel(903415692693475348).mention) + " thread. We use Avrae on the server for dice rolls, and we have the prefix for it set to: &. This means that to roll 4d6 dropping the lowest, you would do: `&r 4d6kh3`. Avrae also has `&randchar`, which will generate all 6 stats for you in this method. Sheets are only really used for certain things like raids (combat events in the dungeon), so it is possible to not use stats at all.\n\n**Character Creation:** To create your character, provide some information about them, starting with their name. There is a template pinned in " + str(client.get_channel(828412055228514325).mention) + ", which includes all the possible bits of information you can use, though you don't need to use all of these. You can also include an image here to show everyone what your character looks like.\n\n**Tuppers:** Most people in the dungeon roleplay using tuppers - aliases which replace your message with those of your character's. To set one up, head to: " + str(client.get_channel(903416425706831902).mention) + " and use the `?register` command. This has the following format: `?register name [text]`, where name is the name of your character as you want it to appear (in quotes if you have a space) and the brackets around the word 'text' can be anything, on either side of the word, and is how you trigger the bot to replace your message. For example, one of the brackets I use is £text, which replaces any of my messages which start with a £ symbol. If it's a character I use less often, I will use their name and a colon. You should include your image in this command as well, or add it to the tupper later using `?avatar name` and adding the link or attaching the image.\n\n**Arranging role-play:** Use the " + str(client.get_channel(832435243117445131).mention) + " channel to arrange scenes with people, or simply drop your character into one of the common rooms and someone will likely join you.\n\nHave fun!"
 
                 await message.channel.send(embed = discord.Embed(title = "Celia's Lewd Dungeon - How to get started?", description = welcdesc, colour = embcol))
 
                 await message.delete()
 
             #Room Command
-
             elif message.content.lower().startswith(str(myprefix) + "room"):
 
                 # saferooms = ["bot-testing"]
@@ -741,7 +823,7 @@ async def on_message(message):
                 if not "adventurer" in str(authroles).lower():
                     for c in range(len(depths)):
                         rooms.append(depths[c])
-                        
+
                 for d in range(len(rooms)):
                     roomchannel = discord.utils.get(client.get_all_channels(), name = rooms[d])
                     roomlast = [joinedMessages async for joinedMessages in client.get_channel(roomchannel.id).history(limit=2, oldest_first=False)]
@@ -758,10 +840,9 @@ async def on_message(message):
 
             #Command to set the scene for roleplay
             elif message.content.lower().startswith(str(myprefix) + "setting"):
-                pass                    
+                pass
 
             #Scene Break Command
-
             elif message.content.lower().startswith(str(myprefix) + "br"):
 
                 if isbot:
@@ -777,7 +858,6 @@ async def on_message(message):
                     print(message.author.name + " created a scene division")
 
             #Embed Command
-
             elif message.content.lower().startswith(str(myprefix) + "embed") and not isbot:
 
                 img = ""
@@ -906,6 +986,44 @@ async def on_message(message):
 
                 await message.channel.send("Embed sent to ooc.")
 
+            #Embed Edit
+            elif message.content.lower().startswith(str(myprefix) + "edembed") and "lorekeeper" in str(message.author.roles).lower():
+                chan = message.content.split(" ")[1].split("/")[5]
+                messid = message.content.split(" ")[1].split("/")[6]
+                messchan = client.get_channel(int(chan))
+                mess = messchan.get_partial_message(int(messid))
+                await mess.edit(embed = discord.Embed(title = "Edited", description = "A"))
+                img = ""
+                thum = ""
+
+                if "-t" in message.content and "-d" in message.content:
+                    if '=' in message.content:
+                        tit = message.content.split("-t")[1].split('=')[1]
+                        des = message.content.split("-d")[1].split('=')[1]
+                    elif "=" in message.content:
+                        tit = message.content.split("-t")[1].split("=")[1]
+                        des = message.content.split("-d")[1].split("=")[1]
+                    else:
+                        tit = "You need to use equals signs around both the Title and Description"
+                        des = "Surround each argument with ="
+                    if "-i" in message.content:
+                        img = message.content.split("-i")[1].split('=')[1]
+                    if "-m" in message.content:
+                        thum = message.content.split("-m")[1].split('=')[1]
+                else:
+                    tit = ""
+                    des = message.content.split(" ",1)[1]
+                cusemb = discord.Embed(title = tit, description = des.replace("The Mistress", "T̴̯̳̳̠͚͓͚̂͗̽̾̈́͌̐̅͠ͅh̸̨̫͓͖͎͍͔̠͇̊̂̏͝ę̶͎͇͍̲̮̠̭̮͛̃̈́͑̓̔̚ ̸͙̺̦̮͈̹̮̑̿̊̀̂́͂̿͒̚͜M̶̬͇̤̾͐̊̽̈́̀̀̕͘͝í̸̬͎͔͍̠͓̋͜͠͝s̶̡̡̧̪̺͍̞̲̬̮͆͋̇̐͋͌̒̋͛̕t̷̤̲̠̠̄̊͌̀͂̈́̊̎̕ȓ̶̼̂̿̇͛̚e̶̹̪̣̫͎͉̫̫͗s̸̟͉̱͈̞̬̽̽̒̔́̉s̸̛̖̗̜̻̻͚̭͇̈́̀̄͒̅̎"), colour = embcol)
+                if not "moderator" in str(authroles).lower():
+                    await client.get_channel(logchannel).send(str(message.author) + " generated an embed in " + str(message.channel.name))
+                if not img == "":
+                    cusemb.set_image(url = img)
+                if not thum == "":
+                    cusemb.set_thumbnail(url = thum)
+                print(message.author.name + " edited an embed")
+                await mess.edit(embed = cusemb)
+                await message.delete()
+
             elif message.content.lower().startswith(str(myprefix) + "oocmsg") and ("lorekeeper" in str(message.author.roles).lower() or str(message.author) == "C_allum#5225"):
 
                 await client.get_channel(832435243117445131).send(message.content.split(" ", 1)[1].replace("The Mistress", "T̴̯̳̳̠͚͓͚̂͗̽̾̈́͌̐̅͠ͅh̸̨̫͓͖͎͍͔̠͇̊̂̏͝ę̶͎͇͍̲̮̠̭̮͛̃̈́͑̓̔̚ ̸͙̺̦̮͈̹̮̑̿̊̀̂́͂̿͒̚͜M̶̬͇̤̾͐̊̽̈́̀̀̕͘͝í̸̬͎͔͍̠͓̋͜͠͝s̶̡̡̧̪̺͍̞̲̬̮͆͋̇̐͋͌̒̋͛̕t̷̤̲̠̠̄̊͌̀͂̈́̊̎̕ȓ̶̼̂̿̇͛̚e̶̹̪̣̫͎͉̫̫͗s̸̟͉̱͈̞̬̽̽̒̔́̉s̸̛̖̗̜̻̻͚̭͇̈́̀̄͒̅̎"))
@@ -913,7 +1031,6 @@ async def on_message(message):
                 await message.channel.send("Message sent to ooc")
 
             #Recent Activity Command
-
             elif message.content.lower().startswith(str(myprefix) + "recent"):
                 delay = await message.channel.send("We are processing your request now")
                 meslatest = []
@@ -921,7 +1038,7 @@ async def on_message(message):
                 rooms.extend(saferooms)
                 rooms.extend(shops)
                 rooms.extend(depths)
-                for n in range(len(rooms)):                    
+                for n in range(len(rooms)):
                     roomchannel = discord.utils.get(client.get_all_channels(), name = rooms[n])
                     roomlatest = [joinedMessages async for joinedMessages in roomchannel.history(limit=2, oldest_first=False)]
 
@@ -966,7 +1083,6 @@ async def on_message(message):
                 await delay.delete()
 
             #Invest Command
-
             elif message.content.lower().startswith(str(myprefix) + "invest"):
 
                 devdata = sheet.values().get(spreadsheetId = "17ZTklwFnnrVk1qeZLOnEK6YacNQusRljUxaSXTvPDWU", range = "AS1:AX200", majorDimension='COLUMNS').execute().get("values")
@@ -974,7 +1090,7 @@ async def on_message(message):
 
                 if str(message.channel).lower() in str(devdata[0]).lower():
 
-                    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ2000", majorDimension='ROWS').execute().get("values")
+                    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
                     reciprow = ""
 
@@ -993,13 +1109,13 @@ async def on_message(message):
                             break
 
                     try:
-                        
+
                         giveamount = int(message.content.split(" ")[1].strip("-"))
 
                     except ValueError:
 
                         giveamount = int(message.content.split(" ")[2].strip("-"))
-                    
+
                     if giveamount >= float(int(devdata[1][row])/4):
 
                         giveamount = math.floor(int(devdata[1][row])/4)
@@ -1037,7 +1153,7 @@ async def on_message(message):
                             except IndexError:
 
                                 devconts = ""
-                             
+
                                 devdata[5].append("")
 
                             if str(message.author) in devdata[5][row]:
@@ -1053,7 +1169,7 @@ async def on_message(message):
                                     else:
 
                                         prevconts.append(devconts[c] + "|")
-                                
+
                                     contributors = "".join(prevconts)
 
                             else:
@@ -1139,7 +1255,7 @@ async def on_message(message):
                                 investemb.set_footer(text = str(devdata[4][row]))
 
                                 investemb.set_image(url = "https://i.ibb.co/Nt3NCRN/loading-dezzie0100.png")
-                                
+
                                 await client.get_channel(996826636358000780).send("A progress bar has been completed in " + str(message.channel) + "\n\nThe players that contributed to this project were:\n\n" + contributors.replace("|", str(dezzieemj + "\n")).replace("£"," - "))
 
                             elif newtotal < 0:
@@ -1155,9 +1271,9 @@ async def on_message(message):
                                 #Image Percentage
 
                                 percent = math.floor(percentage)
-                                
+
                                 imglist = ["https://i.ibb.co/TPRKffZ/loading-dezzie0001.png","https://i.ibb.co/1m60NWV/loading-dezzie0002.png","https://i.ibb.co/FnfHtf3/loading-dezzie0003.png","https://i.ibb.co/28h1xK4/loading-dezzie0004.png","https://i.ibb.co/pnv2RSL/loading-dezzie0005.png","https://i.ibb.co/7nyXP9t/loading-dezzie0006.png","https://i.ibb.co/HPtc5QW/loading-dezzie0007.png","https://i.ibb.co/H7SG2rV/loading-dezzie0008.png","https://i.ibb.co/NTDGY9b/loading-dezzie0009.png","https://i.ibb.co/tqQLm7L/loading-dezzie0010.png","https://i.ibb.co/nzgJR1M/loading-dezzie0011.png","https://i.ibb.co/nD7jHjT/loading-dezzie0012.png","https://i.ibb.co/T2jVx0h/loading-dezzie0013.png","https://i.ibb.co/s3bb0Gt/loading-dezzie0014.png","https://i.ibb.co/RjCXnY8/loading-dezzie0015.png","https://i.ibb.co/3mKY69j/loading-dezzie0016.png","https://i.ibb.co/f4Xjg63/loading-dezzie0017.png","https://i.ibb.co/7Qh98cb/loading-dezzie0018.png","https://i.ibb.co/k0mW2hZ/loading-dezzie0019.png","https://i.ibb.co/wRxCQVM/loading-dezzie0020.png","https://i.ibb.co/tz7fFFg/loading-dezzie0021.png","https://i.ibb.co/pxkBpP5/loading-dezzie0022.png","https://i.ibb.co/SNLbxt1/loading-dezzie0023.png","https://i.ibb.co/HGV26LQ/loading-dezzie0024.png","https://i.ibb.co/FzxGXX1/loading-dezzie0025.png","https://i.ibb.co/4KkZcqh/loading-dezzie0026.png","https://i.ibb.co/p4mkH4x/loading-dezzie0027.png","https://i.ibb.co/z6LZgCs/loading-dezzie0028.png","https://i.ibb.co/GnQKHGS/loading-dezzie0029.png","https://i.ibb.co/rbbjzNP/loading-dezzie0030.png","https://i.ibb.co/m8D5YqF/loading-dezzie0031.png","https://i.ibb.co/nfysj4L/loading-dezzie0032.png","https://i.ibb.co/1T4f7YQ/loading-dezzie0033.png","https://i.ibb.co/tLp7RK2/loading-dezzie0034.png","https://i.ibb.co/t8Ygm5C/loading-dezzie0035.png","https://i.ibb.co/1zB0yPV/loading-dezzie0036.png","https://i.ibb.co/SBB5d6f/loading-dezzie0037.png","https://i.ibb.co/4mPvSdy/loading-dezzie0038.png","https://i.ibb.co/3S9Dhrt/loading-dezzie0039.png","https://i.ibb.co/M1XKkYB/loading-dezzie0040.png","https://i.ibb.co/b5VzVYz/loading-dezzie0041.png","https://i.ibb.co/5rwTJQj/loading-dezzie0042.png","https://i.ibb.co/cK9y4t6/loading-dezzie0043.png","https://i.ibb.co/qDYBfFs/loading-dezzie0044.png","https://i.ibb.co/grW8NsN/loading-dezzie0045.png","https://i.ibb.co/Vj84zY4/loading-dezzie0046.png","https://i.ibb.co/mX7FMBY/loading-dezzie0047.png","https://i.ibb.co/MZBmZqR/loading-dezzie0048.png","https://i.ibb.co/zSxQsbM/loading-dezzie0049.png","https://i.ibb.co/7pSkMxj/loading-dezzie0050.png","https://i.ibb.co/DG2KqYG/loading-dezzie0051.png","https://i.ibb.co/84bngKX/loading-dezzie0052.png","https://i.ibb.co/S5scHyC/loading-dezzie0053.png","https://i.ibb.co/kQsmr9q/loading-dezzie0054.png","https://i.ibb.co/r5PTVPj/loading-dezzie0055.png","https://i.ibb.co/j9KcKsf/loading-dezzie0056.png","https://i.ibb.co/3NVMCNG/loading-dezzie0057.png","https://i.ibb.co/9rfyp5h/loading-dezzie0058.png","https://i.ibb.co/7KCSQ90/loading-dezzie0059.png","https://i.ibb.co/vQVJQRp/loading-dezzie0060.png","https://i.ibb.co/HPRxwJ8/loading-dezzie0061.png","https://i.ibb.co/pbBTqS8/loading-dezzie0062.png","https://i.ibb.co/563ZBfN/loading-dezzie0063.png","https://i.ibb.co/FY065ty/loading-dezzie0064.png","https://i.ibb.co/qxCzJR3/loading-dezzie0065.png","https://i.ibb.co/T8PBnJN/loading-dezzie0066.png","https://i.ibb.co/fFm92D0/loading-dezzie0067.png","https://i.ibb.co/mcJ47qj/loading-dezzie0068.png","https://i.ibb.co/4VyvV9G/loading-dezzie0069.png","https://i.ibb.co/Y2qFHN1/loading-dezzie0070.png","https://i.ibb.co/593DGqF/loading-dezzie0071.png","https://i.ibb.co/v30RgH4/loading-dezzie0072.png","https://i.ibb.co/b351RF0/loading-dezzie0073.png","https://i.ibb.co/x3rv11r/loading-dezzie0074.png","https://i.ibb.co/ySNh943/loading-dezzie0075.png","https://i.ibb.co/BjPSpDZ/loading-dezzie0076.png","https://i.ibb.co/NNwSpKy/loading-dezzie0077.png","https://i.ibb.co/mN8mdt9/loading-dezzie0078.png","https://i.ibb.co/TK3jtVx/loading-dezzie0079.png","https://i.ibb.co/WgjtBZ5/loading-dezzie0080.png","https://i.ibb.co/BKxybMV/loading-dezzie0081.png","https://i.ibb.co/kBRxqZk/loading-dezzie0082.png","https://i.ibb.co/CzmTPbK/loading-dezzie0083.png","https://i.ibb.co/sQr72KL/loading-dezzie0084.png","https://i.ibb.co/4j3fdf0/loading-dezzie0085.png","https://i.ibb.co/x1jGjxM/loading-dezzie0086.png","https://i.ibb.co/jD4NVCY/loading-dezzie0087.png","https://i.ibb.co/S6yKQYb/loading-dezzie0088.png","https://i.ibb.co/bNkrGSn/loading-dezzie0089.png","https://i.ibb.co/d0NXt5z/loading-dezzie0090.png","https://i.ibb.co/smfYLDV/loading-dezzie0091.png","https://i.ibb.co/XS1c3x6/loading-dezzie0092.png","https://i.ibb.co/1vJtBtS/loading-dezzie0093.png","https://i.ibb.co/98BCvYt/loading-dezzie0094.png","https://i.ibb.co/cYctMPp/loading-dezzie0095.png","https://i.ibb.co/pP6SQvd/loading-dezzie0096.png","https://i.ibb.co/gSSqZGp/loading-dezzie0097.png","https://i.ibb.co/hLP8k2R/loading-dezzie0098.png","https://i.ibb.co/XyLFCn3/loading-dezzie0099.png"]
-                                
+
                                 imlink = imglist[percent]
 
                                 investemb.set_image(url = imlink)
@@ -1175,9 +1291,8 @@ async def on_message(message):
                     await message.channel.send(embed = discord.Embed(title = "This channel isn't set up to receive donations", description = "If you believe this to be in error, contact the moderator team", colour = embcol))
 
             #Poker Setup Command
-
             elif message.content.lower().startswith(str(myprefix) + "poker"):
-                
+
                 gamedata = sheet.values().get(spreadsheetId = gamesheet, range = "A1:E1000").execute().get("values")
 
                 gamevalue = len(gamedata)
@@ -1189,7 +1304,7 @@ async def on_message(message):
                 random.shuffle(cardtemp)
 
                 cardtemp.append(str(0))
-                
+
                 gameinit = [gamevalue, "Poker", 0, "", "", "|".join(cardtemp)]
 
                 sheet.values().append(spreadsheetId = gamesheet, range = "A2", valueInputOption = "USER_ENTERED", body = {'values':[gameinit]}).execute()
@@ -1197,20 +1312,19 @@ async def on_message(message):
                 await threadid.send(embed = discord.Embed(title = "Gothica's Gambling Games! - Texas Hold'em Poker", description = "To be done: Add summary of rules\nTo be dealt into this hand, send a message in this thread containing the name of the character you are playing. When everyone is in, type `Ready`"))
 
             #In Poker Thread
-
             elif str(message.channel).startswith("Poker Game"):
 
                 tit = "Lucky Hare Casino's Texas Hold'em Poker"
-                
+
                 #Poker Game
 
                 gamedata = sheet.values().get(spreadsheetId = gamesheet, range = "A1:F1000").execute().get("values")
 
-                econdata =  sheet.values().get(spreadsheetId = EconSheet, range = "A6:B2000", majorDimension = 'ROWS').execute().get("values")
+                econdata =  sheet.values().get(spreadsheetId = EconSheet, range = "A6:B4000", majorDimension = 'ROWS').execute().get("values")
 
                 for n in range(math.ceil(len(econdata)/4)):
 
-                    r = 4 * n 
+                    r = 4 * n
 
                     if str(message.author) in econdata[r][0]:
 
@@ -1293,7 +1407,7 @@ async def on_message(message):
                                         pcards = gamedata[gv][5].split("|")
 
                                         dmchannel = await client.fetch_user(int(playerid))
-                                        
+
                                         await dmchannel.send(embed = discord.Embed(title = "Lucky Hare Poker Game " + str(gv), description = str(pcards[p*2] + " and " + pcards[p*2+1]), colour = embcol))
 
                                         try:
@@ -1320,7 +1434,7 @@ async def on_message(message):
 
                                             print(econdata[playerrow-6][0])
 
-                                            sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(playerrow + 6)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[currentbal]])).execute() 
+                                            sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(playerrow + 6)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[currentbal]])).execute()
 
                                     if not smallblindtaken:
 
@@ -1330,14 +1444,14 @@ async def on_message(message):
 
                                         print(econdata[playerrow-6][0])
 
-                                        sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(playerrow + 6)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[currentbal]])).execute() 
+                                        sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(playerrow + 6)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[currentbal]])).execute()
 
                                     pname = str(gamedata[gv][3]).split("|")
 
                                     cname = []
 
                                     for i in range(len(pname)):
-            
+
                                         cname.append(pname[i].split(" ",1)[1])
 
                                     playerspl = gamedata[gv][3].split("|")
@@ -1345,7 +1459,7 @@ async def on_message(message):
                                     if len(cname) == 2:
 
                                         await message.channel.send(embed=discord.Embed(title = tit, description = "Playing with:\n\n" + "\n".join(gamedata[gv][3].split("|")) + "\n\nYou have each been sent your hand via direct message. The small blind is " + str(smallblind) + dezzieemj + ", paid by " + cname[0] + ", while " + cname[1] + " is paying the big blind of " + str(bigblind) + dezzieemj +  ". " + cname[0] + ", will you call, raise, or fold?", colour = embcol))
-                                        
+
                                         playerspl[0] = playerspl[0] = ">" + str(smallblind) + "£" + playerspl[0]
 
                                         playerspl[1] = "<" + str(bigblind) + "£" + playerspl[1]
@@ -1355,12 +1469,12 @@ async def on_message(message):
                                         await message.channel.send(embed=discord.Embed(title = tit, description = "Playing with:\n\n" + "\n".join(gamedata[gv][3].split("|")) + "\n\nYou have each been sent your hand via direct message. The small blind is " + str(smallblind) + dezzieemj + ", paid by " + cname[0] + ", while " + cname[1] + " is paying the big blind of " + str(bigblind) + dezzieemj +  ". " + cname[2] + ", will you call, raise, or fold?", colour = embcol))
 
                                         playerspl[0] = str(smallblind) + "£" + playerspl[0]
-                                        
+
                                         playerspl[1] = "<" + str(bigblind) + "£" + playerspl[1]
 
                                         playerspl[2] = ">" + playerspl[2]
 
-                                    playersjoined = "|".join(playerspl)  
+                                    playersjoined = "|".join(playerspl)
 
                                     sheet.values().update(spreadsheetId = gamesheet, range = "D" + str(gv+1), valueInputOption = "USER_ENTERED", body = {'values':[[playersjoined]]}).execute()
 
@@ -1411,7 +1525,7 @@ async def on_message(message):
                                                     if i+1 == len(players):
 
                                                         next = players[0]
-                                                        
+
                                                         players[0] = ">" + players[0]
 
                                                     else:
@@ -1443,7 +1557,7 @@ async def on_message(message):
                                                             if "£" in players[i]:
 
                                                                 rejoin.append("<" + str(newbid) + "£" + players[i].split("£")[1])
-                                                    
+
                                                             else:
 
                                                                 rejoin.append("<" + str(newbid) + "£" + players[i])
@@ -1467,7 +1581,7 @@ async def on_message(message):
                                                     if i+1 == len(players):
 
                                                         next = players[0]
-                                                        
+
                                                         players[0] = ">" + players[0]
 
                                                     else:
@@ -1523,7 +1637,7 @@ async def on_message(message):
                                                             if "£" in players[i]:
 
                                                                 rejoin.append(str(currentbid) + "£" + players[i].split("£")[1])
-                                                    
+
                                                             else:
 
                                                                 rejoin.append(str(currentbid) + "£" + players[i])
@@ -1533,7 +1647,7 @@ async def on_message(message):
                                                             rejoin.append(playersfull[n])
 
                                                     gamedata[gv][3] = "|".join(rejoin)
-                                                    
+
                                                     sheet.values().update(spreadsheetId = gamesheet, range = "A" + str(gv+1) + ":F" + str(gv+1), valueInputOption = "USER_ENTERED", body = {'values':[gamedata[gv]]}).execute()
 
                                             elif "fold" in message.content.lower():
@@ -1578,7 +1692,7 @@ async def on_message(message):
                                                     if i+1 == len(players):
 
                                                         next = players[0]
-                                                        
+
                                                         players[0] = ">" + players[0]
 
                                                     else:
@@ -1682,7 +1796,7 @@ async def on_message(message):
                                                     if i+1 == len(players):
 
                                                         next = players[0]
-                                                        
+
                                                         players[0] = ">" + players[0]
 
                                                     else:
@@ -1740,7 +1854,7 @@ async def on_message(message):
                                                     if i+1 == len(players):
 
                                                         next = players[0]
-                                                        
+
                                                         players[0] = ">" + players[0]
 
                                                     else:
@@ -1788,7 +1902,7 @@ async def on_message(message):
                                                             if "£" in players[i]:
 
                                                                 rejoin.append(str(currentbid) + "£" + players[i].split("£")[1])
-                                                    
+
                                                             else:
 
                                                                 rejoin.append(str(currentbid) + "£" + players[i])
@@ -1798,7 +1912,7 @@ async def on_message(message):
                                                             rejoin.append(playersfull[n])
 
                                                     gamedata[gv][3] = "|".join(rejoin)
-                                                    
+
                                                     sheet.values().update(spreadsheetId = gamesheet, range = "A" + str(gv+1) + ":F" + str(gv+1), valueInputOption = "USER_ENTERED", body = {'values':[gamedata[gv]]}).execute()
 
                                             elif "fold" in message.content.lower():
@@ -1843,7 +1957,7 @@ async def on_message(message):
                                                     if i+1 == len(players):
 
                                                         next = players[0]
-                                                        
+
                                                         players[0] = ">" + players[0]
 
                                                     else:
@@ -1897,150 +2011,229 @@ async def on_message(message):
             #Wild and Lustful Magic Table
             elif (message.content.lower().startswith(str(myprefix) + "wildlust")):
                 await MiscellaneuosCommands.wildlust(message)
-                
+
             #Eat a Dezzie commmand
             elif not isbot and ((message.content.lower().startswith(str(myprefix) + "gobblin")) or (message.content.lower().startswith(str(myprefix) + "crunch")) or (message.content.lower().startswith(str(myprefix) + "goblin"))):
                 await MiscellaneuosCommands.crunch(message)
 
             #Rulebook Command
-
             elif (message.content.lower().startswith(str(myprefix) + "rulebook")):
                 await message.delete()
                 await message.channel.send(embed = discord.Embed(title = "Here's a link to the Lewd Rulebook", description = "https://www.dropbox.com/sh/q2wt7nsihxldam2/AAB1yTPUsPo57BNkapEXgxxya/00%20Full%20Lewd%20handbook%20%28WIP%29.pdf?dl=0", colour = embcol))
 
             elif (message.content.lower().startswith(str(myprefix) + "lewdreference")):
                 await message.delete()
-                await message.channel.send(embed = discord.Embed(title = "A quick reference sheet for the lewd rules in the dungeon", description = "**Full Rulebook:** https://www.dropbox.com/sh/q2wt7nsihxldam2/AAB1yTPUsPo57BNkapEXgxxya/00%20Full%20Lewd%20handbook%20%28WIP%29.pdf?dl=0\n\n**Inhibition:** 10 + Proficiency Bonus + Your choice of mental stat modifier\n**Arousal Maximum:** Rolled Hit Dice (or rounded average) plus Con mod per level\n**Climaxing:** DC 15 Inhibition save, fail halves arousal and incapacitates for 1d4 rounds (unless overstimulating)\n\n**Conditions:**\n    *Hyperaroused:* Disadvantage on saves against indirect advances and direct advances against the creature have advantage\n    *Edged:* Hyperaroused, Must save against climaxing, drops items, falls prone, disadvantage on anything but seeking release, faltering speech, advances do maximal stimulation.\n    *Denied:* Automatic success on climax saves, success on a save reduces maximum arousal by 1d4.\n    *Infatuated:* Charmed by the source, willing for all advances by charmer, commands and suggestions require checks.\n    *Intoxicated:* Disadvantage on mental saves\n    *Uninhibited:* Inhibition score at 0. Hyperaroused, intoxicated, willing for all stimulation, disadvantage on checks and saves that are not sexual advances. Uses their turn to move towards and stimulate others, or themself.\n\n**Natural Implements:**\n    *Cock:*\n      Tiny: 1d4 Piercing\n      Small: 1d6 Piercing\n      Medium: 1d8 Piercing\n      Large: 1d10 Piercing\n      Huge: 1d12 Piercing\n      Gargantuan: 2d8 Piercing\n    Tits: 1d6 Bludgeoning\n    Pussy: 1d8 Bludgeoning\n    Ass: 1d8 Bludgeoning\n    Mouth: 1d4 Bludgeoning\n    Hand: 1d4 Bludgeoning\n    Tail: 1d4 Piercing\n    Tentacle: 1d6 Piercing\n    Pseudopod: 1d6 Bludgeoning", colour = embcol))
+                await message.channel.send(embed = discord.Embed(title = "A quick reference sheet for the lewd rules in the dungeon", description = "**Full Rulebook:** https://www.dropbox.com/sh/q2wt7nsihxldam2/AAB1yTPUsPo57BNkapEXgxxya/00%20Full%20Lewd%20handbook%20%28WIP%29.pdf?dl=0\n\n**Inhibition:** 10 + Proficiency Bonus + Your choice of mental stat modifier\n**Arousal Maximum:** Rolled Hit Dice (or rounded average) plus Con mod per level\n**Climaxing:** DC 15 Inhibition save, fail halves arousal and incapacitates for 1d4 rounds (unless overstimulating)\n\n**Conditions:**\n    *Hyperaroused:* Disadvantage on saves against indirect advances and direct advances against the creature have advantage\n    *Edged:* Hyperaroused, Must save against climaxing, drops items, falls prone, stunned, advances do maximal stimulation.\n    *Denied:* Automatic success on climax saves.\n    *Infatuated:* Charmed by the source, willing for all advances by charmer, commands and suggestions require checks.\n    *Intoxicated:* Disadvantage on mental saves\n    *Uninhibited:* Inhibition score at 0. Hyperaroused, intoxicated, willing for all stimulation, disadvantage on checks and saves that are not sexual advances. Uses their turn to move towards and stimulate others, or themself.\n\n**Natural Implements:**\n    *Cock:*\n      Tiny: 1d4 Piercing\n      Small: 1d6 Piercing\n      Medium: 1d8 Piercing\n      Large: 1d10 Piercing\n      Huge: 1d12 Piercing\n      Gargantuan: 2d8 Piercing\n    Tits: 1d6 Bludgeoning\n    Pussy: 1d8 Bludgeoning\n    Ass: 1d8 Bludgeoning\n    Mouth: 1d4 Bludgeoning\n    Hand: 1d4 Bludgeoning\n    Tail: 1d4 Piercing\n    Tentacle: 1d6 Piercing\n    Pseudopod: 1d6 Bludgeoning", colour = embcol))
 
             #Bid Command
-
             elif (message.content.lower().startswith(str(myprefix) + "bid")):
+                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='COLUMNS').execute().get("values")
 
                 if isbot:
-
                     await message.delete()
 
-                else:
+                elif "setup" in message.content.lower() and "lorekeeper" in str(message.author.roles).lower():
+                    for a in range(len(message.content.split(" ", 1)[1].split("|"))):
+                        bidstock.append(message.content.split(" ", 1)[1].split("|")[a])
+                        bidprice.append(0)
+                        bidders.append("")
+                    global bidthread
+                    bidthreadseed = await message.channel.send(embed = discord.Embed(title = "Bidding is open!", description = "This weekend's ~~slaves~~ *wares* are:\n" + "\n".join(bidstock), colour = embcol))
+                    bidthread = await bidthreadseed.create_thread(name = "Bids")
 
-                    bidchannel = 1010566688326045797
+                elif "results" in message.content.lower():
+                    bidsummary = []
+                    auctiontot = 0
+                    for c in range(len(bidstock)):
+                        if bidders[c] != "":
+                            bidsummary.append(bidstock[c] + ": " + str(bidprice[c]) + dezzieemj + ", " + bidders[c].name)
+                            auctiontot += bidprice[c]
+                        else:
+                            bidsummary.append(bidstock[c] + ": No bids yet")
+                    await message.channel.send(embed = discord.Embed(title = "Current bids for this weekend's auctions", description = "\n".join(bidsummary) + "\n\nIn total, " + str(auctiontot) + " is being spent at this auction.",  colour = embcol))
 
-                    #bidlatest = await client.get_channel(bidchannel).history(limit=1, oldest_first=True).flatten()
-                    bidlatest = [joinedMessages async for joinedMessages in client.get_channel(bidchannel).history(limit=1, oldest_first=True).flatten()] #Fix for pebblehost Await issue
-
-                    bids = bidlatest[0].content.split("\n")
-
-                    prevbids = []
-
-                    for a in range(len(bids)):
-
-                        if str(message.content.split(" ")[1]) in bids[a]:
-
+                elif "end" in message.content.lower() and "lorekeeper" in str(message.author.roles).lower():
+                    bidtotal = sum(bidprice)
+                    bidsfinal = []
+                    bidwinners = []
+                    for d in range(len(bidstock)):
+                        if str(bidders[d]) in str(bidwinners):
                             try:
-                                
-                                if int(message.content.split(" ")[2]) > int(bids[a].split(" | ")[2]):
-
-                                    bids[a] = str(bids[a].split(" | ")[0]) + " | " + str(message.author.name) + " | " + str(message.content.split(" ")[2])
-
-                                    await message.channel.send(message.author.name + " has bid " + str(message.content.split(" ")[2]) + dezzieemj + " on " + str(message.channel))
-
-                                else:
-
-                                    await message.channel.send("Your bid is too low, the current bid is: " + str(bids[a].split(" | ")[2]) + dezzieemj)
-
-                            except IndexError:
-
-                                await message.channel.send("Incorrect format. Use %bid name amount.")
-
+                                bidsfinal[bidwinners.index(bidders[d])] += bidprice[d]
                             except ValueError:
+                                pass
+                        else:
+                            bidwinners.append(bidders[d])
+                            bidsfinal.append(bidprice[d]) 
+                    bidstatement = []
 
-                                await message.channel.send(message.content.split(" ")[2] + " is not an integer. Use %bid name amount.")
+                    indexes = []
+                    newbal = []
+                    balances = []
 
-                        if not "setup" in bids[a]:
+                    for e in range(len(bidsfinal)):
+                        indexes.append(economydata[0].index(str(bidwinners[e].name) + "#" + bidwinners[e].discriminator))
+                        newbal.append(int(economydata[1][economydata[0].index(str(bidwinners[e].name) + "#" + str(bidwinners[e].discriminator))]) - int(bidsfinal[e]))
+                        bidstatement.append(str(bidwinners[e]) + ": " + str(bidsfinal[e]))
 
-                            prevbids.append(bids[a])
-
-                    if ("lorekeeper" in str(message.author.roles).lower() or message.author.name == "C_allum") and "set" in message.content:
-
-                        prevbids.append(str((message.content.split(" ")[1]) + " | No Bids Yet | " + "0"))
-
-                        await message.delete()
-
-                    try:
+                    for f in range(max(indexes)+1):
+                        if f in indexes:
+                            balances.append(newbal[indexes.index(f)])
+                        else:
+                            balances.append(economydata[1][f])
                         
-                        await bidlatest[0].edit("\n".join(prevbids))
+                    sheet.values().update(spreadsheetId = EconSheet, range = str("B1:B" + str(max(indexes)+1)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[balances])).execute()
+                    await message.channel.send(embed = discord.Embed(title = "Bidding concluded", description = "The following dezzies have been removed:\n\n" + "\n".join(bidstatement), colour = embcol))
 
-                    except discord.errors.Forbidden:
+                elif "reset" in message.content.lower() and "lorekeeper" in str(message.author.roles).lower():
+                    if len(message.content.split(" ")) > 2:
+                        bidtarget = " ".join(message.content.split(" ")[1:])
+                        try:
+                            if bidtarget.lower() in str(bidstock).lower():
+                                for b in range(len(bidstock)):
+                                    if bidtarget.lower() in bidstock[b].lower():
+                                        slaveindex = b
+                                        break
+                                await message.channel.send(embed = discord.Embed(title = "Reset successful!", description = "You have reset the bid for " + bidstock[slaveindex], colour = embcol))
+                                bidders[slaveindex] = ""
+                                bidprice[slaveindex] = 0
+                                await bidthread.send(message.author.name + " has reset the bid for " + bidstock[slaveindex])
 
-                        await bidlatest[0].delete()
+                            else:
+                                await message.channel.send(embed = discord.Embed(title = "Could not find a slave of that name.", description = "Current slaves for sale are:\n\n" + "\n".join(bidstock), colour = embcol))
 
-                        await client.get_channel(bidchannel).send("\n".join(prevbids))            
+                        except ValueError:
+                            await message.channel.send(embed = discord.Embed(title = "The price you bid needs to be an integer  ", description = "", colour = embcol))
+                    
+                    else:
+                        await message.channel.send(embed = discord.Embed(title = "You didn't format that correctly.", description = "It needs to be `%bid reset slavename`.", colour = embcol))
+                
+                elif "set" in message.content.lower() and "lorekeeper" in str(message.author.roles).lower():
+                    bidsections = message.content.split(" ", 1)[1].split("|")
+                    try:
+                        if bidsections[0].lower() in str(bidstock).lower():
+                            for b in range(len(bidstock)):
+                                if bidsections[0].lower() in bidstock[b].lower():
+                                    slaveindex = b
+                                    bidders[b] = get(client.get_all_members(), id=int(bidsections[1]))
+                                    bidprice[b] = int(bidsections[2])
+                                    break
+                        else:
+                            bidstock.append(bidsections[0])
+                            biduser = get(client.get_all_members(), id=int(bidsections[1]))
+                            bidders.append(biduser)
+                            bidprice.append(int(bidsections[2]))
+                            slaveindex = -1
+
+                        await message.channel.send(embed = discord.Embed(title = "Success!", description = "You have set the bid for " + str(bidstock[slaveindex]) + " to " + str(bidprice[slaveindex]) + " bid by " + str(bidders[slaveindex]), colour = embcol))
+
+                    except ValueError:
+                        await message.channel.send(embed = discord.Embed(title = "The price you bid needs to be an integer  ", description = "", colour = embcol))
+
+                elif "thread" in message.content.lower() and "lorekeeper" in str(message.author.roles).lower():
+                    bidthread = message.channel
+                    await message.channel.send("Bidding Thread Set")
+
+                else:
+                    if len(message.content.split(" ")) >= 3:
+                        bidtarget = " ".join(message.content.split(" ")[1:-1])
+                        try:
+                            bidamount = int(message.content.split(" ")[-1])
+                            bidattempt = bidamount
+                            if message.author.name in str(bidders):
+                                for e in range(len(bidstock)):
+                                    if bidders[e] == message.author:
+                                        bidattempt += bidprice[e]
+
+                            if bidtarget.lower() in str(bidstock).lower():
+                                for b in range(len(bidstock)):
+                                    if bidtarget.lower() in bidstock[b].lower():
+                                        slaveindex = b
+                                        break
+                                if bidamount <= bidprice[slaveindex]:
+                                    await message.channel.send(embed = discord.Embed(title = "You need to bid more than that!", description = "The current bid for " + bidstock[slaveindex] + " is " + str(bidprice[slaveindex]) + dezzieemj + ", bid by " + bidders[slaveindex].name, colour = embcol))
+                                elif bidattempt > int(economydata[1][economydata[0].index(str(message.author.name) + "#" + str(message.author.discriminator))]):
+                                    await message.channel.send(embed = discord.Embed(title = "You can't bid that much.", description = "You only have " + economydata[1][economydata[0].index(str(message.author.name) + "#" + message.author.discriminator)] + dezzieemj + ".", colour = embcol))
+                                elif bidamount < 1000:
+                                    await message.channel.send(embed = discord.Embed(title = "The minimum bid is 1000" + dezzieemj, description = "Please increase your bid.", colour = embcol))
+                                else:
+                                    await message.channel.send(embed = discord.Embed(title = "Bid successful!", description = "You have bid " + str(bidamount) + dezzieemj + " for " + bidstock[slaveindex], colour = embcol))
+                                    bidders[slaveindex] = message.author
+                                    bidprice[slaveindex] = bidamount
+                                    await bidthread.send(message.author.name + " has bid " + str(bidamount) + dezzieemj + " on " + bidstock[slaveindex])
+
+                            else:
+                                await message.channel.send(embed = discord.Embed(title = "Could not find a slave of that name.", description = "Current slaves for sale are:\n\n" + "\n".join(bidstock), colour = embcol))
+
+                        except ValueError:
+                            await message.channel.send(embed = discord.Embed(title = "The price you bid needs to be an integer  ", description = "", colour = embcol))
+
+                    else:
+                        await message.channel.send(embed = discord.Embed(title = "You didn't format that correctly.", description = "It needs to be `%bid slavename amount`.", colour = embcol))
 
             #Easter egg hunt
+            elif message.content.lower().startswith(str(myprefix) + "egg"):
 
-            elif not 1:# (message.content.lower().startswith(str(myprefix) + "egg") and "lorekeeper" in str(message.author.roles).lower()):
+                if "res" in message.content.lower() or not "lorekeeper" in str(message.author.roles).lower():
+                    egglist = []
+                    for a in range(len(eggfinders)):
+                        findersort = [x for _,x in sorted(zip(eggsfound,eggfinders))]
+                        egglist.append(findersort[a] + ": " + str(sorted(eggsfound)[a]))
+                    egglist.reverse()
+                    await message.channel.send(embed = discord.Embed(title = "Mimic Eggs Found", description = "\n".join(egglist), colour = embcol))
 
-                # room = random.choice([845498061459554334, 845498746870693898, 861688038928023583, 838821621913223229, 955144068386664479, 951666605568458752, 951666822636273674, 831906482408259604, 832770478942060574, 832842032073670676, 837112469356019742, 837114447758884885, 887184341875183626, 904403930505678879, 861686321659248640])
+                elif "set" in message.content.lower() or not "lorekeeper" in str(message.author.roles).lower():
+                    eggname = " ".join(message.content.split(" ")[2:-1])
+                    eggno = message.content.split(" ")[-1]
+                    if eggname in str(eggfinders):
+                        eggsfound[eggfinders.index(eggname)] = int(eggno)
+                        egglist = []
+                        for a in range(len(eggfinders)):
+                            findersort = [x for _,x in sorted(zip(eggsfound,eggfinders))]
+                            egglist.append(findersort[a] + ": " + str(sorted(eggsfound)[a]))
+                        egglist.reverse()
+                        await message.channel.send(embed = discord.Embed(title = "Mimic Eggs Found", description = "\n".join(egglist), colour = embcol))
+                    else:
+                        eggfinders.append(eggname)
+                        eggsfound.append(int(eggno))
+                        egglist = []
+                        for a in range(len(eggfinders)):
+                            findersort = [x for _,x in sorted(zip(eggsfound,eggfinders))]
+                            egglist.append(findersort[a] + ": " + str(sorted(eggsfound)[a]))
+                        egglist.reverse()
+                        await message.channel.send(embed = discord.Embed(title = "Mimic Eggs Found", description = "\n".join(egglist), colour = embcol))
 
-                # await message.channel.send(embed = discord.Embed(description = message.author.name + " hid an egg!", colour = embcol))     
-
-                # time = random.randint(30, 300)
-
-                # eggemb = discord.Embed(title = random.choice(["An Egg has appeared!", "You have found an egg!", "The Easter Bunny appears to have been here!", "Is that... an egg?", "An egg!", "You found an egg!"]), description = "Our bunny seems to have left an egg here for you! Click the reaction to find it before this message disappears in " + str(time) + " seconds! That's <t:" + str(int(datetime.timestamp(message.created_at)) + int(time)) + ":R>!", colour = embcol)
-
-                # eggemb.set_thumbnail(url = "https://cdn.discordapp.com/attachments/832435243117445131/964197891935731833/0be8e65e-b68e-49d1-a2e5-c316e86c9b18.gif")
-
-                # eggmess = await client.get_channel(room).send(embed = eggemb)
-
-                # await message.delete()
-
-                # await eggmess.add_reaction("<:EasterEgg:964636527432978482>")
-
-                # reacters = []
-
-                # while True:
-
-                #     if int(datetime.timestamp(datetime.now())) > (int(datetime.timestamp(message.created_at)) + int(time)):
-
-                #         break
-
-                #     try:
-
-                #         reaction, user = await client.wait_for("reaction_add", timeout = 5)
-
-                #         if str(reaction.emoji) == "<:EasterEgg:964636527432978482>":
-
-                #             reacters.append(str(user.name))
-
-                #     except asyncio.exceptions.TimeoutError:
-
-                #         pass
-
-                # await eggmess.delete()
-
-                # await client.get_channel(logchannel).send(message.author.name + " sent an egg. It was found by:\n\n" + "\n".join(reacters))
-
-                pass
+                else:
+                    global eggtimer
+                    eggtimer = message.content.split(" ")[1]
+                    global egglimit
+                    egglimit = message.content.split(" ")[2]
+                    global eggwaittimer
+                    try:
+                        eggwaittimer = message.content.split(" ")[3]
+                    except IndexError:
+                        eggwaittimer = 300
+                    await message.channel.send("Egg timer has been set to " + str(eggtimer) + " seconds. Each egg can be collected by " + str(egglimit) + " players. Eggs will timeout after " + str(eggwaittimer) + " seconds per person allowed to collect them, in this case, " + str(int(eggwaittimer) * int(egglimit)) + " seconds, or " + str((int(eggwaittimer) * int(egglimit))/60) + " minutes.")
 
             #Scenes Command
-
             elif message.content.lower().startswith(str(myprefix) + "scenes"):
 
                 await message.delete()
 
                 waitmess = await message.channel.send("We are processing your request now.")
 
-                econdata = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ2000", majorDimension = 'ROWS').execute().get("values")
+                econdata = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ4000", majorDimension = 'ROWS').execute().get("values")
 
                 row = 0
 
                 for n in range(math.ceil(len(econdata)/4)):
 
-                    r = 4 * n 
+                    r = 4 * n
 
                     if str(message.author) in econdata[r][0]:
 
                         if not econdata[r+2][0] == "":
-                            
+
                             if len(econdata[r+2][0]) == 1:
 
                                 prevscenes = [econdata[r+2][0]]
@@ -2104,24 +2297,24 @@ async def on_message(message):
                                             if (not "remove" in message.content) and (not "notif" in message.content):
 
                                                 try:
-                                                    
+
                                                     #last = await client.get_channel(sceneno).history(limit=1, oldest_first=False).flatten()
                                                     last = [joinedMessages async for joinedMessages in client.get_channel(sceneno).history(limit=1, oldest_first=False)] #Fix for pebblehost Await issue
-                                                   
+
                                                     prevlist.append(str("`" + str(a+1) + "` " + str(prevs[a]) + " - Last message by: " + last[0].author.name))
 
                                                 except AttributeError:
 
-                                                    prevname = "" 
+                                                    prevname = ""
 
                                                     prevlist.append(str("`" + str(a+1) + "` " + str(prevs[a]) + " - Thread archived or channel deleted."))
 
                                             else:
-                                                
+
                                                 prevlist.append(str("`" + str(a+1) + "` " + str(prevs[a])))
 
                                                 prevscenelist.append(str(prevs[a]))
-                                                
+
 
                                         except ValueError:
 
@@ -2135,8 +2328,8 @@ async def on_message(message):
 
                                     scenetemp = await message.channel.send(embed = discord.Embed(title = "Type the number of the scene to stop tracking", description= "\n".join(prevlist), colour = embcol))
 
-                                    try: 
-                                        
+                                    try:
+
                                         scenerechoice = await client.wait_for('message', timeout = 30, check = check(message.author))
 
                                         await scenerechoice.delete()
@@ -2189,7 +2382,7 @@ async def on_message(message):
                                                 splitScene [-1]= " Notifications:Disabled"
                                                 prevs[scenenum] = "".join(splitScene)
 
-                                            
+
                                             elif " on" in message.content and "Disabled" in trackedStatus:
                                                 splitScene = prevs[scenenum].rsplit(" ", 1)
                                                 splitScene [-1]= " Notifications:Enabled"
@@ -2201,14 +2394,14 @@ async def on_message(message):
 
                                                 elif " on" in message.content:
                                                     prevs[scenenum] = prevs[scenenum] + (" Notifications:Enabled")
-                                                else: message.channel.send("Include `on` or `off` at the end of this command to specify how you want all scenes toggled.")                                            
-                                            
+                                                else: message.channel.send("Include `on` or `off` at the end of this command to specify how you want all scenes toggled.")
+
                                         except TypeError:
                                             await message.channel.send("Value not recognised")
                                     #Save new scenes field to sheet.
                                     if len(prevs) > 1:
                                         sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(4*n+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[["|".join(prevs)]])).execute()
-                                                
+
                                     elif len(prevs) == 0:
                                         sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(4*n+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[""]])).execute()
 
@@ -2223,10 +2416,10 @@ async def on_message(message):
                                     #Make user choose the scene to toggle
                                     scenetemp = await message.channel.send(embed = discord.Embed(title = "Type the number of the scene to toggle notifications for", description= "\n".join(prevlist), colour = embcol))
 
-                                    try: 
+                                    try:
                                         scenerechoice = await client.wait_for('message', timeout = 30, check = check(message.author))
                                         scenenum = int(scenerechoice.content) - 1
-                                        
+
                                         try:
                                             trackedStatus = prevs[scenenum].split(" ")[-1]
                                             if trackedStatus == "Notifications:Enabled":
@@ -2235,7 +2428,7 @@ async def on_message(message):
                                                 prevs[scenenum] = "".join(splitScene)
                                                 await message.channel.send(embed = discord.Embed(title = "Scene notifications disabled", description = "The notfication function for the requested scene has been toggled. It is now disabled and we will not notify you of new messages for that scene.", colour = embcol))
 
-                                            
+
                                             elif trackedStatus == "Notifications:Disabled":
                                                 splitScene = prevs[scenenum].rsplit(" ", 1)
                                                 splitScene [-1]= " Notifications:Enabled"
@@ -2245,11 +2438,11 @@ async def on_message(message):
                                             else:
                                                 prevs[scenenum] = prevs[scenenum] + (" Notifications:Enabled")
                                                 await message.channel.send(embed = discord.Embed(title = "Scene notifications enabled", description = "The notfication function for the requested scene has been toggled. It is now enabled and we will notify you of new messages for that scene.", colour = embcol))
-                                            
+
                                             #Save new scenes field to sheet.
                                             if len(prevs) > 1:
                                                 sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(4*n+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[["|".join(prevs)]])).execute()
-                                                
+
                                             elif len(prevs) == 0:
                                                 sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(4*n+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[""]])).execute()
 
@@ -2271,32 +2464,29 @@ async def on_message(message):
             #The Economy
 
             #Buy Item
-
             elif message.content.lower().startswith(str(myprefix) + "buy") or message.content.lower().startswith("$buy"):
-                
+
                 await EconomyCommands.buyitem(message)
 
             #Sell Item
-
             elif message.content.lower().startswith(str(myprefix) + "sell") or message.content.lower().startswith("$sell"):
-                
+
                 await EconomyCommands.sellitem(message)
 
             #Give item
             elif message.content.lower().startswith(str(myprefix) + "giveitem") or message.content.lower().startswith("$giveitem"):
-                
+
                 await EconomyCommands.giveitem(message)
 
             #Add item
             elif message.content.lower().startswith(str(myprefix) + "additem") or message.content.lower().startswith("$additem") and "lorekeeper" in str(message.author.roles).lower():
-                
+
                 await EconomyCommands.additem(message)
 
             #Use Item
-
             elif message.content.lower().startswith(str(myprefix) + "use") or message.content.lower().startswith("$use"):
 
-                userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ2000", majorDimension = 'ROWS').execute().get("values")
+                userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ4000", majorDimension = 'ROWS').execute().get("values")
 
                 shopdata = sheet.values().get(spreadsheetId = shopsheet, range = "A1:J1000", majorDimension = 'COLUMNS').execute().get("values")
 
@@ -2312,7 +2502,7 @@ async def on_message(message):
 
                 for n in range(math.ceil(len(userinvs)/4)):
 
-                    r = 4 * n 
+                    r = 4 * n
 
                     if str(message.author) in userinvs[r][0]:
 
@@ -2339,7 +2529,7 @@ async def on_message(message):
                                                     row = a
 
                                                 break
-                                            
+
                                             else:
 
                                                 usequant = 0
@@ -2421,10 +2611,9 @@ async def on_message(message):
                         break
 
             #Work Command
-
             elif message.content.lower().startswith(str(myprefix) + "work") or message.content.lower().startswith("$work"):
 
-                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ2000", majorDimension='ROWS').execute().get("values")
+                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
                 for a in range(math.floor(len(economydata)/4)):
                     b = a * 4 + 5
                     workreward = random.randint(20,250)
@@ -2477,7 +2666,7 @@ async def on_message(message):
                                     if str(workdiff) == "day" or not "days" in str(workdiff):
                                         paymess = "\n\nYou also collect your role-based income for today, from your work as " + paylist + ": " + str(pay)+ dezzieemj
                                         newtot += pay
-                                    
+
                                     else:
                                         if int(str(workdiff).split(" day")[0]) > 4:
                                             days = 4
@@ -2499,7 +2688,7 @@ async def on_message(message):
                                     newtot = newtot + workreward
                                 else:
                                     critresp = "\n\nYou rolled a " + str(crit) + ", which doesn't do anything special."
-                                
+
                                 if workdiff < 172800:
                                     try:
                                         streakmess = "\n\nYou now have a " + str(int(economydata[b+3][1]) + 1) + " day streak!"
@@ -2548,10 +2737,9 @@ async def on_message(message):
                         pass
 
             #Slut Command
-
             elif message.content.lower().startswith(str(myprefix) + "slut") or message.content.lower().startswith("$slut"):
 
-                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ2000", majorDimension='ROWS').execute().get("values")
+                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
                 for a in range(math.floor(len(economydata)/4)):
 
@@ -2564,7 +2752,7 @@ async def on_message(message):
                     if str(message.author) in str(economydata[b][0]):
 
                         try:
-                            
+
                             slutdiff = int(datetime.timestamp(datetime.now())) - int(economydata[b+2][1])
 
                         except ValueError:
@@ -2591,7 +2779,7 @@ async def on_message(message):
 
                                 slutresp = str(random.choice(sluthooks[0])).replace("[amount]", str(slutreward) + dezzieemj)
 
-                                balresp = "\n\n---------------------------------------------------------\n\n" + message.author.name + " now has " + str(newtot) + dezzieemj 
+                                balresp = "\n\n---------------------------------------------------------\n\n" + message.author.name + " now has " + str(newtot) + dezzieemj
 
                                 await message.channel.send(embed = discord.Embed(title = message.author.name + " slutted!", description = slutresp + balresp, colour = embcol))
 
@@ -2611,7 +2799,7 @@ async def on_message(message):
 
                                 slutresp = str(random.choice(sluthooks[1])).replace("[amount]", str(slutfine) + dezzieemj)
 
-                                balresp = "\n\n---------------------------------------------------------\n\n" + message.author.name + " now has " + str(newtot) + dezzieemj 
+                                balresp = "\n\n---------------------------------------------------------\n\n" + message.author.name + " now has " + str(newtot) + dezzieemj
 
                                 await message.channel.send(embed = discord.Embed(title = message.author.name + " slutted!", description = slutresp + balresp, colour = embcol))
 
@@ -2624,7 +2812,7 @@ async def on_message(message):
                                 sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(row+2)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[str(datetime.timestamp(datetime.now())).split(".")[0]]])).execute()
 
                         else:
-                                
+
                             await message.channel.send(embed = discord.Embed(title = message.author.name + " cannot slut at this time!", description = "You last slutted at <t:" + str(economydata[b+2][1]) + ">.\n The slut command can only be used once every six hours.\n\n Try again " + "<t:" + str(int(economydata[b+2][1]) + 21600) + ":R>", colour = embcol))
 
                             await message.delete()
@@ -2632,22 +2820,19 @@ async def on_message(message):
                         break
 
             #Slit
-
             elif message.content.lower().startswith(str(myprefix) + "slit"):
 
                 await message.channel.send(embed = discord.Embed(title = "You found a slit.", description = "Don't feel bad, it's a common typo. Try %slut instead?", colour = embcol))
 
             #Slur
-
             elif message.content.lower().startswith(str(myprefix) + "slur"):
 
-                await message.channel.send(embed = discord.Embed(title = "Oh-kay, we're sluhrin' ouhr wohrds...", description = "Mahybe try %slut instead?", colour = embcol))              
+                await message.channel.send(embed = discord.Embed(title = "Oh-kay, we're sluhrin' ouhr wohrds...", description = "Mahybe try %slut instead?", colour = embcol))
 
             #Money Command
-
             elif message.content.lower().startswith(str(myprefix) + "money") or message.content.lower().startswith("$money") or message.content.lower().startswith(str(myprefix) + "wallet") or message.content.lower().startswith("$wallet"):
 
-                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ2000", majorDimension='ROWS').execute().get("values")
+                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
                 balances = []
 
@@ -2669,7 +2854,7 @@ async def on_message(message):
 
                     b = a * 4 + 5
 
-                    if str(message.author) in str(economydata[b][0]):
+                    if str(message.author.name + "#" + message.author.discriminator) in str(economydata[b][0]):
 
                         for c in range(len(balances)):
 
@@ -2700,10 +2885,9 @@ async def on_message(message):
                         break
 
             #Leaderboard Command
-
             elif message.content.lower().startswith(str(myprefix) + "leaderboard") or message.content.lower().startswith("$leaderboard"):
 
-                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ2000", majorDimension='ROWS').execute().get("values")
+                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
                 balancesobj = []
 
@@ -2752,7 +2936,6 @@ async def on_message(message):
                 await message.delete()
 
             #Deposit Command
-
             elif message.content.lower().startswith(str(myprefix) + "deposit") or message.content.lower().startswith("$deposit"):
 
                 await message.delete()
@@ -2760,10 +2943,9 @@ async def on_message(message):
                 await message.channel.send(embed = discord.Embed(title = random.choice(["We don't want that sort of deposit!", "You don't know how to use a gloryhole, do you?", "No tips needed!"]), description = "We don't use a bank on this server, so there's nowhere to deposit dezzies to. They've all been returned to you.", colour = embcol))
 
             #Give Money (player to player)
-
             elif message.content.lower().startswith(str(myprefix) + "give-money") or message.content.lower().startswith(str(myprefix) + "give-dezzies") or message.content.lower().startswith("$give-money"):
 
-                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ2000", majorDimension='ROWS').execute().get("values")
+                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
                 reciprow = ""
 
@@ -2780,9 +2962,9 @@ async def on_message(message):
                     await message.channel.send(embed = discord.Embed(title = "Callum doesn't need your money!", description = "You should keep it, he has enough already.", colour = embcol))
 
                 else:
-                    
+
                     try:
-                        
+
                         giveamount = int(message.content.split(" ")[2])
 
                     except ValueError:
@@ -2842,7 +3024,7 @@ async def on_message(message):
                             recipnewtot = int(economydata[reciprow-1][1]) + int(giveamount)
 
                             sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipnewtot]])).execute()
-                    
+
                             TransactionsDatabaseInterface.addTransaction(targname + "#" + str(target.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.Give, int(giveamount))
 
                             sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(giverrow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[givernewtot]])).execute()
@@ -2854,10 +3036,9 @@ async def on_message(message):
                             await message.delete()
 
             #Add Money (moderator to player)
-
             elif (message.content.lower().startswith(str(myprefix) + "add-money") or message.content.lower().startswith(str(myprefix) + "add-dezzies") or message.content.lower().startswith("$add-money")) and not isbot:
 
-                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ2000", majorDimension='ROWS').execute().get("values")
+                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
                 reciprow = ""
 
@@ -2892,7 +3073,7 @@ async def on_message(message):
                 else:
 
                     try:
-                        
+
                         giveamount = int(message.content.split(" ")[2])
 
                     except ValueError:
@@ -2907,13 +3088,12 @@ async def on_message(message):
 
                     await message.channel.send(embed=discord.Embed(title = str(giveamount) + dezzieemj + " has been given to " + targname, description = targname + " now has " + str(recipnewtot) + dezzieemj, colour = embcol))
 
-                    await message.delete()            
+                    await message.delete()
 
             #Remove Money (moderator to player or self)
-
             elif (message.content.lower().startswith(str(myprefix) + "remove-money") or message.content.lower().startswith(str(myprefix) + "remove-dezzies") or message.content.lower().startswith(str(myprefix) + "take-money") or message.content.lower().startswith(str(myprefix) + "take-dezzies") or message.content.lower().startswith(str(myprefix) + "spend") or message.content.lower().startswith("$add-money")) and not isbot:
 
-                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ2000", majorDimension='ROWS').execute().get("values")
+                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
                 reciprow = ""
 
@@ -2946,13 +3126,13 @@ async def on_message(message):
                 if (not "moderator" in str(authroles).lower() and not "lorekeeper" in str(authroles).lower()) or not "@" in message.content:
 
                     try:
-                        
+
                         giveamount = int(message.content.split(" ")[1].strip("-"))
 
                     except ValueError:
 
                         try:
-                            
+
                             giveamount = int(message.content.split(" ")[2].strip("-"))
 
                         except ValueError:
@@ -2984,7 +3164,7 @@ async def on_message(message):
                 else:
 
                     try:
-                        
+
                         giveamount = int(message.content.split(" ")[2])
 
                     except ValueError:
@@ -3008,7 +3188,6 @@ async def on_message(message):
                     await message.delete()
 
             #Item Info
-
             elif message.content.lower().startswith(str(myprefix) + "item") or message.content.lower().startswith(str(myprefix) + "info") or message.content.lower().startswith("$item"):
 
                 shopdata = sheet.values().get(spreadsheetId = shopsheet, range = "A1:J1000", majorDimension = 'COLUMNS').execute().get("values")
@@ -3016,7 +3195,7 @@ async def on_message(message):
                 searchterm = "SearchFailed"
 
                 if message.content.split(" ")[1].lower() in str(shopdata[1]).lower():
-        
+
                     itcount = str(shopdata[1]).lower().count(message.content.split(" ", 1)[1].lower())
 
                     if itcount == 1:
@@ -3163,7 +3342,7 @@ async def on_message(message):
 
                 if not itfound:
 
-                    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ2000", majorDimension='ROWS').execute().get("values")
+                    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
                     if message.content.split(" ")[1].lower() in str(economydata).lower():
 
@@ -3187,16 +3366,15 @@ async def on_message(message):
 
                                         itfound = 1
 
-                                        break                        
+                                        break
 
-                    else:                    
+                    else:
 
                         await message.channel.send(embed = discord.Embed(title = "Could not find an item matching that name.", description= "Check your spelling, and browse `" + myprefix + "shop <shopname>` to ensure it is there.", colour = embcol))
 
                     await message.delete()
 
             #Inventory
-
             elif message.content.lower().startswith(str(myprefix) + "inventory") or message.content.lower().startswith("$inventory"):
 
                 economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension = 'ROWS').execute().get("values")
@@ -3258,7 +3436,7 @@ async def on_message(message):
                                             itemrow = int(c)
 
                                             break
-                                        
+
                                     if itemrow == "":
 
                                         invlist.append(str(economydata[targrow][b].split("|")[1]) + "x `" + str(economydata[targrow][b].split("|")[0]) + "`")
@@ -3276,7 +3454,7 @@ async def on_message(message):
                                         itemrow = c
 
                                         break
-                                        
+
                                 if itemrow == "":
 
                                     invlist.append(str(economydata[targrow][b].split("|")[1]) + "x `" + str(economydata[targrow][b].split("|")[0]) + "`")
@@ -3317,10 +3495,9 @@ async def on_message(message):
 
                     await message.channel.send(embed = discord.Embed(title = targname + "'s inventory", description = invmessage, colour = embcol))
 
-                    await message.delete()           
-                
-            #Shop Listing
+                    await message.delete()
 
+            #Shop Listing
             elif message.content.lower().startswith(str(myprefix) + "shop"):
 
                 if isbot:
@@ -3339,7 +3516,7 @@ async def on_message(message):
 
                     if " " in message.content:
 
-                        shopnames = ["the-golden-jackal", "venom-ink", "widows-boutique", "sophies-garden", "menagerie-magiks", "the-polished-knob", "moo-mellon-auction", "purrfect-petshop"]
+                        shopnames = ["the-golden-jackal", "venom-ink", "widows-boutique", "sophies-garden", "menagerie-magiks", "the-polished-knob", "moo-mellon-auction", "purrfect-petshop", "black-market", "gobblin-bazzar"]
 
                         for a in range(len(shopnames)):
 
@@ -3352,6 +3529,71 @@ async def on_message(message):
                             else:
 
                                 shopchan = "No shop selected"
+
+                        if shopchan == "the-golden-jackal":
+
+                            shopintro = "Hey, how's it going. You've been to The Jackal before. You know how it goes, you break it, I break you.\n------------------------------------------------------------"
+                            shopcolour = 0xded233
+                            npcthumb = "https://cdn.discordapp.com/attachments/1064988615899365529/1064988616465588334/tumblr_p34e41lrbz1v08ecmo1_1280.jpg"
+
+                        elif shopchan == "venom-ink":
+
+                            shopintro = "Alright there? Don't mind the snakes, they won't bite. I might, but that's another matter\n------------------------------------------------------------"
+                            shopcolour = 0x18cdd3
+                            npcthumb = "https://cdn.discordapp.com/attachments/1064985693601923082/1069656250415067287/token_6.png"
+
+                        elif shopchan == "widows-boutique":
+
+                            shopintro = "Welcome to the Widow's Boutique. Mind your manners, and feel free to look at the displays for something you like.\n------------------------------------------------------------"
+                            shopcolour = 0x222222
+                            npcthumb = "https://cdn.discordapp.com/attachments/1064982322392346645/1064982323503829093/webb_avatar.png"
+
+                        elif shopchan == "sophies-garden":
+
+                            shopintro = "Oh hello, dear. Welcome to my own little garden, Sophie's Garden, might we find you a friend today?\n------------------------------------------------------------"
+                            shopcolour = 0xaed318
+                            npcthumb = "https://cdn.discordapp.com/attachments/1064988177271619785/1064988177741393990/the_mushroom_witch_by_lenleg_dd2iqi8-pre.png"
+
+                        elif shopchan == "menagerie-magiks":
+
+                            shopintro = "Huh, oh, right Sophie told me what to say, one moment. Ahem. Welcome to Menagerie Magiks, I am Runar and may I interest you in something?\n------------------------------------------------------------"
+                            shopcolour = 0x4a97df
+                            npcthumb = "https://cdn.discordapp.com/attachments/1064989250698870935/1069654057872003153/token_1_7.png"
+
+                        elif shopchan == "the-polished-knob":
+
+                            shopintro = "Good day. Feel free to browse. Don't touch, ask first.\n------------------------------------------------------------"
+                            shopcolour = 0x96470c
+                            npcthumb = "https://cdn.discordapp.com/attachments/912758732142837761/921654371903750144/D-9576iWwAAPgcP.jpeg"
+
+                        elif shopchan == "purrfect-petshop":
+
+                            shopintro = "Oh, hey! Welcome. Are you looking for a new friend or companion today?\n------------------------------------------------------------"
+                            shopcolour = 0x96470c
+                            npcthumb = "https://cdn.discordapp.com/attachments/1064993147035324436/1064993147580579921/unknown.png"
+
+                        elif shopchan == "black-market":
+
+                            shopintro = "Yeah... we've got some gear to shift. But you didn't get it from us, you hear?\n------------------------------------------------------------"
+                            shopcolour = 0x96470c
+                            npcthumb = "https://cdn.discordapp.com/attachments/912559434969022534/1085358587703988265/d36mb03-8d1973ea-41ad-4193-8566-9cb508d62344.jpg"
+
+                        elif shopchan == "gobblin-bazzar":
+
+                            #shopintro = "Good day. Feel free to browse. Don't touch, ask first.\n------------------------------------------------------------"
+                            shopcolour = 0x3B0B80
+                            npcthumb = "https://cdn.discordapp.com/attachments/912559434969022534/1085358508314210384/3725ee96-4249-4c32-810c-060b1c9efd83.webp"
+
+                        elif shopchan == "moo-mellon-auction":
+
+                            shopcolour = 0xcccbbb
+                            npcthumb = ""
+
+                        else:
+
+                            shopintro = ""
+                            shopcolour = 0x000000
+                            npcthumb = ""
 
                     else:
 
@@ -3367,63 +3609,20 @@ async def on_message(message):
 
                                 npc = shopdata[5][n]
 
+                            if (len("\n".join(itlist)) + len(shopdata[1][n] + "**\n*" + str(shopdata[2][n]) + "*<:dz:844365871350808606>" + shopdata[0][n] + "  **" + shopdata[1][n] + "**\n*" + str(shopdata[2][n]) + "*<:dz:844365871350808606>")) >= 4000:
+
+                                await message.channel.send(embed = discord.Embed(title = shopdata[3][n].strip("#").replace("-", " ").title(), description = shopintro + "\n" + "\n".join(sorted(itlist)).replace("Bimbonomicon", "The Bimbonomicon").replace("Doctor", "The Doctor").replace("Widow", "The Widow").replace("Tome of Imps", "The Tome of Imps"), colour = shopcolour))
+                                itlist = []
+
                             if "The" in shopdata[1][n]:
 
                                 itlist.append(shopdata[0][n] + "  **" + shopdata[1][n].lstrip("The ").replace("ome of Imps", "Tome of Imps") + "**\n*" + str(shopdata[2][n]) + "*<:dz:844365871350808606>")
 
                             else:
-                            
+
                                 itlist.append(shopdata[0][n] + "  **" + shopdata[1][n] + "**\n*" + str(shopdata[2][n]) + "*<:dz:844365871350808606>")
 
                             shoptit = shopdata[3][n].strip("#").replace("-", " ").title()
-
-                        if npc == "Nubia":
-
-                            shopintro = "Hey, how's it going. You've been to The Jackal before. You know how it goes, you break it, I break you.\n------------------------------------------------------------"
-                            shopcolour = 0xded233
-                            npcthumb = "https://cdn.discordapp.com/attachments/912879579260125184/917863713514590228/Nubia-icon.png"
-
-                        elif npc == "Nessa":
-
-                            shopintro = "Alright there? Don't mind the snakes, they won't bite. I might, but that's another matter\n------------------------------------------------------------"
-                            shopcolour = 0x18cdd3
-                            npcthumb = "https://cdn.discordapp.com/attachments/912882341091876915/917863626151456818/Nessa.png"
-
-                        elif npc == "Madame Webb":
-
-                            shopintro = "Welcome to the Widow's Boutique. Mind your manners, and feel free to look at the displays for something you like.\n------------------------------------------------------------"
-                            shopcolour = 0x222222
-                            npcthumb = "https://cdn.discordapp.com/attachments/917870118342647808/917878405473656862/webb_avatar.png"
-
-                        elif npc == "Sophie":
-
-                            shopintro = "Oh hello, dear. Welcome to my own little garden, Sophie's Garden, might we find you a friend today?\n------------------------------------------------------------"
-                            shopcolour = 0xaed318
-                            npcthumb = "https://cdn.discordapp.com/attachments/918575985669062727/919379824986976356/sophie_avatar.png"
-
-                        elif npc == "Runar":
-
-                            shopintro = "Huh, oh, right Sophie told me what to say, one moment. Ahem. Welcome to Menagerie Magiks, I am Runar and may I interest you in something?\n------------------------------------------------------------"
-                            shopcolour = 0x4a97df
-                            npcthumb = "https://cdn.discordapp.com/attachments/912759640008298577/926340769344798730/RunarToken.png"
-                        
-                        elif npc == "Voivode":
-
-                            shopintro = "Good day. Feel free to browse. Don't touch, ask first.\n------------------------------------------------------------"
-                            shopcolour = 0x96470c
-                            npcthumb = "https://cdn.discordapp.com/attachments/912758732142837761/921654371903750144/D-9576iWwAAPgcP.jpeg"
-
-                        elif npc == "Amelia":
-
-                            shopintro = "Oh hello, dear. Welcome to my own little garden, Sophie's Garden, might we find you a friend today?\n------------------------------------------------------------"
-                            shopcolour = 0x9ac7fc
-                            npcthumb = ""
-
-                        else:
-
-                            shopintro = ""
-                            shopcolour = 0x000000
-                            npcthumb = ""
 
                     print(message.author.name + " summoned a shop")
 
@@ -3448,7 +3647,6 @@ async def on_message(message):
                         await message.delete()
 
             #Runar's Inventory
-
             elif message.content.lower().startswith(str(myprefix) + "spellrotation") and "lorekeeper" in str(message.author.roles).lower():
 
                 cantrips = ["Acid Splash (Conjuration)","Chill Touch (Necromancy)","Dancing Lights (Evocation)","Druidcraft (Transmutation)","Eldritch Blast (Evocation)","Fire Bolt (Evocation)","Guidance (Divination)","Light (Evocation)","Mage Hand (Conjuration)","Mending (Transmutation)","Message (Transmutation)","Minor Illusion (Illusion)","Poison Spray (Conjuration)","Prestidigitation (Transmutation)","Produce Flame (Conjuration)","Ray of Frost (Evocation)","Resistance (Abjuration)","Sacred Flame (Evocation)","Shillelagh (Transmutation)","Shocking Grasp (Evocation)","Spare the Dying (Necromancy)","Thaumaturgy (Transmutation)","True Strike (Divination)","Vicious Mockery (Enchantment)"]
@@ -3516,7 +3714,7 @@ async def on_message(message):
                 for a in range(len(spell2s)):
 
                     spellsin.append(str(spell2s[a]) + str(" " + str(int(random.randint(2,20)*50 + random.randint(21,121))) + dezzieemj))
-                    
+
                 spellsin.append("\n**Third Level Spells**")
 
                 for a in range(len(spell3s)):
@@ -3546,13 +3744,12 @@ async def on_message(message):
                 for a in range(len(spell7s)):
 
                     spellsin.append(str(spell7s[a]) + str(" " + str(int(random.randint(2,5)*500 + random.randint(2001,2101))) + dezzieemj))
-                
+
                 spelllist = "Runar has the following spellscrolls available right now:\n\n" + "\n".join(spellsin) + "\n\nCustom scribed scrolls can also be requested, at the following prices:\n\nCantrips: 24 " + dezzieemj + ", 1 day to make\n1st Levels: 423" + dezzieemj + ", 1 day to make\n2nd Levels: 445" + dezzieemj + ", 3 days to make\n3rd Levels: 1350" + dezzieemj + ", 1 week to make\n4th Levels: 1550" + dezzieemj + ", 2 weeks to make\n5th Levels: 1800"  + dezzieemj + ", 4 weeks to make\n6th Levels: 6100" + dezzieemj + ", 8 weeks to make\n7th Levels: 7100" + dezzieemj + ", 16 weeks to make."
 
                 await message.channel.send(embed = discord.Embed(title = "Spells", description = spelllist, colour = embcol))
 
             #Lorekeeper Ping
-
             elif message.channel.id == 917235652947488808 or message.channel.id == 917235695398039583 or message.channel.id == 917236137234399233 or message.channel.id == 917236902921388042 or message.channel.id == 917239168969621515 or message.channel.id == 917565100553031732:
 
                 if not isbot and not message.content.startswith("%") and not message.content.startswith("$"):
@@ -3603,73 +3800,116 @@ async def on_message(message):
 
                         print("Lorekeepers were pinged to play shops")
 
-            elif message.channel.category.name == "﴿──﴾ 𝙳𝚊𝚗𝚐𝚎𝚛𝚘𝚞𝚜 𝙳𝚎𝚙𝚝𝚑𝚜 ﴿──﴾" and not isbot:
+            elif message.channel.category.name == "﴿──﴾ 𝙳𝚊𝚗𝚐𝚎𝚛𝚘𝚞𝚜 𝙳𝚎𝚙𝚝𝚑𝚜 ﴿──﴾" or message.channel.name == "💎the-gobblin-bazaar💎" or message.channel.category.name == "﴿───﴾ 𝚂𝚊𝚏𝚎 𝙿𝚊𝚜𝚜𝚊𝚐𝚎𝚜 ﴿───﴾":
 
-                if message.channel.type == discord.ChannelType.text and random.randint(1,200) == 1 and not "lorekeeper" in str(authroles).lower():
-                    room = "<#" + str(message.channel.id) + ">"
-                    limits = await KinklistCommands.getLimits(str(message.author.name) + "#" + str(message.author.discriminator))
-                    encounters = sheet.values().get(spreadsheetId = encountersheet, range = "A2:R50", majorDimension='COLUMNS').execute().get("values")
-                                        
-                    if message.channel.name == "trapped-corridors":
-                        columnadd = 2
-                    elif message.channel.name == "moaning-hallways":
-                        columnadd = 4
-                    elif message.channel.name == "unlicensed-fights":
-                        columnadd = 6
-                    elif message.channel.name == "sparring-pits":
-                        columnadd = 8
-                    elif message.channel.name == "kobold-dens":
-                        columnadd = 10
-                    elif message.channel.name == "wild-gardens":
-                        columnadd = 12
-                    elif message.channel.name == "twilight-groves":
-                        columnadd = 14
-                    elif message.channel.name == "sirens-grotto":
-                        columnadd = 16
-                    elif message.channel.name == "the-dollhouse":
-                        columnadd = 18
-                    elif message.channel.name == "frostveil-tundra":
-                        columnadd = 20
+                # if not message.author.bot:
 
-                    for a in range(len(encounters[0])):
-                        encounters[columnadd].append(encounters[0][a])
-                        encounters[columnadd+1].append(encounters[1][a])
+                #     if message.channel.type == discord.ChannelType.text and random.randint(1,200) == 1 and not "lorekeeper" in str(authroles).lower():
+                #         room = "<#" + str(message.channel.id) + ">"
+                #         limits = await KinklistCommands.getLimits(str(message.author.name) + "#" + str(message.author.discriminator))
+                #         encounters = sheet.values().get(spreadsheetId = encountersheet, range = "A2:R50", majorDimension='COLUMNS').execute().get("values")
 
-                    for a in range(len(limits)):
-                        
-                        if limits[a] in str(encounters[1+columnadd]):
+                #         if message.channel.name == "trapped-corridors":
+                #             columnadd = 2
+                #         elif message.channel.name == "moaning-hallways":
+                #             columnadd = 4
+                #         elif message.channel.name == "unlicensed-fights":
+                #             columnadd = 6
+                #         elif message.channel.name == "sparring-pits":
+                #             columnadd = 8
+                #         elif message.channel.name == "kobold-dens":
+                #             columnadd = 10
+                #         elif message.channel.name == "wild-gardens":
+                #             columnadd = 12
+                #         elif message.channel.name == "twilight-groves":
+                #             columnadd = 14
+                #         elif message.channel.name == "sirens-grotto":
+                #             columnadd = 16
+                #         elif message.channel.name == "the-dollhouse":
+                #             columnadd = 18
+                #         elif message.channel.name == "frostveil-tundra":
+                #             columnadd = 20
 
-                            for b in range(len(encounters[columnadd])):
-                                try:
-                                    if limits[a] in encounters[1 + columnadd][b]:
-                                        del encounters[columnadd][b]
-                                        del encounters[columnadd + 1][b]
-                                        b -= 1
-                                except IndexError:
-                                    break
-                    encounterindex = random.randint(0, len(encounters[columnadd])-1)
-                    enctext = await CommonDefinitions.diceroll(encounters[columnadd][encounterindex].replace("[race]", random.choice(races)))
-                    try:
-                        enckinks = encounters[columnadd+1][encounterindex].split("|")
-                    except IndexError:
-                        enckinks = ""
-                    kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
-                    playerIndex = [row[1] for row in kinkdata].index(str(message.author.name) + "#" + str(message.author.discriminator))
-                    kinkops = []
+                #         for a in range(len(encounters[0])):
+                #             encounters[columnadd].append(encounters[0][a])
+                #             encounters[columnadd+1].append(encounters[1][a])
 
-                    for c in range(len(enckinks)):
+                #         for a in range(len(limits)):
+
+                #             if limits[a] in str(encounters[1+columnadd]):
+
+                #                 for b in range(len(encounters[columnadd])):
+                #                     try:
+                #                         if limits[a] in encounters[1 + columnadd][b]:
+                #                             del encounters[columnadd][b]
+                #                             del encounters[columnadd + 1][b]
+                #                             b -= 1
+                #                     except IndexError:
+                #                         break
+                #         encounterindex = random.randint(0, len(encounters[columnadd])-1)
+                #         enctext = await CommonDefinitions.diceroll(encounters[columnadd][encounterindex].replace("[race]", random.choice(races)))
+                #         try:
+                #             enckinks = encounters[columnadd+1][encounterindex].split("|")
+                #         except IndexError:
+                #             enckinks = ""
+                #         kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
+                #         playerIndex = [row[1] for row in kinkdata].index(str(message.author.name) + "#" + str(message.author.discriminator))
+                #         kinkops = []
+
+                #         for c in range(len(enckinks)):
+                #             try:
+                #                 kinkops.append(kinkdata[1][kinkdata[1].index(str(enckinks[c]))] + ": " + str(kinkdata[playerIndex][kinkdata[1].index(str(enckinks[c]))]))
+                #             except ValueError:
+                #                 kinkops.append("No kinks required")
+
+                #         await client.get_channel(bridgechannel).send(str(message.author.name.split("#")[0] + " has sent a message in " + room + ". We think a <@&912552597041340416> should go and torment them.\n\n " + enctext + "\n\n" + message.author.name + "'s relevant kinks are: " + "\n".join(kinkops) + "\n\nThis has a one in 200 chance of appearing on any given message. Let Callum know if you think that's too much or too little?"))
+                #         print("Lorekeepers were pinged to run traps")
+
+                #Easter Egg Function
+                if message.author.bot:
+
+                    if liveVersion == 0:
+                        eggemoji = ":EasterEgg:1092228117977890856"
+                    else:
+                        eggemoji = ":EasterEgg:964636527432978482"
+                    if eggtimer != 0:
+                        global eggnexttime
                         try:
-                            kinkops.append(kinkdata[1][kinkdata[1].index(str(enckinks[c]))] + ": " + str(kinkdata[playerIndex][kinkdata[1].index(str(enckinks[c]))]))
-                        except ValueError:
-                            kinkops.append("No kinks required")
-
-                    await client.get_channel(bridgechannel).send(str(message.author.name.split("#")[0] + " has sent a message in " + room + ". We think a <@&912552597041340416> should go and torment them.\n\n " + enctext + "\n\n" + message.author.name + "'s relevant kinks are: " + "\n".join(kinkops) + "\n\nThis has a one in 200 chance of appearing on any given message. Let Callum know if you think that's too much or too little?"))
-                    print("Lorekeepers were pinged to run traps")
+                            nextegg = eggnexttime
+                        except UnboundLocalError:
+                            nextegg = 0
+                        if datetime.timestamp(datetime.now()) >= int(nextegg):
+                            eggnexttime = int(datetime.timestamp(datetime.now()) + int(eggtimer))
+                            await message.add_reaction(eggemoji)
+                            reacts = []
+                            while 1:
+                                try:
+                                    react = await client.wait_for('reaction_add', timeout = int(eggwaittimer))
+                                    if str("<" + eggemoji + ">") == str(react[0]):
+                                        if react[1].name not in str(reacts) and not "Gothica" in react[1].name:
+                                            reacts.append(react)
+                                except asyncio.exceptions.TimeoutError:
+                                    reacts.append("")
+                                if len(reacts) >= int(egglimit):
+                                    break
+                            currentEggFinders = []
+                            for a in range(len(reacts)):
+                                if reacts[a] != "":
+                                    if not str(reacts[a][1].name) in str(eggfinders):
+                                        eggfinders.append(reacts[a][1].name)
+                                        currentEggFinders.append(reacts[a][1].name)
+                                        eggsfound.append(1)
+                                    else:
+                                        eggindex = eggfinders.index(reacts[a][1].name)
+                                        currentEggFinders.append(reacts[a][1].name)
+                                        eggsfound[eggindex] += 1
+                            await message.clear_reactions()
+                            await message.add_reaction("🥚")
+                            await client.get_channel(logchannel).send(", ".join(currentEggFinders) + " found an egg in " + str(message.channel))
 
             #Clone Channel
-
             elif message.content.lower().startswith(str(myprefix) + "clonechannel") and "lorekeeper" in str(message.author.roles).lower():
-                
+
                 await message.channel.send("Processing, please wait")
                 channelid = int(message.channel.id)
                 mess = [joinedMessages async for joinedMessages in message.channel.history(limit = None, oldest_first= True)]
@@ -3688,7 +3928,6 @@ async def on_message(message):
                 del mess
 
             #Impersonator React
-
             elif "gothica" in message.content.lower().replace("-","").replace(".","") or "thic goth" in message.content.lower().replace("-","").replace(".","").replace("cc","c") or "gothy" in message.content.lower().replace("-","").replace(".",""):
                 if message.channel.id == 1058951770870657166:
                     return
@@ -3703,7 +3942,6 @@ async def on_message(message):
                     await message.add_reaction('♥️')
 
             #Dating Game
-
             elif (str(message.channel).startswith("Dating Game") and not isbot):
 
                 if not message.content.startswith("TEST"):
@@ -3737,59 +3975,144 @@ async def on_message(message):
                     await client.get_channel(990265174126645298).send(embed = mysterembed)
 
             #Timestamp Message
-
             elif message.content.lower().startswith(str(myprefix) + "timestamp"):
 
-                print("A")
-
                 try:
-
                     timezone = message.content.split(" ")[2]
-
                 except IndexError:
-
                     timezone = "GMT"
 
-                print(timezone)
+                if timezone == "GMT+12":
+                    timemod = 12
+                elif timezone == "GMT+11" or timezone == "SST":
+                    timemod = 11
+                elif timezone == "GMT+10" or timezone == "HST" or timezone == "HDT":
+                    timemod = 10
+                elif timezone == "GMT+9" or timezone == "AKST" or timezone == "AKDT":
+                    timemod = 9
+                elif timezone == "GMT+8" or timezone == "PST" or timezone == "PDT":
+                    timemod = 8
+                elif timezone == "GMT+7" or timezone == "MST" or timezone == "MDT":
+                    timemod = 7
+                elif timezone == "GMT+6" or timezone == "CST" or timezone == "CDT":
+                    timemod = 6
+                elif timezone == "GMT+5" or timezone == "EST" or timezone == "EDT":
+                    timemod = 5
+                elif timezone == "GMT+4" or timezone == "AST" or timezone == "ADT":
+                    timemod = 4
+                elif timezone == "GMT+3":
+                    timemod = 3
+                elif timezone == "GMT+2":
+                    timemod = 2
+                elif timezone == "GMT+1":
+                    timemod = 1
+                elif timezone == "GMT" or timezone == "UTC" or timezone == "BST" or timezone == "WET":
+                    timemod = 0
+                elif timezone == "GMT-1" or timezone == "CET" or timezone == "CEST" or timezone == "WAT":
+                    timemod = -1
+                elif timezone == "GMT-2" or timezone == "CAT" or timezone == "EET" or timezone == "SAST":
+                    timemod = -2
+                elif timezone == "GMT-3" or timezone == "EAT" or timezone == "MSK":
+                    timemod = -3
+                elif timezone == "GMT-4":
+                    timemod = -4
+                elif timezone == "GMT-5" or timezone == "PKT":
+                    timemod = -5
+                elif timezone == "GMT-6":
+                    timemod = -6
+                elif timezone == "GMT-7" or timezone == "WIB":
+                    timemod = -7
+                elif timezone == "GMT-8" or timezone == "CST":
+                    timemod = -8
+                elif timezone == "GMT-9" or timezone == "KST" or timezone == "JST":
+                    timemod = -9
+                elif timezone == "GMT-10" or timezone == "AEST":
+                    timemod = -10
+                elif timezone == "GMT-11":
+                    timemod = -11
+                elif timezone == "GMT-12" or timezone == "NZST":
+                    timemod = -12
+                elif timezone == "GMT-13":
+                    timemod = -13
+                elif timezone == "GMT-14":
+                    timemod = -14
 
-                try:
+                hour = int(message.content.split(" ")[1].split(":")[0]) + timemod
+                if hour >= 24:
+                    hour -= 24
+                elif hour < 0:
+                    hour = 24 + hour
+                if message.content.count(":") > 1:
+                    combhour = str(hour) + ":" + ":".join(message.content.split(" ")[1].split(":")[1:])
+                    inittime = str(message.content.split(" ")[1].split(":")[0]) + ":" + str(message.content.split(" ")[1].split(":")[1])
+                else:
+                    combhour = str(hour) + ":" + str(message.content.split(" ")[1].split(":")[1]) + ":00"
+                    inittime = str(message.content.split(" ")[1].split(":")[0]) + ":" + str(message.content.split(" ")[1].split(":")[1])
+                time = datetime.time(datetime.strptime(combhour, "%H:%M:%S"))
+                dt = datetime.combine(datetime.today(), time)
+                dtsp = str(datetime.timestamp(dt)).split(".")[0]
 
-                    time = datetime.time(message.content.split(" ")[7])
+                if int(datetime.timestamp(datetime.now())) >= int(dtsp):
+                    dtsp = str(int(dtsp) + 86400)
 
-                except IndexError:
+                await message.channel.send(embed = discord.Embed(title = "Timestamp Converter", description = str(inittime) + " in " + str(timezone) + " is <t:" + str(dtsp) + ":T>. It will next be " + str(inittime) + " in that timezone in " + "<t:" + str(dtsp) + ":R>", colour = embcol))
+                await message.delete()
+            #Manually spawn Imp Tome
+            elif message.content.lower().startswith(str(myprefix) + "imptome") and message.author.id == imptomeWielder:
+                messageLink = message.content.rsplit(" ")[1]
+                splitLink = messageLink.split('/')
+                server_id = int(splitLink[4])
+                channel_id = int(splitLink[5])
+                msg_id = int(splitLink[6])
+                guild = client.get_guild(server_id)
+                channel = client.get_channel(channel_id)
+                msg = await channel.fetch_message(msg_id)
+                await MiscellaneuosCommands.impTomeSpawn(msg)
+            elif message.content.lower().startswith(str(myprefix) + "countscenes"):
+              scenesWithNotifications = 0
+              scenesWithoutNotifications = 0
 
-                    time = str(datetime.timestamp(datetime.now())).split(".")[0]
+              economyData = sheet.values().get(spreadsheetId = EconSheet, range = "A8:A2250", majorDimension = 'ROWS').execute().get("values")
+              
+              for x in range(0,len(economyData),4):
+                currentRow = economyData[x]
+                if (currentRow != []):
+                  scenes = currentRow[0]
+                  splitScenes = scenes.split('|')
+                  for scene in splitScenes:
+                    if ("Notifications:Enabled" in scene):
+                      scenesWithNotifications += 1
+                    else:
+                      scenesWithoutNotifications += 1
 
-                print(time)
-
-                await message.channel.send(embed = discord.Embed(title = "Timestamp Converter", description = "<t:" + str(time) + ":T>" , colour = embcol))
-
+              embed = discord.Embed(title = "Scene Count", description = "We are currently tracking " + str(scenesWithNotifications) + " with notifications and " + str(scenesWithoutNotifications) + " without notifications. Also, Callum is a cutie.", colour = embcol)
+              await message.channel.send(embed = embed)
             #Shop Break Command
 
-            else:
-                messcomm = 0
-                rooms = ["🏺the-golden-jackal🏺", "🐍venom-ink🐍", "🧵widows-boutique🧵", "🍄sophies-garden🍄", "📜menagerie-magiks📜", "🔔the-polished-knob🔔", "🐾purrfect-petshop🐾", "🏥the-clinic🏥", "💰adventurers-guild💰", "⛓black-market⛓"]
-                
-                for n in range(len(rooms)):
-                    roomcur = rooms[n]
-                    roomchannel = discord.utils.get(client.get_all_channels(), name = roomcur)
+            # else:
+            #     messcomm = 0
+            #     rooms = ["🏺the-golden-jackal🏺", "🐍venom-ink🐍", "🧵widows-boutique🧵", "🍄sophies-garden🍄", "📜menagerie-magiks📜", "🔔the-polished-knob🔔", "🐾purrfect-petshop🐾", "🏥the-clinic🏥", "💰adventurers-guild💰", "⛓black-market⛓"]
 
-                    if message.channel != roomchannel and message.channel.name != "alias-bot" and roomchannel != None:
-                        roomlatest = [joinedMessages async for joinedMessages in client.get_channel(roomchannel.id).history(limit=2, oldest_first=False)] #Fix for pebblehost Await issue
-                        
-                        if roomlatest[0].author == client.user:
-                            roomlatest[0] = roomlatest[1]
-                            scenebroken = True
-                        else:
-                            scenebroken = False
-                        rtimestamp = datetime.timestamp(roomlatest[0].created_at)
-                        mestimestamp = datetime.timestamp(message.created_at)
-                        diff = int(math.floor(mestimestamp - rtimestamp))
-                        
-                        if diff >= 3*60*60*24:
-                            if not scenebroken:
-                                await client.get_channel(roomchannel.id).send("```\u200b```")
-                                await client.get_channel(logchannel).send("Automatically created a scene break in " + roomcur + ". The time difference was: " + str(diff) + " seconds, which equates to " + str(float(diff/3600)) + " hours.")
+            #     for n in range(len(rooms)):
+            #         roomcur = rooms[n]
+            #         roomchannel = discord.utils.get(client.get_all_channels(), name = roomcur)
+
+            #         if message.channel != roomchannel and message.channel.name != "alias-bot" and roomchannel != None:
+            #             roomlatest = [joinedMessages async for joinedMessages in client.get_channel(roomchannel.id).history(limit=2, oldest_first=False)] #Fix for pebblehost Await issue
+
+            #             if roomlatest[0].author == client.user:
+            #                 roomlatest[0] = roomlatest[1]
+            #                 scenebroken = True
+            #             else:
+            #                 scenebroken = False
+            #             rtimestamp = datetime.timestamp(roomlatest[0].created_at)
+            #             mestimestamp = datetime.timestamp(message.created_at)
+            #             diff = int(math.floor(mestimestamp - rtimestamp))
+
+            #             if diff >= 3*60*60*24:
+            #                 if not scenebroken:
+            #                     await client.get_channel(roomchannel.id).send("```\u200b```")
+            #                     await client.get_channel(logchannel).send("Automatically created a scene break in " + roomcur + ". The time difference was: " + str(diff) + " seconds, which equates to " + str(float(diff/3600)) + " hours.")
 
 
             #Per message income and Scene tracker pings.
@@ -3802,12 +4125,12 @@ async def on_message(message):
 
                     newtot = 0
 
-                    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ2000", majorDimension='ROWS').execute().get("values")
+                    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
                     #Existing Member
 
                     if str(message.author) in str(economydata):
-                        
+
                         for a in range(math.floor(len(economydata)/4)):
 
                             b = a * 4 + 5
@@ -3844,8 +4167,8 @@ async def on_message(message):
                             row = len(economydata) + 1
 
                         else:
-                            row = ((int(int(len(economydata) - 1) / 4) + 1) * 4) + 2 #Calculates the next line on the sheet that is divisible by 4. This is a bit of a magic formula. 
-                            #len econdata-1 / 4 gives us the player number of the current last player. that + 1 and * 4 gives us the cell that is one before the last one of that player (because we did -1 earlier). 
+                            row = ((int(int(len(economydata) - 1) / 4) + 1) * 4) + 2 #Calculates the next line on the sheet that is divisible by 4. This is a bit of a magic formula.
+                            #len econdata-1 / 4 gives us the player number of the current last player. that + 1 and * 4 gives us the cell that is one before the last one of that player (because we did -1 earlier).
                             #+1 gives us the last line of the currently last registered player, meaning +2 gives us the line the new player's entry needs to start at.
 
                     try:
@@ -3866,7 +4189,7 @@ async def on_message(message):
                         sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[dataup])).execute()
 
                     #Ping user for a tracked scene.
-                
+
                     if not "?edit" in message.content:
                         f = lambda x: [""]if x == [] else x
                         columnZero = [ f(x)[0] for x in economydata]
@@ -3878,7 +4201,7 @@ async def on_message(message):
                                 scenearray = columnZero[scenedataIndex].split("|")
                                 sceneindex = [idx for idx, s in enumerate(scenearray) if str(message.channel.id) in s][0]
                                 trackedStatus = scenearray[sceneindex].split(" ")[-1]
-                                
+
                                 if trackedStatus == "Notifications:Enabled":
                                     if economydata[playerindex][0] != message.author.name + "#" + message.author.discriminator:
                                         user = discord.utils.get(client.guilds[0].members, name = economydata[playerindex][0].split("#")[0], discriminator = economydata[playerindex][0].split("#")[1])
@@ -3887,13 +4210,18 @@ async def on_message(message):
 
                                 elif trackedStatus == "Notifications:Disabled":
                                     pass
-                                
+
                                 else:
                                     scenearray[sceneindex] = scenearray[sceneindex] + (" Notifications:Disabled")
                                     dataup = "|".join(scenearray)
                                     row = scenedataIndex + 1
                                     sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[dataup]])).execute()
 
+
+                else:   #Things we want to do if a bot posted the message
+                    if not(client.user == message.author) and not("Avrae" == message.author.name) and message.channel.category_id in [952251327143084092] and not (message.channel.type == discord.ChannelType.private_thread):
+                        if(random.randint(1, 500) == 1):
+                            await MiscellaneuosCommands.fiendTomeSpawn(message)
 
 
 
@@ -3908,13 +4236,15 @@ async def on_message(message):
 @client.event
 async def on_raw_reaction_add(reaction):
 
+    mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
+
     if "lorekeeper" in str(reaction.member.roles).lower() or "ghostwriter" in str(reaction.member.roles).lower():
 
         mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
 
         if reaction.emoji.name == "dz" or reaction.emoji.name == "cashmoney" or reaction.emoji.name == "makeitrain" or reaction.emoji.name == "DzCrit":
 
-            economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ2000", majorDimension='ROWS').execute().get("values")
+            economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
             reciprow = ""
 
@@ -3941,15 +4271,15 @@ async def on_raw_reaction_add(reaction):
                 await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = str(mess.author) + " is not in the economy.", description = "If this should not be the case, speak to Callum", colour = embcol))
 
             if reaction.emoji.name == "dz":
-                
+
                 giveamount = reactdz
 
             elif reaction.emoji.name == "cashmoney":
-                
+
                 giveamount = reactCashMoney
 
             elif reaction.emoji.name == "makeitrain":
-                
+
                 giveamount = reactMakeItRain
 
             else:
@@ -3964,12 +4294,12 @@ async def on_raw_reaction_add(reaction):
 
             if reaction.member.name == targetName:
 
-                await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(recipnewtot) + dezzieemj + "\n\nNot sure why they're awarding dezzies to themself like this, but ok.", colour = embcol, url = mess.jump_url))    
+                await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(recipnewtot) + dezzieemj + "\n\nNot sure why they're awarding dezzies to themself like this, but ok.", colour = embcol, url = mess.jump_url))
 
             else:
 
                 await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(recipnewtot) + dezzieemj, colour = embcol, url = mess.jump_url))
-        
+
         elif reaction.emoji.name == "💰":
 
             mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
@@ -3979,7 +4309,7 @@ async def on_raw_reaction_add(reaction):
                 await client.get_channel(913998580027645992).send(mess.attachments[a])
 
             if mess.content != "":
-                
+
                 await client.get_channel(913998580027645992).send(mess.content)
 
         elif reaction.emoji.name == "💎":
@@ -3991,7 +4321,7 @@ async def on_raw_reaction_add(reaction):
                 await client.get_channel(985417358019534878).send(mess.attachments[a])
 
             if mess.content != "":
-                
+
                 await client.get_channel(985417358019534878).send(mess.content)
 
         elif reaction.emoji.name == "⛓️":
@@ -4003,7 +4333,7 @@ async def on_raw_reaction_add(reaction):
                 await client.get_channel(980494836811563148).send(mess.attachments[a])
 
             if mess.content != "":
-                
+
                 await client.get_channel(980494836811563148).send(mess.content)
 
         elif reaction.emoji.name == "❌" and mess.author.bot:
@@ -4031,7 +4361,7 @@ async def on_raw_reaction_add(reaction):
 
         mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
 
-        economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ2000", majorDimension='ROWS').execute().get("values")
+        economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
         reciprow = ""
 
@@ -4080,7 +4410,7 @@ async def on_raw_reaction_add(reaction):
 
             if not mess.author.bot:
                 await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = str(givename) + " is not in the economy.", description = "If this should not be the case, speak to Callum", colour = embcol))
-        
+
 
 
 
@@ -4097,7 +4427,7 @@ async def on_raw_reaction_add(reaction):
         else:
             giveamount = random.randint(100,500)
 
-        
+
         #Retrieve users current react dezzie pool
         try:
             prevDezziePool = int(economydata[giverow+2][0])
@@ -4116,7 +4446,7 @@ async def on_raw_reaction_add(reaction):
         if reaction.channel_id != 828545311898468352: #Disable Noticeboard Reacts
 
             if reaction.member.name == targetName:
-                await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = "No.", description = targetName + ", you can't just award dezzzies to yourself.", colour = embcol))    
+                await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = "No.", description = targetName + ", you can't just award dezzzies to yourself.", colour = embcol))
                 await client.get_channel(918257057428279326).send(targetName + " tried to award dezzies to themself.")
 
             else:
@@ -4125,7 +4455,7 @@ async def on_raw_reaction_add(reaction):
                     recipNewTot = int(economydata[reciprow-1][1]) + int(giveamount)
                     newDezziePool = prevDezziePool - giveamount
                     sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipNewTot]])).execute()
-                    
+
                     TransactionsDatabaseInterface.addTransaction(target.name + '#' + target.discriminator, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
 
                     sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(giverow+3)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newDezziePool]])).execute()
@@ -4137,20 +4467,20 @@ async def on_raw_reaction_add(reaction):
                         await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has " + str(newDezziePool) + dezzieemj + " in their dezzie award pool left for the week!", colour = embcol, url = mess.jump_url))
 
                     await client.get_channel(918257057428279326).send(givename + " awarded Dezzies to " + targetName)
-                
+
                 #User has less dezzies in their pool than they reacted with
                 elif prevDezziePool > 0:
                     newDezziePool = 0
                     giveamount = prevDezziePool
                     recipNewTot = int(economydata[reciprow-1][1]) + int(giveamount)
                     sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipNewTot]])).execute()
-                    
+
                     TransactionsDatabaseInterface.addTransaction(target.name + '#' + target.discriminator, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
 
                     sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(giverow+3)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newDezziePool]])).execute()
                     await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
                     await client.get_channel(918257057428279326).send(givename + " awarded Dezzies to " + targetName)
-                
+
                 #User dezzie pool is empty:
                 else:
                     await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + "'s dezzie award pool for the week is empty!" , description = "You will receive a fresh pool of dezzies to award to others at the start of next week!", colour = embcol, url = mess.jump_url))
@@ -4160,9 +4490,9 @@ async def on_raw_reaction_add(reaction):
         else:
             await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = "You can't use this at the here.", colour = embcol, url = mess.jump_url))
 
+    elif reaction.emoji.name == "cuffs" and mess.channel.name != "Server Economy":
 
-    if reaction.emoji.name == "cuffs":
-        
+
         chan = client.get_channel(reaction.channel_id)
         mess = await chan.fetch_message(reaction.message_id)
 
@@ -4188,7 +4518,7 @@ async def on_raw_reaction_add(reaction):
             user = await client.fetch_user(int(reaction.member.id))
             await mess.channel.send(f"Image claimed by {user.display_name}")
 
-            
+
         else:
             emb = discord.Embed(title = reaction.member.name + " has claimed this artwork to make a character from.", colour = embcol)
             emb.set_thumbnail(url = mess.attachments[0])
@@ -4209,16 +4539,7 @@ async def on_raw_reaction_add(reaction):
             emb.set_thumbnail(url = mess.content)
             await user.send(mess.content)
 
-
-    elif reaction.emoji.name == "❓":
-
-        mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
-
-        await client.get_channel(918257057428279326).send(str(reaction.member.name) + " queried the tupper of " + str(mess.author))
-
-
-    
-    if "lorekeeper" in str(reaction.member.roles).lower() or "moderator" in str(reaction.member.roles).lower():   
+    elif "lorekeeper" in str(reaction.member.roles).lower() or "moderator" in str(reaction.member.roles).lower():
 
         if reaction.emoji.name == "💰":
 
@@ -4229,7 +4550,7 @@ async def on_raw_reaction_add(reaction):
                 await client.get_channel(913998580027645992).send(mess.attachments[a])
 
             if mess.content != "":
-                
+
                 await client.get_channel(913998580027645992).send(mess.content)
 
         elif reaction.emoji.name == "💎":
@@ -4241,7 +4562,7 @@ async def on_raw_reaction_add(reaction):
                 await client.get_channel(985417358019534878).send(mess.attachments[a])
 
             if mess.content != "":
-                
+
                 await client.get_channel(985417358019534878).send(mess.content)
 
         elif reaction.emoji.name == "⛓️":
@@ -4253,7 +4574,7 @@ async def on_raw_reaction_add(reaction):
                 await client.get_channel(980494836811563148).send(mess.attachments[a])
 
             if mess.content != "":
-                
+
                 await client.get_channel(980494836811563148).send(mess.content)
 
         elif reaction.emoji.name == "❌" and mess.author.bot:
@@ -4276,7 +4597,6 @@ async def on_raw_reaction_add(reaction):
 
                 pass
 
-
     if reaction.emoji.name =="kinklist":
 
         dmchannel = await client.fetch_user(int(reaction.member.id))
@@ -4285,17 +4605,48 @@ async def on_raw_reaction_add(reaction):
 
         await KinklistCommands.kinklist(mess, dmchannel, "Reaction")
 
-    #else:
+    elif reaction.emoji.name == "❓":
+        dmchannel = await client.fetch_user(int(reaction.member.id))
+        await client.get_channel(logchannel).send(str(reaction.member.name) + " queried the tupper of " + str(mess.author.name))
+        await CharRegistry.charsearch("%search " + mess.author.name, dmchannel)
 
-        #print(reaction.emoji.name)
+    #Black market react
+    elif mess.id == 1089020124025061406 and reaction.emoji.name == "cuffs":
+        role = discord.utils.get(reaction.member.guild.roles, name="Black Market Shopper")
+        await reaction.member.add_roles(role)
+
+    elif mess.id == 1084012997397184512 and reaction.emoji.name == "🖋️":
+        role = discord.utils.get(reaction.member.guild.roles, name="Guild Applicant")
+        await reaction.member.add_roles(role)
+
+    elif mess.id == 1089268299721867285 and reaction.emoji.name == "sigil":
+        role = discord.utils.get(reaction.member.guild.roles, name="Dungeon Denizen")
+        await reaction.member.add_roles(role)
+
+    elif reaction.emoji.name == "🟣":
+        await MiscellaneuosCommands.fiendTomeSpawn(mess)
+    #if liveVersion == 0:
+        #print(reaction)
 
 @client.event
-async def on_message_delete(message):
+async def on_raw_reaction_remove(reaction):
+    mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
+    memb = client.get_guild(reaction.guild_id).get_member(reaction.user_id)
 
-    if "@" in message.content and not message.content.startswith("%") and not " " in message.content:
+    if mess.id == 1088954915361144963 and reaction.emoji.name == "cuffs":
+        role = discord.utils.get(memb.guild.roles, name="Black Market Shopper")
+        await memb.remove_roles(role)
+    elif mess.id == 1084012997397184512 and reaction.emoji.name == "🖋️":
+        role = discord.utils.get(memb.guild.roles, name="Guild Applicant")
+        await memb.remove_roles(role)
+    elif mess.id == 1089268299721867285 and reaction.emoji.name == "sigil":
+        role = discord.utils.get(memb.guild.roles, name="Dungeon Denizen")
+        await memb.remove_roles(role)
 
-        await client.get_channel(logchannel).send(message.author.name + "'s message was deleted in " + str(message.channel) + ". The message was:\n\n" + message.content.replace("@", "\@") + "\n\nThis message was deleted at " + str(datetime.now()))
+# @client.event
+# async def on_message_delete(message):
 
-        
+#     await client.get_channel(logchannel).send(message.author.name + "'s message was deleted in " + str(message.channel) + ". The message was:\n\n" + message.content.replace("@", "\@") + "\n\nThis message was deleted at " + str(datetime.now()))
+
 token = botTokens.gettoken(liveVersion)
 client.run(token, reconnect=True)
