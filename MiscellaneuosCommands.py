@@ -376,10 +376,10 @@ async def manualDezPoolReset(message):
                 pass
 
 
-        #update dezzie pools
-        sheet.values().update(spreadsheetId = EconSheet, range = "A1:A4000", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=economydata)).execute()
+    #update dezzie pools
+    sheet.values().update(spreadsheetId = EconSheet, range = "A1:A4000", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=economydata)).execute()
 
-        print("Weekly Dezzie Award Pool Reset!")
+    print("Weekly Dezzie Award Pool Reset!")
 
 #----------------View Classes----------------
 

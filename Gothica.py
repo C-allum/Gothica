@@ -272,11 +272,11 @@ async def on_message(message):
                 await OocFun.emoteuncurse(message)
 
             #manual Dezzie reward pool reset
-            elif message.content.lower().startswith(str(myprefix) + "rewardpoolreset") and "moderator" in str(authroles):
+            elif message.content.lower().startswith(str(myprefix) + "rewardpoolreset") and "moderator" in str(authroles).lower():
                 await MiscellaneuosCommands.manualDezPoolReset(message)
 
             #Character Index Update - On CharRegistry, untested
-            elif message.content.lower().startswith(str(myprefix) + "indexupdate") and "moderator" in str(authroles):
+            elif message.content.lower().startswith(str(myprefix) + "indexupdate") and "moderator" in str(authroles).lower():
 
                 await CharRegistry.updatereg(message)
 
