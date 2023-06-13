@@ -89,3 +89,50 @@ def printTransactions():
         transactionsConnection.close()
     except sqlite3.Error as error:
         print('Error occured while printing the database contents - ', error)
+
+#Fetch all accumulated information for one person over a given timeframe
+def playerTransactionsInfo(person:str, timeframe:str = None):
+    try:
+        transactionsConnection = sqlite3.connect('CLDTransactions.db')
+        transactionsCursor = transactionsConnection.cursor()
+        
+        #Prints for each person each action plus summed value
+        if timeframe is None:
+            #data=transactionsCursor.execute(f'''SELECT Person, Action, SUM(Amount) FROM Transactions GROUP BY Person, Action ORDER BY Person, SUM(Amount)''')
+            data=transactionsCursor.execute(f'''SELECT Person, Action, SUM(Amount) FROM Transactions WHERE Person in ('{person}') GROUP BY Person, Action ORDER BY Person, SUM(Amount)''')
+        else:
+            timeframe = "-" + timeframe
+            data=transactionsCursor.execute(f'''SELECT Person, Action, SUM(Amount) FROM Transactions WHERE Person in ('{person}') AND Date > date('now', '{timeframe}') GROUP BY Person, Action ORDER BY Person, SUM(Amount)''')
+            #data=transactionsCursor.execute(f'''SELECT * FROM Transactions WHERE Person in ('{person}') AND Date > date('now', '{timeframe}')''')
+
+        #Print whole database
+        #data=transactionsCursor.execute('''SELECT * FROM Transactions''')
+
+        for row in data:
+            print(row)
+            
+        transactionsConnection.close()
+    except sqlite3.Error as error:
+        print(f'Error occured while printing database contents for - {person}', error)
+
+def testing():
+    try:
+        transactionsConnection = sqlite3.connect('CLDTransactions.db')
+        transactionsCursor = transactionsConnection.cursor()
+        
+        #Prints for each person each action plus summed value
+        #data=transactionsCursor.execute('''SELECT Person, Action, SUM(Amount) FROM Transactions GROUP BY Person, Action ORDER BY Person, SUM(Amount)''')
+
+        #Print whole database
+        data=transactionsCursor.execute('''SELECT * FROM Transactions''')
+
+        for row in data:
+            print(row)
+            
+        transactionsConnection.close()
+    except sqlite3.Error as error:
+        print('Error occured while printing the database contents - ', error)
+
+#--- --- --- EXECUTED IF THIS FILE IS RUN --- --- ---
+if __name__ == "__main__":
+    playerTransactionsInfo('Toph#9851', '2 months')
