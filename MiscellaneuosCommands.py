@@ -299,6 +299,88 @@ async def manualMigrateAcc(message):
             await message.channel.send(embed = discord.Embed(title = f"{newPlayerName}: Migration completed!", description = "Your account is now migrated to the new Discord username system"))
         else:
             await message.channel.send(embed = discord.Embed(title = f"{newPlayerName} Migration already completed", description = f"Your account is already migrated or {oldPlayerName} is not in the economy"))
+
+
+async def manualDezPoolReset(message):
+    #Grab current date and time
+    today = datetime.now()
+    #Calculate new timestamp
+    newResetDatetime = (today - timedelta(days=today.weekday()) + timedelta(days=7)).replace(hour=0, minute=0, second=0) #Takes todays date, subtracts the passed days of the week and adds 7, resulting in the date for next monday. Then replaces time component with 0
+    newResetDateTimestamp = int(datetime.timestamp(newResetDatetime))
+
+    #On reboot refresh dezzie pool of users
+    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:A4000", majorDimension='ROWS').execute().get("values")
+
+    for i in range(5, len(economydata)-1, 4):
+        #Grab the name on the member
+        try:
+            name = economydata[i][0]
+        except IndexError:
+            print("Index error at: " + str(i) + ". Probably something broke in the economy sheet, and the registration of new people.")
+        userStillOnServer = 1
+
+        #Get Roles of the member. Attribute Error if they are not in the specified Guild (server)
+        try:
+            if len(name.split('#')[1]) == 4:
+                roles = client.get_guild(828411760365142076).get_member_named(name).roles
+            else:
+                roles = client.get_guild(828411760365142076).get_member_named(name.split('#')[0]).roles
+        except AttributeError:
+            try:
+                if len(name.split('#')[1]) == 4:
+                    roles = client.get_guild(847968618167795782).get_member_named(name).roles
+                else:
+                    roles = client.get_guild(847968618167795782).get_member_named(name.split('#')[0]).roles
+            except AttributeError:
+                userStillOnServer = 0
+
+            dezziePool = 0
+
+        #If they aren't on the server anymore, we can just not refresh their dezzie pool.
+        if userStillOnServer == 1:
+            #Base values
+            if "+3" in str(roles).lower():
+                dezziePool = weeklyDezziePoolP3
+            elif "+2" in str(roles).lower():
+                dezziePool = weeklyDezziePoolP2
+            elif "+1" in str(roles).lower():
+                dezziePool = weeklyDezziePoolP1
+            else:
+                dezziePool = weeklyDezziePoolVerified
+            #Bonus
+            if "licensed fucksmith" in str(roles).lower():
+                dezziePool += weeklyDezzieBonusFucksmith
+            if "server booster" in str(roles).lower():
+                dezziePool += weeklyDezzieBonusBoost
+            if "server veteran" in str(roles).lower():
+                dezziePool += weeklyDezzieBonusVeteran
+            if "lorekeeper" in str(roles).lower() or "lorekeeper" in str(roles).lower() or "admin" in str(roles).lower():
+                dezziePool = 100000
+            if "patron tier 1" in str(roles).lower():
+                dezziePool += weeklyDezzieBonusPatronT1
+            if "patron tier 2" in str(roles).lower():
+                dezziePool += weeklyDezzieBonusPatronT2
+            if "patron tier 3" in str(roles).lower():
+                dezziePool += weeklyDezzieBonusPatronT3
+            if "cult of the mistress" in str(roles).lower():
+                dezziePool += weeklyDezzieBonusPatronT3
+
+        try:
+            economydata[i+3][0] = dezziePool
+        except IndexError:
+            #Occurs when Dezzie pool is null. Initialize dezzie pool
+            try:
+                economydata[i+3] = [dezziePool]
+            except IndexError:
+                #Also triggers at the last person in the spreadsheet, as the cell is not just empty, but unreachable.
+                pass
+
+
+        #update dezzie pools
+        sheet.values().update(spreadsheetId = EconSheet, range = "A1:A4000", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=economydata)).execute()
+
+        print("Weekly Dezzie Award Pool Reset!")
+
 #----------------View Classes----------------
 
 #This is the view class for a simple accept button.
