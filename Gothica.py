@@ -3927,11 +3927,40 @@ async def on_message(message):
                 os.remove(filename)
                 del mess
 
+            elif message.content.lower().startswith(str(myprefix) + "clonev2") and "lorekeeper" in str(message.author.roles).lower():
+
+                await message.channel.send("Processing, please wait")
+
+                if message.content.split(" ")[1].startswith("https"):
+                    chanid = message.content.split(" ")[1].split("/")[-1]
+                    destid = message.content.split(" ")[2].split("/")[-1]
+                elif message.content.split(" ")[1].startswith("<"):
+                    chanid = message.content.split(" ")[1].split("#")[-1].rstrip(">")
+                    destid = message.content.split(" ")[2].split("#")[-1].rstrip(">")
+                else:
+                    chanid = message.content.split(" ")[1]
+                    destid = message.content.split(" ")[2]
+
+                channelid = int(message.channel.id)
+                chan = client.get_channel(int(chanid))
+                dest = client.get_channel(int(destid))
+                mess = [joinedMessages async for joinedMessages in message.channel.history(limit = None, oldest_first= True)]
+                hook = await chan.create_webhook(name= "Clonehook")
+                async with aiohttp.ClientSession() as session:
+                    whook = Webhook.from_url(hook.url, session = session)
+                    for a in range(len(mess)):
+                        if not mess[a].content.startswith("%clone"):
+                            await whook.send(mess[a].content, username = mess[a].author.name, avatar_url = mess[a].author.avatar, thread = dest)
+                        else:
+                            break
+                await session.close()
+                await hook.delete()
+
             #Impersonator React
             elif "gothica" in message.content.lower().replace("-","").replace(".","") or "thic goth" in message.content.lower().replace("-","").replace(".","").replace("cc","c") or "gothy" in message.content.lower().replace("-","").replace(".",""):
                 if message.channel.id == 1058951770870657166:
                     return
-                if message.author.name != "C_allum":
+                if message.author.name != "c_allum":
 
                     if random.randint(1,100) != 100:
                         await message.add_reaction('👀')
