@@ -187,24 +187,23 @@ async def migrateAcc(message):
             oldEconomyIndex = -1
             for a in range(math.ceil((len(userinvs)-5)/4)):
                 b = 4 * a + 5
-                if str(oldPlayerName) in userinvs[b][0]:
+                if str(oldPlayerName) == userinvs[b][0]:
                     oldEconomyIndex = b
                     break
             
             newEconomyIndex = -1
             for a in range(math.ceil((len(userinvs)-5)/4)):
                 b = 4 * a + 5
-                if str(newPlayerName) in userinvs[b][0]:
+                if str(newPlayerName + "#0") == userinvs[b][0]:
                     newEconomyIndex = b
                     break
             if oldEconomyIndex == -1 or newEconomyIndex == -1:
                 await message.channel.send(embed = discord.Embed(title = "Not in Economy!", description = "Your new account name is not in the economy. Write something in OOC to get registered!"))
                 return
             newBalance = int(userinvs[oldEconomyIndex][1]) + int(userinvs[newEconomyIndex][1])
-            
+
             userinvs[oldEconomyIndex][1] = newBalance
             userinvs[oldEconomyIndex][0] = newPlayerName + "#0"
-            sheetLen = math.ceil((len(userinvs)-5)/4) * 4 + 5
             del userinvs[newEconomyIndex:newEconomyIndex+4]
             
             #Fix the database

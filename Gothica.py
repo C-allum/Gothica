@@ -3800,7 +3800,7 @@ async def on_message(message):
 
                         print("Lorekeepers were pinged to play shops")
 
-            elif message.channel.category.name == "﴿──﴾ 𝙳𝚊𝚗𝚐𝚎𝚛𝚘𝚞𝚜 𝙳𝚎𝚙𝚝𝚑𝚜 ﴿──﴾" or message.channel.name == "💎the-gobblin-bazaar💎" or message.channel.category.name == "﴿───﴾ 𝚂𝚊𝚏𝚎 𝙿𝚊𝚜𝚜𝚊𝚐𝚎𝚜 ﴿───﴾":
+            #elif message.channel.category.name == "﴿──﴾ 𝙳𝚊𝚗𝚐𝚎𝚛𝚘𝚞𝚜 𝙳𝚎𝚙𝚝𝚑𝚜 ﴿──﴾" or message.channel.name == "💎the-gobblin-bazaar💎" or message.channel.category.name == "﴿───﴾ 𝚂𝚊𝚏𝚎 𝙿𝚊𝚜𝚜𝚊𝚐𝚎𝚜 ﴿───﴾":
 
                 # if not message.author.bot:
 
@@ -3866,46 +3866,46 @@ async def on_message(message):
                 #         print("Lorekeepers were pinged to run traps")
 
                 #Easter Egg Function
-                if message.author.bot:
+                # if message.author.bot:
 
-                    if liveVersion == 0:
-                        eggemoji = ":EasterEgg:1092228117977890856"
-                    else:
-                        eggemoji = ":EasterEgg:964636527432978482"
-                    if eggtimer != 0:
-                        global eggnexttime
-                        try:
-                            nextegg = eggnexttime
-                        except UnboundLocalError:
-                            nextegg = 0
-                        if datetime.timestamp(datetime.now()) >= int(nextegg):
-                            eggnexttime = int(datetime.timestamp(datetime.now()) + int(eggtimer))
-                            await message.add_reaction(eggemoji)
-                            reacts = []
-                            while 1:
-                                try:
-                                    react = await client.wait_for('reaction_add', timeout = int(eggwaittimer))
-                                    if str("<" + eggemoji + ">") == str(react[0]):
-                                        if react[1].name not in str(reacts) and not "Gothica" in react[1].name:
-                                            reacts.append(react)
-                                except asyncio.exceptions.TimeoutError:
-                                    reacts.append("")
-                                if len(reacts) >= int(egglimit):
-                                    break
-                            currentEggFinders = []
-                            for a in range(len(reacts)):
-                                if reacts[a] != "":
-                                    if not str(reacts[a][1].name) in str(eggfinders):
-                                        eggfinders.append(reacts[a][1].name)
-                                        currentEggFinders.append(reacts[a][1].name)
-                                        eggsfound.append(1)
-                                    else:
-                                        eggindex = eggfinders.index(reacts[a][1].name)
-                                        currentEggFinders.append(reacts[a][1].name)
-                                        eggsfound[eggindex] += 1
-                            await message.clear_reactions()
-                            await message.add_reaction("🥚")
-                            await client.get_channel(logchannel).send(", ".join(currentEggFinders) + " found an egg in " + str(message.channel))
+                #     if liveVersion == 0:
+                #         eggemoji = ":EasterEgg:1092228117977890856"
+                #     else:
+                #         eggemoji = ":EasterEgg:964636527432978482"
+                #     if eggtimer != 0:
+                #         global eggnexttime
+                #         try:
+                #             nextegg = eggnexttime
+                #         except UnboundLocalError:
+                #             nextegg = 0
+                #         if datetime.timestamp(datetime.now()) >= int(nextegg):
+                #             eggnexttime = int(datetime.timestamp(datetime.now()) + int(eggtimer))
+                #             await message.add_reaction(eggemoji)
+                #             reacts = []
+                #             while 1:
+                #                 try:
+                #                     react = await client.wait_for('reaction_add', timeout = int(eggwaittimer))
+                #                     if str("<" + eggemoji + ">") == str(react[0]):
+                #                         if react[1].name not in str(reacts) and not "Gothica" in react[1].name:
+                #                             reacts.append(react)
+                #                 except asyncio.exceptions.TimeoutError:
+                #                     reacts.append("")
+                #                 if len(reacts) >= int(egglimit):
+                #                     break
+                #             currentEggFinders = []
+                #             for a in range(len(reacts)):
+                #                 if reacts[a] != "":
+                #                     if not str(reacts[a][1].name) in str(eggfinders):
+                #                         eggfinders.append(reacts[a][1].name)
+                #                         currentEggFinders.append(reacts[a][1].name)
+                #                         eggsfound.append(1)
+                #                     else:
+                #                         eggindex = eggfinders.index(reacts[a][1].name)
+                #                         currentEggFinders.append(reacts[a][1].name)
+                #                         eggsfound[eggindex] += 1
+                #             await message.clear_reactions()
+                #             await message.add_reaction("🥚")
+                #             await client.get_channel(logchannel).send(", ".join(currentEggFinders) + " found an egg in " + str(message.channel))
 
             #Clone Channel
             elif message.content.lower().startswith(str(myprefix) + "clonechannel") and "lorekeeper" in str(message.author.roles).lower():
@@ -3927,11 +3927,40 @@ async def on_message(message):
                 os.remove(filename)
                 del mess
 
+            elif message.content.lower().startswith(str(myprefix) + "clonev2") and "lorekeeper" in str(message.author.roles).lower():
+
+                await message.channel.send("Processing, please wait")
+
+                if message.content.split(" ")[1].startswith("https"):
+                    chanid = message.content.split(" ")[1].split("/")[-1]
+                    destid = message.content.split(" ")[2].split("/")[-1]
+                elif message.content.split(" ")[1].startswith("<"):
+                    chanid = message.content.split(" ")[1].split("#")[-1].rstrip(">")
+                    destid = message.content.split(" ")[2].split("#")[-1].rstrip(">")
+                else:
+                    chanid = message.content.split(" ")[1]
+                    destid = message.content.split(" ")[2]
+
+                channelid = int(message.channel.id)
+                chan = client.get_channel(int(chanid))
+                dest = client.get_channel(int(destid))
+                mess = [joinedMessages async for joinedMessages in message.channel.history(limit = None, oldest_first= True)]
+                hook = await chan.create_webhook(name= "Clonehook")
+                async with aiohttp.ClientSession() as session:
+                    whook = Webhook.from_url(hook.url, session = session)
+                    for a in range(len(mess)):
+                        if not mess[a].content.startswith("%clone"):
+                            await whook.send(mess[a].content, username = mess[a].author.name, avatar_url = mess[a].author.avatar, thread = dest)
+                        else:
+                            break
+                await session.close()
+                await hook.delete()
+
             #Impersonator React
             elif "gothica" in message.content.lower().replace("-","").replace(".","") or "thic goth" in message.content.lower().replace("-","").replace(".","").replace("cc","c") or "gothy" in message.content.lower().replace("-","").replace(".",""):
                 if message.channel.id == 1058951770870657166:
                     return
-                if message.author.name != "C_allum":
+                if message.author.name != "c_allum":
 
                     if random.randint(1,100) != 100:
                         await message.add_reaction('👀')
