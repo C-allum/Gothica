@@ -99,6 +99,8 @@ else:
 
     Randomlootsheet = "19Dc4PI-E5OubesNroJfB4zKg9bqqqbdPelodjH6ecNw"
 
+    TransactionSheet = "1GKiiWlTPlMDj8FCiNZcNSF_FFJi6J_CKTyimdjoo9GU"
+
     logchannel = 1031701327169998958 #Test Server
 
     bridgechannel = 891781900388159528
