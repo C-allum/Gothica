@@ -19,6 +19,7 @@ googleapis-common-protos
 httplib2
 idna
 multidict
+numpy
 oauthlib
 pip
 protobuf
