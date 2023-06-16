@@ -54,7 +54,7 @@ bot = commands.Bot(command_prefix='%', activity = discord.Game(name="Testing Stu
 print(" Initialised {0.user} at ".format(client) + str(datetime.now()).split(".")[0])
 
 #-----------------LIVE VERSION/BETA TOGGLE---------------
-liveVersion = 1
+liveVersion = 0
 token = ""
 
 #Sheet Locations:
@@ -81,6 +81,8 @@ if liveVersion: #Set to 1 to use the real spreadsheets, or 0 to use the testing 
 
     bridgechannel = 996826636358000780
 
+    communityProjectChannel = 999810708546002994
+
 else:
 
     CharSheet = "1Vgxa8C5j5XnEUGhaGqAANVhsWSIOra87wCE2f5C75tQ"
@@ -102,6 +104,8 @@ else:
     logchannel = 1031701327169998958 #Test Server
 
     bridgechannel = 891781900388159528
+
+    communityProjectChannel = 891781900388159528
 
 SERVICE_ACCOUNT_FILE = "keys.json"
 
@@ -466,20 +470,20 @@ async def helplist(message):
     
     helpcategories = ["General Functions", "Character Index Functions", "Roleplay Functions", "Kink Functions", "Economy Functions", "Lorekeeper Only Functions"]
     helpnames = [
-        ["Start", "Rulebook", "LewdReference", "Embed", "Help", "Timestamp"],
+        ["Start", "Rulebook", "LewdReference", "Embed", "Help", "Timestamp", "Migrate"],
         ["Character Registration", "Edit", "Transfer", "Charlist", "Search", "Retire", "Deactivate", "Activate"],
-        ["LFG", "Plothook", "Plotlead", "Room", "Break", "Recent", "Wildlust", "Gobblin", "Scenes"],
+        ["LFG", "Plothook", "Plotlead", "Room", "Break", "Recent", "Wildlust", "Gobblin", "Scenes", "imptome"],
         ["Kinklist", "Kinksurvey", "Kinkfill", "KinkEdit", "Kinkplayers"],
         ["Work", "Slut", "Money", "Inventory", "Give-Money", "Leaderboard", "Shop", "Item", "Buy", "Sell", "GiveItem", "Invest", "Bid", "Spend"],
-        ["Gag", "Emote", "Adventurer", "Verify", "Kinkencounter", "oocembed", "oocmsg", "Add-money", "Remove-Money", "AddItem", "Spellrotation", "RandLoot"]
+        ["Gag", "Emote", "Adventurer", "Verify", "Kinkencounter", "oocembed", "oocmsg", "Add-money", "Remove-Money", "AddItem", "Spellrotation", "RandLoot", "clonev2", "CommunityProject", "rewardpoolreset", "manualmigrate"]
     ]
     helpsummary = [
-        ["Calls up some welcoming information for new members", "Summons a link to the lewd rulebook", "Summons a quick reference sheet of the main rules for Sexual Advances", "Generates an embed, like this one", "You are here.", "Compares timezones"],
+        ["Calls up some welcoming information for new members", "Summons a link to the lewd rulebook", "Summons a quick reference sheet of the main rules for Sexual Advances", "Generates an embed, like this one", "You are here.", "Compares timezones", "Migrates account from old Discord username to unique username."],
         ["Registers a character to the index", "Edits a character", "Gives a character to another player", "Lists the characters owned by a player", "Provides the index entry of a character", "Retires a character", "Sets a character temporarily unactive", "Reactivates a deactivated character"],
-        ["Helps you find roleplay partners", "Generates a random plothook for your character", "Checks how many plothooks you have seen", "Suggests an empty room for you to roleplay in.", "Generates a scene break", "Provides the time of the last message in each roleplay channel", "Rolls on the wildlust table", "Eats a dezzie", "Stores and recalls your list of active scenes and can DM you whenever a new message is sent in them"],
+        ["Helps you find roleplay partners", "Generates a random plothook for your character", "Checks how many plothooks you have seen", "Suggests an empty room for you to roleplay in.", "Generates a scene break", "Provides the time of the last message in each roleplay channel", "Rolls on the wildlust table", "Eats a dezzie", "Stores and recalls your list of active scenes and can DM you whenever a new message is sent in them", "Manually spawns the imptome into an RP (Only usable by the imptome wielder)."],
         ["Summons the kinks of the tagged player", "Allows you to fill out the kink survey", "Fills any holes in the kinksurvey", "Edits a kink", "Summons a list of players with the targeted kink"],
         ["Earns daily dezzies", "Earns more dezzies, with a risk to lose some instead", "Checks your balance", "Displays your items", "Gives a number of dezzies to someone else", "Shows how rich the richest people on the server are", "Displays the listed shop", "Provides details on a shop or inventory item", "Buys an item", "Sells an item, at a loss.", "Transfers an item to another player", "Spends dezzies on a community project", "Bids on an auction in the Black Market", "Removes Dezzies from yourself"],
-        ["Gags a user in ooc", "Reacts to a message with emote letters", "Grants a player the Adventurer Role", "Confirms that a user is over 18", "Generates a random encounter, respecting the player's kinks", "Generates an embed in ooc", "Sends a message in ooc", "Adds money", "Removes money","Adds an item from the shop to a user's inventory", "Checks Runar's stock of spells", "Generate random loot that fits a player's kinks"]
+        ["Gags a user in ooc", "Reacts to a message with emote letters", "Grants a player the Adventurer Role", "Confirms that a user is over 18", "Generates a random encounter, respecting the player's kinks", "Generates an embed in ooc", "Sends a message in ooc", "Adds money", "Removes money","Adds an item from the shop to a user's inventory", "Checks Runar's stock of spells", "Generate random loot that fits a player's kinks", "Clones the contents of a channel or thread to another channel or threads, including tupper messages.", "Registers a new community project people can %invest in!","MOD ONLY: Resets the dezzie reward pool for all players if needed.", "MOD ONLY: migrates an account from old to new naming system without automatic failsaves. Read full help before using."]
     ]
     helpfull = [
         ["The `%start` command provides an overview of how new players can start making characters and roleplaying in the dungeon, highlighting how to get roles and create a character and tupper.",
@@ -487,7 +491,8 @@ async def helplist(message):
         "Summons a reference sheet for things like lewd statuses, natural implement stimulation values, and other common things needing to be looked up. The command is %LewdReference",
         "Allows you to generate a message in a fancy embed. If you simply type `%embed`, followed by your message, it will use the message as the title.\n\nIf you want different fields like descriptions and images, it is a bit more complex. In this mode, to write a title and description, you would do: `%embed -t =Title goes here= -d =Desciption between these equals signs=` You can also add -i =image link= or -m =thumbnail link=. Obviously, this means that you can't use equals signs in the content of your embed.",
         "Summons this interface. You can use just `%help` on its own, which pulls up the full list of commands, or you can specify the category (So `%help economy` will pull up only the economy commands) or the specific command (`%help help`, for example, will bring up this message).",
-        "This command allows you to specify a time and timezone, for which we will create an embed that shows that time in the timezone as a timestamp that is correct for anyone reading it. The syntax is `%timestamp HH:MM code`, where HH:MM is the hour and minute and code is the code for the timezone."
+        "This command allows you to specify a time and timezone, for which we will create an embed that shows that time in the timezone as a timestamp that is correct for anyone reading it. The syntax is `%timestamp HH:MM code`, where HH:MM is the hour and minute and code is the code for the timezone.",
+        "This command migrates your account from the old username system (username#0000) to the new unique username system (uniquename). For this to work you must have filled in your kinklist while you still had your old username. If you did not do that, contact mods, they can manually migrate you."
         ],
         ["To register a character, go to #character-creation and type some information about them. This message must start with Name, but after that, you can use as many or as few bits of information as you want. Each should be on its own line. For example:\n\n`Name: Lalontra`\n`Race: Water Genasi`\n\nDo not use a tupper when creating your character.\n\nPossible Fields are:\n\nName\nRace\nGender\nPronouns\nAge\nClass\nLevel\nSheet\nAlignment\nBio\nSexuality\nSkin Colour\nHair Colour\nEye Colour\nHeight\nWeight\nSummary\nImage",
         "To edit a character, type `" + myprefix + "edit Name Field New-Value`, as a demonstration:\n\n`" + myprefix + "edit Lalontra class Ranger`\n\nThis will match a character's name even if you only use part of the name.",
@@ -506,7 +511,8 @@ async def helplist(message):
         "We peek into each public room, and take a look at the last message there. Summon this check using `" + myprefix + "recent`. Room names written in **bold** have been inactive for more than three hours.",
         "We have a custom wild magic table available to sorcerers in the dungeon. If you type `%wildlust`, Gothica will roll on that table for you.\n\nThe full table can be seen in the lewd rulebook.",
         "Eating the server currency can have some strange effects. Run `" + myprefix + "Gobblin` or `" + myprefix + "Crunch` to eat a dezzie. A dezzie of a good size to eat has a value of around 10 dezzies. You can also add a number after the command to eat a certain amount.",
-        "Gothica can track your scenes. Running `%scenes add` followed by a brief description of the scene and then the link to it, will tell us to track that scene. You can then do `%scenes` to summon the list of scenes, and we will inform you who sent the last message in the channel. As an example, you might type: `%scenes add Lalontra and River fight an evil fae #An-Uncomfortable-Reunion` to add that scene to your watchlist. You can also remove scenes with `%scenes remove` and then the number of the one to remove. Gothica can also DM you whenever a message is sent in a tracked scene. To enable that run `%scenes notification` and select the scene you want to get notifications on. `%scenes notification all on` or `%scenes notification all off` toggles notification settings on all tracked scenes at once."
+        "Gothica can track your scenes. Running `%scenes add` followed by a brief description of the scene and then the link to it, will tell us to track that scene. You can then do `%scenes` to summon the list of scenes, and we will inform you who sent the last message in the channel. As an example, you might type: `%scenes add Lalontra and River fight an evil fae #An-Uncomfortable-Reunion` to add that scene to your watchlist. You can also remove scenes with `%scenes remove` and then the number of the one to remove. Gothica can also DM you whenever a message is sent in a tracked scene. To enable that run `%scenes notification` and select the scene you want to get notifications on. `%scenes notification all on` or `%scenes notification all off` toggles notification settings on all tracked scenes at once.",
+        "If you are the imptome weilder, you can call `%imptome [message Link]` to spawn the Imp Tome in response to that message. ALWAYS CHECK WITH THE PEOPLE IN THAT RP IF THEY WANT THAT FIRST! If you are the Imp Tome wielder, but can't use this, contact Ken, he has to set a variable in the code..."
         ],
         ["This function lists a users kinks. To use it, run `%kinklist @name`. We will then summon the overview of the list of preferences that the user has filled out. You can then select further information on any particular category of kinks, such as mental domination or clothing and toys. Additionally, if you react to a message using the kinklist emote (<:kinklist:1053378814190813304>), we will direct message you their full kinklist.",
         "`%kinksurvey` is the function that allows you to complete the survey. We will open a thread in which you can tell us all about your kinks and preferences. This command can only be run in the #bots-and-constructs channel. This survey takes some time to run through.",
@@ -540,7 +546,11 @@ async def helplist(message):
         "Like adding dezzies, you can remove dezzies from a user using the `%remove-money @name amount` command. This is especially useful if they are recieving a custom item from the shops or need to pay a fee in the guild.",
         "To add an item to a player's inventory from the shop, you can run `%additem @name item`. For example, `%additem @Callum basic ink` would give Callum a basic tattoo.",
         "The spell scrolls that Runar has available are constantly changing. When someone requests one, you can run `%spellrotation`, which will provide a list of the spells he has in stock, along with their prices.",
-        "To reward a player with randomised loot, you can run the `%randloot @name` command. This generates a piece of loot and compares it to their kinks - so they cannot get a piece of loot that crosses one of their limits. You can also specify the rarity of the item, or a range of rarities to roll from, for example, `%randloot @C_allum very rare` or `%randloot @C_allum common-rare`. It will then ask if you want to cancel, edit the item, or add it to the player's inventory as is."
+        "To reward a player with randomised loot, you can run the `%randloot @name` command. This generates a piece of loot and compares it to their kinks - so they cannot get a piece of loot that crosses one of their limits. You can also specify the rarity of the item, or a range of rarities to roll from, for example, `%randloot @C_allum very rare` or `%randloot @C_allum common-rare`. It will then ask if you want to cancel, edit the item, or add it to the player's inventory as is.",
+        "Clones the contents (all messages) of the channel the command is called from to another channel/thread. `%clonev2 destinationchannel destinationthread`. These can either be #links or just channel IDs. Note that the destination channel must contain the destination thread, and the command has to be called in the thread you want to copy!",
+        "Registers a new community project that people can invest in. `%communityproject -[projectName] -[projectDescription] -[dezzAmountNeededToComplete] -[FailChance(Put 1 for 1%, 5 for 5% etc)] -[VictoryMessage]`. Project name is the name, for example `Rebuilding the Burlesque`. Project Description is what appears in the initial embed. DezzAmountToComplete and fail chance are self explanatory. Victory message is the message used when the project reached its investment goal.",
+        "Resets the dezzie reward pool (for reactions) if something went wrong with the weekly reset. If the underlying function doesn't work, this won't work either as it just manually calls the reset function."
+        "Allows to migrate a players account from old to new naming system without failsaves of checking if the two accounts are actually linked. MAKE SURE THAT THE NAME THE PLAYER GIVES YOU ACTUALLY BELONGS TO THEM! You can see old usernames on the badge in the top right of their account. Command is `%manualmigrate [newUsername] [oldname#4-digit-number]`"
         ]
         ]
 

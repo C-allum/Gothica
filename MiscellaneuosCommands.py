@@ -221,7 +221,9 @@ async def migrateAcc(message):
             sheet.values().update(spreadsheetId = CharSheet, range = "A2", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=charreg)).execute()
             await message.channel.send(embed = discord.Embed(title = f"{newPlayerName}: Migration completed!", description = "Your account is now migrated to the new Discord username system"))
         else:
-            await message.channel.send(embed = discord.Embed(title = f"{newPlayerName} Migration not possible", description = f"Your account is either already migrated, {oldPlayerName} is not in the economy or you haven't filled in your kinklist. Please contact mods to resolve this."))
+            await message.channel.send(embed = discord.Embed(title = f"{newPlayerName} Migration not possible", description = f"Your account is probably already migrated. If that is not the case, please contact mods to resolve this."))
+    else: 
+        await message.channel.send(embed = discord.Embed(title = f"{newPlayerName} Migration not possible", description = f"You did not fill out your kinklist with us before changing to the new naming system. Please contact mods to resolve this."))
 
 async def manualMigrateAcc(message):
     userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension = 'ROWS').execute().get("values")
@@ -262,14 +264,14 @@ async def manualMigrateAcc(message):
             oldEconomyIndex = -1
             for a in range(math.ceil((len(userinvs)-5)/4)):
                 b = 4 * a + 5
-                if str(oldPlayerName) in userinvs[b][0]:
+                if str(oldPlayerName) == userinvs[b][0]:
                     oldEconomyIndex = b
                     break
             
             newEconomyIndex = -1
             for a in range(math.ceil((len(userinvs)-5)/4)):
                 b = 4 * a + 5
-                if str(newPlayerName) in userinvs[b][0]:
+                if str(newPlayerName + "#0") == userinvs[b][0]:
                     newEconomyIndex = b
                     break
             if oldEconomyIndex == -1 or newEconomyIndex == -1:
@@ -298,6 +300,32 @@ async def manualMigrateAcc(message):
             await message.channel.send(embed = discord.Embed(title = f"{newPlayerName}: Migration completed!", description = "Your account is now migrated to the new Discord username system"))
         else:
             await message.channel.send(embed = discord.Embed(title = f"{newPlayerName} Migration already completed", description = f"Your account is already migrated or {oldPlayerName} is not in the economy"))
+
+async def regCommunityProject(message):
+    #extract arguments
+    split_message = message.content.split("-")
+    name = split_message[1][:-1]
+    description = split_message[2][:-1]
+    amount_needed = split_message[3][:-1]
+    fail_chance = split_message[4][:-1].replace("%", "")
+    victory_message = split_message[5]
+
+    #prepare data for the sheet
+    projdata = sheet.values().get(spreadsheetId = Plotsheet, range = "AS1:AX200", majorDimension='ROWS').execute().get("values")
+    new_proj = [name, amount_needed, fail_chance, 0, victory_message, ""]
+    projdata.append(new_proj)
+    
+
+    #Create initial message and thread
+    outputchannel = client.get_channel(communityProjectChannel)
+    initial_message = await outputchannel.send(embed = discord.Embed(title = f"{name}", description = f"{description}", colour = embcol))
+    await outputchannel.create_thread(name= name, message = initial_message)
+    
+
+    #Write into sheet and give feedback
+    sheet.values().update(spreadsheetId = Plotsheet, range = "AS1:AX200", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=projdata)).execute()
+    await message.channel.send(embed = discord.Embed(title = f"Success!", description = f"New community project generated", colour = embcol))
+
 
 
 async def manualDezPoolReset(message):

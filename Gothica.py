@@ -439,7 +439,7 @@ async def on_message(message):
 
                     hooks = 0
 
-                    prevlist = sheet.values().get(spreadsheetId = "17ZTklwFnnrVk1qeZLOnEK6YacNQusRljUxaSXTvPDWU", range = "W2:AM100", majorDimension='ROWS').execute().get("values")
+                    prevlist = sheet.values().get(spreadsheetId = Plotsheet, range = "W2:AM100", majorDimension='ROWS').execute().get("values")
 
                     if prevlist == None:
 
@@ -543,7 +543,7 @@ async def on_message(message):
 
                                 hook = " ".join(temphook).replace("^", cname.title())
 
-                                room = sheet.values().get(spreadsheetId = "17ZTklwFnnrVk1qeZLOnEK6YacNQusRljUxaSXTvPDWU", range = "A1:O1", majorDimension='COLUMNS').execute().get("values")
+                                room = sheet.values().get(spreadsheetId = Plotsheet, range = "A1:O1", majorDimension='COLUMNS').execute().get("values")
 
                                 selroom = room[j][0]
 
@@ -551,7 +551,7 @@ async def on_message(message):
 
                                 prevlist[pind][-1] = str(datetime.now())
 
-                                sheet.values().update(spreadsheetId = "17ZTklwFnnrVk1qeZLOnEK6YacNQusRljUxaSXTvPDWU", range = str("W" + str(pind+2)), valueInputOption = "RAW", body = dict(majorDimension='ROWS', values=[prevlist[pind]])).execute()
+                                sheet.values().update(spreadsheetId = Plotsheet, range = str("W" + str(pind+2)), valueInputOption = "RAW", body = dict(majorDimension='ROWS', values=[prevlist[pind]])).execute()
 
                                 print(message.author.name + " got a plothook")
 
@@ -586,7 +586,7 @@ async def on_message(message):
 
                 delay = await message.channel.send("We are processing your request now")
 
-                prevlist = sheet.values().get(spreadsheetId = "17ZTklwFnnrVk1qeZLOnEK6YacNQusRljUxaSXTvPDWU", range = "R2:AC100", majorDimension='ROWS').execute().get("values")
+                prevlist = sheet.values().get(spreadsheetId = Plotsheet, range = "R2:AC100", majorDimension='ROWS').execute().get("values")
 
                 formlist = []
 
@@ -1082,10 +1082,14 @@ async def on_message(message):
                 await message.delete()
                 await delay.delete()
 
+            #Register community Project
+            elif message.content.lower().startswith(str(myprefix) + "communityproject") and "lorekeeper" in str(message.author.roles).lower():
+                await MiscellaneuosCommands.regCommunityProject(message)
+
             #Invest Command
             elif message.content.lower().startswith(str(myprefix) + "invest"):
 
-                devdata = sheet.values().get(spreadsheetId = "17ZTklwFnnrVk1qeZLOnEK6YacNQusRljUxaSXTvPDWU", range = "AS1:AX200", majorDimension='COLUMNS').execute().get("values")
+                devdata = sheet.values().get(spreadsheetId = Plotsheet, range = "AS1:AX200", majorDimension='COLUMNS').execute().get("values")
                 row = devdata[0].index(str(message.channel))
 
                 if str(message.channel).lower() in str(devdata[0]).lower():
@@ -1116,7 +1120,7 @@ async def on_message(message):
 
                         giveamount = int(message.content.split(" ")[2].strip("-"))
 
-                    if giveamount >= float(int(devdata[1][row])/4):
+                    if giveamount >= float((int(devdata[1][row])/4) + 1):
 
                         giveamount = math.floor(int(devdata[1][row])/4)
 
@@ -1153,8 +1157,8 @@ async def on_message(message):
                             except IndexError:
 
                                 devconts = ""
-
-                                devdata[5].append("")
+                                while len(devdata[5]) < row+1:
+                                    devdata[5].append("")
 
                             if str(message.author) in devdata[5][row]:
 
@@ -1280,9 +1284,9 @@ async def on_message(message):
 
                             await message.channel.send(embed = investemb)
 
-                            sheet.values().update(spreadsheetId = "17ZTklwFnnrVk1qeZLOnEK6YacNQusRljUxaSXTvPDWU", range = str("AV" + str(row+1)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newtotal]])).execute()
+                            sheet.values().update(spreadsheetId = Plotsheet, range = str("AV" + str(row+1)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newtotal]])).execute()
 
-                            sheet.values().update(spreadsheetId = "17ZTklwFnnrVk1qeZLOnEK6YacNQusRljUxaSXTvPDWU", range = str("AX" + str(row+1)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[contributors]])).execute()
+                            sheet.values().update(spreadsheetId = Plotsheet, range = str("AX" + str(row+1)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[contributors]])).execute()
 
                 else:
 
@@ -4250,7 +4254,7 @@ async def on_message(message):
                 else:   #Things we want to do if a bot posted the message
                     if not(client.user == message.author) and not("Avrae" == message.author.name) and message.channel.category_id in [952251327143084092] and not (message.channel.type == discord.ChannelType.private_thread):
                         if(random.randint(1, 500) == 1):
-                            await MiscellaneuosCommands.fiendTomeSpawn(message)
+                            await MiscellaneuosCommands.impTomeSpawn(message)
 
 
 
@@ -4652,8 +4656,8 @@ async def on_raw_reaction_add(reaction):
         role = discord.utils.get(reaction.member.guild.roles, name="Dungeon Denizen")
         await reaction.member.add_roles(role)
 
-    elif reaction.emoji.name == "🟣":
-        await MiscellaneuosCommands.fiendTomeSpawn(mess)
+    elif reaction.emoji.name == "smiling_imp":
+        await MiscellaneuosCommands.impTomeSpawn(mess)
     #if liveVersion == 0:
         #print(reaction)
 
