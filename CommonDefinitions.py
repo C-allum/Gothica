@@ -54,7 +54,7 @@ bot = commands.Bot(command_prefix='%', activity = discord.Game(name="Testing Stu
 print(" Initialised {0.user} at ".format(client) + str(datetime.now()).split(".")[0])
 
 #-----------------LIVE VERSION/BETA TOGGLE---------------
-liveVersion = 0
+liveVersion = 1
 token = ""
 
 #Sheet Locations:
@@ -76,6 +76,8 @@ if liveVersion: #Set to 1 to use the real spreadsheets, or 0 to use the testing 
     Plotsheet = "17ZTklwFnnrVk1qeZLOnEK6YacNQusRljUxaSXTvPDWU"
 
     Randomlootsheet = "19Dc4PI-E5OubesNroJfB4zKg9bqqqbdPelodjH6ecNw"
+
+    TransactionSheet = "1GKiiWlTPlMDj8FCiNZcNSF_FFJi6J_CKTyimdjoo9GU"
 
     logchannel = 918257057428279326
 
