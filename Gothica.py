@@ -2381,25 +2381,25 @@ async def on_message(message):
                                     for scenenum in range(0, len(prevs)):
                                         try:
                                             trackedStatus = prevs[scenenum].split(" ")[-1]
-                                            if " off" in message.content and "Enabled" in trackedStatus:
+                                            if (" off" in message.content or " disable"in message.content) and "Enabled" in trackedStatus:
                                                 splitScene = prevs[scenenum].rsplit(" ", 1)
                                                 splitScene [-1]= " Notifications:Disabled"
                                                 prevs[scenenum] = "".join(splitScene)
 
 
-                                            elif " on" in message.content and "Disabled" in trackedStatus:
+                                            elif (" on" in message.content or " enable" in message.content) and "Disabled" in trackedStatus:
                                                 splitScene = prevs[scenenum].rsplit(" ", 1)
                                                 splitScene [-1]= " Notifications:Enabled"
                                                 prevs[scenenum] = "".join(splitScene)
 
                                             elif not "Enabled" in trackedStatus and not "Disabled" in trackedStatus:
-                                                if " off" in message.content:
+                                                if " off" in message.content or " disable" in message.content:
                                                     prevs[scenenum] = prevs[scenenum] + (" Notifications:Disabled")
 
-                                                elif " on" in message.content:
+                                                elif " on" in message.content or " enable" in message.content:
                                                     prevs[scenenum] = prevs[scenenum] + (" Notifications:Enabled")
-                                                else: message.channel.send("Include `on` or `off` at the end of this command to specify how you want all scenes toggled.")
-
+                                                else: await message.channel.send("Include `on` or `off` at the end of this command to specify how you want all scenes toggled.")
+                                            else: await message.channel.send("Include `on` or `off` at the end of this command to specify how you want all scenes toggled.")
                                         except TypeError:
                                             await message.channel.send("Value not recognised")
                                     #Save new scenes field to sheet.
