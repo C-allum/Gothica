@@ -15,6 +15,7 @@ class DezzieMovingAction(Enum):
     Add = 7     #LK-command add-money
     Remove = 8  #LK-command remove-money
     Invest = 9  #Investing into community projects
+    MessageReward = 10  #Reward for posting in roleplay channels
 
 
 #Initialize the transactions database: connect and create a cursor
@@ -147,6 +148,20 @@ def dataToSpreadsheet():
     except sqlite3.Error as error:
         print('Error occured while printing the database into the spreadsheet - ', error)
 
+#Given a list, finds and removes outliers. IMPORTANT: ASSUMES NUMBERS ARE IN THIRD ARRAY PLACE
+def removeOutliers(data):
+    values = sorted([x[2] for x in data])
+    q1 = np.percentile(values, 25)
+    q3 = np.percentile(values, 75)
+    iqr = q3 - q1
+    lowerFence_react = q1 - (1.5 * iqr)
+    upperFence_react = q3 + (1.5 * iqr)
+
+    outliers = [x for x in data if (x[2] > upperFence_react or x[2] < lowerFence_react)]
+    cleanData = [x for x in data if x not in outliers]
+
+    return cleanData, outliers
+
 
 def testing():
     try:
@@ -157,20 +172,12 @@ def testing():
         #data=transactionsCursor.execute('''SELECT Person, Action, SUM(Amount) FROM Transactions GROUP BY Person, Action ORDER BY Person, SUM(Amount)''')
 
         #Collects for each person action React plus summed value
-        selectAction = "React"
-        transactionsCursor.execute(f'''SELECT Person, Action, SUM(Amount) FROM Transactions WHERE Action in ('{selectAction}') GROUP BY Person, Action ORDER BY Person''')
-
+        actions = ["Work","Slut","React"]
+        transactionsCursor.execute(f'''SELECT Person, Action, SUM(Amount) FROM Transactions WHERE Action in ({','.join(['?']*len(actions))}) GROUP BY Person, Action ORDER BY Person''', actions)
         data = transactionsCursor.fetchall()
 
         #Select only values, write to array
-        reactArr = sorted([x[2] for x in data])
-        q1_react = np.percentile(reactArr, 25)
-        q3_react = np.percentile(reactArr, 75)
-        iqr_react = q3_react - q1_react
-        lowerFence_react = q1_react - (1.5 * iqr_react)
-        upperFence_react = q3_react + (1.5 * iqr_react)
-
-        outliers = [x for x in data if (x[2] > upperFence_react or x[2] < lowerFence_react)]
+        data, outliers = removeOutliers(data)
 
         #Print whole database
         #data=transactionsCursor.execute('''SELECT * FROM Transactions''')
@@ -185,9 +192,9 @@ def testing():
             
         transactionsConnection.close()
     except sqlite3.Error as error:
-        print('Error occured while printing the database contents - ', error)
+        print('Error occured while testing - ', error)
 
 #--- --- --- EXECUTED IF THIS FILE IS RUN --- --- ---
 if __name__ == "__main__":
     #playerTransactionsInfo('Toph#9851', '2 months')
-    dataToSpreadsheet()
+    testing()

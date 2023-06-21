@@ -4158,6 +4158,8 @@ async def on_message(message):
 
                     newtot = 0
 
+                    randaward = 0
+
                     economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
                     #Existing Member
@@ -4220,6 +4222,9 @@ async def on_message(message):
                         sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(row + 1)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[datetime.timestamp(datetime.now())]])).execute()
 
                         sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[dataup])).execute()
+
+                        if (newtot > 0) and (randaward > 0):
+                            TransactionsDatabaseInterface.addTransaction(targname + "#" + str(target.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.MessageReward, int(randaward))
 
                     #Ping user for a tracked scene.
 
