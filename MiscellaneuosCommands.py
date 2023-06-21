@@ -159,6 +159,7 @@ async def migrateAcc(message):
     kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
     charreg = sheet.values().get(spreadsheetId = CharSheet, range = "A2:AA2000", majorDimension='ROWS').execute().get("values")
     user = message.author
+    newPlayerName = user.name
     try:
         if user.discriminator != "0" :
             await message.channel.send(embed = discord.Embed(title = f"{user.name}, you have to wait for your discord migration!", description = f"Your account is not been migrated to the new unique username system that discord introduced. Try again when you have your new username!"))
@@ -169,7 +170,6 @@ async def migrateAcc(message):
     if str(user.id) in str(kinkdata):
         playerIndex = [row[2] for row in kinkdata].index(str(user.id))
         oldPlayerName = kinkdata[playerIndex][1]
-        newPlayerName = user.name
         oldPlayerNameSplit = oldPlayerName.split('#', 1)
         #Check if player is already migrated. If they are not, they will have a delimiter and the length of the split is 2
         if len(oldPlayerNameSplit) == 2:

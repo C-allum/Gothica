@@ -2236,7 +2236,7 @@ async def on_message(message):
 
                     if str(message.author) in econdata[r][0]:
 
-                        if not econdata[r+2][0] == "":
+                        if len(econdata[r+2]) > 0 and not econdata[r+2][0] == "":
 
                             if len(econdata[r+2][0]) == 1:
 
