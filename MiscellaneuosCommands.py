@@ -230,7 +230,7 @@ async def manualMigrateAcc(message):
     kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
     charreg = sheet.values().get(spreadsheetId = CharSheet, range = "A2:AA2000", majorDimension='ROWS').execute().get("values")
     newPlayerName = message.content.split()[1]
-    oldPlayerName = message.content.split()[2]
+    oldPlayerName = message.content.split(" ", 2)[-1]
 
     localGuild = client.get_guild(828411760365142076)
     if localGuild != None:

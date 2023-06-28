@@ -559,7 +559,7 @@ async def helplist(message):
         ]
 
     #Check for lorekeeper channels
-    if message.channel.category.name != "﴿─﴾ 𝙻𝚘𝚛𝚎𝚔𝚎𝚎𝚙𝚎𝚛'𝚜 𝙲𝚊𝚋𝚊𝚕 ﴿─﴾":
+    if message.channel.category.name != "﴿─﴾ 𝙻𝚘𝚛𝚎𝚔𝚎𝚎𝚙𝚎𝚛'𝚜 𝙲𝚊𝚋𝚊𝚕 ﴿─﴾" or message.channel.category.name != "▐ ₪₪ ▌𝙱𝚊𝚌𝚔 𝚘𝚏 𝙷𝚘𝚞𝚜𝚎▐ ₪₪ ▌" or message.channel.category.name != "Secret Lore":
         helpcategories = helpcategories[:-1]
         helpnames = helpnames[:-1]
         helpsummary = helpsummary[:-1]
