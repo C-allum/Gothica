@@ -1580,8 +1580,10 @@ async def getKinkData(message):
         targname = await client.fetch_user(targid)
     else:
         targname = message.author
-
-    namestr = str(targname.name)
+    if message.author.discriminator == "0":
+        namestr = str(targname.name)
+    else:
+        namestr = str(targname.name + "#" + targname.discriminator)
     return kinkdata, namestr, targname
 
 #Fetches name and ID of author, and loads the kinkdata from the sheet.
