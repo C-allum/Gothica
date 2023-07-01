@@ -1015,7 +1015,8 @@ async def charsearch(message, outputchannel):
                         try:
                             await outputchannel.send( embed= emb)
                         except:
-                            await outputchannel.send(embed=discord.Embed(title="Character couldn't be embedded",description="Most likely the image link is broken for this character. If that is not the case, contact the @bot gods.", colour = embcol))
+                            await outputchannel.send(embed=discord.Embed(title="Character couldn't be embedded",description="Most likely the first image link is broken for this character. If that is not the case, contact the @bot gods.", colour = embcol))
+                            return
                         
                         if len(imgurl) > 1:
 
@@ -1025,7 +1026,11 @@ async def charsearch(message, outputchannel):
 
                                 emb.set_image(url = imgurl[d+1])
 
-                                await outputchannel.send(embed=emb)
+                                try:
+                                    await outputchannel.send( embed= emb)
+                                except:
+                                    await outputchannel.send(embed=discord.Embed(title="Character couldn't be embedded",description=f"Most likely the {d} image link is broken for this character. If that is not the case, contact the @bot gods.", colour = embcol))
+                                    return
                         break
 
             except TypeError or ValueError:
