@@ -1012,9 +1012,10 @@ async def charsearch(message, outputchannel):
                             
                                 emb.set_image(url=imgurl[0])
 
-
-                        await outputchannel.send( embed= emb)
-
+                        try:
+                            await outputchannel.send( embed= emb)
+                        except:
+                            await outputchannel.send(embed=discord.Embed(title="Character couldn't be embedded",description="Most likely the image link is broken for this character. If that is not the case, contact the @bot gods.", colour = embcol))
                         
                         if len(imgurl) > 1:
 
