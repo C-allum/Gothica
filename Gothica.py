@@ -17,8 +17,8 @@ async def on_ready():
     startmessage = await client.get_channel(logchannel).send('Logged in as {0.user} at '.format(client) + str(datetime.now()).split(".")[0])
 
     server = startmessage.guild
-    MVProle = discord.utils.get(server.roles, name="MVP")
-    LFGrole = discord.utils.get(server.roles, name="LFG")
+    MVProle = discord.utils.get(server.roles, name="Staff MVP")
+    LFGrole = discord.utils.get(server.roles, name="Looking for Role Play")
     for a in server.members:
         if MVProle in a.roles:
             await a.remove_roles(MVProle)
