@@ -686,9 +686,22 @@ async def additem(message):
 
     return
 
+async def giftAll(message):
+    userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ4000", majorDimension = 'ROWS').execute().get("values")
 
+    amount = int(message.content.split(" ")[-1])
 
+    i = 0
 
+    while i < len(userinvs):
+        userinvs[i][1] = int(userinvs[i][1]) + amount
+        i += 4
+
+    sheet.values().update(spreadsheetId = EconSheet, range = "A6", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=userinvs)).execute()
+    if amount >= 0:
+        await message.channel.send(embed = discord.Embed(title = "Everyone received a gift!", description = f"Every denizen of the dungeon was blessed with {amount}<:dz:844365871350808606> right into their pockets!"))
+    else:
+        await message.channel.send(embed = discord.Embed(title = "Everyone got robbed!", description = f"Every denizen of the dungeon got {amount}<:dz:844365871350808606> taken right out of their pockets!"))
 #---------Helper functions----------
 
 async def getUserNamestr(message):

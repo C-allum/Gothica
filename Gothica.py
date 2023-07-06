@@ -2491,6 +2491,11 @@ async def on_message(message):
 
                 await EconomyCommands.additem(message)
 
+            #gift all
+            elif message.content.lower().startswith(str(myprefix) + "giftall") or message.content.lower().startswith("$giftall") and "lorekeeper" in str(message.author.roles).lower():
+
+                await EconomyCommands.giftAll(message)
+
             #Use Item
             elif message.content.lower().startswith(str(myprefix) + "use") or message.content.lower().startswith("$use"):
 
