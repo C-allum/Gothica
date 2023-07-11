@@ -616,7 +616,14 @@ async def helplist(message):
             for b in range(len(helpnames[a])):
                 index += 1
                 helptextmain.append("`" + str(index) + "`: *%" + helpnames[a][b] + ":* " + helpsummary[a][b])
-        await message.channel.send(embed = discord.Embed(title = "Gothica Help", description = "\n".join(helptextmain), colour = embcol))
+
+        #check if message is too long, else split
+        if len("\n".join(helptextmain)) > 3800:
+            half_length = len(helptextmain) // 2
+            await message.channel.send(embed = discord.Embed(title = "Gothica Help", description = "\n".join(helptextmain[:half_length]), colour = embcol))
+            await message.channel.send(embed = discord.Embed(title = "Gothica Help", description = "\n".join(helptextmain[half_length:]), colour = embcol))
+        else:
+            await message.channel.send(embed = discord.Embed(title = "Gothica Help", description = "\n".join(helptextmain), colour = embcol))
         try:
             msg = await client.wait_for('message', timeout = 30, check = check(message.author))
             try:
