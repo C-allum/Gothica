@@ -7,7 +7,7 @@ async def updatereg(message):
 
     await message.channel.send("Updating Index")
 
-    charlist = await client.get_channel(indexchannel).history(limit=1000, oldest_first=True).flatten()
+    charlist = await client.get_channel(indexchannel).history(limit=4000, oldest_first=True).flatten()
 
     for a in range(len(charlist)):
 
@@ -17,7 +17,7 @@ async def updatereg(message):
 
     await client.get_channel(indexchannel).send(embed = discord.Embed(title = "Break", description= "", colour = embcol))
 
-    chardata = sheet.values().get(spreadsheetId = CharSheet, range = "A1:Z1000" ).execute().get("values")
+    chardata = sheet.values().get(spreadsheetId = CharSheet, range = "A1:Z4000" ).execute().get("values")
 
     for a in range(len(chardata)):
 
@@ -234,12 +234,12 @@ async def charcreate(message):
 
     auth = message.author.name
 
-    autres = sheet.values().get(spreadsheetId = CharSheet, range = "B2:B1000").execute()
+    autres = sheet.values().get(spreadsheetId = CharSheet, range = "B2:B4000").execute()
     authvalues = str(autres.get("values"))
     authvalues = authvalues.replace("'","")
     pnames = authvalues.split(",")
 
-    statres = sheet.values().get(spreadsheetId = CharSheet, range = "X2:X1000").execute()
+    statres = sheet.values().get(spreadsheetId = CharSheet, range = "X2:X4000").execute()
     statvalues = str(statres.get("values"))
     statvalues = statvalues.replace("'","")
     charstats = statvalues.split(",")
@@ -311,9 +311,9 @@ async def charcreate(message):
 #Character Edit Subroutine
 async def charedit(message):
 
-    cargs = sheet.values().get(spreadsheetId = CharSheet, range = "F1:Z1000" ).execute().get("values")
+    cargs = sheet.values().get(spreadsheetId = CharSheet, range = "F1:Z4000" ).execute().get("values")
 
-    autres = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B1000").execute().get("values")
+    autres = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B4000").execute().get("values")
 
     auth = message.author.name
 
@@ -417,7 +417,7 @@ async def chartransfer(message):
 
     auth = message.author.name
 
-    autres = sheet.values().get(spreadsheetId = CharSheet, range = "B2:B1000").execute()
+    autres = sheet.values().get(spreadsheetId = CharSheet, range = "B2:B4000").execute()
     authvalues = str(autres.get("values"))
     authvalues = authvalues.replace("'","")
     pnames = authvalues.split(",")
@@ -477,9 +477,9 @@ async def chartransfer(message):
 
                     #Test Recipient's Slots
 
-                    pnames = str(sheet.values().get(spreadsheetId = CharSheet, range = "B2:B1000").execute().get("values")).replace("'","").split(",")
-                    charstats = str(sheet.values().get(spreadsheetId = CharSheet, range = "X2:X1000").execute().get("values")).replace("'","").split(",")
-                    origowner = str(sheet.values().get(spreadsheetId = CharSheet, range = "A2:A1000").execute().get("values")).replace("'","").split(",")
+                    pnames = str(sheet.values().get(spreadsheetId = CharSheet, range = "B2:B4000").execute().get("values")).replace("'","").split(",")
+                    charstats = str(sheet.values().get(spreadsheetId = CharSheet, range = "X2:X4000").execute().get("values")).replace("'","").split(",")
+                    origowner = str(sheet.values().get(spreadsheetId = CharSheet, range = "A2:A4000").execute().get("values")).replace("'","").split(",")
 
                     if origowner[i] == pnames[i]:
 
@@ -568,7 +568,7 @@ async def charlist(message):
 
             #Show other user's Characters
 
-            pnames = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B1000").execute().get("values")
+            pnames = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B4000").execute().get("values")
 
             if "@" in message.content:
 
@@ -637,7 +637,7 @@ async def charlist(message):
 
         #Show own Characters
 
-        pnames = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B1000").execute().get("values")
+        pnames = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B4000").execute().get("values")
 
         auth = message.author.name
 
@@ -763,11 +763,11 @@ async def charsearch(message, outputchannel):
 
     cdata = ["\n"]
 
-    cnames = sheet.values().get(spreadsheetId = CharSheet, range = "F1:F2000").execute().get("values")
+    cnames = sheet.values().get(spreadsheetId = CharSheet, range = "F1:F4000").execute().get("values")
 
-    pnames = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B2000" ).execute().get("values")
+    pnames = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B4000" ).execute().get("values")
 
-    cargs = sheet.values().get(spreadsheetId = CharSheet, range = "F1:Z2000" ).execute().get("values")
+    cargs = sheet.values().get(spreadsheetId = CharSheet, range = "F1:Z4000" ).execute().get("values")
     searchedName = " ".join(msgspl[1:]).lower()
     
     count = 0
@@ -1054,9 +1054,9 @@ async def charretire(message):
 
     auth = message.author.name
 
-    autres = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B1000").execute().get("values")
+    autres = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B4000").execute().get("values")
 
-    pronounarg = sheet.values().get(spreadsheetId = CharSheet, range = "I1:I1000").execute().get("values")
+    pronounarg = sheet.values().get(spreadsheetId = CharSheet, range = "I1:I4000").execute().get("values")
 
     pnames = autres
 
@@ -1140,7 +1140,7 @@ async def charactivate(message):
 
     auth = message.author.name
 
-    pnames = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B1000").execute().get("values")
+    pnames = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B4000").execute().get("values")
 
     msgspl = message.content.split(" ")
 
@@ -1149,8 +1149,8 @@ async def charactivate(message):
     foot = None
     imgurl = None
 
-    pchars = sheet.values().get(spreadsheetId = CharSheet, range = "F1:F1000").execute().get("values")
-    pstat = sheet.values().get(spreadsheetId = CharSheet, range = "X1:X1000").execute().get("values")
+    pchars = sheet.values().get(spreadsheetId = CharSheet, range = "F1:F4000").execute().get("values")
+    pstat = sheet.values().get(spreadsheetId = CharSheet, range = "X1:X4000").execute().get("values")
 
     charactivated = 0
 
@@ -1233,7 +1233,7 @@ async def chardeactivate(message):
 
     auth = message.author.name
 
-    pnames = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B1000").execute().get("values")
+    pnames = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B4000").execute().get("values")
 
     msgspl = message.content.split(" ")
 
@@ -1242,9 +1242,9 @@ async def chardeactivate(message):
     foot = None
     imgurl = None
 
-    pchars = sheet.values().get(spreadsheetId = CharSheet, range = "F1:F1000").execute().get("values")
+    pchars = sheet.values().get(spreadsheetId = CharSheet, range = "F1:F4000").execute().get("values")
 
-    pstat = sheet.values().get(spreadsheetId = CharSheet, range = "X1:X1000").execute().get("values")
+    pstat = sheet.values().get(spreadsheetId = CharSheet, range = "X1:X4000").execute().get("values")
 
     chardeactivated = 0
 
