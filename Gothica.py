@@ -2702,6 +2702,7 @@ async def on_message(message):
                                 else:
                                     critresp = "\n\nYou rolled a " + str(crit) + ", which doesn't do anything special."
 
+                                streakbonus = 0
                                 if workdiff < 172800:
                                     try:
                                         streakmess = "\n\nYou now have a " + str(int(economydata[b+3][1]) + 1) + " day streak!"
@@ -2730,15 +2731,28 @@ async def on_message(message):
                                     streakmess = "\n\nWork every day to build a streak!"
                                     streakdays = 1
 
+                                if crit == 1:
+                                    TransactionsDatabaseInterface.addTransaction(message.author.name + "#" + str(message.author.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.Work, int(math.ceil(workreward / 2)))
+                                elif crit == 20:
+                                    TransactionsDatabaseInterface.addTransaction(message.author.name + "#" + str(message.author.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.Work, int(2 * workreward))
+                                else:
+                                    TransactionsDatabaseInterface.addTransaction(message.author.name + "#" + str(message.author.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.Work, int(workreward))
+
+                                if pay > 0:
+                                    TransactionsDatabaseInterface.addTransaction(message.author.name + "#" + str(message.author.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.RolePay, int(pay))
+                                
+                                if streakbonus > 0:
+                                    TransactionsDatabaseInterface.addTransaction(message.author.name + "#" + str(message.author.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.StreakReward, int(streakbonus))
+
                                 randbal = str(random.choice([message.author.display_name + " now has " + str(newtot) + dezzieemj, "According to our records, " + message.author.display_name + " now has " + str(newtot) + dezzieemj, str(newtot) + dezzieemj + ". " + message.author.display_name + " has " + str(newtot) + dezzieemj + ".", "This work brings " + message.author.display_name + "'s balance to.. " + str(newtot) + dezzieemj + ".", message.author.display_name + " should really go and visit the Gobblin Bazzar. They have " + str(newtot) + dezzieemj + " to spend."]))
                                 balresp = "\n\n---------------------------------------------------------\n\n" + randbal
                                 worktit = random.choice([message.author.display_name + " earned some dezzies with the work command!", message.author.display_name + " has been hard at work!", "Working hard, or hardly working, " + message.author.display_name + "?", "You guys are getting paid? Well, " + message.author.display_name + " is, anyway.", message.author.display_name + " did some work.", message.author.display_name + " decided to do some work. It's about time they pitched in."])
                                 await message.channel.send(embed = discord.Embed(title = worktit, description = workresp + critresp + paymess + streakmess + balresp, colour = embcol))
                                 await message.delete()
-                                TransactionsDatabaseInterface.addTransaction(message.author.name + "#" + str(message.author.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.Work, int(newtot - int(economydata[b][1])))
                                 sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(row+3)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[streakdays]])).execute()
                                 sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newtot]])).execute()
                                 sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(row+1)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[str(datetime.timestamp(datetime.now()))]])).execute()
+                                
                             else:
                                 await message.channel.send(embed = discord.Embed(title = message.author.name + " cannot work at this time!", description = "You last worked at <t:" + str(economydata[b+1][1]) + ">.\n The work command can only be used once per day.\n\n Try again " + "<t:" + str(int(economydata[b+1][1]) + 84600) + ":R>\nWe'll send you a direct message when you are able to.", colour = embcol))
                                 await message.delete()

@@ -16,6 +16,8 @@ class DezzieMovingAction(Enum):
     Remove = 8  #LK-command remove-money
     Invest = 9  #Investing into community projects
     MessageReward = 10  #Reward for posting in roleplay channels
+    RolePay = 11        #Reward for persons with roles, added when working
+    StreakReward = 12   #Reward for working without missing a day
 
 
 #Initialize the transactions database: connect and create a cursor
@@ -172,7 +174,7 @@ def testing():
         #data=transactionsCursor.execute('''SELECT Person, Action, SUM(Amount) FROM Transactions GROUP BY Person, Action ORDER BY Person, SUM(Amount)''')
 
         #Collects for each person action React plus summed value
-        actions = ["Work","Slut","React"]
+        actions = ["Work","Slut","React","MessageReward","RolePay","StreakReward"]
         transactionsCursor.execute(f'''SELECT Person, Action, SUM(Amount) FROM Transactions WHERE Action in ({','.join(['?']*len(actions))}) GROUP BY Person, Action ORDER BY Person''', actions)
         data = transactionsCursor.fetchall()
 
