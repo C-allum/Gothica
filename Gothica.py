@@ -19,11 +19,14 @@ async def on_ready():
     server = startmessage.guild
     MVProle = discord.utils.get(server.roles, name="Staff MVP")
     LFGrole = discord.utils.get(server.roles, name="Looking for Role Play")
+    temprole = discord.utils.get(server.roles, name="Temporary Role")
     for a in server.members:
         if MVProle in a.roles:
             await a.remove_roles(MVProle)
         if LFGrole in a.roles:
             await a.remove_roles(LFGrole)
+        if temprole in a.roles:
+            await a.remove_roles(temprole)
 
 
     TransactionsDatabaseInterface.initTransactionsDataBase()
@@ -2399,11 +2402,12 @@ async def on_message(message):
                                                 elif " on" in message.content or " enable" in message.content:
                                                     prevs[scenenum] = prevs[scenenum] + (" Notifications:Enabled")
                                                 else: 
-                                                    await message.channel.send("Include `on` or `off` at the end of this command to specify how you want all scenes toggled.")
+                                                    await message.channel.send(embed = discord.Embed(title = "Wrong use of the command!", description = "Include `on` or `off` at the end of this command to specify how you want all scenes toggled.", colour = embcol))
                                                     return
-                                            else: 
-                                                await message.channel.send("Include `on` or `off` at the end of this command to specify how you want all scenes toggled.")
+                                            elif not " off" in message.content and not " disable" in message.content and not " on" in message.content and not " enable" in message.content:
+                                                await message.channel.send(embed = discord.Embed(title = "Wrong use of the command!", description = "Include `on` or `off` at the end of this command to specify how you want all scenes toggled.", colour = embcol))
                                                 return
+
                                         except TypeError:
                                             await message.channel.send("Value not recognised")
                                     #Save new scenes field to sheet.
@@ -4029,6 +4033,31 @@ async def on_message(message):
                         mysterembed.set_thumbnail(url = "https://cdn.discordapp.com/attachments/927298209183830066/989179813627568128/token_5_1.png")
 
                     await client.get_channel(990265174126645298).send(embed = mysterembed)
+
+            elif message.content.lower().startswith(str(myprefix) + "pingrole"):
+                memlist = 0
+                mems = []
+                server = message.guild
+                tagrole = discord.utils.get(server.roles, name = message.content.split(" ", 1)[1])
+                if (not "Moderator" in message.author.roles) and (not "looking" in str(tagrole.name).lower()):
+                    await message.channel.send("You don't have permission to tag that role like this.")
+                else:
+                    temprole = discord.utils.get(server.roles, name= "Temporary Role")
+                    tempid = temprole.id
+                    lastmember = server.members[-1]
+                    await message.channel.send("Pinging Role:")
+                    for a in server.members:
+                        if tagrole in a.roles:
+                            memlist += 1
+                            await a.add_roles(temprole)
+                            mems.append(a)
+                        if memlist == 100 or a == lastmember:
+                            await message.channel.send("<@&" + str(tempid) + ">")
+                            for b in mems:
+                                await b.remove_roles(temprole)
+                            memlist = 0
+                            mems = []
+
 
             #Timestamp Message
             elif message.content.lower().startswith(str(myprefix) + "timestamp"):
