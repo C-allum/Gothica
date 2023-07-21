@@ -927,8 +927,10 @@ async def charsearch(message, outputchannel):
     if foot != None:
         emb.set_footer(text=foot)
 
-    await outputchannel.send(embed=emb)
-
+    try:
+        await outputchannel.send(embed=emb)
+    except discord.errors.HTTPException:
+        outputchannel.send(eembed=discord.Embed(title="Character couldn't be embedded",description="We refuse to write a whole library each time you search this character! (The character as a whole exceeds 4096 characters)", colour = embcol))
     if len(imgurl) > 1 and count == 1:
 
         for d in range(imglen-1):

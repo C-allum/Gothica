@@ -9,7 +9,7 @@ import TransactionsDatabaseInterface
 import time
 from discord import Webhook
 import aiohttp
-
+player_list = []
 @client.event
 async def on_ready():
 
@@ -32,7 +32,8 @@ async def on_ready():
     TransactionsDatabaseInterface.initTransactionsDataBase()
 
     print("Fetching a list of all players...")
-    player_list = MiscellaneuosCommands.getPlayerNameList()
+    global player_list 
+    player_list = await MiscellaneuosCommands.getPlayerNameList()
     print("... done")
 
     #------------------DezzieAwardPoolReset---------------------
@@ -731,7 +732,7 @@ async def on_message(message):
 
                     await client.get_channel(841736084362362940).send(str(advenname) + " has been given the Guild Adventurer role")
 
-                    chardata = sheet.values().get(spreadsheetId = CharSheet, range = "B1:F1000", majorDimension='COLUMNS').execute().get("values")
+                    chardata = sheet.values().get(spreadsheetId = CharSheet, range = "B1:F4000", majorDimension='COLUMNS').execute().get("values")
 
                     advenname = str(advenname).split("#")[0]
 
