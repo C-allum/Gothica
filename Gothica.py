@@ -4207,6 +4207,8 @@ async def on_message(message):
 
             #Per message income and Scene tracker pings.
             if not "verification" in str(message.channel).lower():
+                
+                #-------THIS CODE IS SUPER MESSY AND NEEDS A SERIOUS REWORK----------
 
                 if not isbot:
 
@@ -4217,7 +4219,7 @@ async def on_message(message):
 
                     randaward = 0
 
-                    
+                    continue_check = 0
 
                     #Existing Member
 
@@ -4242,6 +4244,37 @@ async def on_message(message):
                                     newtot = int(economydata[b][1]) + int(randaward)
 
                                     break
+                            
+                            #Ping user for a tracked scene.
+
+                            if not "?edit" in message.content:
+                                f = lambda x: [""]if x == [] else x
+                                columnZero = [ f(x)[0] for x in economydata]
+                                for a in range(math.floor((len(economydata))/4) - 1):
+                                    playerindex = a * 4 + 5
+                                    scenedataIndex =  playerindex + 2
+
+                                    if str(message.channel.id) in columnZero[scenedataIndex]:
+                                        scenearray = columnZero[scenedataIndex].split("|")
+                                        sceneindex = [idx for idx, s in enumerate(scenearray) if str(message.channel.id) in s][0]
+                                        trackedStatus = scenearray[sceneindex].split(" ")[-1]
+
+                                        if trackedStatus == "Notifications:Enabled":
+                                            if economydata[playerindex][0] != message.author.name + "#" + message.author.discriminator:
+                                                user = discord.utils.get(client.guilds[0].members, name = economydata[playerindex][0].split("#")[0], discriminator = economydata[playerindex][0].split("#")[1])
+                                                timeos.sleep(1.5)
+                                                await user.send(f"New message in <#{message.channel.id}> by {message.channel.last_message.author.name}")
+
+                                        elif trackedStatus == "Notifications:Disabled":
+                                            pass
+                                        
+                                        else:
+                                            scenearray[sceneindex] = scenearray[sceneindex] + (" Notifications:Disabled")
+                                            dataup = "|".join(scenearray)
+                                            row = scenedataIndex + 1
+                                            sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[dataup]])).execute()        
+                            
+                            continue_check = 1
 
                     #New member
 
@@ -4251,7 +4284,7 @@ async def on_message(message):
                         newtot = 0
 
                         print(str(message.author) + " has been added to the economy at " + str(datetime.now()))
-
+                        continue_check = 1
                         if (int(len(economydata) - 1) / 4).is_integer():
                             row = len(economydata) + 1
 
@@ -4259,55 +4292,30 @@ async def on_message(message):
                             row = ((int(int(len(economydata) - 1) / 4) + 1) * 4) + 2 #Calculates the next line on the sheet that is divisible by 4. This is a bit of a magic formula.
                             #len econdata-1 / 4 gives us the player number of the current last player. that + 1 and * 4 gives us the cell that is one before the last one of that player (because we did -1 earlier).
                             #+1 gives us the last line of the currently last registered player, meaning +2 gives us the line the new player's entry needs to start at.
+                    
+                    
+                    if continue_check == 1:
+                        try:
+                            prevtime = int(str(economydata[row][0]))
 
-                    try:
-                        prevtime = int(str(economydata[row][0]))
+                        except IndexError:
+                            prevtime = 0
 
-                    except IndexError:
-                        prevtime = 0
+                        except ValueError:
+                            prevtime = 0
 
-                    except ValueError:
-                        prevtime = 0
+                        dataup = [str(message.author), str(newtot)]
 
-                    dataup = [str(message.author), str(newtot)]
+                        if int(str(datetime.timestamp(datetime.now())).split(".")[0]) - int(prevtime) >= 300 and row != 0:
 
-                    if int(str(datetime.timestamp(datetime.now())).split(".")[0]) - int(prevtime) >= 300 and row != 0:
+                            sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(row + 1)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[datetime.timestamp(datetime.now())]])).execute()
 
-                        sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(row + 1)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[datetime.timestamp(datetime.now())]])).execute()
+                            sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[dataup])).execute()
 
-                        sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[dataup])).execute()
+                            if (newtot > 0) and (randaward > 0):
+                                TransactionsDatabaseInterface.addTransaction(targname + "#" + str(target.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.MessageReward, int(randaward))
 
-                        if (newtot > 0) and (randaward > 0):
-                            TransactionsDatabaseInterface.addTransaction(targname + "#" + str(target.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.MessageReward, int(randaward))
-
-                    #Ping user for a tracked scene.
-
-                    if not "?edit" in message.content:
-                        f = lambda x: [""]if x == [] else x
-                        columnZero = [ f(x)[0] for x in economydata]
-                        for a in range(math.floor((len(economydata))/4) - 1):
-                            playerindex = a * 4 + 5
-                            scenedataIndex =  playerindex + 2
-
-                            if str(message.channel.id) in columnZero[scenedataIndex]:
-                                scenearray = columnZero[scenedataIndex].split("|")
-                                sceneindex = [idx for idx, s in enumerate(scenearray) if str(message.channel.id) in s][0]
-                                trackedStatus = scenearray[sceneindex].split(" ")[-1]
-
-                                if trackedStatus == "Notifications:Enabled":
-                                    if economydata[playerindex][0] != message.author.name + "#" + message.author.discriminator:
-                                        user = discord.utils.get(client.guilds[0].members, name = economydata[playerindex][0].split("#")[0], discriminator = economydata[playerindex][0].split("#")[1])
-                                        timeos.sleep(1.5)
-                                        await user.send(f"New message in <#{message.channel.id}> by {message.channel.last_message.author.name}")
-
-                                elif trackedStatus == "Notifications:Disabled":
-                                    pass
-
-                                else:
-                                    scenearray[sceneindex] = scenearray[sceneindex] + (" Notifications:Disabled")
-                                    dataup = "|".join(scenearray)
-                                    row = scenedataIndex + 1
-                                    sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[dataup]])).execute()
+                    
 
 
                 else:   #Things we want to do if a bot posted the message
