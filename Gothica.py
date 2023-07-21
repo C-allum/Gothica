@@ -4219,14 +4219,13 @@ async def on_message(message):
 
                     randaward = 0
 
-                    continue_check = 0
-
                     #Existing Member
-
+                    if player_list == []:
+                        return
+                    
                     if str(message.author) in player_list:
-
-                        if "safe passages" in str(message.channel.category).lower() or "the market" in str(message.channel.category).lower() or "denizen dwellings" in str(message.channel.category).lower() or"keyholder" in str(message.channel.category).lower() or "dangerous depths" in str(message.channel.category).lower() or "outside adventures" in str(message.channel.category).lower() or "quests" in str(message.channel.category).lower():
-                        
+                        if message.channel.category_id in roleplay_categories_id:
+                        #if "safe passages" in str(message.channel.category.name).lower() or "the market" in str(message.channel.category).lower() or "denizen dwellings" in str(message.channel.category).lower() or"keyholder" in str(message.channel.category).lower() or "dangerous depths" in str(message.channel.category).lower() or "outside adventures" in str(message.channel.category).lower() or "quests" in str(message.channel.category).lower():
                             economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
                             for a in range(math.floor(len(economydata)/4)):
@@ -4274,7 +4273,6 @@ async def on_message(message):
                                             row = scenedataIndex + 1
                                             sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[dataup]])).execute()        
                             
-                            continue_check = 1
 
                     #New member
 
@@ -4284,7 +4282,7 @@ async def on_message(message):
                         newtot = 0
 
                         print(str(message.author) + " has been added to the economy at " + str(datetime.now()))
-                        continue_check = 1
+
                         if (int(len(economydata) - 1) / 4).is_integer():
                             row = len(economydata) + 1
 
@@ -4294,7 +4292,7 @@ async def on_message(message):
                             #+1 gives us the last line of the currently last registered player, meaning +2 gives us the line the new player's entry needs to start at.
                     
                     
-                    if continue_check == 1:
+                    if 'economydata' in locals():
                         try:
                             prevtime = int(str(economydata[row][0]))
 
@@ -4313,7 +4311,7 @@ async def on_message(message):
                             sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[dataup])).execute()
 
                             if (newtot > 0) and (randaward > 0):
-                                TransactionsDatabaseInterface.addTransaction(targname + "#" + str(target.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.MessageReward, int(randaward))
+                                TransactionsDatabaseInterface.addTransaction(message.author.name + "#" + str(message.author.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.MessageReward, int(randaward))
 
                     
 
