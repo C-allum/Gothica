@@ -31,6 +31,10 @@ async def on_ready():
 
     TransactionsDatabaseInterface.initTransactionsDataBase()
 
+    print("Fetching a list of all players...")
+    player_list = MiscellaneuosCommands.getPlayerNameList()
+    print("... done")
+
     #------------------DezzieAwardPoolReset---------------------
 
 
@@ -4212,39 +4216,36 @@ async def on_message(message):
 
                     randaward = 0
 
-                    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
+                    
 
                     #Existing Member
 
-                    if str(message.author) in str(economydata):
+                    if str(message.author) in player_list:
 
-                        for a in range(math.floor(len(economydata)/4)):
+                        if "safe passages" in str(message.channel.category).lower() or "the market" in str(message.channel.category).lower() or "denizen dwellings" in str(message.channel.category).lower() or"keyholder" in str(message.channel.category).lower() or "dangerous depths" in str(message.channel.category).lower() or "outside adventures" in str(message.channel.category).lower() or "quests" in str(message.channel.category).lower():
+                        
+                            economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
-                            b = a * 4 + 5
+                            for a in range(math.floor(len(economydata)/4)):
 
-                            if "safe passages" in str(message.channel.category).lower() or "the market" in str(message.channel.category).lower() or "denizen dwellings" in str(message.channel.category).lower() or"keyholder" in str(message.channel.category).lower() or "dangerous depths" in str(message.channel.category).lower() or "outside adventures" in str(message.channel.category).lower() or "quests" in str(message.channel.category).lower():
+                                b = a * 4 + 5
 
-                                mult = 1
+                                charcount = len(message.content)
 
-                            else:
+                                randaward = (math.floor(charcount/100) + random.randint(1,4))
 
-                                mult = 0
+                                if str(message.author) in str(economydata[b][0]):
 
-                            charcount = len(message.content)
+                                    row = b + 1
 
-                            randaward = (math.floor(charcount/100) + random.randint(1,4)) * mult
+                                    newtot = int(economydata[b][1]) + int(randaward)
 
-                            if str(message.author) in str(economydata[b][0]):
-
-                                row = b + 1
-
-                                newtot = int(economydata[b][1]) + int(randaward)
-
-                                break
+                                    break
 
                     #New member
 
                     else:
+                        economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
                         newtot = 0
 
