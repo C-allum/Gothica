@@ -4223,7 +4223,7 @@ async def on_message(message):
                     if player_list == []:
                         return
                     #Check if memeber is already registered
-                    if str(message.author) in player_list:
+                    if str(message.author.name + '#' + message.author.discriminator) in player_list:
                         #check if we are in a channel that awards dezzies for posts
                         if message.channel.category_id in roleplay_categories_id:
                             economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
@@ -4282,7 +4282,7 @@ async def on_message(message):
                         newtot = 0
 
                         print(str(message.author) + " has been added to the economy at " + str(datetime.now()))
-                        player_list.append(message.author + "#" + message.author.discriminator)
+                        player_list.append(str(message.author + "#" + message.author.discriminator))
                         if (int(len(economydata) - 1) / 4).is_integer():
                             row = len(economydata) + 1
 
