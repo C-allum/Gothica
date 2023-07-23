@@ -4222,12 +4222,13 @@ async def on_message(message):
                     #Existing Member
                     if player_list == []:
                         return
-                    
+                    #Check if memeber is already registered
                     if str(message.author) in player_list:
+                        #check if we are in a channel that awards dezzies for posts
                         if message.channel.category_id in roleplay_categories_id:
-                        #if "safe passages" in str(message.channel.category.name).lower() or "the market" in str(message.channel.category).lower() or "denizen dwellings" in str(message.channel.category).lower() or"keyholder" in str(message.channel.category).lower() or "dangerous depths" in str(message.channel.category).lower() or "outside adventures" in str(message.channel.category).lower() or "quests" in str(message.channel.category).lower():
                             economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
+                            #calculate reward amount
                             for a in range(math.floor(len(economydata)/4)):
 
                                 b = a * 4 + 5
@@ -4245,7 +4246,6 @@ async def on_message(message):
                                     break
                             
                             #Ping user for a tracked scene.
-
                             if not "?edit" in message.content:
                                 f = lambda x: [""]if x == [] else x
                                 columnZero = [ f(x)[0] for x in economydata]
@@ -4261,7 +4261,7 @@ async def on_message(message):
                                         if trackedStatus == "Notifications:Enabled":
                                             if economydata[playerindex][0] != message.author.name + "#" + message.author.discriminator:
                                                 user = discord.utils.get(client.guilds[0].members, name = economydata[playerindex][0].split("#")[0], discriminator = economydata[playerindex][0].split("#")[1])
-                                                timeos.sleep(1.5)
+                                                timeos.sleep(3.0)
                                                 await user.send(f"New message in <#{message.channel.id}> by {message.channel.last_message.author.name}")
 
                                         elif trackedStatus == "Notifications:Disabled":
@@ -4270,8 +4270,9 @@ async def on_message(message):
                                         else:
                                             scenearray[sceneindex] = scenearray[sceneindex] + (" Notifications:Disabled")
                                             dataup = "|".join(scenearray)
-                                            row = scenedataIndex + 1
-                                            sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[dataup]])).execute()        
+                                            scene_row = scenedataIndex + 1
+                                            print(dataup)
+                                            sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(scene_row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[dataup]])).execute()
                             
 
                     #New member
@@ -4282,7 +4283,7 @@ async def on_message(message):
                         newtot = 0
 
                         print(str(message.author) + " has been added to the economy at " + str(datetime.now()))
-
+                        player_list.append(message.author + "#" + message.author.discriminator)
                         if (int(len(economydata) - 1) / 4).is_integer():
                             row = len(economydata) + 1
 
@@ -4317,7 +4318,7 @@ async def on_message(message):
 
 
                 else:   #Things we want to do if a bot posted the message
-                    if not(client.user == message.author) and not("Avrae" == message.author.name) and message.channel.category_id in [952251327143084092] and not (message.channel.type == discord.ChannelType.private_thread):
+                    if not(client.user == message.author) and not("Avrae" == message.author.name) and message.channel.category_id in roleplay_categories_id and not (message.channel.type == discord.ChannelType.private_thread):
                         if(random.randint(1, 500) == 1):
                             await MiscellaneuosCommands.impTomeSpawn(message)
 
