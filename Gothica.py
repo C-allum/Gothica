@@ -4271,7 +4271,6 @@ async def on_message(message):
                                             scenearray[sceneindex] = scenearray[sceneindex] + (" Notifications:Disabled")
                                             dataup = "|".join(scenearray)
                                             scene_row = scenedataIndex + 1
-                                            print(dataup)
                                             sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(scene_row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[dataup]])).execute()
                             
 
