@@ -426,6 +426,9 @@ class ImpTomeView(discord.ui.View):
         self.value = True
         self.stop()
 
+
+
+#-----------------Helper functions-------------
 async def uwutongue(message):
     chunks = message.content.split('"')
     result = []
@@ -475,3 +478,12 @@ async def beasttongue(message, animal):
         else:
             beastresult.append(chunks[a])
     return('"'.join(beastresult))
+
+async def getPlayerNameList():
+    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
+    playerList = []
+    for a in range(math.floor(len(economydata)/4) -1):
+
+        b = a * 4 + 5
+        playerList.append(economydata[b][0])
+    return playerList
