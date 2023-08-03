@@ -3997,15 +3997,25 @@ async def on_message(message):
                 channelid = int(message.channel.id)
                 chan = client.get_channel(int(chanid))
                 dest = client.get_channel(int(destid))
+                print("Copying from " + str(chan) + " to " + str(dest))
                 mess = [joinedMessages async for joinedMessages in message.channel.history(limit = None, oldest_first= True)]
-                hook = await chan.create_webhook(name= "Clonehook")
+                hook = await dest.parent.create_webhook(name= "Clonehook")
                 async with aiohttp.ClientSession() as session:
                     whook = Webhook.from_url(hook.url, session = session)
                     for a in range(len(mess)):
-                        if not mess[a].content.startswith("%clone"):
-                            await whook.send(mess[a].content, username = mess[a].author.name, avatar_url = mess[a].author.avatar, thread = dest)
-                        else:
-                            break
+                        try:
+                            if not mess[a].content.startswith("%clone"):
+                                await whook.send(mess[a].content, username = mess[a].author.name, avatar_url = mess[a].author.avatar, thread = dest)
+                            else:
+                                break
+                        except discord.errors.HTTPException:
+                            pass
+                        if mess[a].attachments:
+                            for b in range(len(mess[a].attachments)):
+                                await whook.send(mess[a].attachments[b].url, username = mess[a].author.name, avatar_url = mess[a].author.avatar, thread = dest)
+                        if mess[a].embeds:
+                            await whook.send(embed= mess[a].embeds[0], username = mess[a].author.name, avatar_url = mess[a].author.avatar, thread = dest)
+                await message.channel.send("Complete")
                 await session.close()
                 await hook.delete()
 
@@ -4294,12 +4304,12 @@ async def on_message(message):
                     #New member
 
                     else:
-                        economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
+                        economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ5000", majorDimension='ROWS').execute().get("values")
 
                         newtot = 0
 
                         print(str(message.author) + " has been added to the economy at " + str(datetime.now()))
-                        player_list.append(str(message.author) + "#" + message.author.discriminator)
+                        player_list.append(str(message.author) + "#0")
                         if (int(len(economydata) - 1) / 4).is_integer():
                             row = len(economydata) + 1
 
@@ -4356,7 +4366,7 @@ async def on_message(message):
             else:
                 anonchannel = 1069423947092860998
             if message.content.lower().startswith("%anon"):
-                await client.get_channel(anonchannel).send("Anonymous message:\n\n" + message.content.lstrip("%anon"))
+                await client.get_channel(anonchannel).send("**Anonymous message:**" + message.content.lstrip("%anon") + "\n")
                 await message.channel.send("We have sent your message anonymously")
 
 
