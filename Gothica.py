@@ -4309,7 +4309,7 @@ async def on_message(message):
                         newtot = 0
 
                         print(str(message.author) + " has been added to the economy at " + str(datetime.now()))
-                        player_list.append(str(message.author) + "#0")
+                        player_list.append(message.author)
                         if (int(len(economydata) - 1) / 4).is_integer():
                             row = len(economydata) + 1
 
