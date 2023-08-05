@@ -204,12 +204,12 @@ async def on_message(message):
                 print("Running Tests")              
 
             #Voyeur's Lounge Redirect - On OocFun and Working
-            if isbot and (str(message.channel).lower() == "ooc") and not (message.author.name == "Gothica" or message.author.name == "Gothica Beta"):
+            if isbot and (str(message.channel).lower() == "general-ooc") and not (message.author.name == "Gothica" or message.author.name == "Gothica Beta"):
 
                 await OocFun.VoyRedirect(message)
 
             #Gag - On OocFun and Working
-            if not isbot and str(message.channel).lower() == "ooc" and "gagged" in str(message.author.roles).lower():
+            if not isbot and str(message.channel).lower() == "general-ooc" and "gagged" in str(message.author.roles).lower():
 
                 await OocFun.gag(message)
 
@@ -224,7 +224,7 @@ async def on_message(message):
                 await OocFun.emote(message)
 
             #Player Based Reactions - On OocFun and Working
-            if message.channel.name.lower() == "ooc" and not message.content.startswith(myprefix):
+            if message.channel.name.lower() == "general-ooc" and not message.content.startswith(myprefix):
 
                 await OocFun.playerreacts(message)
 
@@ -4231,6 +4231,9 @@ async def on_message(message):
             #                     await client.get_channel(roomchannel.id).send("```\u200b```")
             #                     await client.get_channel(logchannel).send("Automatically created a scene break in " + roomcur + ". The time difference was: " + str(diff) + " seconds, which equates to " + str(float(diff/3600)) + " hours.")
 
+            elif message.content.lower().startswith(str(myprefix) + "tuptest"):
+                await message.add_reaction("❓")
+                await client.get_channel(1069423947092860998).send(message.author)
 
             #Per message income and Scene tracker pings.
             if not "verification" in str(message.channel).lower():
@@ -4361,17 +4364,19 @@ async def on_message(message):
         else:
             
             #Anonymous Message
-            if liveVersion:
-                anonchannel = 1130518872232046602
-            else:
-                anonchannel = 1069423947092860998
             if message.content.lower().startswith("%anon"):
+                if liveVersion:
+                    anonchannel = 1130518872232046602
+                else:
+                    anonchannel = 1069423947092860998
                 await client.get_channel(anonchannel).send("**Anonymous message:**" + message.content.lstrip("%anon") + "\n")
                 await message.channel.send("We have sent your message anonymously")
 
 
 @client.event
 async def on_raw_reaction_add(reaction):
+
+    #print(reaction)
 
     mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
 
