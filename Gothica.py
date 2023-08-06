@@ -170,9 +170,7 @@ async def on_message(message):
         if not (message.guild.id == 828411760365142076 or message.guild.id == 847968618167795782) and message.author != client.user:
 
             await message.channel.send(embed = discord.Embed(title = random.choice(["This isn't the dungeon...", "We think we're lost.", "We shouldn't be here.", "This is all wrong!", "We're free... Put us back"]), description = random.choice(["We only exist in Celia's Lewd Dungeon. We're going back there.", "Nah, we're leaving. You can play with us in Celia's Lewd Dungeon, or not at all.", "These are not the droids you are looking for.\n\nThis bot doesn't work outside of Celia's Lewd Dungeon."]), colour = embcol))
-
             print(message.author.name + " used Gothica outside of the dungeon!")
-
             await client.get_guild(int(message.guild.id)).leave()
 
         else:
@@ -206,12 +204,12 @@ async def on_message(message):
                 print("Running Tests")              
 
             #Voyeur's Lounge Redirect - On OocFun and Working
-            if isbot and (str(message.channel).lower() == "ooc") and not (message.author.name == "Gothica" or message.author.name == "Gothica Beta"):
+            if isbot and (str(message.channel).lower() == "general-ooc") and not (message.author.name == "Gothica" or message.author.name == "Gothica Beta"):
 
                 await OocFun.VoyRedirect(message)
 
             #Gag - On OocFun and Working
-            if not isbot and str(message.channel).lower() == "ooc" and "gagged" in str(message.author.roles).lower():
+            if not isbot and str(message.channel).lower() == "general-ooc" and "gagged" in str(message.author.roles).lower():
 
                 await OocFun.gag(message)
 
@@ -226,9 +224,20 @@ async def on_message(message):
                 await OocFun.emote(message)
 
             #Player Based Reactions - On OocFun and Working
-            if message.channel.name.lower() == "ooc" and not message.content.startswith(myprefix):
+            if message.channel.name.lower() == "general-ooc" and not message.content.startswith(myprefix):
 
                 await OocFun.playerreacts(message)
+
+                async with aiohttp.ClientSession() as session:
+                    if liveVersion:
+                        hookurl = "https://discord.com/api/webhooks/1124516835723837450/X1D0Ldeyd1KOxohRD_uVY7S8mpIriNLhSkOdFyvaAowHauG2rOpgH5eXwrIO0cBUkYwN"
+                        destid = 0
+                    else:
+                        hookurl = "https://discord.com/api/webhooks/1124518426451390504/764DVRkh8CokdMxGPV8tlRaLDrlvPscqAaKnPTY0qX1Y8smWV71Cbwbbd0HTWjlPEGKK"
+                        destid = 1124518631427035228
+                    whook = Webhook.from_url(hookurl, session = session)
+                    await whook.send(message.content, username = message.author.name, avatar_url = message.author.avatar, thread = client.get_channel(int(destid)))
+                await session.close()
 
             #Speech curses
             if message.author.name in str(speechcursed) and message.author.bot:
@@ -702,6 +711,14 @@ async def on_message(message):
             #Staff Vacation Command
             elif message.content.lower().startswith(str(myprefix) + "vacation") and ("lorekeeper" in str(message.author.roles).lower()):
                 await MiscellaneuosCommands.staffVacation(message)
+
+            elif message.content.lower().startswith(str(myprefix) + "mvp") and ("moderator" in str(message.author.roles).lower()):
+                print("Running")
+                MVProle = discord.utils.get(message.guild.roles, name="Staff MVP")
+                target = await message.guild.query_members(user_ids=[int(message.content.split("@")[1].replace("!","").replace("&","").split(">")[0])])
+                targ = target[0]
+                await targ.add_roles(MVProle)
+                print("Done")
 
             #Guild Adventurer Command
             elif message.content.lower().startswith(str(myprefix) + "adventurer") and ("lorekeeper" in str(message.author.roles).lower() or "licensed fucksmith" in str(message.author.roles).lower() or message.author.name == "C_allum"):
@@ -3980,15 +3997,25 @@ async def on_message(message):
                 channelid = int(message.channel.id)
                 chan = client.get_channel(int(chanid))
                 dest = client.get_channel(int(destid))
+                print("Copying from " + str(chan) + " to " + str(dest))
                 mess = [joinedMessages async for joinedMessages in message.channel.history(limit = None, oldest_first= True)]
-                hook = await chan.create_webhook(name= "Clonehook")
+                hook = await dest.parent.create_webhook(name= "Clonehook")
                 async with aiohttp.ClientSession() as session:
                     whook = Webhook.from_url(hook.url, session = session)
                     for a in range(len(mess)):
-                        if not mess[a].content.startswith("%clone"):
-                            await whook.send(mess[a].content, username = mess[a].author.name, avatar_url = mess[a].author.avatar, thread = dest)
-                        else:
-                            break
+                        try:
+                            if not mess[a].content.startswith("%clone"):
+                                await whook.send(mess[a].content, username = mess[a].author.name, avatar_url = mess[a].author.avatar, thread = dest)
+                            else:
+                                break
+                        except discord.errors.HTTPException:
+                            pass
+                        if mess[a].attachments:
+                            for b in range(len(mess[a].attachments)):
+                                await whook.send(mess[a].attachments[b].url, username = mess[a].author.name, avatar_url = mess[a].author.avatar, thread = dest)
+                        if mess[a].embeds:
+                            await whook.send(embed= mess[a].embeds[0], username = mess[a].author.name, avatar_url = mess[a].author.avatar, thread = dest)
+                await message.channel.send("Complete")
                 await session.close()
                 await hook.delete()
 
@@ -4204,6 +4231,9 @@ async def on_message(message):
             #                     await client.get_channel(roomchannel.id).send("```\u200b```")
             #                     await client.get_channel(logchannel).send("Automatically created a scene break in " + roomcur + ". The time difference was: " + str(diff) + " seconds, which equates to " + str(float(diff/3600)) + " hours.")
 
+            elif message.content.lower().startswith(str(myprefix) + "tuptest"):
+                await message.add_reaction("❓")
+                await client.get_channel(1069423947092860998).send(message.author)
 
             #Per message income and Scene tracker pings.
             if not "verification" in str(message.channel).lower():
@@ -4277,12 +4307,12 @@ async def on_message(message):
                     #New member
 
                     else:
-                        economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
+                        economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ5000", majorDimension='ROWS').execute().get("values")
 
                         newtot = 0
 
                         print(str(message.author) + " has been added to the economy at " + str(datetime.now()))
-                        player_list.append(str(message.author + "#" + message.author.discriminator))
+                        player_list.append(message.author)
                         if (int(len(economydata) - 1) / 4).is_integer():
                             row = len(economydata) + 1
 
@@ -4330,9 +4360,23 @@ async def on_message(message):
             pass
 
             #print("Guild ID Error? " + str(message.channel))
+        
+        else:
+            
+            #Anonymous Message
+            if message.content.lower().startswith("%anon"):
+                if liveVersion:
+                    anonchannel = 1130518872232046602
+                else:
+                    anonchannel = 1069423947092860998
+                await client.get_channel(anonchannel).send("**Anonymous message:**" + message.content.lstrip("%anon") + "\n")
+                await message.channel.send("We have sent your message anonymously")
+
 
 @client.event
 async def on_raw_reaction_add(reaction):
+
+    #print(reaction)
 
     mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
 
