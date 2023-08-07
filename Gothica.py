@@ -4312,7 +4312,7 @@ async def on_message(message):
                         newtot = 0
 
                         print(str(message.author) + " has been added to the economy at " + str(datetime.now()))
-                        player_list.append(message.author)
+                        player_list.append(str(message.author))
                         if (int(len(economydata) - 1) / 4).is_integer():
                             row = len(economydata) + 1
 
@@ -4428,7 +4428,7 @@ async def on_raw_reaction_add(reaction):
 
                 giveamount = random.randint(100,500)
 
-            recipnewtot = int(economydata[reciprow-1][1]) + int(giveamount)
+            recipnewtot = int(economydata[int(reciprow)-1][1]) + int(giveamount)
 
             sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipnewtot]])).execute()
 
