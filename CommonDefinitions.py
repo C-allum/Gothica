@@ -209,8 +209,7 @@ bidders = []
 bidprice = []
 
 #----------------Fiendtome Wielder---------------
-imptomeWielder = 322103552015204367
-
+imptomeWielder = -1
 #----------------KinkValues----------------
 
 rarities = ["Common", "Uncommon", "Rare", "Very Rare", "Legendary"]

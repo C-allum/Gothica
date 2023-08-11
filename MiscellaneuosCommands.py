@@ -131,6 +131,8 @@ async def crunch(message):
         await message.delete()
 
 async def impTomeSpawn(message):
+    if imptomeWielder == -1: #If we currently don't have anyone that wants to use this function
+        return
     tomeWeilder = await client.fetch_user(imptomeWielder)
     #await client.get_channel(logchannel).send(f"imp tome wielder {tomeWeilder.display_name} got notified that their tome got found.")
     outputchannel = await client.fetch_user(imptomeWielder)
