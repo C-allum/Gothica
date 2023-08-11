@@ -469,6 +469,55 @@ eggsfound = []
 eggnexttime = 0
 eggwaittimer = 300
 
+#Staff Functions
+functionnames = ["Writing Lore", "Creating Areas", "Creating NPCs", "Writing Stories/Quests", "Running Stories/Quests", "Running Encounters", "Organising Player Facing Lore", "Organising Deep Lore", "Running NPCs", "Creating And Running Events", "Running Auctions", "Running Non-con Encounters", "Generating Loot", "Generating Statblocks", "Creating Homebrew", "Balance Checking Homebrew", "Approving Character Sheets", "Verifying New Members", "Video Verifying New Members", "Creating Server Rules", "Reporting Broken Rules", "Enforcing Rules", "Issuing Strikes And Bans", "Checking Art Channels For Inappropriate Images", "Managing the Economy", "Balancing Economy Prices", "Writing Bot Functions", "Bug Fixing Gothica", "Managing Channels, Forums And Threads", "Responding To User Issues"]
+functiondesc = ["This involves creating the deeper lore of the dungeon, involving things that players wouldn't know or won't have more than hints of for a while.",
+                "This relates to the development of new spaces within the dungeon, whether safe areas, dangerous depths, or housing districts.",
+                "The creation of people to live in the world of the dungeon.",
+                "Developing stories that feature several encounters, usually for some larger reward, such as a new area opening.",
+                "Running the stories that are developed above, and acting as the main DM for them.",
+                "Encounters can be things such as single combats or lewd scenes, either standalone or as part of a quest.",
+                "This involves determining what lore players have access to, and answering questions on that lore.",
+                "Like the above, this function involves deciding what lore is easily accessed by the team creating quests.",
+                "Primarily running shopkeepers and other small encounters to make the world feel alive.",
+                "Events might range from hosting in character games to orchastrating wider roleplay situations.",
+                "Auctions are for the sale of playable characters as slaves or pets. This function is about creating these and ensuring they run smoothly.",
+                "This involves running traps and other non consensual encounters, geared towards people who intend to lose, rather than other encounters which might be a more standard fight.",
+                "The creation of items as rewards for quests etc.",
+                "This role helps to develop a bestiary for the server, creating interesting creatures to fight/fuck.",
+                "This is mostly related to the development of the Lewd Handbook.",
+                "This ensures that our created material matches correct levels of balance.",
+                "Checking character sheets to ensure balance and correct implementation of features.",
+                "Checking Yoti and picture based verifications to ensure people are of age to enter the server.",
+                "Verifying people via video chat.",
+                "These determine what is acceptable behavior on the server.",
+                "Bringing rule breaking to the attention of the team so that it may be addressed.",
+                "Informing people of their misbehavior, issuing tempmutes.",
+                "Determining if behavior was bad enough to warrant a strike or even a ban.",
+                "Deleting any images showing underaged people or real porn from the Gallery of Sin.",
+                "Importing homebrew items into the economy spreadsheet, managing available quantites and descriptions, and managing the amount of dezzies people earn and have access to.",
+                "Setting the price of items against their balance.",
+                "Coding Gothica in Python, for example to implement a new feature.",
+                "~~An entirely unneccessary function. Gothica has no bugs.~~\n\nFixing Callum's poor coding, using the Python coding language.",
+                "Creating channels and managing their positions and permissions.",
+                "Preventing arguments, directing people to correct channels, being pinged by users, and responding to tickets."
+                ]
+functionreqs = [0, 0, 0, 0, "Naming a Co-Pilot", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "Fucksmith Exam?", 0, 0, 0, 0, 0, 0, "Voted Role", 0, 0, 0, "A lack of sanity", "A greater lack of sanity", 0, 0]
+
+async def stafffunc(mess, resp, memb):
+    index = functionnames.index(mess.channel.name)
+    if mess.channel.name == "Running NPCs":
+        if mess.embeds[0].title == "Tools for running NPCs":
+            if resp == 1:
+                await mess.channel.send(embed = discord.Embed(title = "Which NPC are you looking to run?", description = "This message will timeout in 60 seconds", colour = embcol))
+                try:
+                    msg = await client.wait_for('message', timeout = 60)#, check = check(memb))
+                    if "webb" in msg.content.lower():
+                        await mess.channel.send(embed = discord.Embed(title = "Madame Webb", description = "Name: Madame Webb\nCommon location: ⁠🧵widows-boutique🧵\nRace and Class: Lvl 16 Jorogumo (japanese drider) Enchantress\nSexuality: Pansexual\nGeneral traits: Refined, High-Class, Dominant. Commanding. Venemous. Masked. Closed-off.\nMannerism: Webb does not negotiate. She issues commands and expects them to be carried out. She demands respect, and offers the same in return, until she is given reason not to. Play her like you would a powerful fae. (After all, that's what Jorogumo actually are)\nSpeech patterns: Refined and tasteful, with just a hint of 'I'm better than you, and you know it'. Very 'Ara Ara' vampire/fae Speech example: ' Why, My Darling little fly, it would seem you have found yourself cought in somewhat of a predicament. Now, I would be more than happy to waive some of that debt - In exchange for certain... Services.'\nBond: Webb remains mostly aloof within the Dungeon, and tries not to form any strong bonds or connections with anyone. She is exceptionally closed off, and one of the few people in the dungeon who she does feel comfortable opening up to is Reverend Mother Serena, who has helped her com to terms with much of her past.\nQuirk: While it is not exactly a secret the Webb is a Spider of sorts, she almost never reveals her true form, even in private. She takes more satisfaction than she probably should from controlling others, and actually rather enjoys extortion and blackmail. She is also a Shibari Expert of the highest Caliber, and considers herself an artist. Often valuing her subjects more as peices of art than as people. Values: Respect, Decorum, and Pretense. While Webb is actually far less pretentious than the rest of her royal family, she still values position and appearance. It is important that all things she does are seen as graceful and beautiful.\nSecret/Hook: Web was cast out from her family for fraternizing with those blow her station, and has a complicated history that, best as she can tell, ended in her death at the hands of male rival. Then she woke up in the dungeon. Serena has been halping her work through the confusion and trauma, to understand what happened. Reactions: What does this character do when - (Any other key reactions welcome) Threatened: Return in kind, never dropping the mask of pleasant conversation. And use her power to ensure said person will never threaten her again. Flirted with: flirt back using every tool of seduction in her arsenal. Sex is one of the easiest ways to manipulate a person, and she makes sure she is in control of any such manipulations from the start. Asked for help: it depends on what is being asked. She rarely offers goods or services for free, but she will go out of her way to help someone who truly needs it. Her help generally comes with strings attached though. Everything is an exchange. Bonus: Webb offers discounts on her wares to customers she would like to use as display peices in her shop. Generally, that means being suspended or posed as a paralyzed mannequin for several hours at a time. These displays are purely 'Look, do not touch' Important links below: Webb from NPC questionnaire: https://cdn.discordapp.com/attachments/1020227364371845172/1061987049479098458/Madame_Webb.txt (edited)"))
+                except asyncio.TimeoutError:
+                    await mess.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+                await msg.delete()
+
 #Help message
 async def helplist(message):
 

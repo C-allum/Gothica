@@ -4021,14 +4021,12 @@ async def on_message(message):
 
             #Impersonator React
             elif "gothica" in message.content.lower().replace("-","").replace(".","") or "thic goth" in message.content.lower().replace("-","").replace(".","").replace("cc","c") or "gothy" in message.content.lower().replace("-","").replace(".",""):
-                if message.channel.id == 1058951770870657166:
-                    return
                 if message.author.name != "c_allum":
 
-                    if random.randint(1,100) != 100:
-                        await message.add_reaction('👀')
-                    else:
-                        await message.add_reaction('<:tentacle:830675670711402506>')
+                    #if random.randint(1,100) != 100:
+                    await message.add_reaction('👀')
+                    #else:
+                        #await message.add_reaction('<:tentacle:830675670711402506>')
 
                 else:
                     await message.add_reaction('♥️')
@@ -4077,14 +4075,14 @@ async def on_message(message):
                     temprole = discord.utils.get(server.roles, name= "Temporary Role")
                     tempid = temprole.id
                     lastmember = server.members[-1]
-                    await message.channel.send("Pinging Role:")
+                    await message.channel.send("Pinging Role: " + str(tagrole) + "\n\nThis process may take several minutes, as we need to assign a temporary role to hundreds of people, ping that role, and then remove it for the next batch.")
                     for a in server.members:
                         if tagrole in a.roles:
                             memlist += 1
                             await a.add_roles(temprole)
                             mems.append(a)
                         if memlist == 100 or a == lastmember:
-                            await message.channel.send("<@&" + str(tempid) + ">")
+                            await message.channel.send("<@&" + str(tempid) + ">\n\nThis ping is to allow larger roles to be pinged into forums and threads. You are being pinged here because you have the `" + str(tagrole) + "` role.")
                             for b in mems:
                                 await b.remove_roles(temprole)
                             memlist = 0
@@ -4235,6 +4233,18 @@ async def on_message(message):
                 await message.add_reaction("❓")
                 await client.get_channel(1069423947092860998).send(message.author)
 
+            elif message.content.lower().startswith(str(myprefix) + "functionsetup"):
+                for a in range(len(functionnames)):
+                    if functionreqs[a] != 0:
+                        await message.channel.send(embed = discord.Embed(title = functionnames[a], description = str(functiondesc[a]) + "\n\n*Prerequisites:* " + str(functionreqs[a]), colour = embcol))
+                    else:
+                        await message.channel.send(embed = discord.Embed(title = functionnames[a], description = functiondesc[a], colour = embcol))
+                await message.delete()
+            
+            # if message.channel.parent.name == "official-functions":
+            #     prevmess = [joinedMessages async for joinedMessages in message.channel.history(limit = 2, oldest_first= False)]
+            #     print(prevmess)
+
             #Per message income and Scene tracker pings.
             if not "verification" in str(message.channel).lower():
                 
@@ -4352,7 +4362,7 @@ async def on_message(message):
                             await MiscellaneuosCommands.impTomeSpawn(message)
 
 
-
+    #DM Messages
     except AttributeError:
 
         if not "Direct Message" in str(message.channel):
@@ -4376,9 +4386,52 @@ async def on_message(message):
 @client.event
 async def on_raw_reaction_add(reaction):
 
-    #print(reaction)
-
     mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
+
+    #Staff Function Demo
+    if mess.channel.name == "function-selection":
+
+        await mess.remove_reaction(reaction.emoji, reaction.member)
+        func = mess.embeds[0].title
+        funcindex = functionnames.index(func)
+        channel = client.get_channel(int(1135679819179376852))
+        if functionreqs[funcindex] != 0:
+            if func == "Issuing Strikes And Bans":
+                await reaction.member.send("You do not meet the prerequistes to perform this function. To be able to start or join one of these discussions, you need to be accepted by a group vote.")
+                return
+        else:
+            if func == "Running NPCs":
+                thread = await channel.create_thread( name = str(func), type = discord.ChannelType.public_thread)
+                await thread.send(embed = discord.Embed(title = "Tools for running NPCs", description = "Here are some tools you can use to help you run NPCs. React with the appropriate number to summon the relevant feature:\n\n`1` - NPC Information\n`2` - Player Character Information\n`3` - Player Kink Information", colour = embcol))
+                await mess.edit(embed = discord.Embed(title = str(functionnames[funcindex]), description = str(functiondesc[funcindex]) + "\n\n*Prerequisites:* " + str(functionreqs[funcindex]) + "\n\n*Current Members:* " + str(reaction.member.name), colour = embcol))
+
+        return
+    
+    if mess.channel.parent.name == "official-functions":
+        if mess.author == client.user:
+            option = 0
+            if reaction.emoji.name == "1️⃣":
+                option = 1
+            elif reaction.emoji.name == "2️⃣":
+                option = 2
+            elif reaction.emoji.name == "3️⃣":
+                option = 3
+            elif reaction.emoji.name == "4️⃣":
+                option = 4
+            elif reaction.emoji.name == "5️⃣":
+                option = 5
+            elif reaction.emoji.name == "6️⃣":
+                option = 6
+            elif reaction.emoji.name == "7️⃣":
+                option = 7
+            elif reaction.emoji.name == "8️⃣":
+                option = 8
+            elif reaction.emoji.name == "9️⃣":
+                option = 9
+            
+            await stafffunc(mess, option, reaction.member)
+            
+            
 
     if "lorekeeper" in str(reaction.member.roles).lower() or "ghostwriter" in str(reaction.member.roles).lower():
 
@@ -4632,7 +4685,7 @@ async def on_raw_reaction_add(reaction):
         else:
             await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = "You can't use this at the here.", colour = embcol, url = mess.jump_url))
 
-    elif reaction.emoji.name == "cuffs" and mess.channel.name != "Server Economy":
+    if reaction.emoji.name == "cuffs" and mess.channel.name != "Server Economy":
 
 
         chan = client.get_channel(reaction.channel_id)
@@ -4683,61 +4736,62 @@ async def on_raw_reaction_add(reaction):
 
     elif "lorekeeper" in str(reaction.member.roles).lower() or "moderator" in str(reaction.member.roles).lower():
 
-        if reaction.emoji.name == "💰":
+        pass
+        # if reaction.emoji.name == "💰":
 
-            mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
+        #     mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
 
-            for a in range(len(mess.attachments)):
+        #     for a in range(len(mess.attachments)):
 
-                await client.get_channel(913998580027645992).send(mess.attachments[a])
+        #         await client.get_channel(913998580027645992).send(mess.attachments[a])
 
-            if mess.content != "":
+        #     if mess.content != "":
 
-                await client.get_channel(913998580027645992).send(mess.content)
+        #         await client.get_channel(913998580027645992).send(mess.content)
 
-        elif reaction.emoji.name == "💎":
+        # elif reaction.emoji.name == "💎":
 
-            mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
+        #     mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
 
-            for a in range(len(mess.attachments)):
+        #     for a in range(len(mess.attachments)):
 
-                await client.get_channel(985417358019534878).send(mess.attachments[a])
+        #         await client.get_channel(985417358019534878).send(mess.attachments[a])
 
-            if mess.content != "":
+        #     if mess.content != "":
 
-                await client.get_channel(985417358019534878).send(mess.content)
+        #         await client.get_channel(985417358019534878).send(mess.content)
 
-        elif reaction.emoji.name == "⛓️":
+        # elif reaction.emoji.name == "⛓️":
 
-            mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
+        #     mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
 
-            for a in range(len(mess.attachments)):
+        #     for a in range(len(mess.attachments)):
 
-                await client.get_channel(980494836811563148).send(mess.attachments[a])
+        #         await client.get_channel(980494836811563148).send(mess.attachments[a])
 
-            if mess.content != "":
+        #     if mess.content != "":
 
-                await client.get_channel(980494836811563148).send(mess.content)
+        #         await client.get_channel(980494836811563148).send(mess.content)
 
-        elif reaction.emoji.name == "❌" and mess.author.bot:
+        # elif reaction.emoji.name == "❌" and mess.author.bot:
 
-            await client.get_channel(logchannel).send(str(reaction.member.name) + " deleted the following message from " + str(mess.author.name) + " in " + str(mess.channel))
+        #     await client.get_channel(logchannel).send(str(reaction.member.name) + " deleted the following message from " + str(mess.author.name) + " in " + str(mess.channel))
 
-            try:
+        #     try:
 
-                await client.get_channel(logchannel).send(mess.content)
+        #         await client.get_channel(logchannel).send(mess.content)
 
-            except discord.errors.HTTPException:
+        #     except discord.errors.HTTPException:
 
-                await client.get_channel(logchannel).send(embed = mess.embeds[0])
+        #         await client.get_channel(logchannel).send(embed = mess.embeds[0])
 
-            try:
+        #     try:
 
-                await mess.delete()
+        #         await mess.delete()
 
-            except discord.errors.NotFound:
+        #     except discord.errors.NotFound:
 
-                pass
+        #         pass
 
     if reaction.emoji.name =="kinklist":
 
@@ -4761,7 +4815,8 @@ async def on_raw_reaction_add(reaction):
         role = discord.utils.get(reaction.member.guild.roles, name="Guild Applicant")
         await reaction.member.add_roles(role)
 
-    elif mess.id == 1089268299721867285 and reaction.emoji.name == "sigil":
+    elif mess.id == 1089268299721867285 and reaction.emoji.name == "Sigil":
+        print("Adding Role to " + str(reaction.member.name))
         role = discord.utils.get(reaction.member.guild.roles, name="Dungeon Denizen")
         await reaction.member.add_roles(role)
 
