@@ -721,7 +721,7 @@ async def on_message(message):
                 print("Done")
 
             #Guild Adventurer Command
-            elif message.content.lower().startswith(str(myprefix) + "adventurer") and ("lorekeeper" in str(message.author.roles).lower() or "licensed fucksmith" in str(message.author.roles).lower() or message.author.name == "C_allum"):
+            elif message.content.lower().startswith(str(myprefix) + "adventurer") and ("lorekeeper" in str(message.author.roles).lower() or "licensed fucksmith" in str(message.author.roles).lower() or "guild licenser" in str(message.author.roles).lower() or message.author.name == "C_allum"):
 
                 adventarget = message.content.split("@")[1]
 
