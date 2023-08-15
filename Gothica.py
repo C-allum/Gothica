@@ -4647,7 +4647,7 @@ async def on_raw_reaction_add(reaction):
             else:
                 #Enough dezzies left in users dezzie pool:
                 if giveamount <= prevDezziePool:
-                    recipNewTot = int(economydata[reciprow-1][1]) + int(giveamount)
+                    recipNewTot = int(economydata[int(reciprow)-1][1]) + int(giveamount)
                     newDezziePool = prevDezziePool - giveamount
                     sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipNewTot]])).execute()
 
