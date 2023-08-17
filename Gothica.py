@@ -4246,7 +4246,7 @@ async def on_message(message):
                         await message.channel.send(embed = discord.Embed(title = functionnames[a], description = functiondesc[a], colour = embcol))
                 await message.delete()
 
-            elif message.content.lower().startswith(str(myprefix) + "functionsetup"):
+            #elif message.content.lower().startswith(str(myprefix) + "functionsetup"):
             
             # if message.channel.parent.name == "official-functions":
             #     prevmess = [joinedMessages async for joinedMessages in message.channel.history(limit = 2, oldest_first= False)]
