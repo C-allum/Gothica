@@ -503,6 +503,8 @@ functiondesc = ["This involves creating the deeper lore of the dungeon, involvin
                 ]
 functionreqs = [0, 0, 0, 0, "Naming a Co-Pilot", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "Fucksmith Exam?", 0, 0, 0, 0, 0, 0, "Voted Role", 0, 0, 0, "A lack of sanity", "A greater lack of sanity", 0, 0]
 
+playerreqsnames = ["Run a shopkeeper", "Run another NPC", "Run an encounter", "Run a noncon scene or trap", "Run a longer quest", ""]
+
 async def stafffunc(mess, resp, memb):
     index = functionnames.index(mess.channel.name)
     if mess.channel.name == "Running NPCs":
