@@ -2827,6 +2827,11 @@ async def on_message(message):
 
                         if int(slutdiff) >= 21600:
 
+                            if message.author.name == "ruin_enjoyer":
+                                slutappend = "\n\n" + random.choice("Callum *tried* to make you win every time, honest.", "It *does* seem deliberate at this point, but I promise it isn't.", "Wow. You have worse rolls with this than Callum has with real dice.")
+                            else:
+                                slutappend = ""
+
                             if random.randint(1,100) > 20:
 
                                 row = b + 1
@@ -2857,7 +2862,7 @@ async def on_message(message):
 
                                 balresp = "\n\n---------------------------------------------------------\n\n" + message.author.name + " now has " + str(newtot) + dezzieemj
 
-                                await message.channel.send(embed = discord.Embed(title = message.author.name + " slutted!", description = slutresp + balresp, colour = embcol))
+                                await message.channel.send(embed = discord.Embed(title = message.author.name + " slutted!", description = slutresp + balresp + slutappend, colour = embcol))
 
                                 await message.delete()
 
@@ -4243,6 +4248,8 @@ async def on_message(message):
                     else:
                         await message.channel.send(embed = discord.Embed(title = functionnames[a], description = functiondesc[a], colour = embcol))
                 await message.delete()
+
+            #elif message.content.lower().startswith(str(myprefix) + "functionsetup"):
             
             # if message.channel.parent.name == "official-functions":
             #     prevmess = [joinedMessages async for joinedMessages in message.channel.history(limit = 2, oldest_first= False)]
@@ -4392,48 +4399,48 @@ async def on_raw_reaction_add(reaction):
     mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
 
     #Staff Function Demo
-    if mess.channel.name == "function-selection":
+    # if mess.channel.name == "function-selection":
 
-        await mess.remove_reaction(reaction.emoji, reaction.member)
-        func = mess.embeds[0].title
-        funcindex = functionnames.index(func)
-        channel = client.get_channel(int(1135679819179376852))
-        if functionreqs[funcindex] != 0:
-            if func == "Issuing Strikes And Bans":
-                await reaction.member.send("You do not meet the prerequistes to perform this function. To be able to start or join one of these discussions, you need to be accepted by a group vote.")
-                return
-        else:
-            if func == "Running NPCs":
-                thread = await channel.create_thread( name = str(func), type = discord.ChannelType.public_thread)
-                await thread.send(embed = discord.Embed(title = "Tools for running NPCs", description = "Here are some tools you can use to help you run NPCs. React with the appropriate number to summon the relevant feature:\n\n`1` - NPC Information\n`2` - Player Character Information\n`3` - Player Kink Information", colour = embcol))
-                await mess.edit(embed = discord.Embed(title = str(functionnames[funcindex]), description = str(functiondesc[funcindex]) + "\n\n*Prerequisites:* " + str(functionreqs[funcindex]) + "\n\n*Current Members:* " + str(reaction.member.name), colour = embcol))
+    #     await mess.remove_reaction(reaction.emoji, reaction.member)
+    #     func = mess.embeds[0].title
+    #     funcindex = functionnames.index(func)
+    #     channel = client.get_channel(int(1135679819179376852))
+    #     if functionreqs[funcindex] != 0:
+    #         if func == "Issuing Strikes And Bans":
+    #             await reaction.member.send("You do not meet the prerequistes to perform this function. To be able to start or join one of these discussions, you need to be accepted by a group vote.")
+    #             return
+    #     else:
+    #         if func == "Running NPCs":
+    #             thread = await channel.create_thread( name = str(func), type = discord.ChannelType.public_thread)
+    #             await thread.send(embed = discord.Embed(title = "Tools for running NPCs", description = "Here are some tools you can use to help you run NPCs. React with the appropriate number to summon the relevant feature:\n\n`1` - NPC Information\n`2` - Player Character Information\n`3` - Player Kink Information", colour = embcol))
+    #             await mess.edit(embed = discord.Embed(title = str(functionnames[funcindex]), description = str(functiondesc[funcindex]) + "\n\n*Prerequisites:* " + str(functionreqs[funcindex]) + "\n\n*Current Members:* " + str(reaction.member.name), colour = embcol))
 
-        return
+    #     return
     
-    if mess.channel.parent.name == "official-functions":
-        if mess.author == client.user:
-            option = 0
-            if reaction.emoji.name == "1️⃣":
-                option = 1
-            elif reaction.emoji.name == "2️⃣":
-                option = 2
-            elif reaction.emoji.name == "3️⃣":
-                option = 3
-            elif reaction.emoji.name == "4️⃣":
-                option = 4
-            elif reaction.emoji.name == "5️⃣":
-                option = 5
-            elif reaction.emoji.name == "6️⃣":
-                option = 6
-            elif reaction.emoji.name == "7️⃣":
-                option = 7
-            elif reaction.emoji.name == "8️⃣":
-                option = 8
-            elif reaction.emoji.name == "9️⃣":
-                option = 9
-
-            await stafffunc(mess, option, reaction.member)
-
+    # if mess.channel.parent.name == "official-functions":
+    #     if mess.author == client.user:
+    #         option = 0
+    #         if reaction.emoji.name == "1️⃣":
+    #             option = 1
+    #         elif reaction.emoji.name == "2️⃣":
+    #             option = 2
+    #         elif reaction.emoji.name == "3️⃣":
+    #             option = 3
+    #         elif reaction.emoji.name == "4️⃣":
+    #             option = 4
+    #         elif reaction.emoji.name == "5️⃣":
+    #             option = 5
+    #         elif reaction.emoji.name == "6️⃣":
+    #             option = 6
+    #         elif reaction.emoji.name == "7️⃣":
+    #             option = 7
+    #         elif reaction.emoji.name == "8️⃣":
+    #             option = 8
+    #         elif reaction.emoji.name == "9️⃣":
+    #             option = 9
+            
+    #         await stafffunc(mess, option, reaction.member)
+            
             
 
     if "lorekeeper" in str(reaction.member.roles).lower() or "ghostwriter" in str(reaction.member.roles).lower():
