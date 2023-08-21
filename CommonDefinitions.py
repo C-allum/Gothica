@@ -81,6 +81,8 @@ if liveVersion: #Set to 1 to use the real spreadsheets, or 0 to use the testing 
 
     logchannel = 918257057428279326
 
+    aliasBotChannel = 830799558514573312
+
     bridgechannel = 996826636358000780
 
     communityProjectChannel = 999810708546002994
@@ -106,6 +108,8 @@ else:
     TransactionSheet = "1GKiiWlTPlMDj8FCiNZcNSF_FFJi6J_CKTyimdjoo9GU"
 
     logchannel = 1031701327169998958 #Test Server
+
+    aliasBotChannel = 1142877836298965105
 
     bridgechannel = 891781900388159528
 
@@ -163,6 +167,8 @@ critemj = "<:crit:893767145060696064>"
 embcol = 0xb700ff
 
 indexchannel = 898640028174016552
+
+tupperID = 1071257376088412204
 
 awaitingsel = 0
 

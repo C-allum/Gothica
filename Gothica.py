@@ -6,6 +6,7 @@ import CommonDefinitions
 import MiscellaneuosCommands
 from CommonDefinitions import *
 import TransactionsDatabaseInterface
+import TupperDatabase
 import time
 from discord import Webhook
 import aiohttp
@@ -30,6 +31,8 @@ async def on_ready():
 
 
     TransactionsDatabaseInterface.initTransactionsDataBase()
+    TupperDatabase.initTupperDatabase()
+
 
     print("Fetching a list of all players...")
     global player_list 
@@ -4428,16 +4431,16 @@ async def on_raw_reaction_add(reaction):
                 option = 8
             elif reaction.emoji.name == "9️⃣":
                 option = 9
-            
+
             await stafffunc(mess, option, reaction.member)
-            
+
             
 
     if "lorekeeper" in str(reaction.member.roles).lower() or "ghostwriter" in str(reaction.member.roles).lower():
 
         mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
 
-        if reaction.emoji.name == "dz" or reaction.emoji.name == "cashmoney" or reaction.emoji.name == "makeitrain" or reaction.emoji.name == "DzCrit":
+        if (reaction.emoji.name == "dz" or reaction.emoji.name == "cashmoney" or reaction.emoji.name == "makeitrain" or reaction.emoji.name == "DzCrit") and mess.author.bot == False:
 
             economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
@@ -4552,7 +4555,7 @@ async def on_raw_reaction_add(reaction):
                 pass
 
     #Dezzie Reacts with weekly pool
-    elif reaction.emoji.name == "dz" or reaction.emoji.name == "cashmoney" or reaction.emoji.name == "makeitrain" or reaction.emoji.name == "DzCrit":
+    elif (reaction.emoji.name == "dz" or reaction.emoji.name == "cashmoney" or reaction.emoji.name == "makeitrain" or reaction.emoji.name == "DzCrit") and mess.author.bot == False:
 
         mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
 
@@ -4684,6 +4687,20 @@ async def on_raw_reaction_add(reaction):
 
         else:
             await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = "You can't use this at the here.", colour = embcol, url = mess.jump_url))
+
+
+    elif (reaction.emoji.name == "dz" or reaction.emoji.name == "cashmoney" or reaction.emoji.name == "makeitrain" or reaction.emoji.name == "DzCrit") and mess.author.bot == True and mess.author.id == tupperID:
+        
+        print(mess.author.display_avatar)
+
+        #Get unique tupper img id
+        tup_image_url = mess.author.display_avatar
+
+        #Check if tupper img id in database, if not, check if name + player id combination is. If name + playerid is, update image.
+        playerID, imgURL, charName = await TupperDatabase.lookup(tup_image_url, mess)
+        
+        #if yes, check which player is behind the tupper and award dezzies
+
 
     if reaction.emoji.name == "cuffs" and mess.channel.name != "Server Economy":
 
