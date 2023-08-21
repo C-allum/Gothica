@@ -7,3 +7,4 @@ __pycache__/*
 .vs/*
 .vscode/launch.json
 *.pyc
+CLDTupper.db

@@ -4447,65 +4447,65 @@ async def on_raw_reaction_add(reaction):
 
         mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
 
-        if (reaction.emoji.name == "dz" or reaction.emoji.name == "cashmoney" or reaction.emoji.name == "makeitrain" or reaction.emoji.name == "DzCrit") and mess.author.bot == False:
+        #if (reaction.emoji.name == "dz" or reaction.emoji.name == "cashmoney" or reaction.emoji.name == "makeitrain" or reaction.emoji.name == "DzCrit") and mess.author.bot == False:
+#
+        #    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
+#
+        #    reciprow = ""
+#
+        #    targid = mess.author.id
+#
+        #    target = await client.fetch_user(targid)
+#
+        #    targetName = target.name
+#
+        #    try:
+#
+        #        for a in range(math.floor(len(economydata)/4)):
+#
+        #            b = a * 4 + 5
+#
+        #            if str(targetName + "#" + str(target.discriminator)) in str(economydata[b][0]):
+#
+        #                reciprow = b + 1
+#
+        #                break
+#
+        #    except IndexError:
+#
+        #        await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = str(mess.author) + " is not in the economy.", description = "If this should not be the case, speak to Callum", colour = embcol))
+#
+        #    if reaction.emoji.name == "dz":
+#
+        #        giveamount = reactdz
+#
+        #    elif reaction.emoji.name == "cashmoney":
+#
+        #        giveamount = reactCashMoney
+#
+        #    elif reaction.emoji.name == "makeitrain":
+#
+        #        giveamount = reactMakeItRain
+#
+        #    else:
+#
+        #        giveamount = random.randint(100,500)
+#
+        #    recipnewtot = int(economydata[int(reciprow)-1][1]) + int(giveamount)
+#
+        #    sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipnewtot]])).execute()
+#
+        #    TransactionsDatabaseInterface.addTransaction(target.name + '#' + target.discriminator, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
+#
+        #    if reaction.member.name == targetName:
+#
+        #        await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(recipnewtot) + dezzieemj + "\n\nNot sure why they're awarding dezzies to themself like this, but ok.", colour = embcol, url = mess.jump_url))
+#
+        #    else:
+#
+        #        await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(recipnewtot) + dezzieemj, colour = embcol, url = mess.jump_url))
 
-            economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
-
-            reciprow = ""
-
-            targid = mess.author.id
-
-            target = await client.fetch_user(targid)
-
-            targetName = target.name
-
-            try:
-
-                for a in range(math.floor(len(economydata)/4)):
-
-                    b = a * 4 + 5
-
-                    if str(targetName + "#" + str(target.discriminator)) in str(economydata[b][0]):
-
-                        reciprow = b + 1
-
-                        break
-
-            except IndexError:
-
-                await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = str(mess.author) + " is not in the economy.", description = "If this should not be the case, speak to Callum", colour = embcol))
-
-            if reaction.emoji.name == "dz":
-
-                giveamount = reactdz
-
-            elif reaction.emoji.name == "cashmoney":
-
-                giveamount = reactCashMoney
-
-            elif reaction.emoji.name == "makeitrain":
-
-                giveamount = reactMakeItRain
-
-            else:
-
-                giveamount = random.randint(100,500)
-
-            recipnewtot = int(economydata[int(reciprow)-1][1]) + int(giveamount)
-
-            sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipnewtot]])).execute()
-
-            TransactionsDatabaseInterface.addTransaction(target.name + '#' + target.discriminator, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
-
-            if reaction.member.name == targetName:
-
-                await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(recipnewtot) + dezzieemj + "\n\nNot sure why they're awarding dezzies to themself like this, but ok.", colour = embcol, url = mess.jump_url))
-
-            else:
-
-                await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(recipnewtot) + dezzieemj, colour = embcol, url = mess.jump_url))
-
-        elif reaction.emoji.name == "💰":
+        if reaction.emoji.name == "💰":
 
             mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
 
@@ -4562,7 +4562,10 @@ async def on_raw_reaction_add(reaction):
                 pass
 
     #Dezzie Reacts with weekly pool
-    elif (reaction.emoji.name == "dz" or reaction.emoji.name == "cashmoney" or reaction.emoji.name == "makeitrain" or reaction.emoji.name == "DzCrit") and mess.author.bot == False:
+    if (reaction.emoji.name == "dz" or reaction.emoji.name == "cashmoney" or reaction.emoji.name == "makeitrain" or reaction.emoji.name == "DzCrit") and mess.author.bot == False:
+
+        await EconomyCommands.dezReact(reaction)
+        return
 
         mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
 
@@ -4695,19 +4698,11 @@ async def on_raw_reaction_add(reaction):
         else:
             await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = "You can't use this at the here.", colour = embcol, url = mess.jump_url))
 
-
+    #Dezzie React on Tupper
     elif (reaction.emoji.name == "dz" or reaction.emoji.name == "cashmoney" or reaction.emoji.name == "makeitrain" or reaction.emoji.name == "DzCrit") and mess.author.bot == True and mess.author.id == tupperID:
         
-        print(mess.author.display_avatar)
-
-        #Get unique tupper img id
-        tup_image_url = mess.author.display_avatar
-
-        #Check if tupper img id in database, if not, check if name + player id combination is. If name + playerid is, update image.
-        playerID, imgURL, charName = await TupperDatabase.lookup(tup_image_url, mess)
+        await EconomyCommands.rpDezReact(reaction)
         
-        #if yes, check which player is behind the tupper and award dezzies
-
 
     if reaction.emoji.name == "cuffs" and mess.channel.name != "Server Economy":
 

@@ -83,6 +83,8 @@ if liveVersion: #Set to 1 to use the real spreadsheets, or 0 to use the testing 
 
     aliasBotChannel = 830799558514573312
 
+    botchannel = 1050503346374594660
+
     bridgechannel = 996826636358000780
 
     communityProjectChannel = 999810708546002994
@@ -110,6 +112,8 @@ else:
     logchannel = 1031701327169998958 #Test Server
 
     aliasBotChannel = 1142877836298965105
+
+    botchannel = 1031701327169998958
 
     bridgechannel = 891781900388159528
 

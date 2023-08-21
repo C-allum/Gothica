@@ -1,5 +1,8 @@
+import TransactionsDatabaseInterface
+import TupperDatabase
 from CommonDefinitions import *
 from TransactionsDatabaseInterface import addTransaction, DezzieMovingAction
+
 
 #Buy Item
 async def buyitem(message):
@@ -702,6 +705,241 @@ async def giftAll(message):
         await message.channel.send(embed = discord.Embed(title = "Everyone received a gift!", description = f"Every denizen of the dungeon was blessed with {amount}<:dz:844365871350808606> right into their pockets!"))
     else:
         await message.channel.send(embed = discord.Embed(title = "Everyone got robbed!", description = f"Every denizen of the dungeon got {amount}<:dz:844365871350808606> taken right out of their pockets!"))
+
+async def dezReact(reaction):
+    mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
+
+    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
+
+    reciprow = ""
+    targid = mess.author.id
+    target = await client.fetch_user(targid)
+    targetName = target.name
+
+    giverow = ""
+    giveid = reaction.member.id
+    giver = await client.fetch_user(giveid)
+    givename = giver.name
+
+    #Find recipients row in the economy sheet
+    try:
+        for a in range(math.floor(len(economydata)/4)):
+            b = a * 4 + 5
+
+            if str(targetName + "#" + str(target.discriminator)) in str(economydata[b][0]):
+                reciprow = b + 1
+                break
+
+    except IndexError:
+        if not mess.author.bot:
+            await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = str(mess.author) + " is not in the economy.", description = "If this should not be the case, speak to Callum", colour = embcol))
+    
+    #Find giver row in the economy sheet
+    try:
+        for a in range(math.floor(len(economydata)/4)):
+            b = a * 4 + 5
+
+            if str(givename + "#" + str(giver.discriminator)) in str(economydata[b][0]):
+                giverow = b + 1
+                break
+    except IndexError:
+        if not mess.author.bot:
+            await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = str(givename) + " is not in the economy.", description = "If this should not be the case, speak to Callum", colour = embcol))
+
+
+    #Determine gift amount - Values in CommonDefinitions.py
+    if reaction.emoji.name == "dz":
+        giveamount = reactdz
+
+    elif reaction.emoji.name == "cashmoney":
+        giveamount = reactCashMoney
+
+    elif reaction.emoji.name == "makeitrain":
+        giveamount = reactMakeItRain
+
+    else:
+        giveamount = random.randint(100,500)
+
+
+    #Retrieve users current react dezzie pool
+    try:
+        prevDezziePool = int(economydata[giverow+2][0])
+
+    except IndexError:
+        prevDezziePool = weeklyDezziePoolVerified
+
+    except ValueError:
+        prevDezziePool = weeklyDezziePoolVerified
+
+    except TypeError:
+        prevDezziePool = weeklyDezziePoolVerified
+
+
+    #Check if given amount is smaller than the pool of dezzies left for the user
+    if reaction.channel_id != 828545311898468352: #Disable Noticeboard Reacts
+
+        if reaction.member.name == targetName:
+            await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = "No.", description = targetName + ", you can't just award dezzzies to yourself.", colour = embcol))
+            await client.get_channel(918257057428279326).send(targetName + " tried to award dezzies to themself.")
+
+        else:
+            #Enough dezzies left in users dezzie pool:
+            if giveamount <= prevDezziePool:
+                recipNewTot = int(economydata[int(reciprow)-1][1]) + int(giveamount)
+                newDezziePool = prevDezziePool - giveamount
+                sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipNewTot]])).execute()
+
+                TransactionsDatabaseInterface.addTransaction(target.name + '#' + target.discriminator, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
+
+                sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(int(giverow)+3)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newDezziePool]])).execute()
+
+                if newDezziePool == 0:
+                    await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
+
+                else:
+                    await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has " + str(newDezziePool) + dezzieemj + " in their dezzie award pool left for the week!", colour = embcol, url = mess.jump_url))
+
+                await client.get_channel(918257057428279326).send(givename + " awarded Dezzies to " + targetName)
+
+            #User has less dezzies in their pool than they reacted with
+            elif prevDezziePool > 0:
+                newDezziePool = 0
+                giveamount = prevDezziePool
+                recipNewTot = int(economydata[reciprow-1][1]) + int(giveamount)
+                sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipNewTot]])).execute()
+
+                TransactionsDatabaseInterface.addTransaction(target.name + '#' + target.discriminator, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
+
+                sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(giverow+3)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newDezziePool]])).execute()
+                await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
+                await client.get_channel(918257057428279326).send(givename + " awarded Dezzies to " + targetName)
+
+            #User dezzie pool is empty:
+            else:
+                await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + "'s dezzie award pool for the week is empty!" , description = "You will receive a fresh pool of dezzies to award to others at the start of next week!", colour = embcol, url = mess.jump_url))
+
+    else:
+        await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = "You can't use this at the here.", colour = embcol, url = mess.jump_url))
+
+async def rpDezReact(reaction):
+    mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
+    #Get unique tupper img id
+    tup_image_url = mess.author.display_avatar
+
+    #Check if tupper img id in database, if not, check if name + player id combination is. If name + playerid is, update image.
+    playerID, imgURL, charName = await TupperDatabase.lookup(tup_image_url, mess)
+
+    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
+
+    reciprow = ""
+    targid = playerID
+    target = await client.fetch_user(targid)
+    targetName = target.name
+
+    giverow = ""
+    giveid = reaction.member.id
+    giver = await client.fetch_user(giveid)
+    givename = giver.name
+
+    #Find recipients row in the economy sheet
+    try:
+        for a in range(math.floor(len(economydata)/4)):
+            b = a * 4 + 5
+
+            if str(targetName + "#" + str(target.discriminator)) in str(economydata[b][0]):
+                reciprow = b + 1
+                break
+
+    except IndexError:
+        if not mess.author.bot:
+            await client.get_channel(botchannel).send(embed=discord.Embed(title = str(mess.author) + " is not in the economy.", description = "If this should not be the case, speak to Callum", colour = embcol))
+    
+    #Find giver row in the economy sheet
+    try:
+        for a in range(math.floor(len(economydata)/4)):
+            b = a * 4 + 5
+
+            if str(givename + "#" + str(giver.discriminator)) in str(economydata[b][0]):
+                giverow = b + 1
+                break
+    except IndexError:
+        if not mess.author.bot:
+            await client.get_channel(botchannel).send(embed=discord.Embed(title = str(givename) + " is not in the economy.", description = "If this should not be the case, speak to Callum", colour = embcol))
+
+
+    #Determine gift amount - Values in CommonDefinitions.py
+    if reaction.emoji.name == "dz":
+        giveamount = reactdz
+
+    elif reaction.emoji.name == "cashmoney":
+        giveamount = reactCashMoney
+
+    elif reaction.emoji.name == "makeitrain":
+        giveamount = reactMakeItRain
+
+    else:
+        giveamount = random.randint(100,500)
+
+
+    #Retrieve users current react dezzie pool
+    try:
+        prevDezziePool = int(economydata[giverow+2][0])
+
+    except IndexError:
+        prevDezziePool = weeklyDezziePoolVerified
+
+    except ValueError:
+        prevDezziePool = weeklyDezziePoolVerified
+
+    except TypeError:
+        prevDezziePool = weeklyDezziePoolVerified
+
+
+    #Check if given amount is smaller than the pool of dezzies left for the user
+    if reaction.channel_id != 828545311898468352: #Disable Noticeboard Reacts
+
+        if reaction.member.name == targetName:
+            await client.get_channel(botchannel).send(embed=discord.Embed(title = "No.", description = targetName + ", you can't just award dezzzies to yourself.", colour = embcol))
+            await client.get_channel(918257057428279326).send(targetName + " tried to award dezzies to themself.")
+
+        else:
+            #Enough dezzies left in users dezzie pool:
+            if giveamount <= prevDezziePool:
+                recipNewTot = int(economydata[int(reciprow)-1][1]) + int(giveamount)
+                newDezziePool = prevDezziePool - giveamount
+                sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipNewTot]])).execute()
+
+                TransactionsDatabaseInterface.addTransaction(target.name + '#' + target.discriminator, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
+
+                sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(int(giverow)+3)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newDezziePool]])).execute()
+
+                if newDezziePool == 0:
+                    await client.get_channel(botchannel).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName + " for an RP message", description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
+
+                else:
+                    await client.get_channel(botchannel).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName + " for an RP message", description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has " + str(newDezziePool) + dezzieemj + " in their dezzie award pool left for the week!", colour = embcol, url = mess.jump_url))
+
+                await client.get_channel(918257057428279326).send(givename + " awarded Dezzies to " + targetName)
+
+            #User has less dezzies in their pool than they reacted with
+            elif prevDezziePool > 0:
+                newDezziePool = 0
+                giveamount = prevDezziePool
+                recipNewTot = int(economydata[reciprow-1][1]) + int(giveamount)
+                sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipNewTot]])).execute()
+
+                TransactionsDatabaseInterface.addTransaction(target.name + '#' + target.discriminator, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
+
+                sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(giverow+3)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newDezziePool]])).execute()
+                await client.get_channel(botchannel).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
+                await client.get_channel(918257057428279326).send(givename + " awarded Dezzies to " + targetName)
+
+            #User dezzie pool is empty:
+            else:
+                await client.get_channel(botchannel).send(embed=discord.Embed(title = reaction.member.name + "'s dezzie award pool for the week is empty!" , description = "You will receive a fresh pool of dezzies to award to others at the start of next week!", colour = embcol, url = mess.jump_url))
+
+    else:
+        await client.get_channel(botchannel).send(embed=discord.Embed(title = "You can't use this at the here.", colour = embcol, url = mess.jump_url))
 #---------Helper functions----------
 
 async def getUserNamestr(message):

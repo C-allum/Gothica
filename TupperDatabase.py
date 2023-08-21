@@ -97,6 +97,7 @@ async def lookup(imgURL:str, message:discord.Message):
             #Fetch data for this tupper from bot channel
             #initialize new tupper
             addTupper(playerID, imgURL, charName)
+            data = [[playerID, imgURL, charName]]
 
         #In this case we found the tupper by name + playerID
         else:
