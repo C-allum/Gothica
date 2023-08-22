@@ -819,7 +819,7 @@ async def dezReact(reaction):
                 await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + "'s dezzie award pool for the week is empty!" , description = "You will receive a fresh pool of dezzies to award to others at the start of next week!", colour = embcol, url = mess.jump_url))
 
     else:
-        await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = "You can't use this at the here.", colour = embcol, url = mess.jump_url))
+        await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = "You can't award dezzies in this channel.", colour = embcol, url = mess.jump_url))
 
 async def rpDezReact(reaction):
     mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
@@ -827,7 +827,13 @@ async def rpDezReact(reaction):
     tup_image_url = mess.author.display_avatar
 
     #Check if tupper img id in database, if not, check if name + player id combination is. If name + playerid is, update image.
-    playerID, imgURL, charName = await TupperDatabase.lookup(tup_image_url, mess)
+    try:
+        playerID, imgURL, charName = await TupperDatabase.lookup(tup_image_url, mess)
+    except TypeError:
+        giveid = reaction.member.id
+        giver = await client.fetch_user(giveid)
+        await client.get_channel(botchannel).send(embed=discord.Embed(title = str(giver.display_name) + ": The post you tried to award is too old.", description = "The first time a character is awarded dezzies, the post has to be rather new. If the issue persists, contact the bot gods.", colour = embcol))
+        return
 
     economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
 
@@ -905,19 +911,20 @@ async def rpDezReact(reaction):
         else:
             #Enough dezzies left in users dezzie pool:
             if giveamount <= prevDezziePool:
-                recipNewTot = int(economydata[int(reciprow)-1][1]) + int(giveamount * rpReactModifier)
+                reward = int(giveamount * rpReactModifier)
+                recipNewTot = int(economydata[int(reciprow)-1][1]) + reward
                 newDezziePool = prevDezziePool - giveamount
                 sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipNewTot]])).execute()
 
-                TransactionsDatabaseInterface.addTransaction(target.name + '#' + target.discriminator, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount * rpReactModifier))
+                TransactionsDatabaseInterface.addTransaction(target.name + '#' + target.discriminator, TransactionsDatabaseInterface.DezzieMovingAction.React, int(reward))
 
                 sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(int(giverow)+3)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newDezziePool]])).execute()
 
                 if newDezziePool == 0:
-                    await client.get_channel(botchannel).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount * rpReactModifier) + dezzieemj + " to " + targetName + " for an RP message", description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
+                    await client.get_channel(botchannel).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(reward) + dezzieemj + " to " + targetName + " for an RP message", description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
 
                 else:
-                    await client.get_channel(botchannel).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount * rpReactModifier) + dezzieemj + " to " + targetName + " for an RP message", description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has " + str(newDezziePool) + dezzieemj + " in their dezzie award pool left for the week!", colour = embcol, url = mess.jump_url))
+                    await client.get_channel(botchannel).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(reward) + dezzieemj + " to " + targetName + " for an RP message", description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has " + str(newDezziePool) + dezzieemj + " in their dezzie award pool left for the week! (RP Rewards award 25% more while costing the same!)", colour = embcol, url = mess.jump_url))
 
                 await client.get_channel(918257057428279326).send(givename + " awarded Dezzies to " + targetName)
 
@@ -931,7 +938,7 @@ async def rpDezReact(reaction):
                 TransactionsDatabaseInterface.addTransaction(target.name + '#' + target.discriminator, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
 
                 sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(giverow+3)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newDezziePool]])).execute()
-                await client.get_channel(botchannel).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName + " for an RP message", description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
+                await client.get_channel(botchannel).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(reward) + dezzieemj + " to " + targetName + " for an RP message", description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
                 await client.get_channel(918257057428279326).send(givename + " awarded Dezzies to " + targetName)
 
             #User dezzie pool is empty:

@@ -17,7 +17,9 @@ def initTupperDatabase():
         table = """ CREATE TABLE IF NOT EXISTS Tuppers (
                     PlayerID TEXT NOT NULL,
                     ImgURL TEXT NOT NULL,
-                    CharName TEXT NOT NULL
+                    CharName TEXT NOT NULL,
+                    WordCount INT DEFAULT 0,
+                    PostCount INT DEFAULT 0
         );"""
 
         tupperCursor.execute(table)
@@ -36,13 +38,28 @@ def addTupper(playerID:str, imgURL:str, charName:str):
         tupperDBConnection = sqlite3.connect('CLDTupper.db')
         tupperCursor = tupperDBConnection.cursor()
 
-        tupperCursor.execute(f'''INSERT INTO Tuppers VALUES ('{playerID}', '{imgURL}', '{charName}')''')
+        tupperCursor.execute(f'''INSERT INTO Tuppers VALUES ('{playerID}', '{imgURL}', '{charName}', 0, 0)''')
         tupperDBConnection.commit()
         tupperDBConnection.close()
 
     except sqlite3.Error as error:
         print('Error occured while adding a Tuppers to the database - ', error)
 
+#Prints contents of the transactions table to the console
+def printTuppers():
+    print("Data in table Tuppers:")
+    try:
+        transactionsConnection = sqlite3.connect('CLDTupper.db')
+        transactionsCursor = transactionsConnection.cursor()
+        
+        data=transactionsCursor.execute('''SELECT * FROM Tuppers''').fetchall()
+
+        for row in data:
+            print(row)
+            
+        transactionsConnection.close()
+    except sqlite3.Error as error:
+        print('Error occured while printing the database contents - ', error)
 
 def updateURL(playerID:str, newImgURL:str, charName:str):
     try:
@@ -71,16 +88,24 @@ def updateTupName(playerID:str, imgURL:str, newCharName:str):
 async def lookup(imgURL:str, message:discord.Message):
     tupperDBConnection = sqlite3.connect('CLDTupper.db')
     tupperCursor = tupperDBConnection.cursor()
-    
-    tupperCursor.execute(f'''SELECT PlayerID, ImgURL, CharName FROM Tuppers WHERE ImgURL in ('{imgURL}')''')
+    imgURL = imgURL.key
+    tupperCursor.execute(f'''SELECT PlayerID, ImgURL, CharName FROM Tuppers WHERE ImgURL = ('{imgURL}')''')
     data=tupperCursor.fetchall()
-
+    
+    #uncomment to see the whole database as a print
+    #printTuppers()
+    
+    
     #See if we found the image URL of the tupper post
     if data == []:
         #Fetch data for this tupper from bot channel
         aliasChannel = client.get_channel(aliasBotChannel)
-        messages = [message async for message in aliasChannel.history(limit=800)]
-        #iterate through the last 800 embedded messages
+        messages = [message async for message in aliasChannel.history(limit=4000)]
+
+        playerID = None
+        charName = None
+
+        #iterate through the last 4000 embedded messages
         for currMess in messages:
             #we found the message if the RP message matches, and the author (character name) matches as well.
             if message.content in currMess.embeds[0].description and message.author.name == currMess.embeds[0].title:
@@ -89,25 +114,31 @@ async def lookup(imgURL:str, message:discord.Message):
                 break
         
         #check if the tupper is in the database, but the url has changed
-        tupperCursor.execute(f'''SELECT PlayerID, ImgURL, CharName FROM Tuppers WHERE PlayerID in ('{playerID}') AND CharName in ('{charName}')''')
-        data = tupperCursor.fetchall()
-
+        try:
+            tupperCursor.execute(f'''SELECT PlayerID, ImgURL, CharName FROM Tuppers WHERE PlayerID in ('{playerID}') AND CharName in ('{charName}')''')
+            data = tupperCursor.fetchall()
+        except:
+            pass
         #if data is still empty (no playerID and Tup Name match in DB)
-        if data == []:
-            #Fetch data for this tupper from bot channel
+        if data == [] and playerID != None and charName != None:
             #initialize new tupper
             addTupper(playerID, imgURL, charName)
             data = [[playerID, imgURL, charName]]
+        
+        elif data == [] and playerID == None:
+            print("Someone tried to award an RP message that was too old, and the character had not yet been awarded anything.")
+            return
 
         #In this case we found the tupper by name + playerID
-        else:
-            updateURL(playerID, imgURL, charName)
-            print(f"Updated the img url from: {data[0][1]} to: {imgURL}.")
-            data[0][1] = imgURL
+        elif data != []:
+            if data[0][1] != imgURL:
+                updateURL(playerID, imgURL, charName)
+                print(f"Updated the img url from: {data[0][1]} to: {imgURL}.")
+                data[0][1] = imgURL
 
     elif data[0][2] != message.author.name:
         #check if tup name needs updating.
-        updateTupName(playerID, imgURL, message.author.name)
+        updateTupName(data[0][0], imgURL, message.author.name)
         print(f"Updated tupper name from {data[0][2]} to {message.author.name}")
         data[0][2] = message.author.name
     
