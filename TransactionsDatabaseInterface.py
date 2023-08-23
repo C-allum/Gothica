@@ -135,20 +135,38 @@ def playerTransactionsInfo(person:str, timeframe:str = None):
     except sqlite3.Error as error:
         print(f'Error occured while printing database contents for - {person}', error)
 
-#Fetch whole database and print it into spreadsheet
-def dataToSpreadsheet():
+#Fetch database, filter by given timeframe and print it into spreadsheet
+#Throws an error if there is no Sheet in the Spreadsheet with the timeframe as name
+def dataToSpreadsheet(timeframe:str = None):
     try:
         transactionsConnection = sqlite3.connect('CLDTransactions.db')
         transactionsCursor = transactionsConnection.cursor()
         
-        data=transactionsCursor.execute('''SELECT * FROM Transactions''').fetchall()
+        if timeframe == None:
+            sheetName = "Total"
+            data = transactionsCursor.execute(f'''SELECT * FROM Transactions''').fetchall()
 
-        SheetsService.values().update(spreadsheetId=TransactionSheet, range='Sheet1', body=dict(majorDimension='ROWS', values=data), valueInputOption='USER_ENTERED').execute()
+        else:
+            sheetName = timeframe
+            timeframe = "-" + timeframe
+            data = transactionsCursor.execute(f'''SELECT * FROM Transactions WHERE Date > datetime('now', '{timeframe}') ''').fetchall()
+
+        SheetsService.values().clear(spreadsheetId=TransactionSheet, range=sheetName).execute()
+        SheetsService.values().update(spreadsheetId=TransactionSheet, range=sheetName, body=dict(majorDimension='ROWS', values=data), valueInputOption='USER_ENTERED').execute()
         print('Wrote data to spreadsheet')
                     
         transactionsConnection.close()
     except sqlite3.Error as error:
         print('Error occured while printing the database into the spreadsheet - ', error)
+
+#Write a selection of recent transactions to sheets
+def automaticTransactionDump():
+    dataToSpreadsheet('1 Week')
+    dataToSpreadsheet('1 Month')
+    dataToSpreadsheet('3 Months')
+    dataToSpreadsheet('6 Months')
+    dataToSpreadsheet('1 Year')
+    dataToSpreadsheet()
 
 #Given a list, finds and removes outliers. IMPORTANT: ASSUMES NUMBERS ARE IN THIRD ARRAY PLACE
 def removeOutliers(data):
@@ -198,5 +216,4 @@ def testing():
 
 #--- --- --- EXECUTED IF THIS FILE IS RUN --- --- ---
 if __name__ == "__main__":
-    #playerTransactionsInfo('Toph#9851', '2 months')
-    testing()
+    playerTransactionsInfo('Toph#9851', '2 months')
