@@ -4562,12 +4562,12 @@ async def on_raw_reaction_add(reaction):
                 pass
 
     #Dezzie Reacts with weekly pool on OOC messages
-    if (reaction.emoji.name == "dz" or reaction.emoji.name == "cashmoney" or reaction.emoji.name == "makeitrain" or reaction.emoji.name == "DzCrit") and mess.author.bot == False:
+    if (reaction.emoji.name == "dz" or reaction.emoji.name == "cashmoney" or reaction.emoji.name == "makeitrain" or reaction.emoji.name == "Dezzieheart" or reaction.emoji.name == "DzCrit") and mess.author.bot == False:
 
         await EconomyCommands.dezReact(reaction)
 
     #Dezzie React on Tupper
-    elif (reaction.emoji.name == "dz" or reaction.emoji.name == "cashmoney" or reaction.emoji.name == "makeitrain" or reaction.emoji.name == "DzCrit") and mess.author.bot == True and not mess.author.name in botnames :
+    elif (reaction.emoji.name == "dz" or reaction.emoji.name == "cashmoney" or reaction.emoji.name == "makeitrain" or reaction.emoji.name == "Dezzieheart" or reaction.emoji.name == "DzCrit") and mess.author.bot == True and not mess.author.name in botnames :
         
         await EconomyCommands.rpDezReact(reaction)
         
@@ -4689,6 +4689,7 @@ async def on_raw_reaction_add(reaction):
         await KinklistCommands.kinklist(mess, dmchannel, "Reaction")
 
     elif reaction.emoji.name == "❓":
+        mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
         dmchannel = await client.fetch_user(int(reaction.member.id))
         await client.get_channel(logchannel).send(str(reaction.member.name) + " queried the tupper of " + str(mess.author.name))
         await CharRegistry.charsearch("%search " + mess.author.name, dmchannel)

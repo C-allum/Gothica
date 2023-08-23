@@ -754,7 +754,7 @@ async def dezReact(reaction):
     elif reaction.emoji.name == "cashmoney":
         giveamount = reactCashMoney
 
-    elif reaction.emoji.name == "makeitrain":
+    elif reaction.emoji.name == "makeitrain" or reaction.emoji.name == "Dezzieheart":
         giveamount = reactMakeItRain
 
     else:
@@ -880,7 +880,7 @@ async def rpDezReact(reaction):
     elif reaction.emoji.name == "cashmoney":
         giveamount = reactCashMoney
 
-    elif reaction.emoji.name == "makeitrain":
+    elif reaction.emoji.name == "makeitrain" or reaction.emoji.name == "Dezzieheart":
         giveamount = reactMakeItRain
 
     else:

@@ -823,7 +823,7 @@ async def kinksurvey(message):
     if str(message.channel.id) != kinkcreatechannel:
         await message.channel.send(embed = discord.Embed(title = "This is not the place to talk about that.", description = f"We will gladly talk about your deepest desires, <@{targname.id}>. We prefer a bit of privacy for that however. Please use the <#{kinkcreatechannel}> channel to call this command.", colour = embcol))
         return
-    if str(targname) in str(kinkdata):
+    if str(namestr) in str(kinkdata):
 
         await message.channel.send(embed = discord.Embed(title = "We already know your deepest desires", description = f"Your kinklist is already registered with us, <@{targname.id}>. If you want to take the whole survey again reply `1`, otherwise reply `0`.\n If you want to edit it a single kink, use %kinkedit.", colour = embcol))
         #See if the user wants to retake the survey
@@ -844,9 +844,12 @@ async def kinksurvey(message):
         else:
             return
 
-
     threadid = await message.create_thread(name= "Kinklist Survey: " + namestr.split("#", 1)[0])
-
+    
+    if retakeSurvey == 1 and playerIndex == -1:
+            await threadid.send(embed = discord.Embed(title = "Kink Survey", description = f"Something went wrong. We couldn't locate your entry in the kinklist. Contact the Bot Gods."))
+            return
+    
     await threadid.send(embed = discord.Embed(title = "Kink Survey", description = f"Welcome to the kink survey! We will ask you to give us a rating on all sorts of kinks in just a moment. We will go through a couple of categories with plenty of kinks, and when we are done you can look at your kinklist with the %kinklist command, or edit it with the %kinkedit command. Furthermore you can search for users with a certain kink using the %kinkplayers [kink] command, or look at someone else's list with %kinklist [@username]. \n\n **Please note that we go to sleep around <t:1670025600:T> on the night from sunday to monday every week. If you don't finish before that, your progress will be lost!** \n\n **If you ever want to exit this survey, input a wrong number 3 times in a single question.** \n\n Okay, with the formalities out of the way, let us begin..."))
     
 
