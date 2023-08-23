@@ -123,8 +123,8 @@ async def on_ready():
                     dezziePool += weeklyDezzieBonusBoost
                 if "server veteran" in str(roles).lower():
                     dezziePool += weeklyDezzieBonusVeteran
-                if "lorekeeper" in str(roles).lower() or "lorekeeper" in str(roles).lower() or "admin" in str(roles).lower():
-                    dezziePool = 100000
+                if "lorekeeper" in str(roles).lower() or "moderator" in str(roles).lower() or "admin" in str(roles).lower():
+                    dezziePool += weeklyDezzieBonusLorekeeper
                 if "patron tier 1" in str(roles).lower():
                     dezziePool += weeklyDezzieBonusPatronT1
                 if "patron tier 2" in str(roles).lower():
@@ -132,7 +132,7 @@ async def on_ready():
                 if "patron tier 3" in str(roles).lower():
                     dezziePool += weeklyDezzieBonusPatronT3
                 if "cult of the mistress" in str(roles).lower():
-                    dezziePool += weeklyDezzieBonusPatronT3
+                    dezziePool += weeklyDezzieBonusPatronT4
 
             try:
                 economydata[i+3][0] = dezziePool
@@ -4565,12 +4565,12 @@ async def on_raw_reaction_add(reaction):
                 pass
 
     #Dezzie Reacts with weekly pool on OOC messages
-    if (reaction.emoji.name == "dz" or reaction.emoji.name == "cashmoney" or reaction.emoji.name == "makeitrain" or reaction.emoji.name == "DzCrit") and mess.author.bot == False:
+    if (reaction.emoji.name == "dz" or reaction.emoji.name == "cashmoney" or reaction.emoji.name == "makeitrain" or reaction.emoji.name == "Dezzieheart" or reaction.emoji.name == "DzCrit") and mess.author.bot == False:
 
         await EconomyCommands.dezReact(reaction)
 
     #Dezzie React on Tupper
-    elif (reaction.emoji.name == "dz" or reaction.emoji.name == "cashmoney" or reaction.emoji.name == "makeitrain" or reaction.emoji.name == "DzCrit") and mess.author.bot == True and mess.author.id == tupperID:
+    elif (reaction.emoji.name == "dz" or reaction.emoji.name == "cashmoney" or reaction.emoji.name == "makeitrain" or reaction.emoji.name == "Dezzieheart" or reaction.emoji.name == "DzCrit") and mess.author.bot == True and not mess.author.name in botnames :
         
         await EconomyCommands.rpDezReact(reaction)
         
@@ -4692,6 +4692,7 @@ async def on_raw_reaction_add(reaction):
         await KinklistCommands.kinklist(mess, dmchannel, "Reaction")
 
     elif reaction.emoji.name == "❓":
+        mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
         dmchannel = await client.fetch_user(int(reaction.member.id))
         await client.get_channel(logchannel).send(str(reaction.member.name) + " queried the tupper of " + str(mess.author.name))
         await CharRegistry.charsearch("%search " + mess.author.name, dmchannel)

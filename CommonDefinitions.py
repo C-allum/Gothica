@@ -89,6 +89,8 @@ if liveVersion: #Set to 1 to use the real spreadsheets, or 0 to use the testing 
 
     communityProjectChannel = 999810708546002994
 
+
+
 else:
 
     CharSheet = "1Vgxa8C5j5XnEUGhaGqAANVhsWSIOra87wCE2f5C75tQ"
@@ -118,6 +120,7 @@ else:
     bridgechannel = 891781900388159528
 
     communityProjectChannel = 891781900388159528
+
 
 SERVICE_ACCOUNT_FILE = "keys.json"
 
@@ -172,7 +175,8 @@ embcol = 0xb700ff
 
 indexchannel = 898640028174016552
 
-tupperID = 1071257376088412204
+botnames = ['Arcane', 'Avrae (in dice jail)', 'Dungeon\'s Herald', 'Dungeon\'s Keeper', 'Dungeon\'s Whisperer', 'Dyno', 'PartyBeast', 'Tempo', 'Thread-Watcher', 'Twitch Alerts']
+
 
 awaitingsel = 0
 
@@ -195,6 +199,8 @@ reactdz = 20
 reactCashMoney = 100
 reactMakeItRain = 200
 
+rpReactModifier = 1.25
+
 weeklyDezziePoolVerified = 500
 weeklyDezziePoolP1 = 650
 weeklyDezziePoolP2 = 800
@@ -203,6 +209,7 @@ weeklyDezziePoolP3 = 1000
 weeklyDezzieBonusFucksmith = 500
 weeklyDezzieBonusBoost = 100
 weeklyDezzieBonusVeteran = 100
+weeklyDezzieBonusLorekeeper = 500
 
 weeklyDezzieBonusPatronT1 = 100
 weeklyDezzieBonusPatronT2 = 100
