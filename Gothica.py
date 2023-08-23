@@ -60,6 +60,9 @@ async def on_ready():
 
     if oldResetDateTime < datetime.timestamp(today):
 
+        #Write transaction data to spreadsheets
+        TransactionsDatabaseInterface.automaticTransactionDump()
+
         #Calculate new timestamp
         newResetDatetime = (today - timedelta(days=today.weekday()) + timedelta(days=7)).replace(hour=0, minute=0, second=0) #Takes todays date, subtracts the passed days of the week and adds 7, resulting in the date for next monday. Then replaces time component with 0
         newResetDateTimestamp = int(datetime.timestamp(newResetDatetime))
