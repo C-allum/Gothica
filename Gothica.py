@@ -9,6 +9,7 @@ import TransactionsDatabaseInterface
 import TupperDatabase
 import time
 from discord import Webhook
+from discord import SyncWebhook
 import aiohttp
 player_list = []
 @client.event
@@ -4007,22 +4008,26 @@ async def on_message(message):
                 dest = client.get_channel(int(destid))
                 print("Copying from " + str(chan) + " to " + str(dest))
                 mess = [joinedMessages async for joinedMessages in message.channel.history(limit = None, oldest_first= True)]
+                mess.sort(key=lambda x: x.created_at)
                 hook = await dest.parent.create_webhook(name= "Clonehook")
+                lock = asyncio.Lock()
+                
                 async with aiohttp.ClientSession() as session:
-                    whook = Webhook.from_url(hook.url, session = session)
+                    whook = SyncWebhook.from_url(hook.url)
                     for a in range(len(mess)):
                         try:
                             if not mess[a].content.startswith("%clone"):
-                                await whook.send(mess[a].content, username = mess[a].author.name, avatar_url = mess[a].author.avatar, thread = dest)
+                                whook.send(mess[a].content, username = mess[a].author.name, avatar_url = mess[a].author.avatar, thread = dest)
                             else:
                                 break
                         except discord.errors.HTTPException:
                             pass
                         if mess[a].attachments:
                             for b in range(len(mess[a].attachments)):
-                                await whook.send(mess[a].attachments[b].url, username = mess[a].author.name, avatar_url = mess[a].author.avatar, thread = dest)
+                                whook.send(mess[a].attachments[b].url, username = mess[a].author.name, avatar_url = mess[a].author.avatar, thread = dest)
                         if mess[a].embeds:
-                            await whook.send(embed= mess[a].embeds[0], username = mess[a].author.name, avatar_url = mess[a].author.avatar, thread = dest)
+                            whook.send(embed= mess[a].embeds[0], username = mess[a].author.name, avatar_url = mess[a].author.avatar, thread = dest)
+
                 await message.channel.send("Complete")
                 await session.close()
                 await hook.delete()
