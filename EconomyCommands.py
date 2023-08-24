@@ -832,7 +832,7 @@ async def rpDezReact(reaction):
     except TypeError:
         giveid = reaction.member.id
         giver = await client.fetch_user(giveid)
-        await client.get_channel(botchannel).send(embed=discord.Embed(title = str(giver.display_name) + ": The post you tried to award is too old.", description = "The first time a character is awarded dezzies, the post has to be rather new. If the issue persists, contact the bot gods.", colour = embcol))
+        await client.get_channel(botchannel).send(embed=discord.Embed(title = str(giver.display_name) + ": The post you tried to award is too old, or was edited.", description = "The first time a character is awarded dezzies, the post has to be rather new and unedited! Try awarding a different, unedited post of that character. If the issue persists, contact the bot gods.", colour = embcol))
         return
 
     economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
