@@ -296,6 +296,9 @@ async def charcreate(message):
 
     print(message.author.name + " registered a character")
 
+    #Send message to character index
+    await client.get_channel(indexchannel).send(embed=emb)
+
     await message.channel.send(embed=emb2)
 
     #Convert to list of lists

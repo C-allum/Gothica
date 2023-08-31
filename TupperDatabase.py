@@ -126,7 +126,7 @@ async def lookup(imgURL:str, message:discord.Message):
             data = [[playerID, imgURL, charName]]
         
         elif data == [] and playerID == None:
-            print("Someone tried to award an RP message that was too old, and the character had not yet been awarded anything.")
+            print("Someone tried to award an RP message that was too old or the message was edited, and the character had not yet been awarded anything.")
             return
 
         #In this case we found the tupper by name + playerID
