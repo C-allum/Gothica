@@ -8,12 +8,8 @@ from CommonDefinitions import *
 import TransactionsDatabaseInterface
 import TupperDatabase
 import time
-import discord
 from discord import Webhook
 from discord import SyncWebhook
-from discord.ext import commands
-import discord_ui
-from discord_ui import Button, UI, Listener
 import aiohttp
 player_list = []
 @client.event
@@ -159,6 +155,7 @@ async def on_ready():
     else:
         print("It is not dezzie award pool reset time yet!")
     #----------------------------------------------------------
+
 
 #Main Loop
 
@@ -704,7 +701,7 @@ async def on_message(message):
 
                     await message.channel.send(embed = discord.Embed(title = "**Please read this before closing this ticket**", description = ":one: Go to role-selection to choose your roles. Make sure that you at least select the channels you want to have access to.\n(You can change your role and the channels you want to see anytime by un-clicking your reaction.)\n\n:two: Press on the :lock:-icon on the first message to close the ticket.\n\nYou are good to go now, enter the server and have fun :slight_smile:", colour = embcol))
 
-                    #await client.get_channel(841736084362362940).send(str(vername) + " is now verified")
+                    await client.get_channel(841736084362362940).send(str(vername) + " is now verified")
 
                     vername = str(vername).split("#")[0]
 
@@ -716,8 +713,7 @@ async def on_message(message):
 
                     welcomes = ["Hello everyone! We were taking detailed notes about the xio colony in the lower halls and found a new visitor! Please say hello to " + str(verping) + "!\nNow if you'll excuse us, we must go back to find out precisely how quickly those broodmothers spawn.", "Pardon me. We were helping Sophie care for a sick tentacle, and it spat up a person! Would one of you please take care of " + str(verping) + " while We help Sophie clean up the excess slime?", str(verping) + ", here, got caught trying to look under Our skirts. Apparently, they have never heard what happens when you stare into the Abyss because they seem to be stunned by what was down there. We're sure a hot meal will do the trick though.", "We were mucking out the Cathedral's prison cells and found " + str(verping) + " tied to a post, promising to be good. Come say hello to the newest lewd convert!", str(verping) + " thought they could get in without us noticing. Everybody, make sure they feel welcome!", "This poor soul fell through a portal onto a pile of lightly used mattresses while We were changing, and seemed unable to handle the psychic stress of our unfiltered form. They've passed out from shock for now, would someone make sure they still remember their name when they wake up? I believe it's " + str(verping) + ".", str(verping) + " seems to have had a recent encounter with some of the dungeon slimes. Could someone get them some clothes, and see to it that they are taken care of?", "Oh Dear," + str(verping) + "appears to have been transported here from their native plane of existence! Could someone help them get settled into their new home?", "It's odd, We thought we had fixed that hole already? Could someone check if " + str(verping) + " is alright while we go see to the repairs again?", "We think " + str(verping) + " must have had a run in with one of the amnesia blooms in the garden. They dont seem to remember where they are! Could someone help them get settled back in while We do some weeding?"]
 
-                    await client.get_channel(828411760847356005).send(embed = discord.Embed(title = titles[rand], description = welcomes[rand], colour = embcol), components = [Button(label = "Take a Tour", custom_id = "TourButton", color = "Green")])
-
+                    await client.get_channel(828411760847356005).send(embed = discord.Embed(title = titles[rand], description = welcomes[rand], colour = embcol))
 
             #Staff Vacation Command
             elif message.content.lower().startswith(str(myprefix) + "vacation") and ("lorekeeper" in str(message.author.roles).lower()):
@@ -2836,7 +2832,7 @@ async def on_message(message):
                         if int(slutdiff) >= 21600:
 
                             if message.author.name == "ruin_enjoyer":
-                                slutappend = "\n\n" + random.choice(["Callum *tried* to make you win every time, honest.", "It *does* seem deliberate at this point, but I promise it isn't.", "Wow. You have worse rolls with this than Callum has with real dice."])
+                                slutappend = "\n\n" + random.choice("Callum *tried* to make you win every time, honest.", "It *does* seem deliberate at this point, but I promise it isn't.", "Wow. You have worse rolls with this than Callum has with real dice.")
                             else:
                                 slutappend = ""
 
@@ -4192,7 +4188,6 @@ async def on_message(message):
 
                 await message.channel.send(embed = discord.Embed(title = "Timestamp Converter", description = str(inittime) + " in " + str(timezone) + " is <t:" + str(dtsp) + ":T>. It will next be " + str(inittime) + " in that timezone in " + "<t:" + str(dtsp) + ":R>", colour = embcol))
                 await message.delete()
-            
             #Manually spawn Imp Tome
             elif message.content.lower().startswith(str(myprefix) + "imptome") and message.author.id == imptomeWielder:
                 messageLink = message.content.rsplit(" ")[1]
@@ -4204,7 +4199,6 @@ async def on_message(message):
                 channel = client.get_channel(channel_id)
                 msg = await channel.fetch_message(msg_id)
                 await MiscellaneuosCommands.impTomeSpawn(msg)
-            
             elif message.content.lower().startswith(str(myprefix) + "countscenes"):
               scenesWithNotifications = 0
               scenesWithoutNotifications = 0
@@ -4268,9 +4262,6 @@ async def on_message(message):
             # if message.channel.parent.name == "official-functions":
             #     prevmess = [joinedMessages async for joinedMessages in message.channel.history(limit = 2, oldest_first= False)]
             #     print(prevmess)
-
-            elif message.content.lower().startswith(str(myprefix) + "tour"):
-                await MiscellaneuosCommands.tour(message)
 
             #Per message income and Scene tracker pings.
             if not "verification" in str(message.channel).lower():
@@ -4749,35 +4740,6 @@ async def on_raw_reaction_remove(reaction):
 # async def on_message_delete(message):
 
 #     await client.get_channel(logchannel).send(message.author.name + "'s message was deleted in " + str(message.channel) + ". The message was:\n\n" + message.content.replace("@", "\@") + "\n\nThis message was deleted at " + str(datetime.now()))
-
-
-#This would listen to *every* button event. Use custom IDs to define by function instead.
-#@client.listen('on_button')
-#async def on_button(btn):
-
-#To add a button to a message, send the message as normal, and add a parameter for component, as below:
-# await message.channel.send("Text or Embed goes here, as normal", components = [Button(label = "Text on the button", custom_id = "Used to trigger the listener", color = "Green (It doesn't accept the spelling of colour with a u.)", emoji = "Picture")])
-
-#Gets all buttons marked Tourbutton
-@ui.components.listening_component(custom_id = "TourButton")
-async def listening_component(btn):
-    await btn.respond() #Prevents the button from showing a failure
-    msg = btn.message #Fetch the message that the button was attached to
-    button = btn.component.content #Get the text from the pressed button
-    presser = btn.author # Returns the member who pressed the button
-    
-    print(str(button))
-    print(TourNext)
-    if not str(button) in str(TourNext):
-        Tourindex = 0
-    else:
-        Tourindex = TourNext.index(button) + 1
-    
-    await client.get_channel(TourLocations[Tourindex]).send("<@" + str(presser.id) + ">")
-    try:
-        await client.get_channel(TourLocations[Tourindex]).send(embed = discord.Embed(title = TourNames[Tourindex], description = str(TourDescriptions[Tourindex]) + "\n<#" + str(TourLocations[Tourindex+1]) + ">", colour = embcol), components = [Button(label = TourNext[Tourindex], custom_id = "TourButton", color = "Green")])
-    except IndexError:
-        await client.get_channel(TourLocations[Tourindex]).send(embed = discord.Embed(title = TourNames[Tourindex], description = TourDescriptions[Tourindex], colour = embcol))
 
 token = botTokens.gettoken(liveVersion)
 client.run(token, reconnect=True)
