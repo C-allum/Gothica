@@ -1,3 +1,4 @@
+from typing import Optional
 from CommonDefinitions import *
 import random
 import CommonDefinitions
@@ -155,6 +156,13 @@ async def impTomeSpawn(message):
     else:
         await sentmsg.edit(embed = discord.Embed(title = f"Hello {tomeWeilder.display_name}", description = f"The imp tome possibly was found in the dungeon in channel {message.jump_url}. The timer expired and the scene probably moved on.", colour = embcol))
     
+async def tour(message):
+    embed = discord.Embed(title="Take a Tour!", description="This command is solely used to summon the tour option manually.")
+    buttontest = await message.channel.send(embed = embed, components = [Button(label = "Take a Tour", custom_id = "TourButton", color = "green")])
+
+
+
+
 async def migrateAcc(message):
 
     userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension = 'ROWS').execute().get("values")
@@ -427,8 +435,6 @@ class ImpTomeView(discord.ui.View):
         await interaction.response.send_message("Imp tome spawning...")
         self.value = True
         self.stop()
-
-
 
 #-----------------Helper functions-------------
 async def uwutongue(message):
