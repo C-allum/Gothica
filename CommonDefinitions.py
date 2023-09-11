@@ -209,7 +209,7 @@ weeklyDezziePoolP3 = 1000
 weeklyDezzieBonusFucksmith = 500
 weeklyDezzieBonusBoost = 100
 weeklyDezzieBonusVeteran = 100
-weeklyDezzieBonusLorekeeper = 500
+weeklyDezzieBonusStaff = 500
 
 weeklyDezzieBonusPatronT1 = 100
 weeklyDezzieBonusPatronT2 = 100

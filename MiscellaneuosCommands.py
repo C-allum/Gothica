@@ -9,7 +9,7 @@ async def staffVacation(message):
     readMessages = perms.read_messages
     sendMessages = perms.send_messages
     author = message.author
-    if "vacation" in str(message.author.roles).lower() and "lorekeeper" in str(message.author.roles).lower():
+    if "vacation" in str(message.author.roles).lower() and "lore team" in str(message.author.roles).lower():
         if sendMessages == False and readMessages == False:
             perms.send_messages = True
             perms.read_messages = True
@@ -22,7 +22,7 @@ async def staffVacation(message):
         perms = client.get_channel(ModVacationChannels[0]).overwrites_for(message.author)
         readMessages = perms.read_messages
         sendMessages = perms.send_messages
-        if sendMessages == False and readMessages == False and "moderator" in str(message.author.roles).lower():
+        if sendMessages == False and readMessages == False and "mod team" in str(message.author.roles).lower():
             perms.send_messages = True
             perms.read_messages = True
             perms.view_channel = True
@@ -32,7 +32,7 @@ async def staffVacation(message):
         await message.author.remove_roles(role)
         
 
-    elif not("vacation" in str(message.author.roles).lower()) and "lorekeeper" in str(message.author.roles).lower():
+    elif not("vacation" in str(message.author.roles).lower()) and "lore team" in str(message.author.roles).lower():
         if sendMessages != True and readMessages != True:
             perms.send_messages = False
             perms.read_messages = False
@@ -48,7 +48,7 @@ async def staffVacation(message):
         readMessages = perms.read_messages
         sendMessages = perms.send_messages
 
-        if sendMessages != False and readMessages != False and "moderator" in str(message.author.roles).lower():
+        if sendMessages != False and readMessages != False and "mod team" in str(message.author.roles).lower():
             perms.send_messages = False
             perms.read_messages = False
             perms.view_channel = False
@@ -367,7 +367,7 @@ async def manualDezPoolReset(message):
 
         #If they aren't on the server anymore, we can just not refresh their dezzie pool.
         if userStillOnServer == 1:
-            #Base values
+           #Base values
             if "+3" in str(roles).lower():
                 dezziePool = weeklyDezziePoolP3
             elif "+2" in str(roles).lower():
@@ -383,8 +383,8 @@ async def manualDezPoolReset(message):
                 dezziePool += weeklyDezzieBonusBoost
             if "server veteran" in str(roles).lower():
                 dezziePool += weeklyDezzieBonusVeteran
-            if "lorekeeper" in str(roles).lower() or "lorekeeper" in str(roles).lower() or "admin" in str(roles).lower():
-                dezziePool = 100000
+            if "lore team" in str(roles).lower() or "mod team" in str(roles).lower() or "admin" in str(roles).lower():
+                dezziePool += weeklyDezzieBonusStaff
             if "patron tier 1" in str(roles).lower():
                 dezziePool += weeklyDezzieBonusPatronT1
             if "patron tier 2" in str(roles).lower():
@@ -392,7 +392,7 @@ async def manualDezPoolReset(message):
             if "patron tier 3" in str(roles).lower():
                 dezziePool += weeklyDezzieBonusPatronT3
             if "cult of the mistress" in str(roles).lower():
-                dezziePool += weeklyDezzieBonusPatronT3
+                dezziePool += weeklyDezzieBonusPatronT4
 
         try:
             economydata[i+3][0] = dezziePool

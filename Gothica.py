@@ -124,8 +124,8 @@ async def on_ready():
                     dezziePool += weeklyDezzieBonusBoost
                 if "server veteran" in str(roles).lower():
                     dezziePool += weeklyDezzieBonusVeteran
-                if "lorekeeper" in str(roles).lower() or "moderator" in str(roles).lower() or "admin" in str(roles).lower():
-                    dezziePool += weeklyDezzieBonusLorekeeper
+                if "lore team" in str(roles).lower() or "mod team" in str(roles).lower() or "admin" in str(roles).lower():
+                    dezziePool += weeklyDezzieBonusStaff
                 if "patron tier 1" in str(roles).lower():
                     dezziePool += weeklyDezzieBonusPatronT1
                 if "patron tier 2" in str(roles).lower():
@@ -221,12 +221,12 @@ async def on_message(message):
                 await OocFun.gag(message)
 
             #Set Gag - On OocFun and Working
-            if message.content.lower().startswith(myprefix + "gag") and "lorekeeper" in str(message.author.roles).lower():
+            if message.content.lower().startswith(myprefix + "gag") and "lore team" in str(message.author.roles).lower():
 
                 await OocFun.setgag(message)
 
             #Emote - On OocFun and Working
-            if message.content.lower().startswith(str(myprefix) + "emote") and not isbot and ("lorekeeper" in str(message.author.roles).lower() or str(message.author) == "C_allum#5225"):
+            if message.content.lower().startswith(str(myprefix) + "emote") and not isbot and ("lore team" in str(message.author.roles).lower() or str(message.author) == "C_allum#5225"):
 
                 await OocFun.emote(message)
 
@@ -276,7 +276,7 @@ async def on_message(message):
                 except ValueError:
                     return
 
-            if message.content.lower().startswith(str(myprefix) + "speechcurse") and "lorekeeper" in str(message.author.roles).lower():
+            if message.content.lower().startswith(str(myprefix) + "speechcurse") and "lore team" in str(message.author.roles).lower():
                 speechcursed.append(message.content.split(" ")[1:-1])
                 speechcurses.append(message.content.split(" ")[-1])
                 await message.channel.send("Curse Confirmed")
@@ -287,7 +287,7 @@ async def on_message(message):
                 await message.channel.send("Done")
 
             #Curse
-            if message.content.lower().startswith(str(myprefix) + "curse") and "lorekeeper" in str(message.author.roles).lower():
+            if message.content.lower().startswith(str(myprefix) + "curse") and "lore team" in str(message.author.roles).lower():
 
                 await OocFun.emotecurse(message)
 
@@ -296,11 +296,11 @@ async def on_message(message):
                 await OocFun.emoteuncurse(message)
 
             #manual Dezzie reward pool reset
-            elif message.content.lower().startswith(str(myprefix) + "rewardpoolreset") and "moderator" in str(authroles).lower():
+            elif message.content.lower().startswith(str(myprefix) + "rewardpoolreset") and "mod team" in str(authroles).lower():
                 await MiscellaneuosCommands.manualDezPoolReset(message)
 
             #Character Index Update - On CharRegistry, untested
-            elif message.content.lower().startswith(str(myprefix) + "indexupdate") and "moderator" in str(authroles).lower():
+            elif message.content.lower().startswith(str(myprefix) + "indexupdate") and "mod team" in str(authroles).lower():
 
                 await CharRegistry.updatereg(message)
 
@@ -353,7 +353,7 @@ async def on_message(message):
                 await MiscellaneuosCommands.migrateAcc(message)
 
             #manual account migration command
-            elif message.content.lower().startswith(str(myprefix) + "manualmigrate") and not isbot and "lorekeeper" in str(message.author.roles).lower():
+            elif message.content.lower().startswith(str(myprefix) + "manualmigrate") and not isbot and "lore team" in str(message.author.roles).lower():
                 await MiscellaneuosCommands.manualMigrateAcc(message)
 
             #Plothook Command
@@ -681,7 +681,7 @@ async def on_message(message):
                 await message.channel.send(embed = discord.Embed(title = "Plothook Leaderboard", description = "\n".join(sortlist), colour = embcol))
 
             #Verify Command
-            elif message.content.lower().startswith(str(myprefix) + "verify") and ("moderator" in str(message.author.roles).lower() or "bouncer" in str(message.author.roles).lower()):
+            elif message.content.lower().startswith(str(myprefix) + "verify") and ("mod team" in str(message.author.roles).lower() or "bouncer" in str(message.author.roles).lower()):
 
                 vertarget = message.content.split("@")[1]
 
@@ -716,10 +716,10 @@ async def on_message(message):
                     await client.get_channel(828411760847356005).send(embed = discord.Embed(title = titles[rand], description = welcomes[rand], colour = embcol))
 
             #Staff Vacation Command
-            elif message.content.lower().startswith(str(myprefix) + "vacation") and ("lorekeeper" in str(message.author.roles).lower()):
+            elif message.content.lower().startswith(str(myprefix) + "vacation") and ("lore team" in str(message.author.roles).lower()):
                 await MiscellaneuosCommands.staffVacation(message)
 
-            elif message.content.lower().startswith(str(myprefix) + "mvp") and ("moderator" in str(message.author.roles).lower()):
+            elif message.content.lower().startswith(str(myprefix) + "mvp") and ("mod team" in str(message.author.roles).lower()):
                 print("Running")
                 MVProle = discord.utils.get(message.guild.roles, name="Staff MVP")
                 target = await message.guild.query_members(user_ids=[int(message.content.split("@")[1].replace("!","").replace("&","").split(">")[0])])
@@ -728,7 +728,7 @@ async def on_message(message):
                 print("Done")
 
             #Guild Adventurer Command
-            elif message.content.lower().startswith(str(myprefix) + "adventurer") and ("lorekeeper" in str(message.author.roles).lower() or "licensed fucksmith" in str(message.author.roles).lower() or "guild licenser" in str(message.author.roles).lower() or message.author.name == "C_allum"):
+            elif message.content.lower().startswith(str(myprefix) + "adventurer") and ("lore team" in str(message.author.roles).lower() or "licensed fucksmith" in str(message.author.roles).lower() or "guild licenser" in str(message.author.roles).lower() or message.author.name == "C_allum"):
 
                 adventarget = message.content.split("@")[1]
 
@@ -826,7 +826,7 @@ async def on_message(message):
                 await KinklistCommands.kinkcompare(message)
             elif message.content.lower().startswith(str(myprefix) + "kinkfill"):
                 await KinklistCommands.kinkfill(message)
-            elif message.content.lower().startswith(str(myprefix) + "randloot") and "lorekeeper" in str(message.author.roles).lower():
+            elif message.content.lower().startswith(str(myprefix) + "randloot") and "lore team" in str(message.author.roles).lower():
                 await KinklistCommands.randloot(message)
             #Start
 
@@ -932,7 +932,7 @@ async def on_message(message):
 
                 cusemb = discord.Embed(title = tit, description = des.replace("The Mistress", "T̴̯̳̳̠͚͓͚̂͗̽̾̈́͌̐̅͠ͅh̸̨̫͓͖͎͍͔̠͇̊̂̏͝ę̶͎͇͍̲̮̠̭̮͛̃̈́͑̓̔̚ ̸͙̺̦̮͈̹̮̑̿̊̀̂́͂̿͒̚͜M̶̬͇̤̾͐̊̽̈́̀̀̕͘͝í̸̬͎͔͍̠͓̋͜͠͝s̶̡̡̧̪̺͍̞̲̬̮͆͋̇̐͋͌̒̋͛̕t̷̤̲̠̠̄̊͌̀͂̈́̊̎̕ȓ̶̼̂̿̇͛̚e̶̹̪̣̫͎͉̫̫͗s̸̟͉̱͈̞̬̽̽̒̔́̉s̸̛̖̗̜̻̻͚̭͇̈́̀̄͒̅̎"), colour = embcol)
 
-                if not "moderator" in str(authroles).lower():
+                if not "mod team" in str(authroles).lower():
 
                     await client.get_channel(logchannel).send(str(message.author) + " generated an embed in " + str(message.channel.name))
 
@@ -954,7 +954,7 @@ async def on_message(message):
 
                 await message.delete()
 
-            elif message.content.lower().startswith(str(myprefix) + "oocembed") and "lorekeeper" in str(message.author.roles).lower():
+            elif message.content.lower().startswith(str(myprefix) + "oocembed") and "lore team" in str(message.author.roles).lower():
 
                 img = ""
 
@@ -996,7 +996,7 @@ async def on_message(message):
 
                 cusemb = discord.Embed(title = tit, description = des.replace("The Mistress", "T̴̯̳̳̠͚͓͚̂͗̽̾̈́͌̐̅͠ͅh̸̨̫͓͖͎͍͔̠͇̊̂̏͝ę̶͎͇͍̲̮̠̭̮͛̃̈́͑̓̔̚ ̸͙̺̦̮͈̹̮̑̿̊̀̂́͂̿͒̚͜M̶̬͇̤̾͐̊̽̈́̀̀̕͘͝í̸̬͎͔͍̠͓̋͜͠͝s̶̡̡̧̪̺͍̞̲̬̮͆͋̇̐͋͌̒̋͛̕t̷̤̲̠̠̄̊͌̀͂̈́̊̎̕ȓ̶̼̂̿̇͛̚e̶̹̪̣̫͎͉̫̫͗s̸̟͉̱͈̞̬̽̽̒̔́̉s̸̛̖̗̜̻̻͚̭͇̈́̀̄͒̅̎"), colour = embcol)
 
-                if not "moderator" in str(authroles).lower():
+                if not "mod team" in str(authroles).lower():
 
                     await client.get_channel(logchannel).send(str(message.author) + " generated an embed in " + str(message.channel.name))
 
@@ -1019,7 +1019,7 @@ async def on_message(message):
                 await message.channel.send("Embed sent to ooc.")
 
             #Embed Edit
-            elif message.content.lower().startswith(str(myprefix) + "edembed") and "lorekeeper" in str(message.author.roles).lower():
+            elif message.content.lower().startswith(str(myprefix) + "edembed") and "lore team" in str(message.author.roles).lower():
                 chan = message.content.split(" ")[1].split("/")[5]
                 messid = message.content.split(" ")[1].split("/")[6]
                 messchan = client.get_channel(int(chan))
@@ -1046,7 +1046,7 @@ async def on_message(message):
                     tit = ""
                     des = message.content.split(" ",1)[1]
                 cusemb = discord.Embed(title = tit, description = des.replace("The Mistress", "T̴̯̳̳̠͚͓͚̂͗̽̾̈́͌̐̅͠ͅh̸̨̫͓͖͎͍͔̠͇̊̂̏͝ę̶͎͇͍̲̮̠̭̮͛̃̈́͑̓̔̚ ̸͙̺̦̮͈̹̮̑̿̊̀̂́͂̿͒̚͜M̶̬͇̤̾͐̊̽̈́̀̀̕͘͝í̸̬͎͔͍̠͓̋͜͠͝s̶̡̡̧̪̺͍̞̲̬̮͆͋̇̐͋͌̒̋͛̕t̷̤̲̠̠̄̊͌̀͂̈́̊̎̕ȓ̶̼̂̿̇͛̚e̶̹̪̣̫͎͉̫̫͗s̸̟͉̱͈̞̬̽̽̒̔́̉s̸̛̖̗̜̻̻͚̭͇̈́̀̄͒̅̎"), colour = embcol)
-                if not "moderator" in str(authroles).lower():
+                if not "mod team" in str(authroles).lower():
                     await client.get_channel(logchannel).send(str(message.author) + " generated an embed in " + str(message.channel.name))
                 if not img == "":
                     cusemb.set_image(url = img)
@@ -1056,7 +1056,7 @@ async def on_message(message):
                 await mess.edit(embed = cusemb)
                 await message.delete()
 
-            elif message.content.lower().startswith(str(myprefix) + "oocmsg") and ("lorekeeper" in str(message.author.roles).lower() or str(message.author) == "C_allum#5225"):
+            elif message.content.lower().startswith(str(myprefix) + "oocmsg") and ("lore team" in str(message.author.roles).lower() or str(message.author) == "C_allum#5225"):
 
                 await client.get_channel(832435243117445131).send(message.content.split(" ", 1)[1].replace("The Mistress", "T̴̯̳̳̠͚͓͚̂͗̽̾̈́͌̐̅͠ͅh̸̨̫͓͖͎͍͔̠͇̊̂̏͝ę̶͎͇͍̲̮̠̭̮͛̃̈́͑̓̔̚ ̸͙̺̦̮͈̹̮̑̿̊̀̂́͂̿͒̚͜M̶̬͇̤̾͐̊̽̈́̀̀̕͘͝í̸̬͎͔͍̠͓̋͜͠͝s̶̡̡̧̪̺͍̞̲̬̮͆͋̇̐͋͌̒̋͛̕t̷̤̲̠̠̄̊͌̀͂̈́̊̎̕ȓ̶̼̂̿̇͛̚e̶̹̪̣̫͎͉̫̫͗s̸̟͉̱͈̞̬̽̽̒̔́̉s̸̛̖̗̜̻̻͚̭͇̈́̀̄͒̅̎"))
 
@@ -1115,7 +1115,7 @@ async def on_message(message):
                 await delay.delete()
 
             #Register community Project
-            elif message.content.lower().startswith(str(myprefix) + "communityproject") and "lorekeeper" in str(message.author.roles).lower():
+            elif message.content.lower().startswith(str(myprefix) + "communityproject") and "lore team" in str(message.author.roles).lower():
                 await MiscellaneuosCommands.regCommunityProject(message)
 
             #Invest Command
@@ -2068,7 +2068,7 @@ async def on_message(message):
                 if isbot:
                     await message.delete()
 
-                elif "setup" in message.content.lower() and "lorekeeper" in str(message.author.roles).lower():
+                elif "setup" in message.content.lower() and "lore team" in str(message.author.roles).lower():
                     for a in range(len(message.content.split(" ", 1)[1].split("|"))):
                         bidstock.append(message.content.split(" ", 1)[1].split("|")[a])
                         bidprice.append(0)
@@ -2088,7 +2088,7 @@ async def on_message(message):
                             bidsummary.append(bidstock[c] + ": No bids yet")
                     await message.channel.send(embed = discord.Embed(title = "Current bids for this weekend's auctions", description = "\n".join(bidsummary) + "\n\nIn total, " + str(auctiontot) + " is being spent at this auction.",  colour = embcol))
 
-                elif "end" in message.content.lower() and "lorekeeper" in str(message.author.roles).lower():
+                elif "end" in message.content.lower() and "lore team" in str(message.author.roles).lower():
                     bidtotal = sum(bidprice)
                     bidsfinal = []
                     bidwinners = []
@@ -2121,7 +2121,7 @@ async def on_message(message):
                     sheet.values().update(spreadsheetId = EconSheet, range = str("B1:B" + str(max(indexes)+1)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[balances])).execute()
                     await message.channel.send(embed = discord.Embed(title = "Bidding concluded", description = "The following dezzies have been removed:\n\n" + "\n".join(bidstatement), colour = embcol))
 
-                elif "reset" in message.content.lower() and "lorekeeper" in str(message.author.roles).lower():
+                elif "reset" in message.content.lower() and "lore team" in str(message.author.roles).lower():
                     if len(message.content.split(" ")) > 2:
                         bidtarget = " ".join(message.content.split(" ")[1:])
                         try:
@@ -2144,7 +2144,7 @@ async def on_message(message):
                     else:
                         await message.channel.send(embed = discord.Embed(title = "You didn't format that correctly.", description = "It needs to be `%bid reset slavename`.", colour = embcol))
                 
-                elif "set" in message.content.lower() and "lorekeeper" in str(message.author.roles).lower():
+                elif "set" in message.content.lower() and "lore team" in str(message.author.roles).lower():
                     bidsections = message.content.split(" ", 1)[1].split("|")
                     try:
                         if bidsections[0].lower() in str(bidstock).lower():
@@ -2166,7 +2166,7 @@ async def on_message(message):
                     except ValueError:
                         await message.channel.send(embed = discord.Embed(title = "The price you bid needs to be an integer  ", description = "", colour = embcol))
 
-                elif "thread" in message.content.lower() and "lorekeeper" in str(message.author.roles).lower():
+                elif "thread" in message.content.lower() and "lore team" in str(message.author.roles).lower():
                     bidthread = message.channel
                     await message.channel.send("Bidding Thread Set")
 
@@ -2210,7 +2210,7 @@ async def on_message(message):
             #Easter egg hunt
             elif message.content.lower().startswith(str(myprefix) + "egg"):
 
-                if "res" in message.content.lower() or not "lorekeeper" in str(message.author.roles).lower():
+                if "res" in message.content.lower() or not "lore team" in str(message.author.roles).lower():
                     egglist = []
                     for a in range(len(eggfinders)):
                         findersort = [x for _,x in sorted(zip(eggsfound,eggfinders))]
@@ -2218,7 +2218,7 @@ async def on_message(message):
                     egglist.reverse()
                     await message.channel.send(embed = discord.Embed(title = "Mimic Eggs Found", description = "\n".join(egglist), colour = embcol))
 
-                elif "set" in message.content.lower() or not "lorekeeper" in str(message.author.roles).lower():
+                elif "set" in message.content.lower() or not "lore team" in str(message.author.roles).lower():
                     eggname = " ".join(message.content.split(" ")[2:-1])
                     eggno = message.content.split(" ")[-1]
                     if eggname in str(eggfinders):
@@ -2520,12 +2520,12 @@ async def on_message(message):
                 await EconomyCommands.giveitem(message)
 
             #Add item
-            elif message.content.lower().startswith(str(myprefix) + "additem") or message.content.lower().startswith("$additem") and "lorekeeper" in str(message.author.roles).lower():
+            elif message.content.lower().startswith(str(myprefix) + "additem") or message.content.lower().startswith("$additem") and "lore team" in str(message.author.roles).lower():
 
                 await EconomyCommands.additem(message)
 
             #gift all
-            elif message.content.lower().startswith(str(myprefix) + "giftall") or message.content.lower().startswith("$giftall") and "lorekeeper" in str(message.author.roles).lower():
+            elif message.content.lower().startswith(str(myprefix) + "giftall") or message.content.lower().startswith("$giftall") and "lore team" in str(message.author.roles).lower():
 
                 await EconomyCommands.giftAll(message)
 
@@ -2688,12 +2688,12 @@ async def on_message(message):
                                 if "mvp" in roles:
                                     pay += 150
                                     payroles.append("MVP")
-                                if "moderator" in roles:
+                                if "mod team" in roles:
                                     pay += 100
-                                    payroles.append("Dungeon moderator")
-                                if "lorekeeper" in roles:
+                                    payroles.append("Mod Team")
+                                if "lore team" in roles:
                                     pay += 200
-                                    payroles.append("Lorekeeper")
+                                    payroles.append("Lore Team")
                                 if "pet" in roles:
                                     pay += 50
                                     payroles.append("Dungeon Pet")
@@ -3123,7 +3123,7 @@ async def on_message(message):
 
                         break
 
-                if not "moderator" in str(authroles).lower() and not "lorekeeper" in str(authroles).lower():
+                if not "mod team" in str(authroles).lower() and not "lore team" in str(authroles).lower():
 
                     await message.channel.send(embed=discord.Embed(title = "You cannot use this", description = "Our records show that you are neither moderator, nor a lorekeeper here. It does look like they're taking applications for lorekeepers though?", colour = embcol))
 
@@ -3188,7 +3188,7 @@ async def on_message(message):
 
                         break
 
-                if (not "moderator" in str(authroles).lower() and not "lorekeeper" in str(authroles).lower()) or not "@" in message.content:
+                if (not "mod team" in str(authroles).lower() and not "lore team" in str(authroles).lower()) or not "@" in message.content:
 
                     try:
 
@@ -3712,7 +3712,7 @@ async def on_message(message):
                         await message.delete()
 
             #Runar's Inventory
-            elif message.content.lower().startswith(str(myprefix) + "spellrotation") and "lorekeeper" in str(message.author.roles).lower():
+            elif message.content.lower().startswith(str(myprefix) + "spellrotation") and "lore team" in str(message.author.roles).lower():
 
                 cantrips = ["Acid Splash (Conjuration)","Chill Touch (Necromancy)","Dancing Lights (Evocation)","Druidcraft (Transmutation)","Eldritch Blast (Evocation)","Fire Bolt (Evocation)","Guidance (Divination)","Light (Evocation)","Mage Hand (Conjuration)","Mending (Transmutation)","Message (Transmutation)","Minor Illusion (Illusion)","Poison Spray (Conjuration)","Prestidigitation (Transmutation)","Produce Flame (Conjuration)","Ray of Frost (Evocation)","Resistance (Abjuration)","Sacred Flame (Evocation)","Shillelagh (Transmutation)","Shocking Grasp (Evocation)","Spare the Dying (Necromancy)","Thaumaturgy (Transmutation)","True Strike (Divination)","Vicious Mockery (Enchantment)"]
 
@@ -3847,7 +3847,7 @@ async def on_message(message):
 
                         ping = False
 
-                    if "lorekeeper" in str(authroles).lower():
+                    if "lore team" in str(authroles).lower():
 
                         ping = False
 
@@ -3869,7 +3869,7 @@ async def on_message(message):
 
                 # if not message.author.bot:
 
-                #     if message.channel.type == discord.ChannelType.text and random.randint(1,200) == 1 and not "lorekeeper" in str(authroles).lower():
+                #     if message.channel.type == discord.ChannelType.text and random.randint(1,200) == 1 and not "lore team" in str(authroles).lower():
                 #         room = "<#" + str(message.channel.id) + ">"
                 #         limits = await KinklistCommands.getLimits(str(message.author.name) + "#" + str(message.author.discriminator))
                 #         encounters = sheet.values().get(spreadsheetId = encountersheet, range = "A2:R50", majorDimension='COLUMNS').execute().get("values")
@@ -3973,7 +3973,7 @@ async def on_message(message):
                 #             await client.get_channel(logchannel).send(", ".join(currentEggFinders) + " found an egg in " + str(message.channel))
 
             #Clone Channel
-            elif message.content.lower().startswith(str(myprefix) + "clonechannel") and "lorekeeper" in str(message.author.roles).lower():
+            elif message.content.lower().startswith(str(myprefix) + "clonechannel") and "lore team" in str(message.author.roles).lower():
 
                 await message.channel.send("Processing, please wait")
                 channelid = int(message.channel.id)
@@ -3992,7 +3992,7 @@ async def on_message(message):
                 os.remove(filename)
                 del mess
 
-            elif message.content.lower().startswith(str(myprefix) + "clonev2") and "lorekeeper" in str(message.author.roles).lower():
+            elif message.content.lower().startswith(str(myprefix) + "clonev2") and "lore team" in str(message.author.roles).lower():
 
                 await message.channel.send("Processing, please wait")
 
@@ -4085,7 +4085,7 @@ async def on_message(message):
                 mems = []
                 server = message.guild
                 tagrole = discord.utils.get(server.roles, name = message.content.split(" ", 1)[1])
-                if (not "Moderator" in message.author.roles) and (not "looking" in str(tagrole.name).lower()):
+                if (not "mod team" in message.author.roles) and (not "looking" in str(tagrole.name).lower()):
                     await message.channel.send("You don't have permission to tag that role like this.")
                 else:
                     temprole = discord.utils.get(server.roles, name= "Temporary Role")
@@ -4451,7 +4451,7 @@ async def on_raw_reaction_add(reaction):
             
             
 
-    if "lorekeeper" in str(reaction.member.roles).lower() or "ghostwriter" in str(reaction.member.roles).lower():
+    if "lore team" in str(reaction.member.roles).lower() or "ghostwriter" in str(reaction.member.roles).lower():
 
         mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
 
@@ -4629,7 +4629,7 @@ async def on_raw_reaction_add(reaction):
             emb.set_thumbnail(url = mess.content)
             await user.send(mess.content)
 
-    elif "lorekeeper" in str(reaction.member.roles).lower() or "moderator" in str(reaction.member.roles).lower():
+    elif "lore team" in str(reaction.member.roles).lower() or "mod team" in str(reaction.member.roles).lower():
 
         pass
         # if reaction.emoji.name == "💰":

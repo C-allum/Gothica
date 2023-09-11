@@ -169,7 +169,7 @@ async def kinkedit(message):
         playerIndex = [row[1] for row in kinkdata].index(namestr)
         playerKinkData = kinkdata[playerIndex]
 
-        if targname != message.author and not "moderator" in str(message.author.roles).lower():
+        if targname != message.author and not "mod team" in str(message.author.roles).lower():
 
             await message.channel.send(embed = discord.Embed(title = "You can't edit someone else's kinks.", description = "", colour = embcol))
 
@@ -726,7 +726,7 @@ async def kinkplayers(message):
 
 #Finds a room and an encounter for the specified person.
 async def kinkencounter(message):
-    if ("lorekeeper" in str(message.author.roles).lower() or message.author.name == "C_allum"):
+    if ("lore team" in str(message.author.roles).lower() or message.author.name == "C_allum"):
         kinkdata, namestr, targname = await getKinkData(message)
 
         if not str(namestr) in str(kinkdata):

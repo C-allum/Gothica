@@ -126,7 +126,7 @@ async def emote(message):
 
     await message.channel.send("Reactions sent")
 
-    if not "moderator" in str(message.author.roles).lower():
+    if not "mod team" in str(message.author.roles).lower():
 
         await client.get_channel(logchannel).send(message.author.name + " reacted to a message in " + messchan.name + " with " + meslist)
 
@@ -229,7 +229,7 @@ async def emotecurse(message):
 async def emoteuncurse(message):
     if not " " in message.content:
         targ = message.author.name + "#" + str(message.author.discriminator)
-    elif "lorekeeper" in str(message.author.roles).lower():
+    elif "lore team" in str(message.author.roles).lower():
         target = client.get_guild(message.channel.guild.id).get_member(int(message.content.split(" ")[1].lstrip("<@").rstrip(">")))
         targ = target.name + "#" + str(target.discriminator)
     global emoteCursed
