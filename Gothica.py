@@ -3817,7 +3817,7 @@ async def on_message(message):
                 await message.channel.send(embed = discord.Embed(title = "Spells", description = spelllist, colour = embcol))
 
             #Lorekeeper Ping
-            elif message.channel.category.name == "﴿───﴾ 𝚃𝚑𝚎 𝙼𝚊𝚛𝚔𝚎𝚝 ﴿───﴾" and message.channel.type == discord.ChannelType.text:
+            elif (message.channel.category.name == "﴿───﴾ 𝚃𝚑𝚎 𝙼𝚊𝚛𝚔𝚎𝚝 ﴿───﴾" or message.channel.category.name == "﴿──﴾ 𝙳𝚊𝚗𝚐𝚎𝚛𝚘𝚞𝚜 𝙳𝚎𝚙𝚝𝚑𝚜 ﴿──﴾") and message.channel.type == discord.ChannelType.text:
 
                 if not isbot and not message.content.startswith("%") and not message.content.startswith("$"):
                     prevmess = [joinedMessages async for joinedMessages in message.channel.history(limit=2, oldest_first=False)] #Fix for pebblehost Await issue
@@ -3834,8 +3834,13 @@ async def on_message(message):
                         ping = False
                     if ping:
                         room = "<#" + str(message.channel.id) + ">"
-                        await client.get_channel(996826636358000780).send(str(message.author.name.split("#")[0] + " has sent a message in " + room + ". The last message in the channel before this was over " + str(timediff).replace(", ", " and ") + " hours ago.\n\n<@&" + str(1145873596753924180) + "> or <@&" + str(1145789101610651710) + ">, is anyone able to go and assist them?\n\nI will replace this ping system once we have the NPCs working better").replace("1 hours", "an hour"))
-                        print("Lorekeepers were pinged to play shops")
+                        if message.channel.category.name == "﴿───﴾ 𝚃𝚑𝚎 𝙼𝚊𝚛𝚔𝚎𝚝 ﴿───﴾":
+                            await client.get_channel(996826636358000780).send(str(message.author.name.split("#")[0] + " has sent a message in " + room + ". The last message in the channel before this was over " + str(timediff).replace(", ", " and ") + " hours ago.\n\n<@&" + str(1145873596753924180) + "> or <@&" + str(1145789101610651710) + ">, is anyone able to go and assist them?\n\nI will replace this ping system once we have the NPCs working better").replace("1 hours", "an hour"))
+                            print("Lorekeepers were pinged to play shops")
+                        else:
+                            await client.get_channel(996826636358000780).send(str(message.author.name.split("#")[0] + " has sent a message in " + room + ". The last message in the channel before this was over " + str(timediff).replace(", ", " and ") + " hours ago.\n\n<@&" + str(1145872343458140211) + ">, would you like to go and torment them?").replace("1 hours", "an hour"))
+                            print("Lorekeepers were pinged to torment depths delvers")
+                        
 
             #elif message.channel.category.name == "﴿──﴾ 𝙳𝚊𝚗𝚐𝚎𝚛𝚘𝚞𝚜 𝙳𝚎𝚙𝚝𝚑𝚜 ﴿──﴾" or message.channel.name == "💎the-gobblin-bazaar💎" or message.channel.category.name == "﴿───﴾ 𝚂𝚊𝚏𝚎 𝙿𝚊𝚜𝚜𝚊𝚐𝚎𝚜 ﴿───﴾":
 
