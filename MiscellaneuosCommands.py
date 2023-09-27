@@ -328,8 +328,6 @@ async def regCommunityProject(message):
     sheet.values().update(spreadsheetId = Plotsheet, range = "AS1:AX200", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=projdata)).execute()
     await message.channel.send(embed = discord.Embed(title = f"Success!", description = f"New community project generated", colour = embcol))
 
-
-
 async def manualDezPoolReset(message):
     #Grab current date and time
     today = datetime.now()
@@ -421,14 +419,77 @@ class ImpTomeView(discord.ui.View):
     #This defines the button. The button_calback function defines what happened when we click it. We save the click in the variable to make sure
     # that we can later see if the button was actually pressed.´
     # The interaction.response is important as otherwise the interaction (button) will be seen as failed.
-    # You can also silently acknowledge the interaction with interaction.response.defer()
+    # You can also silently acknowledge the interaction with interaction.response.defer() - This makes the bot think. Respond with "" for full invisibility.
     @discord.ui.button(label="Spawn Imp Tome!", style = discord.ButtonStyle.green)
     async def button_callback(self, interaction, item):
         await interaction.response.send_message("Imp tome spawning...")
         self.value = True
         self.stop()
 
+#----------------Tour View Buttons----------------
 
+class TourView0(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.value = None
+    @discord.ui.button(label=Tourbuttontext[0], style = discord.ButtonStyle.green, custom_id = "TourButton")
+    async def tourbutton_callback(self, component, btn):
+        print(self)
+        print(component)
+        print(btn)
+        #await Tourparser(btn.user, 0, TourView1())
+
+class TourView1(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.value = None
+    @discord.ui.button(label=Tourbuttontext[1], style = discord.ButtonStyle.green, custom_id = "TourButton")
+    async def tourbutton_callback(self, component, btn):
+        print(self)
+        print(component)
+        print(btn)
+        #await Tourparser(btn.user, 1, TourView2())
+
+class TourView2(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.value = None
+    @discord.ui.button(label=Tourbuttontext[2], style = discord.ButtonStyle.green, custom_id = "TourButton")
+    async def tourbutton_callback(self, component, btn):
+        await Tourparser(btn.user, 2, TourView3())
+
+class TourView3(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.value = None
+    @discord.ui.button(label=Tourbuttontext[3], style = discord.ButtonStyle.green, custom_id = "TourButton")
+    async def tourbutton_callback(self, component, btn):
+        await Tourparser(btn.user, 3, TourView4())
+
+class TourView4(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.value = None
+    @discord.ui.button(label=Tourbuttontext[4], style = discord.ButtonStyle.green, custom_id = "TourButton")
+    async def tourbutton_callback(self, component, btn):
+        await Tourparser(btn.user, 4, TourView5())
+
+class TourView5(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.value = None
+    @discord.ui.button(label=Tourbuttontext[5], style = discord.ButtonStyle.green, custom_id = "TourButton")
+    async def tourbutton_callback(self, component, btn):
+        await Tourparser(btn.user, 5, None)
+
+async def Tourparser(presser, stage, tourview):
+    await client.get_channel(TourLocations[stage]).send("<@" + str(presser.id) + ">")
+    if tourview != None:
+        await client.get_channel(TourLocations[stage]).send(embed = discord.Embed(title = TourNames[stage], description = str(TourDescriptions[stage]) + "\n<#" + str(TourLocations[stage+1]) + ">", colour = embcol), view = tourview)
+    else:
+        await client.get_channel(TourLocations[stage]).send(embed = discord.Embed(title = TourNames[stage], description = TourDescriptions[stage], colour = embcol))
+
+#Yes, it's unbearably clunky. If I could have an array of classes, that would make this system amazing.
 
 #-----------------Helper functions-------------
 async def uwutongue(message):
