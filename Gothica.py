@@ -4238,6 +4238,10 @@ async def on_message(message):
             elif message.content.lower().startswith(str(myprefix) + "tour"):
                 await message.channel.send(embed = discord.Embed(title = TourNames[0], description = TourDescriptions[0], colour = embcol), view = MiscellaneuosCommands.TourView1())
 
+            elif message.content.lower().startswith(str(myprefix) + "demo"):
+                await message.delete()
+                await message.channel.send(embed = discord.Embed(title = "Setting the scene in the Unlit Passageways!", description = "*A small door of fine oak panelling swings open to reveal a cosy bedchamber. The bed is a simple wrought iron frame with a comfortable looking mattress, flanked by small wooden bedside tables. The room is lit by a single torch in a sconce in the wall, which is spluttering low and almost out.*\n\n---------------------------------------------------------------------\n\nCasting Detect Magic in the room reveals a source of magic in the bedsheets and two in the right bedside table.\n\n---------------------------------------------------------------------\n\nItems inside the drawers on the left table:\n* One medium dildo\n* A set of red lacy lingerie\n\nItems inside the drawers on the right table:\n* A spell scroll, containing the spell 'Cure Wounds'\n* Upon a DC 14 *Investigation* Check: ||A false bottom in the drawer, revealing a Temporeal Collar of Wealth||\n\n---------------------------------------------------------------------\n\nCasting Identify on the bedsheets reveals that they are charmed to be luxuriosly comfortable Temporeal items. They are also cursed, such that anyone under them is subjected to ||Mantle of Agreability||\n\n---------------------------------------------------------------------\n\n*Temporeal items are magical temporary items, which vanish after 1d4 hours or if they are removed from the room in which they are found.*", colour = embcol))
+
             #Per message income and Scene tracker pings.
             if not "verification" in str(message.channel).lower():
                 
