@@ -306,9 +306,8 @@ async def on_message(message):
 
                 await CharRegistry.updatereg(message)
 
-            #Character Creation Subroutine - On CharRegistry, untested
-            elif str(message.channel) == "character-creation" and message.content.lower().lstrip("*").startswith("name") and not isbot:
-
+            #Character Creation Subroutine - On CharRegistry
+            elif (str(message.channel) == "character-creation" or str(message.channel.name) == "NPC Creation") and message.content.lower().lstrip("*").startswith("name") and not isbot:
                 await CharRegistry.charcreate(message)
 
             #Character Edit Subroutine - On CharRegistry, untested
@@ -2685,23 +2684,26 @@ async def on_message(message):
                                 payroles = []
 
                                 if "admin" in roles:
-                                    pay += 100
+                                    pay += 50
                                     payroles.append("Admin")
                                 if "mvp" in roles:
                                     pay += 150
                                     payroles.append("MVP")
                                 if "mod team" in roles:
-                                    pay += 100
+                                    pay += 50
                                     payroles.append("Mod Team")
                                 if "lore team" in roles:
-                                    pay += 200
+                                    pay += 50
                                     payroles.append("Lore Team")
                                 if "pet" in roles:
                                     pay += 50
                                     payroles.append("Dungeon Pet")
                                 if "fucksmith" in roles:
-                                    pay += 25
+                                    pay += 50
                                     payroles.append("Licensed Fucksmith")
+                                if "staff" in roles:
+                                    pay += 200
+                                    payroles.append("Staff")
                                 if pay == 0:
                                     paymess = ""
                                 else:

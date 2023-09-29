@@ -82,7 +82,7 @@ async def charcreate(message):
 
     char = [message.author.name, message.author.name, date.today().strftime("%d/%m/%Y"), "Never Transferred", ""]
 
-    for i in range(len(headers)-2):
+    for i in range(len(headers)-5):
         char.append("")
 
     #Test for image
@@ -97,6 +97,8 @@ async def charcreate(message):
     #Add Link
 
     char.append(message.jump_url)
+    char.append("")
+    char.append("")
 
     for j in range(len(args)):
 
@@ -147,9 +149,7 @@ async def charcreate(message):
                     #Exception - Sex in Sexuality
 
                     if "sex" in argtype.lower():
-
                         if "sexual" in argtype.lower() and headers[i] != "Sexuality":
-
                             arg = ""
                             argtype = ""
 
@@ -190,47 +190,40 @@ async def charcreate(message):
                             if int(arg) > 14:
                                 await client.get_channel(logchannel).send(str(message.author) + " has tried to register a character over level 14")
 
+                        if str(headers[i]) == "Image" and hasimage:
+                            arg = message.attachments[0].url
+
                         #Append the filled field to desc, for use in the user facing output
 
                         desc += headers[i] + ": " + str(arg) + "\n"
 
                         #Set the list item for char - for the back of house output
-
-                        if "colour" in arg.lower() or "color" in arg.lower():
-
-                            if not " " in arg:
-
-                                break
-
-                        else:
-                            
+                        if headers[i] != "Link" and headers[i] != "Approved" and headers[i] != "Played by: (NPCs only)": 
+                            if "colour" in arg.lower() or "color" in arg.lower():
+                                if not " " in arg:
+                                    break
+                            else:
+                                char[i+namecol] = arg
+                            break
+                        elif headers[i] == "Players" and message.channel.name == "NPC Creation":
                             char[i+namecol] = arg
-
-                        break
 
                     #Test Multiline Variable
 
                     if i+1 == len(headers) and not argmatched and args[j] != argsprev:
-
                         #Append to previous Arg
-
                         char[argprev+namecol] += "\n\n" + args[j]
-
                         desc += "\n" + str(args[j]) + "\n"
-
                         argsprev = args[j]
 
     #Send user output embed
 
     emb = discord.Embed(title=char[namecol+1], description = desc, colour = embcol)
-
     emb2 = discord.Embed(title=tit, description = "You have added " + char[namecol+1] + " to your character list.", colour = embcol)
 
     if hasimage:
         emb.set_image(url=message.attachments[0].url)
         emb2.set_thumbnail(url=message.attachments[0].url)
-
-    #Informative Footnotes!
 
     auth = message.author.name
 
@@ -292,13 +285,15 @@ async def charcreate(message):
 
         emb2.set_footer(text="\n\n----------------------------------\n\nThis is the last character you can register before you run out of slots")
 
+    if message.channel.name == "NPC Creation":
+        char[23] = "DMPC"
+
     emb.set_footer(text = "------------------------------------------------\n\nOwned by " + message.author.name)
 
     print(message.author.name + " registered a character")
 
     #Send message to character index
     await client.get_channel(indexchannel).send(embed=emb)
-
     await message.channel.send(embed=emb2)
 
     #Convert to list of lists
@@ -550,6 +545,7 @@ async def charlist(message):
     imgurl = None
 
     clist = []
+    npclist = []
 
     targname = ""
 
@@ -558,140 +554,83 @@ async def charlist(message):
 
     waitmess = await message.channel.send("We are processing your request now.")
 
-    if " " in message.content:
+    if not " " in message.content:
+        message.content += " " + message.author.name
 
-        if "help" in message.content.lower():
-            message.content = "%help charlist"
-            await helplist(message)
-            return
+    if "help" in message.content.lower():
+        message.content = "%help charlist"
+        await helplist(message)
+        return
 
-        else:
-
-            #Show other user's Characters
-
-            pnames = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B4000").execute().get("values")
-
-            if "@" in message.content:
-
-                targidpar = message.content.split("@")[1]
-
-                targid = targidpar.replace("!","")
-                targid = targid.replace("&","")
-                targid = int(targid.replace(">",""))
-
-                targname = await client.fetch_user(targid)
-
-                targname = str(targname).split("#")[0]
-
-            else: 
-
-                targname = message.content.split(" ")[1]
-
-            pindex = []
-
-            for i in range(len(pnames)):
-
-                if pnames[i][0].lower() == targname.lower():
-
-                    pindex.append(i)
-
-            if pindex != []:
-
-                for j in range(len(pindex)):
-
-                    #Get Char names
-
-                    cname = str(sheet.values().get(spreadsheetId = CharSheet, range = "F" + str(pindex[j]+1)).execute().get("values")).strip("[]'")
-
-                    cstat = str(sheet.values().get(spreadsheetId = CharSheet, range = "X" + str(pindex[j]+1)).execute().get("values")).strip("[]'")
-
-                    cshort = sheet.values().get(spreadsheetId = CharSheet, range = "W" + str(pindex[j]+1)).execute().get("values")
-
-                    if cstat == "Active":
-
-                        if cshort != None:
-
-                            clist.append("**" + cname + "** - " + cshort[0][0])
-
-                        else:
-
-                            clist.append("**" + cname + "**")
-
-                        pcharsact += 1
-
-                    else:
-
-                        clist.append("~~" + cname + " (" + cstat + ")~~")
-
-                        if cstat == "Unavailable":
-
-                            pcharsun +=1
-
-            tit = targname + "'s Character List"
-
-            if clist == []:
-                desc = targname + " has no registered characters"
-            else:
-                desc = "\n\n".join(clist).strip("[]'")
-        
     else:
 
-        #Show own Characters
+        #Show other user's Characters
 
         pnames = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B4000").execute().get("values")
 
-        auth = message.author.name
+        if "@" in message.content:
 
-        targname = auth
+            targidpar = message.content.split("@")[1]
 
-        targid = message.author.id
-        
+            targid = targidpar.replace("!","")
+            targid = targid.replace("&","")
+            targid = int(targid.replace(">",""))
+
+            targname = await client.fetch_user(targid)
+
+            targname = str(targname).split("#")[0]
+
+        else: 
+
+            targname = message.content.split(" ")[1]
+
         pindex = []
 
-        pcharsact = 0
-
         for i in range(len(pnames)):
-
-            if str(pnames[i][0]) == str(auth):
-
+            if pnames[i][0].lower() == targname.lower():
                 pindex.append(i)
 
         if pindex != []:
-
+            charreg = sheet.values().get(spreadsheetId = CharSheet, range = "A1:AB" + str(pindex[-1]+1)).execute().get("values")
             for j in range(len(pindex)):
 
-                #Get Char names
-
-                cname = str(sheet.values().get(spreadsheetId = CharSheet, range = "F" + str(pindex[j]+1)).execute().get("values")).strip("[]'")
-
-                cstat = str(sheet.values().get(spreadsheetId = CharSheet, range = "X" + str(pindex[j]+1)).execute().get("values")).strip("[]'")
-
-                cshort = sheet.values().get(spreadsheetId = CharSheet, range = "W" + str(pindex[j]+1)).execute().get("values")
+                #Get Char data
+                cname = str(charreg[pindex[j]][5])
+                cstat = str(charreg[pindex[j]][23])
+                try:
+                    cshort = str(charreg[pindex[j]][22])
+                except IndexError:
+                    cshort = None
+                try:
+                    npcplayers = str(charreg[pindex[j]][27])
+                except IndexError:
+                    npcplayers = None
 
                 if cstat == "Active":
-
-                    if cshort != None:
-
-                        clist.append("**" + cname + "** - " + cshort[0][0])
-
+                    if cshort != None and cshort != "":
+                        clist.append("**" + cname + "** - " + cshort)
                     else:
-
                         clist.append("**" + cname + "**")
-
                     pcharsact += 1
-
+                elif cstat == "DMPC":
+                    if npcplayers != None:
+                        npclist.append("**" + cname + "** - " + cshort + " - DMPC\n   Also played by: " + npcplayers)
+                    else:
+                        npclist.append("**" + cname + "** - " + cshort + " - DMPC")
                 else:
-
                     clist.append("~~" + cname + " (" + cstat + ")~~")
-
                     if cstat == "Unavailable":
+                        pcharsun +=1
 
-                        pcharsun += 1
-
-        tit = auth + "'s Character List"
+        if len(npclist) != 0:
+            clist.append("-------------------------------------------------------------")
+            for k in range(len(npclist)):
+                clist.append(npclist[k])
+        
+        tit = targname + "'s Character List"
 
         if clist == []:
-            desc = "You have no registered characters"
+            desc = targname + " has no registered characters"
         else:
             desc = "\n\n".join(clist).strip("[]'")
 
@@ -707,45 +646,25 @@ async def charlist(message):
     emb = discord.Embed(title = tit, description = desc, colour = embcol)
 
     if str(message.author.name) == targname:
-
         if pcharsact == 1:
-
             if pcharsun == 0:
-        
                 emb.set_footer(text = "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active character, out of " + str(maxchars) + " slots." )
-
-            elif pcharsun ==1:
-
+            elif pcharsun == 1:
                 emb.set_footer(text = "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active character, and " + str(pcharsun) + " unavailable character (" + str(pcharsact + pcharsun) + " in total), out of " + str(maxchars) + " slots." )    
-
             else:
-
                 emb.set_footer(text = "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active character, and " + str(pcharsun) + " unavailable characters (" + str(pcharsact + pcharsun) + " in total), out of " + str(maxchars) + " slots." )    
-
         else:
-
-            if pcharsun == 0:
-        
+            if pcharsun == 0:        
                 emb.set_footer(text = "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active characters, out of " + str(maxchars) + " slots." )
-
             elif pcharsun ==1:
-
                 emb.set_footer(text = "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active characters, and " + str(pcharsun) + " unavailable character (" + str(pcharsact + pcharsun) + " in total), out of " + str(maxchars) + " slots." )    
-
             else:
-
                 emb.set_footer(text = "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active characters, and " + str(pcharsun) + " unavailable characters (" + str(pcharsact + pcharsun) + " in total), out of " + str(maxchars) + " slots." )    
-
     elif str(message.author.name) != targname:
-
         emb.set_footer(text = "-------------------------------------------------------------\n\nThis search was summoned by " + str(message.author.name))
-
     print(message.author.name + " summoned a charlist for " + targname)
-
     await message.channel.send(embed=emb)
-
     await message.delete()
-
     await waitmess.delete()
 
 #Search Subroutine
@@ -764,17 +683,17 @@ async def charsearch(message, outputchannel):
 
     cdata = ["\n"]
 
-    cnames = sheet.values().get(spreadsheetId = CharSheet, range = "F1:F4000").execute().get("values")
+    charreg = sheet.values().get(spreadsheetId = CharSheet, range = "A1:AB4000", majorDimension='COLUMNS').execute().get("values")
+    cnames = charreg[5]
+    pnames = charreg[1]
+    cargs = sheet.values().get(spreadsheetId = CharSheet, range = "F1:AB4000" ).execute().get("values")
 
-    pnames = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B4000" ).execute().get("values")
-
-    cargs = sheet.values().get(spreadsheetId = CharSheet, range = "F1:Z4000" ).execute().get("values")
     searchedName = " ".join(msgspl[1:]).lower()
     
     count = 0
-
+    multidata = []
     multindexes = []
-
+    cindex = 0
     fieldappend = ""
 
     for f in str(searchedName.lower()):
@@ -788,69 +707,69 @@ async def charsearch(message, outputchannel):
     count = str(cnames).lower().replace("ì", "i").count(searchedName)
     
     if searchedName == "dragon" or searchedName == "slime" or searchedName == "bard":
-
         count = 0
-
-    if count == 1:
-
-        #Search by character name
-
+    if count >= 1: #Search by character name
+        if count > 1:
+            tit = "Multiple characters found whose names contain '" + searchedName + "':"
+            multidata.append("Type the number to bring up the bio of the one you want:\n")
+            for i in range(len(cnames)):
+                if str(searchedName).lower() in str(cnames[i]).lower():
+                    multidata.append("`" + str(len(multidata)) + "` - " + str(pnames[i]) + "'s " + str(cnames[i]))
+                    multindexes.append(i)
+            foot = "\n----------------------------------------------\n\nThis message will timeout after 30 seconds."
+            emb = discord.Embed(title = tit, description = "\n".join(multidata), colour = embcol)
+            await outputchannel.send(embed=emb)
+            try:
+                msg = await client.wait_for('message', timeout = 30, check = check(message.author))
+                try:
+                    valu = int(msg.content)
+                    await msg.delete()
+                    try:
+                        cindex = multindexes[valu-1]
+                    except IndexError:
+                        cindex = -1
+                        await outputchannel.send(embed=discord.Embed(title="Selection Invalid",description="You must enter a number between 1 and " + str(len(multindexes)), colour = embcol))
+                except TypeError or ValueError:
+                    cindex = -1
+                    await msg.delete()
+                    await outputchannel.send(embed=discord.Embed(title="Selection Invalid",description="You must enter an integer", colour = embcol))
+            except asyncio.TimeoutError:
+                cindex = -1
+                await outputchannel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
         for i in range(len(cnames)):
-
+            if cindex > 0: #If index of character is known (from multiple selection, inputs it here)
+                i = cindex
+            elif cindex == -1: #If multiple selection failed, ends.
+                break
             if searchedName.lower() in str(cnames[i]).lower().replace("ì", "i"):
-
-                cname = str(cnames[i][0])
-
+                cname = str(cnames[i])
                 tit = cname
-
                 for j in range(len(headers)-1):
-
-                    carg = cargs[i][j]
-
+                    try:
+                        carg = cargs[i][j]
+                    except IndexError:
+                        carg = ""
                     if carg != "":
-
-                        cdata.append(headers[j+1] + ": " + carg)
-
-                    if headers[j+1] == "Image":
-
-                        if not "|" in carg:
-
-                            imgurl = carg
-
-                            imglen = 1
-
+                        if headers[j+1] == "Link":
+                            pass
+                        elif headers[j+1] == "Approved":
+                            cdata.append("Character sheet approved")
+                        elif headers[j+1] == "Players":
+                            cdata.append("Also played by:" + carg)
                         else:
-
+                            cdata.append(headers[j+1] + ": " + carg)
+                    if headers[j+1] == "Image":
+                        if not "|" in carg:
+                            imgurl = carg
+                            imglen = 1
+                        else:
                             imgurl = carg.split("|")
-
                             imglen = carg.count("|") + 1
-
                 try:
                     foot = "---------------------------------------------------------\n\nOwned by " + str(pnames[i][0] + ". Searched for by " + message.author.name)
                 except AttributeError:
                     foot = ""
-
-    elif count > 1:
-
-        tit = "Multiple characters found who's names contain '" + searchedName + "':"
-
-        c = 0
-
-        for i in range(len(cnames)):
-
-            if str(searchedName).lower() in str(cnames[i]).lower():
-
-                if c == 0:
-
-                    cdata.append("Type the number to bring up the bio of the one you want:\n\n")
-
-                c += 1
-
-                cdata.append("`" + str(c) + "` - " + str(pnames[i][0]) + "'s " + str(cnames[i][0]))
-
-                multindexes.append(i)
-
-        foot = "\n----------------------------------------------\n\nThis message will timeout after 30 seconds."
+                break
 
     elif str(searchedName).lower() in str(headers).lower():
 
@@ -910,142 +829,27 @@ async def charsearch(message, outputchannel):
 
         cdata.append("Maybe try a different search term?")
 
-    if cdata != None:
-        desc = "\n".join(cdata)
-
-    emb = discord.Embed(title = tit, description = desc, colour = embcol)
-
-    if imgurl != "":
-
-        if imglen == 1:
-
-            emb.set_image(url=imgurl)
-
-        else:
-
-            emb.set_image(url=imgurl[0])
-
-    if foot != None:
-        emb.set_footer(text=foot)
-
-    try:
-        await outputchannel.send(embed=emb)
-    except discord.errors.HTTPException:
-        await outputchannel.send(embed=discord.Embed(title="Character couldn't be embedded",description="We refuse to write a whole library each time you search this character! (The character as a whole exceeds 4096 characters)", colour = embcol))
-        return
-    if len(imgurl) > 1 and count == 1:
-
-        for d in range(imglen-1):
-
-            emb = discord.Embed(title = tit, description = "", colour = embcol)
-
-            emb.set_image(url = imgurl[d+1])
-
-            await outputchannel.send(embed=emb)
-
-    if multindexes != []:
+    if cindex != -1:
+        if cdata != None:
+            desc = "\n".join(cdata)
+        emb = discord.Embed(title = tit, description = desc, colour = embcol)
+        if imgurl != "":
+            if imglen == 1:
+                emb.set_image(url=imgurl)
+            else:
+                emb.set_image(url=imgurl[0])
+        if foot != None:
+            emb.set_footer(text=foot)
         try:
-
-            auth = message.author
-            chan = message.channel
-        
-            msg = await client.wait_for('message', timeout = 30, check = check(message.author))
-
-            try:
-
-                valu = int(msg.content)
-
-                multsort = 0
-
-                for w in range(len(multindexes)):
-
-                    if str(valu) == str(w+1) and not multsort:
-
-                        cname = str(cnames[multindexes[w]][0])
-
-                        tit = cname
-
-                        cdata = ["\n"]
-
-                        for j in range(len(headers)-1):
-
-                            carg = cargs[multindexes[w]][j]
-
-                            if carg != "":
-
-                                cdata.append(headers[j+1] + ": " + carg)
-
-                            if headers[j+1] == "Image":
-
-                                if not "|" in carg:
-
-                                    imgurl = carg
-
-                                    imglen = 1
-
-                                else:
-
-                                    imgurl = carg.split("|")
-
-                                    imglen = carg.count("|") + 1
-
-                        if cdata != None:
-                            desc = "\n".join(cdata)
-
-                        try:    
-                            foot = "---------------------------------------------------------\n\nOwned by " + str(pnames[multindexes[w]][0] + ". Searched for by " + message.author.name)
-                        except AttributeError:
-                            foot = ""
-
-                        multsort = 1
-
-                        emb = discord.Embed( title = tit, description= desc, colour = embcol)
-
-                        if imgurl != None:
-                            emb.set_image(url=imgurl)
-
-                        emb.set_footer(text=foot)
-
-                        if imgurl != "":
-
-                            if imglen == 1:
-                            
-                                emb.set_image(url=imgurl)
-
-                            else:
-                            
-                                emb.set_image(url=imgurl[0])
-
-                        try:
-                            await outputchannel.send( embed= emb)
-                        except:
-                            await outputchannel.send(embed=discord.Embed(title="Character couldn't be embedded",description="Most likely the first image link is broken for this character. If that is not the case, contact the @bot gods.", colour = embcol))
-                            return
-                        
-                        if len(imgurl) > 1:
-
-                            for d in range(imglen-1):
-                            
-                                emb = discord.Embed(title = tit, description = "", colour = embcol)
-
-                                emb.set_image(url = imgurl[d+1])
-
-                                try:
-                                    await outputchannel.send( embed= emb)
-                                except:
-                                    await outputchannel.send(embed=discord.Embed(title="Character couldn't be embedded",description=f"Most likely the {d} image link is broken for this character. If that is not the case, contact the @bot gods.", colour = embcol))
-                                    return
-                        break
-
-            except TypeError or ValueError:
-
-                await outputchannel.send(embed=discord.Embed(title="Selection Invalid",description="You must enter an integer", colour = embcol))
-
-        except asyncio.TimeoutError:
-
-            await outputchannel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
-
-        await msg.delete()
+            await outputchannel.send(embed=emb)
+        except discord.errors.HTTPException:
+            await outputchannel.send(embed=discord.Embed(title="Character couldn't be embedded",description="We refuse to write a whole library each time you search this character! (The character as a whole exceeds 4096 characters)\n\nIf this is not the case, it is likely that the image link has broken. Try editing the image, and if that doesn't work, contact the @bot gods.", colour = embcol))
+            return
+        if len(imgurl) > 1:
+            for d in range(imglen-1):
+                emb = discord.Embed(title = tit, description = "", colour = embcol)
+                emb.set_image(url = imgurl[d+1])
+                await outputchannel.send(embed=emb)
     try:
         await message.delete()
     except AttributeError:

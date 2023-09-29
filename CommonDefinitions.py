@@ -89,6 +89,8 @@ if liveVersion: #Set to 1 to use the real spreadsheets, or 0 to use the testing 
 
     communityProjectChannel = 999810708546002994
 
+    indexchannel = 898640028174016552
+
 
 
 else:
@@ -121,6 +123,8 @@ else:
 
     communityProjectChannel = 891781900388159528
 
+    indexchannel = 1031701327169998958
+
 
 SERVICE_ACCOUNT_FILE = "keys.json"
 
@@ -132,7 +136,7 @@ creds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FI
 service = build("sheets", "v4", credentials=creds)
 
 sheet = service.spreadsheets()
-result = sheet.values().get(spreadsheetId = CharSheet, range = "E1:Y1").execute()
+result = sheet.values().get(spreadsheetId = CharSheet, range = "E1:AB1").execute()
 values = str(result.get("values"))
 values = values.replace("'","")
 headers = values.split(",")
@@ -151,7 +155,7 @@ else:
     kinkcreatechannel = "891781900388159528"
 #Sheets
 
-aliases = sheet.values().get(spreadsheetId = "1xGL06_MrOb5IIt2FHJFeW_bdcwedIKZX-j3m2djSOaw", range = "A1:T50", majorDimension='COLUMNS').execute().get("values")
+aliases = sheet.values().get(spreadsheetId = "1xGL06_MrOb5IIt2FHJFeW_bdcwedIKZX-j3m2djSOaw", range = "A1:W50", majorDimension='COLUMNS').execute().get("values")
 
 plothooks = sheet.values().get(spreadsheetId = Plotsheet, range = "A2:O50", majorDimension='COLUMNS').execute().get("values")
 
@@ -172,8 +176,6 @@ dezzieemj = "<:dz:844365871350808606>"
 critemj = "<:crit:893767145060696064>"
 
 embcol = 0xb700ff
-
-indexchannel = 898640028174016552
 
 botnames = ['Arcane', 'Avrae (in dice jail)', 'Dungeon\'s Herald', 'Dungeon\'s Keeper', 'Dungeon\'s Whisperer', 'Dyno', 'PartyBeast', 'Tempo', 'Thread-Watcher', 'Twitch Alerts']
 
