@@ -9,7 +9,7 @@ async def staffVacation(message):
     readMessages = perms.read_messages
     sendMessages = perms.send_messages
     author = message.author
-    if "vacation" in str(message.author.roles).lower() and "lore team" in str(message.author.roles).lower():
+    if "vacation" in str(message.author.roles).lower() and "staff" in str(message.author.roles).lower():
         if sendMessages == False and readMessages == False:
             perms.send_messages = True
             perms.read_messages = True
@@ -32,7 +32,7 @@ async def staffVacation(message):
         await message.author.remove_roles(role)
         
 
-    elif not("vacation" in str(message.author.roles).lower()) and "lore team" in str(message.author.roles).lower():
+    elif not("vacation" in str(message.author.roles).lower()) and "staff" in str(message.author.roles).lower():
         if sendMessages != True and readMessages != True:
             perms.send_messages = False
             perms.read_messages = False
@@ -381,7 +381,7 @@ async def manualDezPoolReset(message):
                 dezziePool += weeklyDezzieBonusBoost
             if "server veteran" in str(roles).lower():
                 dezziePool += weeklyDezzieBonusVeteran
-            if "lore team" in str(roles).lower() or "mod team" in str(roles).lower() or "admin" in str(roles).lower():
+            if "staff" in str(roles).lower() or "mod team" in str(roles).lower() or "admin" in str(roles).lower():
                 dezziePool += weeklyDezzieBonusStaff
             if "patron tier 1" in str(roles).lower():
                 dezziePool += weeklyDezzieBonusPatronT1

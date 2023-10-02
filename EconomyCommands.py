@@ -706,6 +706,11 @@ async def giftAll(message):
     else:
         await message.channel.send(embed = discord.Embed(title = "Everyone got robbed!", description = f"Every denizen of the dungeon got {amount}<:dz:844365871350808606> taken right out of their pockets!"))
 
+async def shopDisplay(message):
+    
+
+    return
+
 async def dezReact(reaction):
     mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
 
@@ -947,6 +952,8 @@ async def rpDezReact(reaction):
 
     else:
         await client.get_channel(botchannel).send(embed=discord.Embed(title = "You can't use this at the here.", colour = embcol, url = mess.jump_url))
+
+
 #---------Helper functions----------
 
 async def getUserNamestr(message):

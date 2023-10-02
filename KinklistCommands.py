@@ -726,7 +726,7 @@ async def kinkplayers(message):
 
 #Finds a room and an encounter for the specified person.
 async def kinkencounter(message):
-    if ("lore team" in str(message.author.roles).lower() or message.author.name == "C_allum"):
+    if ("staff" in str(message.author.roles).lower() or message.author.name == "C_allum"):
         kinkdata, namestr, targname = await getKinkData(message)
 
         if not str(namestr) in str(kinkdata):
