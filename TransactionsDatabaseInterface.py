@@ -2,7 +2,7 @@ import sqlite3
 import datetime
 import numpy as np
 from enum import Enum
-from CommonDefinitions import sheet as SheetsService, TransactionSheet
+from CommonDefinitions import sheet as SheetsService, TransactionSheet, liveVersion
 
 #Enum defining valid dezzie moving actions
 class DezzieMovingAction(Enum):
@@ -150,10 +150,10 @@ def dataToSpreadsheet(timeframe:str = None):
             sheetName = timeframe
             timeframe = "-" + timeframe
             data = transactionsCursor.execute(f'''SELECT * FROM Transactions WHERE Date > datetime('now', '{timeframe}') ''').fetchall()
-
-        SheetsService.values().clear(spreadsheetId=TransactionSheet, range=sheetName).execute()
-        SheetsService.values().update(spreadsheetId=TransactionSheet, range=sheetName, body=dict(majorDimension='ROWS', values=data), valueInputOption='USER_ENTERED').execute()
-        print('Wrote data to spreadsheet')
+        if liveVersion == 1:
+            SheetsService.values().clear(spreadsheetId=TransactionSheet, range=sheetName).execute()
+            SheetsService.values().update(spreadsheetId=TransactionSheet, range=sheetName, body=dict(majorDimension='ROWS', values=data), valueInputOption='USER_ENTERED').execute()
+            print('Wrote data to spreadsheet')
                     
         transactionsConnection.close()
     except sqlite3.Error as error:

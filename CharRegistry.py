@@ -766,7 +766,7 @@ async def charsearch(message, outputchannel):
                             imgurl = carg.split("|")
                             imglen = carg.count("|") + 1
                 try:
-                    foot = "---------------------------------------------------------\n\nOwned by " + str(pnames[i][0] + ". Searched for by " + message.author.name)
+                    foot = "---------------------------------------------------------\n\nOwned by " + str(pnames[i] + ". Searched for by " + message.author.name)
                 except AttributeError:
                     foot = ""
                 break
@@ -803,7 +803,7 @@ async def charsearch(message, outputchannel):
 
                     if searchterm.lower() in cargs[n][i-1].lower():
 
-                        cdata.append(pnames[n][0] + "'s " + cargs[n][0])
+                        cdata.append(pnames[n] + "'s " + cargs[n][0])
 
                 if cdata == ["\n"]:
 
@@ -821,7 +821,7 @@ async def charsearch(message, outputchannel):
 
                     tit = "Found '" + searchedName.lower() + "' in:"
 
-                    cdata.append("The " + str(headers[i]).lower() + " of " + str(pnames[j][0]) + "'s " + str(cnames[j][0]))
+                    cdata.append("The " + str(headers[i]).lower() + " of " + str(pnames[j]) + "'s " + str(cnames[j]))
 
     else:
 
