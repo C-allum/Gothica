@@ -790,7 +790,12 @@ async def dezReact(reaction):
         else:
             #Enough dezzies left in users dezzie pool:
             if giveamount <= prevDezziePool:
-                recipNewTot = int(economydata[int(reciprow)-1][1]) + int(giveamount)
+                try:
+                    recipNewTot = int(economydata[int(reciprow)-1][1]) + int(giveamount)
+                except ValueError:
+                    await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " seems to not be in the economy", description = targetName + "This should not be the case. Please talk one of the @bot gods as there is most likely something wrong with your entry in our data.", colour = embcol, url = mess.jump_url))
+                    return
+
                 newDezziePool = prevDezziePool - giveamount
                 sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipNewTot]])).execute()
 
