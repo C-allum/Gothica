@@ -1546,7 +1546,7 @@ async def randloot(message):
     await destchannel.send(embed = discord.Embed(title = namestr + ", you have found an item!", description = "**" + lootTitle + "**\n\n*" + itemtype + " - " + rarity + "*\n" + lootDesc + "\n\nIt is worth " + str(lootValue) + dezzieemj + "\n\nIt has not yet been added to your inventory, but *soon*...", colour = embcol))
     await message.channel.send("Sent Loot")
     #Update inventory
-    userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ4000", majorDimension = 'ROWS').execute().get("values")
+    userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ8000", majorDimension = 'ROWS').execute().get("values")
     targetindex = [row[0] for row in userinvs[::4]].index(namestr)
     targetindex *= 4
     targetinv = userinvs[targetindex]

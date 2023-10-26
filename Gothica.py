@@ -4270,7 +4270,7 @@ async def on_message(message):
                     if str(message.author.name + '#' + message.author.discriminator) in player_list:
                         #check if we are in a channel that awards dezzies for posts
                         if message.channel.category_id in roleplay_categories_id:
-                            economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
+                            economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
 
                             #calculate reward amount
                             for a in range(math.floor(len(economydata)/4)):
@@ -4321,7 +4321,7 @@ async def on_message(message):
                     #New member
 
                     else:
-                        economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ5000", majorDimension='ROWS').execute().get("values")
+                        economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
 
                         newtot = 0
 

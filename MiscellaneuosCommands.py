@@ -85,7 +85,7 @@ async def crunch(message):
     if numbrolls > 12:
         numbrolls = 12
     dezcost = numbrolls * 10
-    userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ4000", majorDimension = 'ROWS').execute().get("values")
+    userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ8000", majorDimension = 'ROWS').execute().get("values")
     authorindex = [row[0] for row in userinvs[::4]].index(message.author.name + "#" + message.author.discriminator)
     authorindex *= 4
     authorinv = userinvs[authorindex]
@@ -157,9 +157,9 @@ async def impTomeSpawn(message):
     
 async def migrateAcc(message):
 
-    userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension = 'ROWS').execute().get("values")
-    kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
-    charreg = sheet.values().get(spreadsheetId = CharSheet, range = "A2:AA2000", majorDimension='ROWS').execute().get("values")
+    userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension = 'ROWS').execute().get("values")
+    kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ8000", majorDimension='ROWS').execute().get("values")
+    charreg = sheet.values().get(spreadsheetId = CharSheet, range = "A2:AA8000", majorDimension='ROWS').execute().get("values")
     user = message.author
     newPlayerName = user.name
     try:
@@ -228,7 +228,7 @@ async def migrateAcc(message):
         await message.channel.send(embed = discord.Embed(title = f"{newPlayerName} Migration not possible", description = f"You did not fill out your kinklist with us before changing to the new naming system. Please contact mods to resolve this."))
 
 async def manualMigrateAcc(message):
-    userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension = 'ROWS').execute().get("values")
+    userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension = 'ROWS').execute().get("values")
     kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
     charreg = sheet.values().get(spreadsheetId = CharSheet, range = "A2:AA2000", majorDimension='ROWS').execute().get("values")
     newPlayerName = message.content.split()[1]
@@ -336,7 +336,7 @@ async def manualDezPoolReset(message):
     newResetDateTimestamp = int(datetime.timestamp(newResetDatetime))
 
     #On reboot refresh dezzie pool of users
-    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:A4000", majorDimension='ROWS').execute().get("values")
+    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:A8000", majorDimension='ROWS').execute().get("values")
 
     for i in range(5, len(economydata)-1, 4):
         #Grab the name on the member
@@ -404,7 +404,7 @@ async def manualDezPoolReset(message):
 
 
     #update dezzie pools
-    sheet.values().update(spreadsheetId = EconSheet, range = "A1:A4000", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=economydata)).execute()
+    sheet.values().update(spreadsheetId = EconSheet, range = "A1:A8000", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=economydata)).execute()
 
     print("Weekly Dezzie Award Pool Reset!")
 
@@ -543,7 +543,7 @@ async def beasttongue(message, animal):
     return('"'.join(beastresult))
 
 async def getPlayerNameList():
-    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ4000", majorDimension='ROWS').execute().get("values")
+    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
     playerList = []
     for a in range(math.floor(len(economydata)/4) -1):
 
