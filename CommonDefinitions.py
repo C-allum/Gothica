@@ -762,3 +762,17 @@ async def diceroll(message):
         else:
             words.append(messwords[a])
     return(" ".join(words))
+
+def extract(lst, index):
+    return [item[index] for item in lst]
+
+def cursefromref(ref):
+    curserefs = ref.split("|")
+    ref = ref.replace("|", "\n")
+    for a in range(len(curserefs)):
+        try:
+            i = extract(itemdatabase[1], 4).index(curserefs[a])
+            ref = ref.replace(curserefs[a], str("**" + itemdatabase[1][i][0] + "**, *Level " + itemdatabase[1][i][1] + "*\n" + itemdatabase[1][i][2]).replace("**Generic Curse**, *Level 0*\n", ""))
+        except ValueError:
+            pass
+    return str(ref)

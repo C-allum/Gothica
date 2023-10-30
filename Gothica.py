@@ -39,7 +39,7 @@ async def on_ready():
     #Economy V2 startup
     if not liveVersion:
         print("Fetching item database...")
-
+        
         for a in range(len(itemlists)):
             itemdatabase.append(itemlists[a].get_all_values())
         print("... done\n")
@@ -163,6 +163,8 @@ async def on_ready():
         print("Weekly Dezzie Award Pool Reset!")
     else:
         print("It is not dezzie award pool reset time yet!")
+
+    print("\n------------------------------------------------------\n")
     #----------------------------------------------------------
 
 
@@ -4260,6 +4262,8 @@ async def on_message(message):
             elif message.author.name == "c_allum":
                 if message.content.lower().startswith(str(myprefix) + "~shop"):
                     await EconomyV2.shop(message)
+                elif message.content.lower().startswith(str(myprefix) + "~item"):
+                    await EconomyV2.item(message)
 
             #Per message income and Scene tracker pings.
             if not "verification" in str(message.channel).lower():
