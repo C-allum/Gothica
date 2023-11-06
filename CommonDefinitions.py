@@ -43,6 +43,8 @@ from pyasn1_modules.rfc2459 import ExtensionPhysicalDeliveryAddressComponents, N
 from pyasn1_modules.rfc5208 import PrivateKeyInfo
 from random import sample
 
+import gspread
+
 import botTokens
 
 intents = discord.Intents().all()
@@ -53,8 +55,19 @@ bot = commands.Bot(command_prefix='%', activity = discord.Game(name="Testing Stu
 
 print(" Initialised {0.user} at ".format(client) + str(datetime.now()).split(".")[0])
 
+SERVICE_ACCOUNT_FILE = "keys.json"
+
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+
+creds = None
+creds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+
+service = build("sheets", "v4", credentials=creds)
+
+gc = gspread.service_account(filename = SERVICE_ACCOUNT_FILE)
+
 #-----------------LIVE VERSION/BETA TOGGLE---------------
-liveVersion = 1
+liveVersion = 0
 token = ""
 
 #Sheet Locations:
@@ -92,7 +105,6 @@ if liveVersion: #Set to 1 to use the real spreadsheets, or 0 to use the testing 
     indexchannel = 898640028174016552
 
 
-
 else:
 
     CharSheet = "1Vgxa8C5j5XnEUGhaGqAANVhsWSIOra87wCE2f5C75tQ"
@@ -100,6 +112,9 @@ else:
     EconSheet = "1mmWxHhDUPI0PjLC2UXJZmj5wNqXnucFMz-er9NpVC2c"
 
     shopsheet = "1tj64lIs9qvfv3wUDjU5AHplhRoXU4i-qgHj21-Q7olk"
+
+    itemsheet = gc.open_by_key("17M2FS5iWchszIoimqNzk6lzJMOVLBWQgEZZKUPQuMR8") #New for economy rewrite
+    itemlists = itemsheet.worksheets()
 
     encountersheet = "1poNQfcqLqkiK9NaKBqNOk_DDUsTr8GuBEVQP_uQcjeg" #No change as yet
 
@@ -126,20 +141,13 @@ else:
     indexchannel = 1031701327169998958
 
 
-SERVICE_ACCOUNT_FILE = "keys.json"
-
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
-
-creds = None
-creds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
-
-service = build("sheets", "v4", credentials=creds)
-
 sheet = service.spreadsheets()
 result = sheet.values().get(spreadsheetId = CharSheet, range = "E1:AB1").execute()
 values = str(result.get("values"))
 values = values.replace("'","")
 headers = values.split(",")
+
+itemdatabase = []
 
 namecol = 4
 
@@ -754,3 +762,17 @@ async def diceroll(message):
         else:
             words.append(messwords[a])
     return(" ".join(words))
+
+def extract(lst, index):
+    return [item[index] for item in lst]
+
+def cursefromref(ref):
+    curserefs = ref.split("|")
+    ref = ref.replace("|", "\n")
+    for a in range(len(curserefs)):
+        try:
+            i = extract(itemdatabase[1], 4).index(curserefs[a])
+            ref = ref.replace(curserefs[a], str("**" + itemdatabase[1][i][0] + "**, *Level " + itemdatabase[1][i][1] + "*\n" + itemdatabase[1][i][2]).replace("**Generic Curse**, *Level 0*\n", ""))
+        except ValueError:
+            pass
+    return str(ref)
