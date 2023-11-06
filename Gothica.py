@@ -14,7 +14,7 @@ from discord import SyncWebhook
 import aiohttp
 
 player_list = []
-
+#test
 @client.event
 async def on_ready():
 
