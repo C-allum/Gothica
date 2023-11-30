@@ -1,0 +1,35 @@
+channels:
+  arbitrator_vacation_channels:
+  - 829477815782866956
+  art_claim_forum_id:
+  - 1050252064455925790
+  roleplay_categories_id:
+  - 917234637359702057
+  - 1058839161735483462
+  - 831894394877509682
+  - 952251327143084092
+  - 853176266077110302
+  - 832433588363853845
+  staff_vacation_channels:
+  - 912559434969022534
+  - 996826636358000780
+  - 1058951770870657166
+  - 1008283892177965106
+economy:
+  currency_multiplier_per_rp_word: 0.001
+  currency_per_rp_word: 0.25
+  daily_interaction_count: 5
+  daily_interaction_value: 300
+experience:
+  characterslot_levels:
+  - 5
+  - 10
+  - 15
+  - 20
+  xp_limit: '10000'
+  xp_per_level: 500
+  xp_per_message_character: 0.02
+general:
+  administrative_role: admin
+  gothy_prefix: '%'
+  staff_role: staff

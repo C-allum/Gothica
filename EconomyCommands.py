@@ -2,7 +2,7 @@ import TransactionsDatabaseInterface
 import TupperDatabase
 from CommonDefinitions import *
 from TransactionsDatabaseInterface import addTransaction, DezzieMovingAction
-
+import GlobalVars
 
 #Buy Item
 async def buyitem(message):
@@ -323,7 +323,7 @@ async def buyitem(message):
 
     else:
 
-        await message.channel.send(embed = discord.Embed(title = "We couldn't find any items matching that name.", description= "Check the spelling of the item, and look through `" + myprefix + "shop shopname` to ensure it is correct.", colour = embcol))
+        await message.channel.send(embed = discord.Embed(title = "We couldn't find any items matching that name.", description= "Check the spelling of the item, and look through `" + GlobalVars.config["general"]["gothy_prefix"] + "shop shopname` to ensure it is correct.", colour = embcol))
 
 #Sell Item
 async def sellitem(message):
@@ -681,7 +681,7 @@ async def additem(message):
         await message.channel.send(embed = discord.Embed(title = f"Added {itname} to {targetusername}'s inventory!", description= "Congratulations, <@" + str(targid) + ">, you have been given an item!", colour = embcol))
                  
     else:
-        await message.channel.send(embed = discord.Embed(title = "We couldn't find any items matching that name.", description= "Check the spelling of the item, and look through `" + myprefix + "shop shopname` to ensure it is correct.", colour = embcol))
+        await message.channel.send(embed = discord.Embed(title = "We couldn't find any items matching that name.", description= "Check the spelling of the item, and look through `" + GlobalVars.config[general][gothy_prefix] + "shop shopname` to ensure it is correct.", colour = embcol))
 
     await message.delete()
     #TODO: Make sure to send a log of the item given to the botchannel!

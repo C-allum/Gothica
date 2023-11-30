@@ -12,14 +12,25 @@ import time
 from discord import Webhook
 from discord import SyncWebhook
 import aiohttp
+import ConfigCommands
+import GlobalVars
+#from ConfigCommands import *
 
 player_list = []
+global startup
+startup = True
 #test
 @client.event
 async def on_ready():
 
     print('Logged in as {0.user} at '.format(client) + str(datetime.now()).split(".")[0])
     startmessage = await client.get_channel(logchannel).send('Logged in as {0.user} at '.format(client) + str(datetime.now()).split(".")[0])
+
+    print("Loading config...")
+    print(GlobalVars.config_data)
+    await GlobalVars.reload_config()
+    print(GlobalVars.config_data)
+    print("Done.")
 
     server = startmessage.guild
     MVProle = discord.utils.get(server.roles, name="Staff MVP")
@@ -70,8 +81,8 @@ async def on_ready():
 
     if oldResetDateTime < datetime.timestamp(today):
 
-        #Write transaction data to spreadsheets
-        TransactionsDatabaseInterface.automaticTransactionDump()
+        #Write transaction data to spreadsheets CURRENTLY BROKEN!
+        #TransactionsDatabaseInterface.automaticTransactionDump()
 
         #Calculate new timestamp
         newResetDatetime = (today - timedelta(days=today.weekday()) + timedelta(days=7)).replace(hour=0, minute=0, second=0) #Takes todays date, subtracts the passed days of the week and adds 7, resulting in the date for next monday. Then replaces time component with 0
@@ -165,6 +176,8 @@ async def on_ready():
         print("It is not dezzie award pool reset time yet!")
 
     print("\n------------------------------------------------------\n")
+    startup = False
+    print("Startup completed.")
     #----------------------------------------------------------
 
 
@@ -173,7 +186,11 @@ async def on_ready():
 @client.event
 async def on_message(message):
 
-    if message.content.startswith("%"):
+    if startup == True:
+        print("Error with the startup sequence. Please restart / Look at the error.")
+        return
+
+    if message.content.startswith(GlobalVars.config["general"]["gothy_prefix"]):
 
         messcomm = 1
 
@@ -218,7 +235,7 @@ async def on_message(message):
             if message.author == client.user:
                 return
 
-            if message.content.lower().startswith(myprefix + "test"):
+            if message.content.lower().startswith(GlobalVars.config["general"]["gothy_prefix"] + "test"):
                 print("Running Tests")              
 
             #Voyeur's Lounge Redirect - On OocFun and Working
@@ -232,17 +249,17 @@ async def on_message(message):
                 await OocFun.gag(message)
 
             #Set Gag - On OocFun and Working
-            if message.content.lower().startswith(myprefix + "gag") and "staff" in str(message.author.roles).lower():
+            if message.content.lower().startswith(GlobalVars.config["general"]["gothy_prefix"] + "gag") and "staff" in str(message.author.roles).lower():
 
                 await OocFun.setgag(message)
 
             #Emote - On OocFun and Working
-            if message.content.lower().startswith(str(myprefix) + "emote") and not isbot and ("staff" in str(message.author.roles).lower() or str(message.author) == "C_allum#5225"):
+            if message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "emote") and not isbot and ("staff" in str(message.author.roles).lower() or str(message.author) == "C_allum#5225"):
 
                 await OocFun.emote(message)
 
             #Player Based Reactions - On OocFun and Working
-            if message.channel.name.lower() == "general-ooc" and not message.content.startswith(myprefix):
+            if message.channel.name.lower() == "general-ooc" and not message.content.startswith(GlobalVars.config["general"]["gothy_prefix"]):
 
                 await OocFun.playerreacts(message)
 
@@ -287,31 +304,31 @@ async def on_message(message):
                 except ValueError:
                     return
 
-            if message.content.lower().startswith(str(myprefix) + "speechcurse") and "staff" in str(message.author.roles).lower():
+            if message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "speechcurse") and "staff" in str(message.author.roles).lower():
                 speechcursed.append(message.content.split(" ")[1:-1])
                 speechcurses.append(message.content.split(" ")[-1])
                 await message.channel.send("Curse Confirmed")
 
-            elif message.content.lower().startswith(str(myprefix) + "removecurse"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "removecurse"):
                 speechcurses.pop(speechcursed.index(message.author.name))
                 speechcursed.pop(speechcursed.index(message.author.name))
                 await message.channel.send("Done")
 
             #Curse
-            if message.content.lower().startswith(str(myprefix) + "curse") and "staff" in str(message.author.roles).lower():
+            if message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "curse") and "staff" in str(message.author.roles).lower():
 
                 await OocFun.emotecurse(message)
 
-            elif message.content.lower().startswith(str(myprefix) + "uncurse"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "uncurse"):
 
                 await OocFun.emoteuncurse(message)
 
             #manual Dezzie reward pool reset
-            elif message.content.lower().startswith(str(myprefix) + "rewardpoolreset") and "mod team" in str(authroles).lower():
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "rewardpoolreset") and "mod team" in str(authroles).lower():
                 await MiscellaneuosCommands.manualDezPoolReset(message)
 
             #Character Index Update - On CharRegistry, untested
-            elif message.content.lower().startswith(str(myprefix) + "indexupdate") and "mod team" in str(authroles).lower():
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "indexupdate") and "mod team" in str(authroles).lower():
 
                 await CharRegistry.updatereg(message)
 
@@ -320,54 +337,56 @@ async def on_message(message):
                 await CharRegistry.charcreate(message)
 
             #Character Edit Subroutine - On CharRegistry, untested
-            elif message.content.lower().startswith(str(myprefix) + "edit") and not isbot:
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "edit") and not isbot:
 
                 await CharRegistry.charedit(message)
 
             #Character Transfer Subroutine - On CharRegistry, untested
-            elif message.content.lower().startswith(str(myprefix) + "transfer") and not isbot:
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "transfer") and not isbot:
 
                 await CharRegistry.chartransfer(message)
 
             #Character List Subroutine - On CharRegistry, untested
-            elif (message.content.lower().startswith(str(myprefix) + "charlist") or message.content.lower().startswith(str(myprefix) + "list")) and not isbot:
+            elif (message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "charlist") or message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "list")) and not isbot:
 
                 await CharRegistry.charlist(message)
 
             #Search Subroutine - On CharRegistry, untested
-            elif (message.content.lower().startswith(str(myprefix) + "search") or message.content.lower().startswith(str(myprefix) + "char")or message.content.lower().startswith(str(myprefix) + "show")) and not isbot:
+            elif (message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "search") or message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "char")or message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "show")) and not isbot:
 
                 await CharRegistry.charsearch(message, message.channel)
 
             #Retire Command - On CharRegistry, untested
-            elif message.content.lower().startswith(str(myprefix) + "retire") and not isbot:
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "retire") and not isbot:
 
                 await CharRegistry.charretire(message)
 
             #Activate Command - On CharRegistry, untested
-            elif message.content.lower().startswith(str(myprefix) + "activate") and not isbot:
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "activate") and not isbot:
 
                 await CharRegistry.charactivate(message)
 
             #Deactivate Command - On CharRegistry, untested
-            elif message.content.lower().startswith(str(myprefix) + "deactivate") and not isbot:
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "deactivate") and not isbot:
 
                 await CharRegistry.chardeactivate(message)
 
             #Help Command
-            elif message.content.lower().startswith(str(myprefix) + "help"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "help"):
                 await CommonDefinitions.helplist(message)
 
             #account migration command
-            elif message.content.lower().startswith(str(myprefix) + "migrate") and not isbot:
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "migrate") and not isbot:
                 await MiscellaneuosCommands.migrateAcc(message)
 
             #manual account migration command
-            elif message.content.lower().startswith(str(myprefix) + "manualmigrate") and not isbot and "staff" in str(message.author.roles).lower():
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "manualmigrate") and not isbot and "staff" in str(message.author.roles).lower():
                 await MiscellaneuosCommands.manualMigrateAcc(message)
 
+            #
+
             #Plothook Command
-            elif message.content.lower().startswith(str(myprefix) + "plothook") and not isbot:
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "plothook") and not isbot:
 
                 delay = await message.channel.send("We are processing your request now")
 
@@ -616,7 +635,7 @@ async def on_message(message):
                     await delay.delete()
 
             #Plothook Leaderboard
-            elif message.content.lower().startswith(str(myprefix) + "plotlead"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "plotlead"):
 
                 delay = await message.channel.send("We are processing your request now")
 
@@ -691,7 +710,7 @@ async def on_message(message):
                 await message.channel.send(embed = discord.Embed(title = "Plothook Leaderboard", description = "\n".join(sortlist), colour = embcol))
 
             #Verify Command
-            elif message.content.lower().startswith(str(myprefix) + "verify") and ("mod team" in str(message.author.roles).lower() or "bouncer" in str(message.author.roles).lower()):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "verify") and ("mod team" in str(message.author.roles).lower() or "bouncer" in str(message.author.roles).lower()):
 
                 vertarget = message.content.split("@")[1]
 
@@ -726,10 +745,10 @@ async def on_message(message):
                     await client.get_channel(828411760847356005).send(embed = discord.Embed(title = titles[rand], description = welcomes[rand], colour = embcol))#, view = MiscellaneuosCommands.TourView0())
 
             #Staff Vacation Command
-            elif message.content.lower().startswith(str(myprefix) + "vacation") and ("staff" in str(message.author.roles).lower()):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "vacation") and ("staff" in str(message.author.roles).lower()):
                 await MiscellaneuosCommands.staffVacation(message)
 
-            elif message.content.lower().startswith(str(myprefix) + "mvp") and ("mod team" in str(message.author.roles).lower()):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "mvp") and ("mod team" in str(message.author.roles).lower()):
                 print("Running")
                 MVProle = discord.utils.get(message.guild.roles, name="Staff MVP")
                 target = await message.guild.query_members(user_ids=[int(message.content.split("@")[1].replace("!","").replace("&","").split(">")[0])])
@@ -738,7 +757,7 @@ async def on_message(message):
                 print("Done")
 
             #Guild Adventurer Command
-            elif message.content.lower().startswith(str(myprefix) + "adventurer") and ("staff" in str(message.author.roles).lower() or "licensed fucksmith" in str(message.author.roles).lower() or "guild licenser" in str(message.author.roles).lower() or message.author.name == "C_allum"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "adventurer") and ("staff" in str(message.author.roles).lower() or "licensed fucksmith" in str(message.author.roles).lower() or "guild licenser" in str(message.author.roles).lower() or message.author.name == "C_allum"):
 
                 adventarget = message.content.split("@")[1]
 
@@ -820,27 +839,27 @@ async def on_message(message):
                 await vermemb.remove_roles(role)
 
             #Kink Functions
-            elif message.content.lower().startswith(str(myprefix) + "kinklist"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "kinklist"):
                 await KinklistCommands.kinklist(message, message.channel, "Command")
-            elif message.content.lower().startswith(str(myprefix) + "kinkedit"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "kinkedit"):
                 await KinklistCommands.kinkedit(message)
-            elif message.content.lower().startswith(str(myprefix) + "kinkplayers"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "kinkplayers"):
                 await KinklistCommands.kinkplayers(message)
-            elif message.content.lower().startswith(str(myprefix) + "kinkencounter"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "kinkencounter"):
                 await KinklistCommands.kinkencounter(message)
-            elif message.content.lower().startswith(str(myprefix) + "kinksurvey"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "kinksurvey"):
                 await KinklistCommands.kinksurvey(message)
-            elif message.content.lower().startswith(str(myprefix) + "kinkhelp"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "kinkhelp"):
                 await KinklistCommands.kinkhelp(message)
-            elif message.content.lower().startswith(str(myprefix) + "kinkcompare"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "kinkcompare"):
                 await KinklistCommands.kinkcompare(message)
-            elif message.content.lower().startswith(str(myprefix) + "kinkfill"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "kinkfill"):
                 await KinklistCommands.kinkfill(message)
-            elif message.content.lower().startswith(str(myprefix) + "randloot") and "staff" in str(message.author.roles).lower():
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "randloot") and "staff" in str(message.author.roles).lower():
                 await KinklistCommands.randloot(message)
             #Start
 
-            elif message.content.lower().startswith(str(myprefix) + "start"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "start"):
 
                 welcdesc = "This guide was created to streamline the process of joining the general roleplay in the server.\n\n**Role Selection:** The first thing you should do is head up to " + str(client.get_channel(880605891366375435).mention) + ", where you can choose roles based on what you're interested in and how you define yourself. To see the roleplay channels, you'll need the RP-Intro (<:gem:944690539553513492>) role.\n\nAfter that, you'll need to go to " + str(client.get_channel(1081779600494972958).mention) + ". This contains an overview of the lore of the setting, as well as the rules for roleplaying within it. Once you've read through that, click the sigil ( <:Sigil:1055572608512442479> ) to accept the rules. This will allow to to access the public roleplay channels.\n\n**Generating Stats:** Now that you can access the " + str(client.get_channel(828412055228514325).mention) + " channel, you can create a character to play as. We allow characters up to level 14, though we recommend being between 4 and 10 due to balance on certain things. You can use any method to roll stats that you would like, as long as it is within reason. If you want to roll (4D6, dropping the lowest is the usual way), you can use the " + str(client.get_channel(903415692693475348).mention) + " thread. We use Avrae on the server for dice rolls, and we have the prefix for it set to: &. This means that to roll 4d6 dropping the lowest, you would do: `&r 4d6kh3`. Avrae also has `&randchar`, which will generate all 6 stats for you in this method. Sheets are only really used for certain things like raids (combat events in the dungeon), so it is possible to not use stats at all.\n\n**Character Creation:** To create your character, provide some information about them, starting with their name. There is a template pinned in " + str(client.get_channel(828412055228514325).mention) + ", which includes all the possible bits of information you can use, though you don't need to use all of these. You can also include an image here to show everyone what your character looks like.\n\n**Tuppers:** Most people in the dungeon roleplay using tuppers - aliases which replace your message with those of your character's. To set one up, head to: " + str(client.get_channel(903416425706831902).mention) + " and use the `?register` command. This has the following format: `?register name [text]`, where name is the name of your character as you want it to appear (in quotes if you have a space) and the brackets around the word 'text' can be anything, on either side of the word, and is how you trigger the bot to replace your message. For example, one of the brackets I use is £text, which replaces any of my messages which start with a £ symbol. If it's a character I use less often, I will use their name and a colon. You should include your image in this command as well, or add it to the tupper later using `?avatar name` and adding the link or attaching the image.\n\n**Arranging role-play:** Use the " + str(client.get_channel(832435243117445131).mention) + " channel to arrange scenes with people, or simply drop your character into one of the common rooms and someone will likely join you.\n\nHave fun!"
 
@@ -849,7 +868,7 @@ async def on_message(message):
                 await message.delete()
 
             #Room Command
-            elif message.content.lower().startswith(str(myprefix) + "room"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "room"):
 
                 # saferooms = ["bot-testing"]
                 # shops = ["ooc", "character-creation"]
@@ -881,11 +900,11 @@ async def on_message(message):
                 await message.channel.send(embed = discord.Embed(title = "We generated a random room for you.", description = "You could roleplay in the " + str(sortedrooms[randindex]) + ". It hasn't been used for " + str(math.floor((datetime.timestamp(datetime.now())-int(roomlastmess[randindex]))/3600)) + " hours", colour = embcol))
 
             #Command to set the scene for roleplay
-            elif message.content.lower().startswith(str(myprefix) + "setting"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "setting"):
                 pass
 
             #Scene Break Command
-            elif message.content.lower().startswith(str(myprefix) + "br"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "br"):
 
                 if isbot:
 
@@ -900,7 +919,7 @@ async def on_message(message):
                     print(message.author.name + " created a scene division")
 
             #Embed Command
-            elif message.content.lower().startswith(str(myprefix) + "embed") and not isbot:
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "embed") and not isbot:
 
                 img = ""
 
@@ -964,7 +983,7 @@ async def on_message(message):
 
                 await message.delete()
 
-            elif message.content.lower().startswith(str(myprefix) + "oocembed") and "staff" in str(message.author.roles).lower():
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "oocembed") and "staff" in str(message.author.roles).lower():
 
                 img = ""
 
@@ -1029,7 +1048,7 @@ async def on_message(message):
                 await message.channel.send("Embed sent to ooc.")
 
             #Embed Edit
-            elif message.content.lower().startswith(str(myprefix) + "edembed") and "staff" in str(message.author.roles).lower():
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "edembed") and "staff" in str(message.author.roles).lower():
                 chan = message.content.split(" ")[1].split("/")[5]
                 messid = message.content.split(" ")[1].split("/")[6]
                 messchan = client.get_channel(int(chan))
@@ -1066,14 +1085,14 @@ async def on_message(message):
                 await mess.edit(embed = cusemb)
                 await message.delete()
 
-            elif message.content.lower().startswith(str(myprefix) + "oocmsg") and ("staff" in str(message.author.roles).lower() or str(message.author) == "C_allum#5225"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "oocmsg") and ("staff" in str(message.author.roles).lower() or str(message.author) == "C_allum#5225"):
 
                 await client.get_channel(832435243117445131).send(message.content.split(" ", 1)[1].replace("The Mistress", "T̴̯̳̳̠͚͓͚̂͗̽̾̈́͌̐̅͠ͅh̸̨̫͓͖͎͍͔̠͇̊̂̏͝ę̶͎͇͍̲̮̠̭̮͛̃̈́͑̓̔̚ ̸͙̺̦̮͈̹̮̑̿̊̀̂́͂̿͒̚͜M̶̬͇̤̾͐̊̽̈́̀̀̕͘͝í̸̬͎͔͍̠͓̋͜͠͝s̶̡̡̧̪̺͍̞̲̬̮͆͋̇̐͋͌̒̋͛̕t̷̤̲̠̠̄̊͌̀͂̈́̊̎̕ȓ̶̼̂̿̇͛̚e̶̹̪̣̫͎͉̫̫͗s̸̟͉̱͈̞̬̽̽̒̔́̉s̸̛̖̗̜̻̻͚̭͇̈́̀̄͒̅̎"))
 
                 await message.channel.send("Message sent to ooc")
 
             #Recent Activity Command
-            elif message.content.lower().startswith(str(myprefix) + "recent"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "recent"):
                 delay = await message.channel.send("We are processing your request now")
                 meslatest = []
                 rooms = []
@@ -1125,11 +1144,11 @@ async def on_message(message):
                 await delay.delete()
 
             #Register community Project
-            elif message.content.lower().startswith(str(myprefix) + "communityproject") and "staff" in str(message.author.roles).lower():
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "communityproject") and "staff" in str(message.author.roles).lower():
                 await MiscellaneuosCommands.regCommunityProject(message)
 
             #Invest Command
-            elif message.content.lower().startswith(str(myprefix) + "invest"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "invest"):
 
                 devdata = sheet.values().get(spreadsheetId = Plotsheet, range = "AS1:AX200", majorDimension='COLUMNS').execute().get("values")
                 row = devdata[0].index(str(message.channel))
@@ -1337,7 +1356,7 @@ async def on_message(message):
                     await message.channel.send(embed = discord.Embed(title = "This channel isn't set up to receive donations", description = "If you believe this to be in error, contact the moderator team", colour = embcol))
 
             #Poker Setup Command
-            elif message.content.lower().startswith(str(myprefix) + "poker"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "poker"):
 
                 gamedata = sheet.values().get(spreadsheetId = gamesheet, range = "A1:E1000").execute().get("values")
 
@@ -2055,24 +2074,24 @@ async def on_message(message):
                                                     sheet.values().update(spreadsheetId = gamesheet, range = "A" + str(gv+1) + ":F" + str(gv+1), valueInputOption = "USER_ENTERED", body = {'values':[gamedata[gv]]}).execute()
 
             #Wild and Lustful Magic Table
-            elif (message.content.lower().startswith(str(myprefix) + "wildlust")):
+            elif (message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "wildlust")):
                 await MiscellaneuosCommands.wildlust(message)
 
             #Eat a Dezzie commmand
-            elif not isbot and ((message.content.lower().startswith(str(myprefix) + "gobblin")) or (message.content.lower().startswith(str(myprefix) + "crunch")) or (message.content.lower().startswith(str(myprefix) + "goblin"))):
+            elif not isbot and ((message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "gobblin")) or (message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "crunch")) or (message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "goblin"))):
                 await MiscellaneuosCommands.crunch(message)
 
             #Rulebook Command
-            elif (message.content.lower().startswith(str(myprefix) + "rulebook")):
+            elif (message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "rulebook")):
                 await message.delete()
                 await message.channel.send(embed = discord.Embed(title = "Here's a link to the Lewd Rulebook", description = "https://www.dropbox.com/sh/q2wt7nsihxldam2/AAB1yTPUsPo57BNkapEXgxxya/00%20Full%20Lewd%20handbook%20%28WIP%29.pdf?dl=0", colour = embcol))
 
-            elif (message.content.lower().startswith(str(myprefix) + "lewdreference")):
+            elif (message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "lewdreference")):
                 await message.delete()
                 await message.channel.send(embed = discord.Embed(title = "A quick reference sheet for the lewd rules in the dungeon", description = "**Full Rulebook:** https://www.dropbox.com/sh/q2wt7nsihxldam2/AAB1yTPUsPo57BNkapEXgxxya/00%20Full%20Lewd%20handbook%20%28WIP%29.pdf?dl=0\n\n**Inhibition:** 10 + Proficiency Bonus + Your choice of mental stat modifier\n**Arousal Maximum:** Rolled Hit Dice (or rounded average) plus Con mod per level\n**Climaxing:** DC 15 Inhibition save, fail halves arousal and incapacitates for 1d4 rounds (unless overstimulating)\n\n**Conditions:**\n    *Hyperaroused:* Disadvantage on saves against indirect advances and direct advances against the creature have advantage\n    *Edged:* Hyperaroused, Must save against climaxing, drops items, falls prone, stunned, advances do maximal stimulation.\n    *Denied:* Automatic success on climax saves.\n    *Infatuated:* Charmed by the source, willing for all advances by charmer, commands and suggestions require checks.\n    *Intoxicated:* Disadvantage on mental saves\n    *Uninhibited:* Inhibition score at 0. Hyperaroused, intoxicated, willing for all stimulation, disadvantage on checks and saves that are not sexual advances. Uses their turn to move towards and stimulate others, or themself.\n\n**Natural Implements:**\n    *Cock:*\n      Tiny: 1d4 Piercing\n      Small: 1d6 Piercing\n      Medium: 1d8 Piercing\n      Large: 1d10 Piercing\n      Huge: 1d12 Piercing\n      Gargantuan: 2d8 Piercing\n    Tits: 1d6 Bludgeoning\n    Pussy: 1d8 Bludgeoning\n    Ass: 1d8 Bludgeoning\n    Mouth: 1d4 Bludgeoning\n    Hand: 1d4 Bludgeoning\n    Tail: 1d4 Piercing\n    Tentacle: 1d6 Piercing\n    Pseudopod: 1d6 Bludgeoning", colour = embcol))
 
             #Bid Command
-            elif (message.content.lower().startswith(str(myprefix) + "bid")):
+            elif (message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "bid")):
                 economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='COLUMNS').execute().get("values")
 
                 if isbot:
@@ -2218,7 +2237,7 @@ async def on_message(message):
                         await message.channel.send(embed = discord.Embed(title = "You didn't format that correctly.", description = "It needs to be `%bid slavename amount`.", colour = embcol))
 
             #Easter egg hunt
-            elif message.content.lower().startswith(str(myprefix) + "egg"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "egg"):
 
                 if "res" in message.content.lower() or not "staff" in str(message.author.roles).lower():
                     egglist = []
@@ -2262,7 +2281,7 @@ async def on_message(message):
                     await message.channel.send("Egg timer has been set to " + str(eggtimer) + " seconds. Each egg can be collected by " + str(egglimit) + " players. Eggs will timeout after " + str(eggwaittimer) + " seconds per person allowed to collect them, in this case, " + str(int(eggwaittimer) * int(egglimit)) + " seconds, or " + str((int(eggwaittimer) * int(egglimit))/60) + " minutes.")
 
             #Scenes Command
-            elif message.content.lower().startswith(str(myprefix) + "scenes"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "scenes"):
 
                 await message.delete()
 
@@ -2294,7 +2313,7 @@ async def on_message(message):
 
                             await message.channel.send(embed = discord.Embed(title = "You have no scenes tracked.", description = "Add one using:\n\n`%scenes add Brief Scene Description #Channel Name`\n\nFor example, to watch the a particular scene in the cantina, you might type:\n\n`%scenes add Dinner Date #<832842032073670676>`", colour = embcol))
 
-                        if message.content.lower().startswith(str(myprefix) + "scenes add"):
+                        if message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "scenes add"):
 
                             scenestr = message.content.split(" ", 2)[2]
 
@@ -2515,32 +2534,32 @@ async def on_message(message):
             #The Economy
 
             #Buy Item
-            elif message.content.lower().startswith(str(myprefix) + "buy") or message.content.lower().startswith("$buy"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "buy") or message.content.lower().startswith("$buy"):
 
                 await EconomyCommands.buyitem(message)
 
             #Sell Item
-            elif message.content.lower().startswith(str(myprefix) + "sell") or message.content.lower().startswith("$sell"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "sell") or message.content.lower().startswith("$sell"):
 
                 await EconomyCommands.sellitem(message)
 
             #Give item
-            elif message.content.lower().startswith(str(myprefix) + "giveitem") or message.content.lower().startswith("$giveitem"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "giveitem") or message.content.lower().startswith("$giveitem"):
 
                 await EconomyCommands.giveitem(message)
 
             #Add item
-            elif message.content.lower().startswith(str(myprefix) + "additem") or message.content.lower().startswith("$additem") and "staff" in str(message.author.roles).lower():
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "additem") or message.content.lower().startswith("$additem") and "staff" in str(message.author.roles).lower():
 
                 await EconomyCommands.additem(message)
 
             #gift all
-            elif message.content.lower().startswith(str(myprefix) + "giftall") or message.content.lower().startswith("$giftall") and "staff" in str(message.author.roles).lower():
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "giftall") or message.content.lower().startswith("$giftall") and "staff" in str(message.author.roles).lower():
 
                 await EconomyCommands.giftAll(message)
 
             #Use Item
-            elif message.content.lower().startswith(str(myprefix) + "use") or message.content.lower().startswith("$use"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "use") or message.content.lower().startswith("$use"):
 
                 userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ8000", majorDimension = 'ROWS').execute().get("values")
 
@@ -2667,7 +2686,7 @@ async def on_message(message):
                         break
 
             #Work Command
-            elif message.content.lower().startswith(str(myprefix) + "work") or message.content.lower().startswith("$work"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "work") or message.content.lower().startswith("$work"):
 
                 economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
                 for a in range(math.floor(len(economydata)/4)):
@@ -2810,7 +2829,7 @@ async def on_message(message):
                         pass
 
             #Slut Command
-            elif message.content.lower().startswith(str(myprefix) + "slut") or message.content.lower().startswith("$slut"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "slut") or message.content.lower().startswith("$slut"):
 
                 economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
 
@@ -2898,17 +2917,17 @@ async def on_message(message):
                         break
 
             #Slit
-            elif message.content.lower().startswith(str(myprefix) + "slit"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "slit"):
 
                 await message.channel.send(embed = discord.Embed(title = "You found a slit.", description = "Don't feel bad, it's a common typo. Try %slut instead?", colour = embcol))
 
             #Slur
-            elif message.content.lower().startswith(str(myprefix) + "slur"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "slur"):
 
                 await message.channel.send(embed = discord.Embed(title = "Oh-kay, we're sluhrin' ouhr wohrds...", description = "Mahybe try %slut instead?", colour = embcol))
 
             #Money Command
-            elif message.content.lower().startswith(str(myprefix) + "money") or message.content.lower().startswith("$money") or message.content.lower().startswith(str(myprefix) + "wallet") or message.content.lower().startswith("$wallet"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "money") or message.content.lower().startswith("$money") or message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "wallet") or message.content.lower().startswith("$wallet"):
 
                 economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
 
@@ -2963,7 +2982,7 @@ async def on_message(message):
                         break
 
             #Leaderboard Command
-            elif message.content.lower().startswith(str(myprefix) + "leaderboard") or message.content.lower().startswith("$leaderboard"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "leaderboard") or message.content.lower().startswith("$leaderboard"):
 
                 economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
 
@@ -3014,14 +3033,14 @@ async def on_message(message):
                 await message.delete()
 
             #Deposit Command
-            elif message.content.lower().startswith(str(myprefix) + "deposit") or message.content.lower().startswith("$deposit"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "deposit") or message.content.lower().startswith("$deposit"):
 
                 await message.delete()
 
                 await message.channel.send(embed = discord.Embed(title = random.choice(["We don't want that sort of deposit!", "You don't know how to use a gloryhole, do you?", "No tips needed!"]), description = "We don't use a bank on this server, so there's nowhere to deposit dezzies to. They've all been returned to you.", colour = embcol))
 
             #Give Money (player to player)
-            elif message.content.lower().startswith(str(myprefix) + "give-money") or message.content.lower().startswith(str(myprefix) + "give-dezzies") or message.content.lower().startswith("$give-money"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "give-money") or message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "give-dezzies") or message.content.lower().startswith("$give-money"):
 
                 economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
 
@@ -3077,7 +3096,7 @@ async def on_message(message):
 
                     elif giveamount <= 0:
 
-                        await message.channel.send(embed=discord.Embed(title = "You need to specify an amount!", description = "You need to specify a positive amount to give. The format should be:\n\n`" + myprefix + "give-money @name amount`", colour = embcol))
+                        await message.channel.send(embed=discord.Embed(title = "You need to specify an amount!", description = "You need to specify a positive amount to give. The format should be:\n\n`" + GlobalVars.config["general"]["gothy_prefix"] + "give-money @name amount`", colour = embcol))
 
                         await message.delete()
 
@@ -3114,7 +3133,7 @@ async def on_message(message):
                             await message.delete()
 
             #Add Money (moderator to player)
-            elif (message.content.lower().startswith(str(myprefix) + "add-money") or message.content.lower().startswith(str(myprefix) + "add-dezzies") or message.content.lower().startswith("$add-money")) and not isbot:
+            elif (message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "add-money") or message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "add-dezzies") or message.content.lower().startswith("$add-money")) and not isbot:
 
                 economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
 
@@ -3169,7 +3188,7 @@ async def on_message(message):
                     await message.delete()
 
             #Remove Money (moderator to player or self)
-            elif (message.content.lower().startswith(str(myprefix) + "remove-money") or message.content.lower().startswith(str(myprefix) + "remove-dezzies") or message.content.lower().startswith(str(myprefix) + "take-money") or message.content.lower().startswith(str(myprefix) + "take-dezzies") or message.content.lower().startswith(str(myprefix) + "spend") or message.content.lower().startswith("$add-money")) and not isbot:
+            elif (message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "remove-money") or message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "remove-dezzies") or message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "take-money") or message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "take-dezzies") or message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "spend") or message.content.lower().startswith("$add-money")) and not isbot:
 
                 economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
 
@@ -3266,7 +3285,7 @@ async def on_message(message):
                     await message.delete()
 
             #Item Info
-            elif message.content.lower().startswith(str(myprefix) + "item") or message.content.lower().startswith(str(myprefix) + "info") or message.content.lower().startswith("$item"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "item") or message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "info") or message.content.lower().startswith("$item"):
 
                 shopdata = sheet.values().get(spreadsheetId = shopsheet, range = "A1:J1000", majorDimension = 'COLUMNS').execute().get("values")
 
@@ -3448,12 +3467,12 @@ async def on_message(message):
 
                     else:
 
-                        await message.channel.send(embed = discord.Embed(title = "Could not find an item matching that name.", description= "Check your spelling, and browse `" + myprefix + "shop <shopname>` to ensure it is there.", colour = embcol))
+                        await message.channel.send(embed = discord.Embed(title = "Could not find an item matching that name.", description= "Check your spelling, and browse `" + GlobalVars.config["general"]["gothy_prefix"] + "shop <shopname>` to ensure it is there.", colour = embcol))
 
                     await message.delete()
 
             #Inventory
-            elif message.content.lower().startswith(str(myprefix) + "inventory") or message.content.lower().startswith("$inventory"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "inventory") or message.content.lower().startswith("$inventory"):
 
                 economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension = 'ROWS').execute().get("values")
 
@@ -3576,7 +3595,7 @@ async def on_message(message):
                     await message.delete()
 
             #Shop Listing
-            elif message.content.lower().startswith(str(myprefix) + "shop"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "shop"):
 
                 if isbot:
 
@@ -3725,7 +3744,7 @@ async def on_message(message):
                         await message.delete()
 
             #Runar's Inventory
-            elif message.content.lower().startswith(str(myprefix) + "spellrotation") and "staff" in str(message.author.roles).lower():
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "spellrotation") and "staff" in str(message.author.roles).lower():
 
                 cantrips = ["Acid Splash (Conjuration)","Chill Touch (Necromancy)","Dancing Lights (Evocation)","Druidcraft (Transmutation)","Eldritch Blast (Evocation)","Fire Bolt (Evocation)","Guidance (Divination)","Light (Evocation)","Mage Hand (Conjuration)","Mending (Transmutation)","Message (Transmutation)","Minor Illusion (Illusion)","Poison Spray (Conjuration)","Prestidigitation (Transmutation)","Produce Flame (Conjuration)","Ray of Frost (Evocation)","Resistance (Abjuration)","Sacred Flame (Evocation)","Shillelagh (Transmutation)","Shocking Grasp (Evocation)","Spare the Dying (Necromancy)","Thaumaturgy (Transmutation)","True Strike (Divination)","Vicious Mockery (Enchantment)"]
 
@@ -3961,7 +3980,7 @@ async def on_message(message):
                 #             await client.get_channel(logchannel).send(", ".join(currentEggFinders) + " found an egg in " + str(message.channel))
 
             #Clone Channel
-            elif message.content.lower().startswith(str(myprefix) + "clonechannel") and "staff" in str(message.author.roles).lower():
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "clonechannel") and "staff" in str(message.author.roles).lower():
 
                 await message.channel.send("Processing, please wait")
                 channelid = int(message.channel.id)
@@ -3980,7 +3999,7 @@ async def on_message(message):
                 os.remove(filename)
                 del mess
 
-            elif message.content.lower().startswith(str(myprefix) + "clonev2") and "staff" in str(message.author.roles).lower():
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "clonev2") and "staff" in str(message.author.roles).lower():
 
                 await message.channel.send("Processing, please wait")
 
@@ -4068,7 +4087,7 @@ async def on_message(message):
 
                     await client.get_channel(990265174126645298).send(embed = mysterembed)
 
-            elif message.content.lower().startswith(str(myprefix) + "pingrole"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "pingrole"):
                 memlist = 0
                 mems = []
                 server = message.guild
@@ -4094,7 +4113,7 @@ async def on_message(message):
 
 
             #Timestamp Message
-            elif message.content.lower().startswith(str(myprefix) + "timestamp"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "timestamp"):
 
                 try:
                     timezone = message.content.split(" ")[2]
@@ -4177,7 +4196,7 @@ async def on_message(message):
                 await message.channel.send(embed = discord.Embed(title = "Timestamp Converter", description = str(inittime) + " in " + str(timezone) + " is <t:" + str(dtsp) + ":T>. It will next be " + str(inittime) + " in that timezone in " + "<t:" + str(dtsp) + ":R>", colour = embcol))
                 await message.delete()
             #Manually spawn Imp Tome
-            elif message.content.lower().startswith(str(myprefix) + "imptome") and message.author.id == imptomeWielder:
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "imptome") and message.author.id == imptomeWielder:
                 messageLink = message.content.rsplit(" ")[1]
                 splitLink = messageLink.split('/')
                 server_id = int(splitLink[4])
@@ -4187,7 +4206,7 @@ async def on_message(message):
                 channel = client.get_channel(channel_id)
                 msg = await channel.fetch_message(msg_id)
                 await MiscellaneuosCommands.impTomeSpawn(msg)
-            elif message.content.lower().startswith(str(myprefix) + "countscenes"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "countscenes"):
               scenesWithNotifications = 0
               scenesWithoutNotifications = 0
 
@@ -4233,11 +4252,11 @@ async def on_message(message):
             #                     await client.get_channel(roomchannel.id).send("```\u200b```")
             #                     await client.get_channel(logchannel).send("Automatically created a scene break in " + roomcur + ". The time difference was: " + str(diff) + " seconds, which equates to " + str(float(diff/3600)) + " hours.")
 
-            elif message.content.lower().startswith(str(myprefix) + "tuptest"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "tuptest"):
                 await message.add_reaction("❓")
                 await client.get_channel(1069423947092860998).send(message.author)
 
-            elif message.content.lower().startswith(str(myprefix) + "functionsetup"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "functionsetup"):
                 for a in range(len(functionnames)):
                     if functionreqs[a] != 0:
                         await message.channel.send(embed = discord.Embed(title = functionnames[a], description = str(functiondesc[a]) + "\n\n*Prerequisites:* " + str(functionreqs[a]), colour = embcol))
@@ -4245,24 +4264,24 @@ async def on_message(message):
                         await message.channel.send(embed = discord.Embed(title = functionnames[a], description = functiondesc[a], colour = embcol))
                 await message.delete()
 
-            #elif message.content.lower().startswith(str(myprefix) + "functionsetup"):
+            #elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "functionsetup"):
             
             # if message.channel.parent.name == "official-functions":
             #     prevmess = [joinedMessages async for joinedMessages in message.channel.history(limit = 2, oldest_first= False)]
             #     print(prevmess)
 
-            elif message.content.lower().startswith(str(myprefix) + "tour"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "tour"):
                 await message.channel.send(embed = discord.Embed(title = TourNames[0], description = TourDescriptions[0], colour = embcol), view = MiscellaneuosCommands.TourView1())
 
-            elif message.content.lower().startswith(str(myprefix) + "demo"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "demo"):
                 await message.delete()
                 await message.channel.send(embed = discord.Embed(title = "Setting the scene in the Unlit Passageways!", description = "*A small door of fine oak panelling swings open to reveal a cosy bedchamber. The bed is a simple wrought iron frame with a comfortable looking mattress, flanked by small wooden bedside tables. The room is lit by a single torch in a sconce in the wall, which is spluttering low and almost out.*\n\n---------------------------------------------------------------------\n\nCasting Detect Magic in the room reveals a source of magic in the bedsheets and two in the right bedside table.\n\n---------------------------------------------------------------------\n\nItems inside the drawers on the left table:\n* One medium dildo\n* A set of red lacy lingerie\n\nItems inside the drawers on the right table:\n* A spell scroll, containing the spell 'Cure Wounds'\n* Upon a DC 14 *Investigation* Check: ||A false bottom in the drawer, revealing a Temporeal Collar of Wealth||\n\n---------------------------------------------------------------------\n\nCasting Identify on the bedsheets reveals that they are charmed to be luxuriosly comfortable Temporeal items. They are also cursed, such that anyone under them is subjected to ||Mantle of Agreability||\n\n---------------------------------------------------------------------\n\n*Temporeal items are magical temporary items, which vanish after 1d4 hours or if they are removed from the room in which they are found.*", colour = embcol))
 
             #New economy commands
             elif message.author.name == "c_allum":
-                if message.content.lower().startswith(str(myprefix) + "~shop"):
+                if message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~shop"):
                     await EconomyV2.shop(message)
-                elif message.content.lower().startswith(str(myprefix) + "~item"):
+                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~item"):
                     await EconomyV2.item(message)
 
             #Per message income and Scene tracker pings.
