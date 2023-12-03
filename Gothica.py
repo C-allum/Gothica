@@ -14,7 +14,7 @@ from discord import SyncWebhook
 import aiohttp
 import ConfigCommands
 import GlobalVars
-#from ConfigCommands import *
+
 
 player_list = []
 global startup
@@ -22,14 +22,14 @@ startup = True
 #test
 @client.event
 async def on_ready():
-
+    global startup
     print('Logged in as {0.user} at '.format(client) + str(datetime.now()).split(".")[0])
     startmessage = await client.get_channel(logchannel).send('Logged in as {0.user} at '.format(client) + str(datetime.now()).split(".")[0])
 
     print("Loading config...")
-    print(GlobalVars.config_data)
-    await GlobalVars.reload_config()
-    print(GlobalVars.config_data)
+    print(GlobalVars.config)
+    await ConfigCommands.reload_config()
+    print(GlobalVars.config)
     print("Done.")
 
     server = startmessage.guild
@@ -337,7 +337,7 @@ async def on_message(message):
                 await CharRegistry.charcreate(message)
 
             #Character Edit Subroutine - On CharRegistry, untested
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "edit") and not isbot:
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "edit ") and not isbot:
 
                 await CharRegistry.charedit(message)
 
@@ -383,7 +383,17 @@ async def on_message(message):
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "manualmigrate") and not isbot and "staff" in str(message.author.roles).lower():
                 await MiscellaneuosCommands.manualMigrateAcc(message)
 
-            #
+            #------------------------ Config Commands -------------------------------
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "editconfig") and not isbot and GlobalVars.config["general"]["administrative_role"] in str(message.author.roles).lower():
+                await ConfigCommands.edit_config(message)
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "printconfig") and not isbot and GlobalVars.config["general"]["administrative_role"] in str(message.author.roles).lower():
+                await ConfigCommands.print_config(message)
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "printconfigraw") and not isbot and GlobalVars.config["general"]["administrative_role"] in str(message.author.roles).lower():
+                await ConfigCommands.print_config_raw(message)
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "reloadconfig") and not isbot and GlobalVars.config["general"]["administrative_role"] in str(message.author.roles).lower():
+                await ConfigCommands.reload_config()
+
+            #------------------------------------------------------------------------
 
             #Plothook Command
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "plothook") and not isbot:

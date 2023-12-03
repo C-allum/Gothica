@@ -1,4 +1,4 @@
-from ast import Index, Pass, excepthandler
+from ast import Index, Pass, excepthandler, literal_eval
 from dis import dis, disco
 from email import message_from_string
 from hashlib import new
@@ -65,7 +65,7 @@ creds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FI
 service = build("sheets", "v4", credentials=creds)
 
 gc = gspread.service_account(filename = SERVICE_ACCOUNT_FILE)
-config_file_path = "config.json"
+config_file_path = "config.yaml"
 #-----------------LIVE VERSION/BETA TOGGLE---------------
 liveVersion = 0
 token = ""

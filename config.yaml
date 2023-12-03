@@ -26,7 +26,8 @@ experience:
   - 10
   - 15
   - 20
-  xp_limit: '10000'
+  - 25
+  xp_limit: 10000
   xp_per_level: 500
   xp_per_message_character: 0.02
 general:

@@ -1,2 +1,3 @@
+#Config dictionary
 global config
-config = None
+config = dict()
