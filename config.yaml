@@ -27,6 +27,7 @@ economy:
   reactmakeitrain: 200
   rpreactmodifier: 1.25
   sellpricemultiplier: 0.5
+  #Reward Pool Bonuses
   weeklydezziebonusboost: 100
   weeklydezziebonusfucksmith: 500
   weeklydezziebonuspatront1: 100

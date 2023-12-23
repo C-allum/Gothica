@@ -395,6 +395,13 @@ async def on_message(message):
 
             #------------------------------------------------------------------------
 
+            #------------------------ Debug commands --------------------------------
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "copysheet") and not isbot and liveVersion == 0:
+                await MiscellaneuosCommands.copySheet(message)
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "removezerodiscrim") and not isbot and liveVersion == 0:
+                await MiscellaneuosCommands.removeZeroDiscriminators(message)
+            #------------------------------------------------------------------------
+
             #Plothook Command
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "plothook") and not isbot:
 
@@ -1178,7 +1185,7 @@ async def on_message(message):
 
                         b = a * 4 + 5
 
-                        if str(targname + "#" + str(target.discriminator)) in str(economydata[b][0]):
+                        if str(targname) in str(economydata[b][0]):
 
                             reciprow = b + 1
 
@@ -1210,7 +1217,7 @@ async def on_message(message):
 
                             sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipnewtot]])).execute()
 
-                            TransactionsDatabaseInterface.addTransaction(targname + "#" + str(target.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.Invest, int(-giveamount))
+                            TransactionsDatabaseInterface.addTransaction(targname, TransactionsDatabaseInterface.DezzieMovingAction.Invest, int(-giveamount))
 
                         if str(message.channel).lower() in str(devdata).lower():
 
@@ -2148,8 +2155,8 @@ async def on_message(message):
                     balances = []
 
                     for e in range(len(bidsfinal)):
-                        indexes.append(economydata[0].index(str(bidwinners[e].name) + "#" + bidwinners[e].discriminator))
-                        newbal.append(int(economydata[1][economydata[0].index(str(bidwinners[e].name) + "#" + str(bidwinners[e].discriminator))]) - int(bidsfinal[e]))
+                        indexes.append(economydata[0].index(str(bidwinners[e].name)))
+                        newbal.append(int(economydata[1][economydata[0].index(str(bidwinners[e].name))]) - int(bidsfinal[e]))
                         bidstatement.append(str(bidwinners[e]) + ": " + str(bidsfinal[e]))
 
                     for f in range(max(indexes)+1):
@@ -2228,8 +2235,8 @@ async def on_message(message):
                                         break
                                 if bidamount <= bidprice[slaveindex]:
                                     await message.channel.send(embed = discord.Embed(title = "You need to bid more than that!", description = "The current bid for " + bidstock[slaveindex] + " is " + str(bidprice[slaveindex]) + dezzieemj + ", bid by " + bidders[slaveindex].name, colour = embcol))
-                                elif bidattempt > int(economydata[1][economydata[0].index(str(message.author.name) + "#" + str(message.author.discriminator))]):
-                                    await message.channel.send(embed = discord.Embed(title = "You can't bid that much.", description = "You only have " + economydata[1][economydata[0].index(str(message.author.name) + "#" + message.author.discriminator)] + dezzieemj + ".", colour = embcol))
+                                elif bidattempt > int(economydata[1][economydata[0].index(str(message.author.name))]):
+                                    await message.channel.send(embed = discord.Embed(title = "You can't bid that much.", description = "You only have " + economydata[1][economydata[0].index(str(message.author.name))] + dezzieemj + ".", colour = embcol))
                                 elif bidamount < 1000:
                                     await message.channel.send(embed = discord.Embed(title = "The minimum bid is 1000" + dezzieemj, description = "Please increase your bid.", colour = embcol))
                                 else:
@@ -2808,17 +2815,17 @@ async def on_message(message):
                                     streakdays = 1
 
                                 if crit == 1:
-                                    TransactionsDatabaseInterface.addTransaction(message.author.name + "#" + str(message.author.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.Work, int(math.ceil(workreward / 2)))
+                                    TransactionsDatabaseInterface.addTransaction(message.author.name , TransactionsDatabaseInterface.DezzieMovingAction.Work, int(math.ceil(workreward / 2)))
                                 elif crit == 20:
-                                    TransactionsDatabaseInterface.addTransaction(message.author.name + "#" + str(message.author.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.Work, int(2 * workreward))
+                                    TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.Work, int(2 * workreward))
                                 else:
-                                    TransactionsDatabaseInterface.addTransaction(message.author.name + "#" + str(message.author.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.Work, int(workreward))
+                                    TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.Work, int(workreward))
 
                                 if pay > 0:
-                                    TransactionsDatabaseInterface.addTransaction(message.author.name + "#" + str(message.author.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.RolePay, int(pay))
+                                    TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.RolePay, int(pay))
                                 
                                 if streakbonus > 0:
-                                    TransactionsDatabaseInterface.addTransaction(message.author.name + "#" + str(message.author.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.StreakReward, int(streakbonus))
+                                    TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.StreakReward, int(streakbonus))
 
                                 randbal = str(random.choice([message.author.display_name + " now has " + str(newtot) + dezzieemj, "According to our records, " + message.author.display_name + " now has " + str(newtot) + dezzieemj, str(newtot) + dezzieemj + ". " + message.author.display_name + " has " + str(newtot) + dezzieemj + ".", "This work brings " + message.author.display_name + "'s balance to.. " + str(newtot) + dezzieemj + ".", message.author.display_name + " should really go and visit the Gobblin Bazzar. They have " + str(newtot) + dezzieemj + " to spend."]))
                                 balresp = "\n\n---------------------------------------------------------\n\n" + randbal
@@ -2895,7 +2902,7 @@ async def on_message(message):
 
                                 sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newtot]])).execute()
 
-                                TransactionsDatabaseInterface.addTransaction(message.author.name + "#" + str(message.author.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.Slut, int(slutreward))
+                                TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.Slut, int(slutreward))
 
                                 sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(row+2)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[str(datetime.timestamp(datetime.now())).split(".")[0]]])).execute()
 
@@ -2915,7 +2922,7 @@ async def on_message(message):
 
                                 sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newtot]])).execute()
 
-                                TransactionsDatabaseInterface.addTransaction(message.author.name + "#" + str(message.author.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.Slut, int(-slutfine))
+                                TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.Slut, int(-slutfine))
 
                                 sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(row+2)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[str(datetime.timestamp(datetime.now())).split(".")[0]]])).execute()
 
@@ -2962,7 +2969,7 @@ async def on_message(message):
 
                     b = a * 4 + 5
 
-                    if str(message.author.name + "#" + message.author.discriminator) in str(economydata[b][0]):
+                    if str(message.author.name) in str(economydata[b][0]):
 
                         for c in range(len(balances)):
 
@@ -3091,7 +3098,7 @@ async def on_message(message):
 
                             giverrow = b + 1
 
-                        if str(targname + "#" + str(target.discriminator)) in str(economydata[b][0]):
+                        if str(targname) in str(economydata[b][0]):
 
                             reciprow = b + 1
 
@@ -3133,11 +3140,11 @@ async def on_message(message):
 
                             sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipnewtot]])).execute()
 
-                            TransactionsDatabaseInterface.addTransaction(targname + "#" + str(target.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.Give, int(giveamount))
+                            TransactionsDatabaseInterface.addTransaction(targname, TransactionsDatabaseInterface.DezzieMovingAction.Give, int(giveamount))
 
                             sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(giverrow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[givernewtot]])).execute()
 
-                            TransactionsDatabaseInterface.addTransaction(message.author.name + "#" + str(message.author.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.Give, int(-giveamount))
+                            TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.Give, int(-giveamount))
 
                             await message.channel.send(embed=discord.Embed(title = message.author.name + " has given " + str(giveamount) + dezzieemj + " to " + targname, description = message.author.name + " has " + str(givernewtot) + dezzieemj + "\n\n" + targname + " has " + str(recipnewtot) + dezzieemj, colour = embcol))
 
@@ -3160,7 +3167,7 @@ async def on_message(message):
 
                     b = a * 4 + 5
 
-                    if str(targname + "#" + str(target.discriminator)) in str(economydata[b][0]):
+                    if str(targname) in str(economydata[b][0]):
 
                         reciprow = b + 1
 
@@ -3192,7 +3199,7 @@ async def on_message(message):
 
                     sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipnewtot]])).execute()
 
-                    TransactionsDatabaseInterface.addTransaction(targname + "#" + str(target.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.Add, int(giveamount))
+                    TransactionsDatabaseInterface.addTransaction(targname, TransactionsDatabaseInterface.DezzieMovingAction.Add, int(giveamount))
 
                     await message.channel.send(embed=discord.Embed(title = str(giveamount) + dezzieemj + " has been given to " + targname, description = targname + " now has " + str(recipnewtot) + dezzieemj, colour = embcol))
 
@@ -3225,7 +3232,7 @@ async def on_message(message):
 
                     b = a * 4 + 5
 
-                    if str(targname + "#" + str(target.discriminator)) in str(economydata[b][0]):
+                    if str(targname) in str(economydata[b][0]):
 
                         reciprow = b + 1
 
@@ -3257,7 +3264,7 @@ async def on_message(message):
 
                         sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipnewtot]])).execute()
 
-                        TransactionsDatabaseInterface.addTransaction(targname + "#" + str(target.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.Remove, int(-giveamount))
+                        TransactionsDatabaseInterface.addTransaction(targname, TransactionsDatabaseInterface.DezzieMovingAction.Remove, int(-giveamount))
 
                         await message.channel.send(embed=discord.Embed(title = str(giveamount) + dezzieemj + " has been taken from " + message.author.name, description = message.author.name + " now has " + str(recipnewtot) + dezzieemj, colour = embcol))
 
@@ -3289,7 +3296,7 @@ async def on_message(message):
 
                         sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipnewtot]])).execute()
 
-                        TransactionsDatabaseInterface.addTransaction(targname + "#" + str(target.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.Remove, int(-giveamount))
+                        TransactionsDatabaseInterface.addTransaction(targname, TransactionsDatabaseInterface.DezzieMovingAction.Remove, int(-giveamount))
 
                         await message.channel.send(embed=discord.Embed(title = str(giveamount) + dezzieemj + " has been taken from " + targname, description = targname + " now has " + str(recipnewtot) + dezzieemj, colour = embcol))
 
@@ -3509,7 +3516,7 @@ async def on_message(message):
 
                     b = a * 4 + 5
 
-                    if str(targname + "#" + str(target.discriminator)) in str(economydata[b][0]):
+                    if str(targname) in str(economydata[b][0]):
 
                         targrow = b
 
@@ -3890,7 +3897,7 @@ async def on_message(message):
 
                 #     if message.channel.type == discord.ChannelType.text and random.randint(1,200) == 1 and not "staff" in str(authroles).lower():
                 #         room = "<#" + str(message.channel.id) + ">"
-                #         limits = await KinklistCommands.getLimits(str(message.author.name) + "#" + str(message.author.discriminator))
+                #         limits = await KinklistCommands.getLimits(str(message.author.name))
                 #         encounters = sheet.values().get(spreadsheetId = encountersheet, range = "A2:R50", majorDimension='COLUMNS').execute().get("values")
 
                 #         if message.channel.name == "trapped-corridors":
@@ -3937,7 +3944,7 @@ async def on_message(message):
                 #         except IndexError:
                 #             enckinks = ""
                 #         kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
-                #         playerIndex = [row[1] for row in kinkdata].index(str(message.author.name) + "#" + str(message.author.discriminator))
+                #         playerIndex = [row[1] for row in kinkdata].index(str(message.author.name))
                 #         kinkops = []
 
                 #         for c in range(len(enckinks)):
@@ -4314,7 +4321,7 @@ async def on_message(message):
                     if player_list == []:
                         return
                     #Check if memeber is already registered
-                    if str(message.author.name + '#' + message.author.discriminator) in player_list:
+                    if str(message.author.name) in player_list:
                         #check if we are in a channel that awards dezzies for posts
                         if message.channel.category_id in roleplay_categories_id:
                             economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
@@ -4350,8 +4357,8 @@ async def on_message(message):
                                         trackedStatus = scenearray[sceneindex].split(" ")[-1]
 
                                         if trackedStatus == "Notifications:Enabled":
-                                            if economydata[playerindex][0] != message.author.name + "#" + message.author.discriminator:
-                                                user = discord.utils.get(client.guilds[0].members, name = economydata[playerindex][0].split("#")[0], discriminator = economydata[playerindex][0].split("#")[1])
+                                            if economydata[playerindex][0] != message.author.name:
+                                                user = discord.utils.get(client.guilds[0].members, name = economydata[playerindex][0])
                                                 timeos.sleep(3.0)
                                                 await user.send(f"New message in <#{message.channel.id}> by {message.channel.last_message.author.name}")
 
@@ -4401,7 +4408,7 @@ async def on_message(message):
                             sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[dataup])).execute()
 
                             if (newtot > 0) and (randaward > 0):
-                                TransactionsDatabaseInterface.addTransaction(message.author.name + "#" + str(message.author.discriminator), TransactionsDatabaseInterface.DezzieMovingAction.MessageReward, int(randaward))
+                                TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.MessageReward, int(randaward))
 
                 else:   #Things we want to do if a bot posted the message
                     if not(client.user == message.author) and not("Avrae" == message.author.name) and message.channel.category_id in roleplay_categories_id and not (message.channel.type == discord.ChannelType.private_thread):

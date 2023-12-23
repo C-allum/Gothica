@@ -228,10 +228,10 @@ async def emotecurse(message):
 
 async def emoteuncurse(message):
     if not " " in message.content:
-        targ = message.author.name + "#" + str(message.author.discriminator)
+        targ = message.author.name
     elif "staff" in str(message.author.roles).lower():
         target = client.get_guild(message.channel.guild.id).get_member(int(message.content.split(" ")[1].lstrip("<@").rstrip(">")))
-        targ = target.name + "#" + str(target.discriminator)
+        targ = target.name
     global emoteCursed
     global emoteCursechance
     global emoteCurses

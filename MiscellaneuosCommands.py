@@ -86,7 +86,7 @@ async def crunch(message):
         numbrolls = 12
     dezcost = numbrolls * 10
     userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ8000", majorDimension = 'ROWS').execute().get("values")
-    authorindex = [row[0] for row in userinvs[::4]].index(message.author.name + "#" + message.author.discriminator)
+    authorindex = [row[0] for row in userinvs[::4]].index(message.author.name)
     authorindex *= 4
     authorinv = userinvs[authorindex]
     if int(authorinv[1]) < dezcost:
@@ -408,6 +408,31 @@ async def manualDezPoolReset(message):
 
     print("Weekly Dezzie Award Pool Reset!")
 
+async def copySheet(message):
+    userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension = 'ROWS').execute().get("values")
+    rangeAll = 'A1:ZZ8000'
+    body = {}
+    sheet.values().clear(spreadsheetId = EconSheet, range = "copysheet!"+rangeAll, body = body).execute()    #Delete the copy sheet
+    sheet.values().update(spreadsheetId = EconSheet, range = "copysheet!A1", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=userinvs)).execute() #save a copy
+
+async def removeZeroDiscriminators(message):
+    userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension = 'ROWS').execute().get("values")
+    rangeAll = 'A1:ZZ8000'
+    body = {}
+    sheet.values().clear(spreadsheetId = EconSheet, range = "copysheetZeroDiscrim!"+rangeAll, body = body).execute()    #Delete the copy sheet
+    sheet.values().update(spreadsheetId = EconSheet, range = "copysheetZeroDiscrim!A1", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=userinvs)).execute() #save a copy
+
+    #Remove #0 discriminators
+    i = 5
+    while i < len(userinvs):
+        if userinvs[i][0].endswith('#0'):
+            userinvs[i][0] = userinvs[i][0][:-2] #Cut last 2 characters, which are # and 0
+        i+=4
+
+    sheet.values().update(spreadsheetId = EconSheet, range = "Sheet1!A1", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=userinvs)).execute() #save a copy
+
+
+            
 #----------------View Classes----------------
 
 #This is the view class for a simple accept button.
@@ -419,7 +444,7 @@ class ImpTomeView(discord.ui.View):
     #This defines the button. The button_calback function defines what happened when we click it. We save the click in the variable to make sure
     # that we can later see if the button was actually pressed.´
     # The interaction.response is important as otherwise the interaction (button) will be seen as failed.
-    # You can also silently acknowledge the interaction with interaction.response.defer() - This makes the bot think. Respond with "" for full invisibility.
+    # You can also silently acknowledge the interaction with interaction.response.defer() - This makes the bot think it properly responded with "" for full invisibility.
     @discord.ui.button(label="Spawn Imp Tome!", style = discord.ButtonStyle.green)
     async def button_callback(self, interaction, item):
         await interaction.response.send_message("Imp tome spawning...")

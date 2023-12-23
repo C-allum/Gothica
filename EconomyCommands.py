@@ -319,7 +319,7 @@ async def buyitem(message):
                     
                     sheet.values().update(spreadsheetId = EconSheet, range = "B" + str(r+6), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[[newbal]])).execute()
 
-                    addTransaction(message.author.name + "#" + str(message.author.discriminator), DezzieMovingAction.Buy, int(-(int(buyquant) * int(itprice))))
+                    addTransaction(message.author.name, DezzieMovingAction.Buy, int(-(int(buyquant) * int(itprice))))
 
     else:
 
@@ -397,7 +397,7 @@ async def sellitem(message):
 
     #update sheet
     sheet.values().update(spreadsheetId = EconSheet, range = "B" + str(rowindex+6), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[[newbal]])).execute()
-    addTransaction(message.author.name + "#" + str(message.author.discriminator), DezzieMovingAction.Sell, int(totalprice))
+    addTransaction(message.author.name, DezzieMovingAction.Sell, int(totalprice))
     collet = await getColumnLetter(columnindex)
     if newitemtotal == 0: #Shift everything else over
         newitemlist = userinvs[rowindex][columnindex+1:]
@@ -435,7 +435,7 @@ async def giveitem(message):
         return
         
     #prevent giving yourself items
-    if namestr == message.author.name + "#" + message.author.discriminator:
+    if namestr == message.author.name:
         await message.channel.send(embed = discord.Embed(title = "No, you can't give yourself an item that you own...", description = "Giving yourself an item is weird. Maybe a case of split personalities?", colour = embcol))
         return
     
@@ -448,7 +448,7 @@ async def giveitem(message):
     targetindex *= 4
     targetinv = userinvs[targetindex]
  
-    authorindex = [row[0] for row in userinvs[::4]].index(message.author.name + "#" + message.author.discriminator)
+    authorindex = [row[0] for row in userinvs[::4]].index(message.author.name)
     authorindex *= 4
     authorinv = userinvs[authorindex]
 
@@ -731,7 +731,7 @@ async def dezReact(reaction):
         for a in range(math.floor(len(economydata)/4)):
             b = a * 4 + 5
 
-            if str(targetName + "#" + str(target.discriminator)) in str(economydata[b][0]):
+            if str(targetName) in str(economydata[b][0]):
                 reciprow = b + 1
                 break
 
@@ -744,7 +744,7 @@ async def dezReact(reaction):
         for a in range(math.floor(len(economydata)/4)):
             b = a * 4 + 5
 
-            if str(givename + "#" + str(giver.discriminator)) in str(economydata[b][0]):
+            if str(givename) in str(economydata[b][0]):
                 giverow = b + 1
                 break
     except IndexError:
@@ -799,7 +799,7 @@ async def dezReact(reaction):
                 newDezziePool = prevDezziePool - giveamount
                 sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipNewTot]])).execute()
 
-                TransactionsDatabaseInterface.addTransaction(target.name + '#' + target.discriminator, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
+                TransactionsDatabaseInterface.addTransaction(target.name, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
 
                 sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(int(giverow)+3)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newDezziePool]])).execute()
 
@@ -818,7 +818,7 @@ async def dezReact(reaction):
                 recipNewTot = int(economydata[reciprow-1][1]) + int(giveamount)
                 sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipNewTot]])).execute()
 
-                TransactionsDatabaseInterface.addTransaction(target.name + '#' + target.discriminator, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
+                TransactionsDatabaseInterface.addTransaction(target.name, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
 
                 sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(giverow+3)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newDezziePool]])).execute()
                 await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
@@ -862,7 +862,7 @@ async def rpDezReact(reaction):
         for a in range(math.floor(len(economydata)/4)):
             b = a * 4 + 5
 
-            if str(targetName + "#" + str(target.discriminator)) in str(economydata[b][0]):
+            if str(targetName) in str(economydata[b][0]):
                 reciprow = b + 1
                 break
 
@@ -875,7 +875,7 @@ async def rpDezReact(reaction):
         for a in range(math.floor(len(economydata)/4)):
             b = a * 4 + 5
 
-            if str(givename + "#" + str(giver.discriminator)) in str(economydata[b][0]):
+            if str(givename) in str(economydata[b][0]):
                 giverow = b + 1
                 break
     except IndexError:
@@ -926,7 +926,7 @@ async def rpDezReact(reaction):
                 newDezziePool = prevDezziePool - giveamount
                 sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipNewTot]])).execute()
 
-                TransactionsDatabaseInterface.addTransaction(target.name + '#' + target.discriminator, TransactionsDatabaseInterface.DezzieMovingAction.React, int(reward))
+                TransactionsDatabaseInterface.addTransaction(target.name, TransactionsDatabaseInterface.DezzieMovingAction.React, int(reward))
 
                 sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(int(giverow)+3)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newDezziePool]])).execute()
 
@@ -945,7 +945,7 @@ async def rpDezReact(reaction):
                 recipNewTot = int(economydata[reciprow-1][1]) + int(giveamount)
                 sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipNewTot]])).execute()
 
-                TransactionsDatabaseInterface.addTransaction(target.name + '#' + target.discriminator, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
+                TransactionsDatabaseInterface.addTransaction(target.name, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
 
                 sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(giverow+3)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newDezziePool]])).execute()
                 await client.get_channel(botchannel).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(reward) + dezzieemj + " to " + targetName + " for an RP message", description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
@@ -973,7 +973,7 @@ async def getUserNamestr(message):
 
         targname = message.author
 
-    namestr = str(targname.name + "#" + targname.discriminator)
+    namestr = str(targname.name)
 
     return namestr, targid
 

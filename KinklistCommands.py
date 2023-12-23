@@ -117,7 +117,7 @@ async def kinklist(message, outputchannel, trigger):
                 "\n\n**Kink Overview:**\n" +\
                 namestr +\
                 "'s general thoughts on each category of kink are shown below. We have then taken their average response in each category, and included that information in brackets.\n*As always, you should check with your rp partners regarding hard and soft limits for any particular scene.*\n\n*To see more detail on any of the below categories, type the corresponding number*\n\n" +\
-                "\n".join(categoryEmbedString), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}")
+                "\n".join(categoryEmbedString), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name} / {message.author.display_name}")
 
             await message.delete()
             await outputchannel.send(embed = kinkemb)
@@ -716,13 +716,13 @@ async def kinkplayers(message):
 
                         if len(", ".join(kinkhavers)) > 3800:
 
-                            await message.channel.send(embed = discord.Embed(title = "Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as something they like:", description = ", ".join(kinkhavers), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}"))
+                            await message.channel.send(embed = discord.Embed(title = "Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as something they like:", description = ", ".join(kinkhavers), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name} / {message.author.display_name}"))
 
                             kinkhavers = []
 
                         kinkhavers.append(kinkdata[e][1])
 
-                await message.channel.send(embed = discord.Embed(title = "Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as something they like:", description = ", ".join(kinkhavers), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}"))
+                await message.channel.send(embed = discord.Embed(title = "Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as something they like:", description = ", ".join(kinkhavers), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name} / {message.author.display_name}"))
 
 #Finds a room and an encounter for the specified person.
 async def kinkencounter(message):
@@ -1161,7 +1161,7 @@ async def kinkcompare(message):
     #Send embeds
     await message.channel.send(embed = discord.Embed(title = f"Common Faves/Kinks/Likes of " + ", ".join(playerNames), description = "\n".join(commonKinks), colour = embcol))
     #await message.channel.send(embed = discord.Embed(title = f"Uncertain Elements shared by " + ", ".join(playerNames), description = "\n".join(maybeAvoid), colour = embcol))
-    await message.channel.send(embed = discord.Embed(title = f"Accumulated Soft and Hard Limits of  " + ", ".join(playerNames), description = "\n".join(limits), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis comparison was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}"))
+    await message.channel.send(embed = discord.Embed(title = f"Accumulated Soft and Hard Limits of  " + ", ".join(playerNames), description = "\n".join(limits), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis comparison was summoned by {message.author.name} / {message.author.display_name}"))
     await message.channel.send(embed = discord.Embed(title = f"Reminder!", description = "*Please remember that the kinklist is not a perfect guide. Just because someone has marked something positively or negatively, doesn't mean they have the same understanding of what that thing is as you do. It's important to discuss any element you plan to bring into a scene with your partner.*", colour = embcol))
 
     await message.delete()
@@ -1170,7 +1170,7 @@ async def kinkcompare(message):
 
 #Posts an embed with help on the commands.
 async def kinkhelp(message):
-    await message.channel.send(embed = discord.Embed(title = "Kinklist Help", description = f"*This is the %kinkhelp command! To start the kinklist survey, use the %kinksurvey command.\n If you have already filled out the survey, you can look at your kinklist with the %kinklist command, or edit it with the %kinkedit command. Furthermore you can search for users with a certain kink using the %kinkplayers [kink] command, or look at someone else's list with %kinklist [@username]. You can also compare kinklists of two or more people with the %kinkcompare [@username1] [@username2] [@username3 (OPTIONAL] command. You can compare 2 or more peoples kinklist with that to navigate scenes easier. Finally, the %lfg [hours of access] allows you access to the lfg channel for as many hours as you specify. There you can use %kinkplayers [kink] in a different way! We will not only tell you who likes the specified kink, but also tag the people that are also present in the channel, so you have an easier time looking for roleplays with a certain kink.*").set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}"))
+    await message.channel.send(embed = discord.Embed(title = "Kinklist Help", description = f"*This is the %kinkhelp command! To start the kinklist survey, use the %kinksurvey command.\n If you have already filled out the survey, you can look at your kinklist with the %kinklist command, or edit it with the %kinkedit command. Furthermore you can search for users with a certain kink using the %kinkplayers [kink] command, or look at someone else's list with %kinklist [@username]. You can also compare kinklists of two or more people with the %kinkcompare [@username1] [@username2] [@username3 (OPTIONAL] command. You can compare 2 or more peoples kinklist with that to navigate scenes easier. Finally, the %lfg [hours of access] allows you access to the lfg channel for as many hours as you specify. There you can use %kinkplayers [kink] in a different way! We will not only tell you who likes the specified kink, but also tag the people that are also present in the channel, so you have an easier time looking for roleplays with a certain kink.*").set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name} / {message.author.display_name}"))
     await message.delete()
 
 async def kinkfill(message):
@@ -1583,7 +1583,7 @@ async def getKinkData(message):
         targname = await client.fetch_user(targid)
     else:
         targname = message.author
-    if message.author.discriminator == "0":
+    if message.author.discriminator == "0" or message.author.discriminator == None:
         namestr = str(targname.name)
     else:
         namestr = str(targname.name + "#" + targname.discriminator)
@@ -1632,7 +1632,7 @@ async def Kinklistdetail(categoryIndex, categories, printCategories, sel, kinkda
             
             else:
 
-                kinkemb2 = discord.Embed(title = "That is not a number of a category to view.", description = "The categories range from 1 to 11.", colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name}#{message.author.discriminator} / {message.author.display_name}")
+                kinkemb2 = discord.Embed(title = "That is not a number of a category to view.", description = "The categories range from 1 to 11.", colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name} / {message.author.display_name}")
 
         await outputchannel.send(embed = kinkemb2)
 

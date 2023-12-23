@@ -1,0 +1,7 @@
+-------------------------GLOBAL VARIABLES AND THE CONFIG-----------------------------------------------
+If you want a variable to be global (between .py files as well), put it in GlobalVars.py, and import that file.
+Call those variables through GlobalVars.variableName - Do not import them explicitly, like 'From GlobalVars import variableName'.
+If you want to add a global variable that is editable through gothica commands, put it into the config.yaml file.
+It will have to go into a category (First indentation level), and then be named (second indentation level), and then assigned a value.
+You can grab that variable in the code by calling GlobalVars.config[categoryName][variableName]
+DO NOT IMPORT GLOBAL VARIABLES AS 'From GlobalVars import *'! THIS WILL BREAK THE GLOBAL PROPERTIES OF THE VARIABLES AND MESS UP THE CONFIG!
