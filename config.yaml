@@ -3,6 +3,8 @@ channels:
   - 829477815782866956
   art_claim_forum_id:
   - 1050252064455925790
+  mod_vacation_channels:
+  - 829477815782866956
   roleplay_categories_id:
   - 917234637359702057
   - 1058839161735483462
@@ -20,6 +22,23 @@ economy:
   currency_per_rp_word: 0.25
   daily_interaction_count: 5
   daily_interaction_value: 300
+  reactcashmoney: 100
+  reactdz: 20
+  reactmakeitrain: 200
+  rpreactmodifier: 1.25
+  sellpricemultiplier: 0.5
+  weeklydezziebonusboost: 100
+  weeklydezziebonusfucksmith: 500
+  weeklydezziebonuspatront1: 100
+  weeklydezziebonuspatront2: 100
+  weeklydezziebonuspatront3: 100
+  weeklydezziebonuspatront4: 100
+  weeklydezziebonusstaff: 500
+  weeklydezziebonusveteran: 100
+  weeklydezziepoolplus1: 650
+  weeklydezziepoolplus2: 800
+  weeklydezziepoolplus3: 1000
+  weeklydezziepoolverified: 500
 experience:
   characterslot_levels:
   - 5

@@ -100,7 +100,7 @@ async def lookup(imgURL:str, message:discord.Message):
     if data == []:
         #Fetch data for this tupper from bot channel
         aliasChannel = client.get_channel(aliasBotChannel)
-        messages = [message async for message in aliasChannel.history(limit=4000)]
+        messages = [message async for message in aliasChannel.history(limit=8000)]
 
         playerID = None
         charName = None

@@ -383,13 +383,13 @@ async def sellitem(message):
     #Check quantity to be sold against inventory
     invquant = int(userinvs[rowindex][columnindex].split("|")[1])
     if quant <= invquant:
-        totalprice = int(quant * price) * float(sellpricemultiplier)
+        totalprice = int(quant * price) * float(GlobalVars.config["economy"]["sellpricemultiplier"])
         newitemtotal = invquant - quant
     else:
         #Selling more than they have. Tell them no and set to max.
         await message.channel.send(embed = discord.Embed(title = "You don't have enough of those in your inventory to be able to sell " + str(quant), description = "We are fairly sure that " + str(invquant) + " is less than " + str(quant) + ". Selling " + str(invquant), colour = embcol))
         quant = invquant
-        totalprice = int(math.floor(float(quant) * float(price) * float(sellpricemultiplier)))
+        totalprice = int(math.floor(float(quant) * float(price) * float(GlobalVars.config["economy"]["sellpricemultiplier"])))
         newitemtotal = invquant - quant
     newbal = int(int(userinvs[rowindex][1]) + totalprice)
     sellreturnmessage = random.choice(["We hope you washed that first", "Dezzies may be returned to your account within 6-9 working days. Probably.", "Were you not satisfied with your purchase?", "Cum again!", "We had been looking for one of those ourself..."])
@@ -754,13 +754,13 @@ async def dezReact(reaction):
 
     #Determine gift amount - Values in CommonDefinitions.py
     if reaction.emoji.name == "dz":
-        giveamount = reactdz
+        giveamount = GlobalVars.config["economy"]["reactdz"]
 
     elif reaction.emoji.name == "cashmoney":
-        giveamount = reactCashMoney
+        giveamount = GlobalVars.config["economy"]["reactcashmoney"]
 
     elif reaction.emoji.name == "makeitrain" or reaction.emoji.name == "Dezzieheart":
-        giveamount = reactMakeItRain
+        giveamount = GlobalVars.config["economy"]["reactmakeitrain"]
 
     else:
         giveamount = random.randint(100,500)
@@ -771,13 +771,13 @@ async def dezReact(reaction):
         prevDezziePool = int(economydata[giverow+2][0])
 
     except IndexError:
-        prevDezziePool = weeklyDezziePoolVerified
+        prevDezziePool = GlobalVars.config["economy"]["weeklydezziepoolverified"]
 
     except ValueError:
-        prevDezziePool = weeklyDezziePoolVerified
+        prevDezziePool = GlobalVars.config["economy"]["weeklydezziepoolverified"]
 
     except TypeError:
-        prevDezziePool = weeklyDezziePoolVerified
+        prevDezziePool = GlobalVars.config["economy"]["weeklydezziepoolverified"]
 
 
     #Check if given amount is smaller than the pool of dezzies left for the user
@@ -842,7 +842,7 @@ async def rpDezReact(reaction):
     except TypeError:
         giveid = reaction.member.id
         giver = await client.fetch_user(giveid)
-        await client.get_channel(botchannel).send(embed=discord.Embed(title = str(giver.display_name) + ": The post you tried to award is too old, or was edited.", description = "The first time a character is awarded dezzies, the post has to be rather new and unedited! Try awarding a different, unedited post of that character. If the issue persists, contact the bot gods.", colour = embcol))
+        await client.get_channel(botchannel).send(embed=discord.Embed(title = str(giver.display_name) + ": The post you tried to award is too old, or was edited.", description = "The first time a character is awarded dezzies, the post has to be rather new and unedited! Try awarding a different, unedited post of that character. If the issue persists, contact the bot gods.", colour = embcol, url = mess.jump_url))
         return
 
     economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
@@ -885,13 +885,13 @@ async def rpDezReact(reaction):
 
     #Determine gift amount - Values in CommonDefinitions.py
     if reaction.emoji.name == "dz":
-        giveamount = reactdz
+        giveamount = GlobalVars.config["economy"]["reactdz"]
 
     elif reaction.emoji.name == "cashmoney":
-        giveamount = reactCashMoney
+        giveamount = GlobalVars.config["economy"]["reactcashmoney"]
 
     elif reaction.emoji.name == "makeitrain" or reaction.emoji.name == "Dezzieheart":
-        giveamount = reactMakeItRain
+        giveamount = GlobalVars.config["economy"]["reactmakeitrain"]
 
     else:
         giveamount = random.randint(100,500)
@@ -902,13 +902,13 @@ async def rpDezReact(reaction):
         prevDezziePool = int(economydata[giverow+2][0])
 
     except IndexError:
-        prevDezziePool = weeklyDezziePoolVerified
+        prevDezziePool = GlobalVars.config["economy"]["weeklydezziepoolverified"]
 
     except ValueError:
-        prevDezziePool = weeklyDezziePoolVerified
+        prevDezziePool = GlobalVars.config["economy"]["weeklydezziepoolverified"]
 
     except TypeError:
-        prevDezziePool = weeklyDezziePoolVerified
+        prevDezziePool = GlobalVars.config["economy"]["weeklydezziepoolverified"]
 
 
     #Check if given amount is smaller than the pool of dezzies left for the user
@@ -921,7 +921,7 @@ async def rpDezReact(reaction):
         else:
             #Enough dezzies left in users dezzie pool:
             if giveamount <= prevDezziePool:
-                reward = int(giveamount * rpReactModifier)
+                reward = int(giveamount * GlobalVars.config["economy"]["rpreactmodifier"])
                 recipNewTot = int(economydata[int(reciprow)-1][1]) + reward
                 newDezziePool = prevDezziePool - giveamount
                 sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipNewTot]])).execute()

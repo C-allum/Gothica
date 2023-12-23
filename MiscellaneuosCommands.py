@@ -5,7 +5,7 @@ from TransactionsDatabaseInterface import updatePerson, printTransactions
 
 async def staffVacation(message):
     #Toggle Lorekeeper chat Permissions
-    perms = client.get_channel(LKVacationChannels[0]).overwrites_for(message.author)
+    perms = client.get_channel(GlobalVars.config["channels"]["staff_vacation_channels"][0]).overwrites_for(message.author)
     readMessages = perms.read_messages
     sendMessages = perms.send_messages
     author = message.author
@@ -16,17 +16,17 @@ async def staffVacation(message):
             perms.view_channel = True
             #await client.get_channel(LKChannel).category.set_permissions(message.author, overwrite=perms)
             #await client.get_channel(LKChannel).category.set_permissions(message.author, overwrite=None)
-            for channel in LKVacationChannels:
+            for channel in GlobalVars.config["channels"]["staff_vacation_channels"]:
                 await client.get_channel(channel).set_permissions(message.author, overwrite=None)
 
-        perms = client.get_channel(ModVacationChannels[0]).overwrites_for(message.author)
+        perms = client.get_channel(GlobalVars.config["channels"]["mod_vacation_channels"][0]).overwrites_for(message.author)
         readMessages = perms.read_messages
         sendMessages = perms.send_messages
         if sendMessages == False and readMessages == False and "mod team" in str(message.author.roles).lower():
             perms.send_messages = True
             perms.read_messages = True
             perms.view_channel = True
-            for channel in ModVacationChannels:
+            for channel in GlobalVars.config["channels"]["mod_vacation_channels"]:
                 await client.get_channel(channel).set_permissions(message.author, overwrite=None)
         role = discord.utils.get(author.guild.roles,name="Staff Vacation")
         await message.author.remove_roles(role)
@@ -41,10 +41,10 @@ async def staffVacation(message):
             #perms.send_messages = True
             #perms.read_messages = True
             #perms.view_channel = True
-            for channel in LKVacationChannels:
+            for channel in GlobalVars.config["channels"]["staff_vacation_channels"]:
                 await client.get_channel(channel).set_permissions(message.author, overwrite=perms)
 
-        perms = client.get_channel(ModVacationChannels[0]).category.overwrites_for(message.author)
+        perms = client.get_channel(GlobalVars.config["channels"]["mod_vacation_channels"][0]).category.overwrites_for(message.author)
         readMessages = perms.read_messages
         sendMessages = perms.send_messages
 
@@ -52,7 +52,7 @@ async def staffVacation(message):
             perms.send_messages = False
             perms.read_messages = False
             perms.view_channel = False
-            for channel in ModVacationChannels:
+            for channel in GlobalVars.config["channels"]["mod_vacation_channels"]:
                 await client.get_channel(channel).set_permissions(message.author, overwrite=perms)
 
 
@@ -367,30 +367,30 @@ async def manualDezPoolReset(message):
         if userStillOnServer == 1:
            #Base values
             if "+3" in str(roles).lower():
-                dezziePool = weeklyDezziePoolP3
+                dezziePool = GlobalVars.config["economy"]["weeklydezziepoolplus3"]
             elif "+2" in str(roles).lower():
-                dezziePool = weeklyDezziePoolP2
+                dezziePool = GlobalVars.config["economy"]["weeklydezziepoolplus2"]
             elif "+1" in str(roles).lower():
-                dezziePool = weeklyDezziePoolP1
+                dezziePool = GlobalVars.config["economy"]["weeklydezziepoolplus1"]
             else:
-                dezziePool = weeklyDezziePoolVerified
+                dezziePool = GlobalVars.config["economy"]["weeklydezziepoolverified"]
             #Bonus
             if "licensed fucksmith" in str(roles).lower():
-                dezziePool += weeklyDezzieBonusFucksmith
+                dezziePool += GlobalVars.config["economy"]["weeklydezziebonusfucksmith"]
             if "server booster" in str(roles).lower():
-                dezziePool += weeklyDezzieBonusBoost
+                dezziePool += GlobalVars.config["economy"]["weeklydezziebonusboost"]
             if "server veteran" in str(roles).lower():
-                dezziePool += weeklyDezzieBonusVeteran
+                dezziePool += GlobalVars.config["economy"]["weeklydezziebonusveteran"]
             if "staff" in str(roles).lower() or "mod team" in str(roles).lower() or "admin" in str(roles).lower():
-                dezziePool += weeklyDezzieBonusStaff
+                dezziePool += GlobalVars.config["economy"]["weeklydezziebonusstaff"]
             if "patron tier 1" in str(roles).lower():
-                dezziePool += weeklyDezzieBonusPatronT1
+                dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront1"]
             if "patron tier 2" in str(roles).lower():
-                dezziePool += weeklyDezzieBonusPatronT2
+                dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront2"]
             if "patron tier 3" in str(roles).lower():
-                dezziePool += weeklyDezzieBonusPatronT3
+                dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront3"]
             if "cult of the mistress" in str(roles).lower():
-                dezziePool += weeklyDezzieBonusPatronT4
+                dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront4"]
 
         try:
             economydata[i+3][0] = dezziePool

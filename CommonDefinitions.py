@@ -44,7 +44,7 @@ from pyasn1_modules.rfc5208 import PrivateKeyInfo
 from random import sample
 
 import gspread
-
+import GlobalVars
 import botTokens
 
 intents = discord.Intents().all()
@@ -194,37 +194,9 @@ selopts = []
 
 column = ["F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","AA","AB"]
 
-#This defines the art forum channel for the cuffs emote
-artClaimForumID = 1050252064455925790
 
-#These variables define which channels are toggled with %vacation
-LKVacationChannels = [912559434969022534, 996826636358000780, 1058951770870657166, 1008283892177965106]
-ModVacationChannels = [829477815782866956]
 
 #----------------EconomyValues----------------
-
-reactdz = 20
-reactCashMoney = 100
-reactMakeItRain = 200
-
-rpReactModifier = 1.25
-
-weeklyDezziePoolVerified = 500
-weeklyDezziePoolP1 = 650
-weeklyDezziePoolP2 = 800
-weeklyDezziePoolP3 = 1000
-
-weeklyDezzieBonusFucksmith = 500
-weeklyDezzieBonusBoost = 100
-weeklyDezzieBonusVeteran = 100
-weeklyDezzieBonusStaff = 500
-
-weeklyDezzieBonusPatronT1 = 100
-weeklyDezzieBonusPatronT2 = 100
-weeklyDezzieBonusPatronT3 = 100
-weeklyDezzieBonusPatronT4 = 100
-
-sellpricemultiplier = 0.5 #Use this to change how much things are sold for, relative to their purchase price
 
 global bidstock
 global bidders

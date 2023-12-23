@@ -130,30 +130,30 @@ async def on_ready():
             if userStillOnServer == 1:
                 #Base values
                 if "+3" in str(roles).lower():
-                    dezziePool = weeklyDezziePoolP3
+                    dezziePool = GlobalVars.config["economy"]["weeklydezziepoolplus3"]
                 elif "+2" in str(roles).lower():
-                    dezziePool = weeklyDezziePoolP2
+                    dezziePool = GlobalVars.config["economy"]["weeklydezziepoolplus2"]
                 elif "+1" in str(roles).lower():
-                    dezziePool = weeklyDezziePoolP1
+                    dezziePool = GlobalVars.config["economy"]["weeklydezziepoolplus1"]
                 else:
-                    dezziePool = weeklyDezziePoolVerified
+                    dezziePool = GlobalVars.config["economy"]["weeklydezziepoolverified"]
                 #Bonus
                 if "licensed fucksmith" in str(roles).lower():
-                    dezziePool += weeklyDezzieBonusFucksmith
+                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonusfucksmith"]
                 if "server booster" in str(roles).lower():
-                    dezziePool += weeklyDezzieBonusBoost
+                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonusboost"]
                 if "server veteran" in str(roles).lower():
-                    dezziePool += weeklyDezzieBonusVeteran
-                if "lore team" in str(roles).lower() or "mod team" in str(roles).lower() or "admin" in str(roles).lower():
-                    dezziePool += weeklyDezzieBonusStaff
+                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonusveteran"]
+                if "staff" in str(roles).lower():
+                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonusstaff"]
                 if "patron tier 1" in str(roles).lower():
-                    dezziePool += weeklyDezzieBonusPatronT1
+                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront1"]
                 if "patron tier 2" in str(roles).lower():
-                    dezziePool += weeklyDezzieBonusPatronT2
+                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront2"]
                 if "patron tier 3" in str(roles).lower():
-                    dezziePool += weeklyDezzieBonusPatronT3
+                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront3"]
                 if "cult of the mistress" in str(roles).lower():
-                    dezziePool += weeklyDezzieBonusPatronT4
+                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront4"]
 
             try:
                 economydata[i+3][0] = dezziePool
@@ -848,7 +848,7 @@ async def on_message(message):
 
                 await vermemb.remove_roles(role)
 
-            #Kink Functions
+            #-------------------------Kink Functions--------------------------------
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "kinklist"):
                 await KinklistCommands.kinklist(message, message.channel, "Command")
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "kinkedit"):
@@ -867,8 +867,9 @@ async def on_message(message):
                 await KinklistCommands.kinkfill(message)
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "randloot") and "staff" in str(message.author.roles).lower():
                 await KinklistCommands.randloot(message)
-            #Start
+            #-----------------------------------------------------------------------
 
+            #Start
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "start"):
 
                 welcdesc = "This guide was created to streamline the process of joining the general roleplay in the server.\n\n**Role Selection:** The first thing you should do is head up to " + str(client.get_channel(880605891366375435).mention) + ", where you can choose roles based on what you're interested in and how you define yourself. To see the roleplay channels, you'll need the RP-Intro (<:gem:944690539553513492>) role.\n\nAfter that, you'll need to go to " + str(client.get_channel(1081779600494972958).mention) + ". This contains an overview of the lore of the setting, as well as the rules for roleplaying within it. Once you've read through that, click the sigil ( <:Sigil:1055572608512442479> ) to accept the rules. This will allow to to access the public roleplay channels.\n\n**Generating Stats:** Now that you can access the " + str(client.get_channel(828412055228514325).mention) + " channel, you can create a character to play as. We allow characters up to level 14, though we recommend being between 4 and 10 due to balance on certain things. You can use any method to roll stats that you would like, as long as it is within reason. If you want to roll (4D6, dropping the lowest is the usual way), you can use the " + str(client.get_channel(903415692693475348).mention) + " thread. We use Avrae on the server for dice rolls, and we have the prefix for it set to: &. This means that to roll 4d6 dropping the lowest, you would do: `&r 4d6kh3`. Avrae also has `&randchar`, which will generate all 6 stats for you in this method. Sheets are only really used for certain things like raids (combat events in the dungeon), so it is possible to not use stats at all.\n\n**Character Creation:** To create your character, provide some information about them, starting with their name. There is a template pinned in " + str(client.get_channel(828412055228514325).mention) + ", which includes all the possible bits of information you can use, though you don't need to use all of these. You can also include an image here to show everyone what your character looks like.\n\n**Tuppers:** Most people in the dungeon roleplay using tuppers - aliases which replace your message with those of your character's. To set one up, head to: " + str(client.get_channel(903416425706831902).mention) + " and use the `?register` command. This has the following format: `?register name [text]`, where name is the name of your character as you want it to appear (in quotes if you have a space) and the brackets around the word 'text' can be anything, on either side of the word, and is how you trigger the bot to replace your message. For example, one of the brackets I use is £text, which replaces any of my messages which start with a £ symbol. If it's a character I use less often, I will use their name and a colon. You should include your image in this command as well, or add it to the tupper later using `?avatar name` and adding the link or attaching the image.\n\n**Arranging role-play:** Use the " + str(client.get_channel(832435243117445131).mention) + " channel to arrange scenes with people, or simply drop your character into one of the common rooms and someone will likely join you.\n\nHave fun!"
@@ -2541,7 +2542,7 @@ async def on_message(message):
 
                 await waitmess.delete()
 
-            #The Economy
+            #-------------------------------------The Economy---------------------------------------
 
             #Buy Item
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "buy") or message.content.lower().startswith("$buy"):
@@ -3855,7 +3856,8 @@ async def on_message(message):
                 spelllist = "Runar has the following spellscrolls available right now:\n\n" + "\n".join(spellsin) + "\n\nCustom scribed scrolls can also be requested, at the following prices:\n\nCantrips: 24 " + dezzieemj + ", 1 day to make\n1st Levels: 423" + dezzieemj + ", 1 day to make\n2nd Levels: 445" + dezzieemj + ", 3 days to make\n3rd Levels: 1350" + dezzieemj + ", 1 week to make\n4th Levels: 1550" + dezzieemj + ", 2 weeks to make\n5th Levels: 1800"  + dezzieemj + ", 4 weeks to make\n6th Levels: 6100" + dezzieemj + ", 8 weeks to make\n7th Levels: 7100" + dezzieemj + ", 16 weeks to make."
 
                 await message.channel.send(embed = discord.Embed(title = "Spells", description = spelllist, colour = embcol))
-
+            
+            #---------------------------------------------------------------------------------------
             #Lorekeeper Ping
             elif (message.channel.category.name == "﴿───﴾ 𝚃𝚑𝚎 𝙼𝚊𝚛𝚔𝚎𝚝 ﴿───﴾" or message.channel.category.name == "﴿──﴾ 𝙳𝚊𝚗𝚐𝚎𝚛𝚘𝚞𝚜 𝙳𝚎𝚙𝚝𝚑𝚜 ﴿──﴾") and message.channel.type == discord.ChannelType.text:
 
@@ -4623,7 +4625,7 @@ async def on_raw_reaction_add(reaction):
 
         #Check whether we are in the art claiming forum, or somewhere else in the server
         if chan.type == discord.ChannelType.public_thread:
-            if chan.parent.id != artClaimForumID:
+            if chan.parent.id != GlobalVars.config["channels"]["art_claim_forum_id"]:
                 insideArtForumThread = False
         else:
             insideArtForumThread = False
@@ -4638,7 +4640,7 @@ async def on_raw_reaction_add(reaction):
         else:
             emb = discord.Embed(title = reaction.member.name + " has claimed this artwork to make a character from.", colour = embcol)
             emb.set_thumbnail(url = mess.attachments[0])
-            artForumChannel = client.get_channel(artClaimForumID)
+            artForumChannel = client.get_channel(GlobalVars.config["channels"]["art_claim_forum_id"])
             user = await client.fetch_user(int(reaction.member.id))
             if mess.channel.type == discord.ChannelType.public_thread:
                 channelName = mess.channel.parent.name
