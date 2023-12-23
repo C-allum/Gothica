@@ -2712,7 +2712,7 @@ async def on_message(message):
                     workreward = random.randint(20,250)
                     try:
 
-                        if str(message.author) in str(economydata[b][0]):
+                        if str(message.author.name) in str(economydata[b][0]):
                             try:
                                 workdiff = int(datetime.timestamp(datetime.now())) - int(economydata[b+1][1])
                             except IndexError:
