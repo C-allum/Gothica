@@ -396,9 +396,9 @@ async def on_message(message):
             #------------------------------------------------------------------------
 
             #------------------------ Debug commands --------------------------------
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "copysheet") and not isbot and liveVersion == 0:
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "copysheet") and not isbot and GlobalVars.config["general"]["administrative_role"] in str(message.author.roles).lower():
                 await MiscellaneuosCommands.copySheet(message)
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "removezerodiscrim") and not isbot and liveVersion == 0:
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "removezerodiscrim") and not isbot and GlobalVars.config["general"]["administrative_role"] in str(message.author.roles).lower():
                 await MiscellaneuosCommands.removeZeroDiscriminators(message)
             #------------------------------------------------------------------------
 
