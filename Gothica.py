@@ -2313,7 +2313,7 @@ async def on_message(message):
 
                     r = 4 * n
 
-                    if str(message.author) in econdata[r][0]:
+                    if str(message.author.name) in econdata[r][0]:
 
                         if len(econdata[r+2]) > 0 and not econdata[r+2][0] == "":
 
@@ -2859,7 +2859,7 @@ async def on_message(message):
 
                     slutfine = random.randint(math.floor((int(economydata[b][1]))/100),math.floor((int(economydata[b][1]))/20))
 
-                    if str(message.author) in str(economydata[b][0]):
+                    if str(message.author.name) in str(economydata[b][0]):
 
                         try:
 
@@ -3028,7 +3028,7 @@ async def on_message(message):
 
                 for c in range(10):
 
-                    if str(message.author) == balances[c][0]:
+                    if str(message.author.name) == balances[c][0]:
 
                         balances[c][0] = "**" + balances[c][0] + "**"
 
@@ -3040,7 +3040,7 @@ async def on_message(message):
 
                     for d in range(len(balances)):
 
-                        if str(message.author) == balances[d][0]:
+                        if str(message.author.name) == balances[d][0]:
 
                             userbalpos = d
 
@@ -3094,7 +3094,7 @@ async def on_message(message):
 
                         b = a * 4 + 5
 
-                        if str(message.author) in str(economydata[b][0]):
+                        if str(message.author.name) in str(economydata[b][0]):
 
                             giverrow = b + 1
 
@@ -4335,7 +4335,7 @@ async def on_message(message):
 
                                 randaward = (math.floor(charcount/100) + random.randint(1,4))
 
-                                if str(message.author) in str(economydata[b][0]):
+                                if str(message.author.name) in str(economydata[b][0]):
 
                                     row = b + 1
 
@@ -4379,8 +4379,8 @@ async def on_message(message):
 
                         newtot = 0
 
-                        print(str(message.author) + " has been added to the economy at " + str(datetime.now()))
-                        player_list.append(str(message.author))
+                        print(str(message.author.name) + " has been added to the economy at " + str(datetime.now()))
+                        player_list.append(str(message.author.name))
                         if (int(len(economydata) - 1) / 4).is_integer():
                             row = len(economydata) + 1
 
@@ -4399,7 +4399,7 @@ async def on_message(message):
                         except ValueError:
                             prevtime = 0
 
-                        dataup = [str(message.author), str(newtot)]
+                        dataup = [str(message.author.name), str(newtot)]
 
                         if int(str(datetime.timestamp(datetime.now())).split(".")[0]) - int(prevtime) >= 300 and row != 0:
 

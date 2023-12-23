@@ -254,7 +254,7 @@ async def buyitem(message):
 
             r = 4 * n 
 
-            if str(message.author) in userinvs[r][0]:
+            if str(message.author.name) in userinvs[r][0]:
 
                 #Check Balance!
 
@@ -345,7 +345,7 @@ async def sellitem(message):
     userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ8000", majorDimension = 'ROWS').execute().get("values")
     for a in range(math.ceil(len(userinvs)/4)):
         b = 4 * a 
-        if str(message.author) in userinvs[b][0]:
+        if str(message.author.name) in userinvs[b][0]:
             rowindex = b
             break
     matchingItems = []
