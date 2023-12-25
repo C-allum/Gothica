@@ -111,18 +111,24 @@ async def on_ready():
 
             #Get Roles of the member. Attribute Error if they are not in the specified Guild (server)
             try:
-                if len(name.split('#')[1]) == 4:
+                if not "#" in name:
+                    roles = client.get_guild(828411760365142076).get_member_named(name).roles
+                elif len(name.split('#')[1]) == 4:
                     roles = client.get_guild(828411760365142076).get_member_named(name).roles
                 else:
                     roles = client.get_guild(828411760365142076).get_member_named(name.split('#')[0]).roles
             except AttributeError:
                 try:
-                    if len(name.split('#')[1]) == 4:
+                    if not "#" in name:
+                        roles = client.get_guild(828411760365142076).get_member_named(name).roles
+                    elif len(name.split('#')[1]) == 4:
                         roles = client.get_guild(847968618167795782).get_member_named(name).roles
                     else:
                         roles = client.get_guild(847968618167795782).get_member_named(name.split('#')[0]).roles
                 except AttributeError:
                     userStillOnServer = 0
+
+                
 
             dezziePool = 0
 
