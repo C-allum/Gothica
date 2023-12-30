@@ -2117,20 +2117,20 @@ async def on_message(message):
             #Bid Command
             elif (message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "bid")):
                 economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='COLUMNS').execute().get("values")
-
+                debugvar = message.content.lower().split(" ")
                 if isbot:
                     await message.delete()
 
-                elif "setup" in message.content.lower() and "staff" in str(message.author.roles).lower():
-                    for a in range(len(message.content.split(" ", 1)[1].split("|"))):
-                        bidstock.append(message.content.split(" ", 1)[1].split("|")[a])
+                elif "setup" == message.content.lower().split(" ")[1] and "staff" in str(message.author.roles).lower():
+                    for a in range(len(message.content.split(" ")[2].split("|"))):
+                        bidstock.append(message.content.split(" ")[2].split("|")[a])
                         bidprice.append(0)
                         bidders.append("")
                     global bidthread
                     bidthreadseed = await message.channel.send(embed = discord.Embed(title = "Bidding is open!", description = "This weekend's ~~slaves~~ *wares* are:\n" + "\n".join(bidstock), colour = embcol))
                     bidthread = await bidthreadseed.create_thread(name = "Bids")
 
-                elif "results" in message.content.lower():
+                elif "results" == message.content.lower().split(" ")[1]:
                     bidsummary = []
                     auctiontot = 0
                     for c in range(len(bidstock)):
@@ -2141,7 +2141,7 @@ async def on_message(message):
                             bidsummary.append(bidstock[c] + ": No bids yet")
                     await message.channel.send(embed = discord.Embed(title = "Current bids for this weekend's auctions", description = "\n".join(bidsummary) + "\n\nIn total, " + str(auctiontot) + " is being spent at this auction.",  colour = embcol))
 
-                elif "end" in message.content.lower() and "staff" in str(message.author.roles).lower():
+                elif "end" == message.content.lower().split(" ")[1] and "staff" in str(message.author.roles).lower():
                     bidtotal = sum(bidprice)
                     bidsfinal = []
                     bidwinners = []
@@ -2174,9 +2174,9 @@ async def on_message(message):
                     sheet.values().update(spreadsheetId = EconSheet, range = str("B1:B" + str(max(indexes)+1)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[balances])).execute()
                     await message.channel.send(embed = discord.Embed(title = "Bidding concluded", description = "The following dezzies have been removed:\n\n" + "\n".join(bidstatement), colour = embcol))
 
-                elif "reset" in message.content.lower() and "staff" in str(message.author.roles).lower():
+                elif "reset" == message.content.lower().split(" ")[1] and "staff" in str(message.author.roles).lower():
                     if len(message.content.split(" ")) > 2:
-                        bidtarget = " ".join(message.content.split(" ")[1:])
+                        bidtarget = " ".join(message.content.split(" ")[2:])
                         try:
                             if bidtarget.lower() in str(bidstock).lower():
                                 for b in range(len(bidstock)):
@@ -2197,8 +2197,8 @@ async def on_message(message):
                     else:
                         await message.channel.send(embed = discord.Embed(title = "You didn't format that correctly.", description = "It needs to be `%bid reset slavename`.", colour = embcol))
                 
-                elif "set" in message.content.lower() and "staff" in str(message.author.roles).lower():
-                    bidsections = message.content.split(" ", 1)[1].split("|")
+                elif "set" == message.content.lower().split(" ")[1] and "staff" in str(message.author.roles).lower():
+                    bidsections = message.content.split(" ", 1)[2].split("|")
                     try:
                         if bidsections[0].lower() in str(bidstock).lower():
                             for b in range(len(bidstock)):
@@ -2219,7 +2219,7 @@ async def on_message(message):
                     except ValueError:
                         await message.channel.send(embed = discord.Embed(title = "The price you bid needs to be an integer  ", description = "", colour = embcol))
 
-                elif "thread" in message.content.lower() and "staff" in str(message.author.roles).lower():
+                elif "thread" == message.content.lower().split(" ")[1] and "staff" in str(message.author.roles).lower():
                     bidthread = message.channel
                     await message.channel.send("Bidding Thread Set")
 
