@@ -425,7 +425,7 @@ async def on_message(message):
 
                 auth = message.author.name
 
-                pnames = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B1000").execute().get("values")
+                pnames = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B4000").execute().get("values")
 
                 msgspl = message.content.split(" ")
 
@@ -434,9 +434,9 @@ async def on_message(message):
                 foot = None
                 imgurl = None
 
-                pchars = sheet.values().get(spreadsheetId = CharSheet, range = "F1:F1000").execute().get("values")
-                pstat = sheet.values().get(spreadsheetId = CharSheet, range = "X1:X1000").execute().get("values")
-                ppron = sheet.values().get(spreadsheetId = CharSheet, range = "I1:I1000").execute().get("values")
+                pchars = sheet.values().get(spreadsheetId = CharSheet, range = "F1:F4000").execute().get("values")
+                pstat = sheet.values().get(spreadsheetId = CharSheet, range = "X1:X4000").execute().get("values")
+                ppron = sheet.values().get(spreadsheetId = CharSheet, range = "I1:I4000").execute().get("values")
 
                 indexes = []
 
