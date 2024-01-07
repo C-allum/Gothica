@@ -4783,5 +4783,12 @@ async def on_raw_reaction_remove(reaction):
 #     await client.get_channel(logchannel).send(message.author.name + "'s message was deleted in " + str(message.channel) + ". The message was:\n\n" + message.content.replace("@", "\@") + "\n\nThis message was deleted at " + str(datetime.now()))
 
 token = botTokens.gettoken(liveVersion)
-client.run(token, reconnect=True)
+errorVar = 1
+while errorVar == 1:
+    try:
+        errorVar = 0
+        client.run(token, reconnect=True)
+    except KeyError:
+        errorVar = 1
+
 
