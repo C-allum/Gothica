@@ -4789,6 +4789,7 @@ while errorVar == 1:
         errorVar = 0
         client.run(token, reconnect=True)
     except KeyError:
+        print("Gothy crashed with a KeyError, probably from someone posting a GIF sticker again...")
         errorVar = 1
 
 
