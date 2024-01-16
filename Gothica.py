@@ -4067,6 +4067,9 @@ async def on_message(message):
                 await session.close()
                 await hook.delete()
 
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"] + "export")):
+                await MiscellaneuosCommands.export(message)
+
             #Impersonator React
             elif "gothica" in message.content.lower().replace("-","").replace(".","") or "thic goth" in message.content.lower().replace("-","").replace(".","").replace("cc","c") or "gothy" in message.content.lower().replace("-","").replace(".",""):
                 if message.author.name != "c_allum":

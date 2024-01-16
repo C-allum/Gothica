@@ -57,7 +57,7 @@ print(" Initialised {0.user} at ".format(client) + str(datetime.now()).split("."
 
 SERVICE_ACCOUNT_FILE = "keys.json"
 
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/documents"]
 
 creds = None
 creds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)

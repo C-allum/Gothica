@@ -2,6 +2,9 @@ from CommonDefinitions import *
 import random
 import CommonDefinitions
 from TransactionsDatabaseInterface import updatePerson, printTransactions
+from discord import Webhook
+from discord import SyncWebhook
+import aiohttp
 
 async def staffVacation(message):
     #Toggle Lorekeeper chat Permissions
@@ -575,3 +578,120 @@ async def getPlayerNameList():
         b = a * 4 + 5
         playerList.append(economydata[b][0])
     return playerList
+
+async def export(message):
+
+    if message.author.bot:
+        return
+
+    dest = message.content.split(" ")[1]
+    processing = await message.channel.send(embed = discord.Embed(title="Processing", description= "This may take some time, depending on the length of the channel.", colour=embcol))
+
+    try:
+        int(dest)
+        dest = "<#" + str(dest) + ">"
+    except ValueError:
+        pass
+
+    if "doc" in dest.lower() or "sheet" in dest.lower():
+        desttype = "Spreadsheet"
+        try:
+            if "docs.google.com/spreadsheets" in dest.lower():
+                dest = gc.open_by_url(dest)
+            elif "staff" in str(message.author.roles).lower() and "@" in message.content.split(" ")[2]:
+                dest = gc.create(message.channel.name)
+                recip = message.content.split(" ")[2]
+            else:
+                await message.channel.send(embed = discord.Embed(title = "You need to provide the link to an editable document.", description= "", colour = embcol))
+                return
+        except IndexError:
+            await message.channel.send(embed = discord.Embed(title = "You need to provide an email address to add to the spreadsheet.", description= "The API doesn't support setting it to public, so we need to share the sheet with you via email.", colour = embcol))
+            return
+        
+    elif dest.lower().startswith("https://discord.com/channels") or dest.startswith("<#"):
+
+        dest = client.get_channel(int(str(message.content.split(" ")[1].split("/")[-1]).rstrip(">").lstrip("<#")))
+
+        if "thread" in str(dest.type) and ("staff" in str(message.author.roles).lower() or str(dest.owner) == str(message.author)):
+            desttype = "Thread"
+            hook = await dest.parent.create_webhook(name= "Exporthook")
+        elif "staff" in str(message.author.roles).lower():
+            desttype = "Channel"
+            hook = await dest.create_webhook(name= "Exporthook")
+        else:
+            await message.channel.send(embed = discord.Embed(title = "You cannot write to that thread.", description= "Only Staff members can write to threads that they did not create", colour= embcol))
+            return
+        
+    elif dest.lower() == "file":
+        dest = "File"
+        desttype = "File"
+
+    else:
+        await message.channel.send(embed = discord.Embed(title = "Output format not recognised.", description = "Options to output to are:\n\nGoogle Sheet; providing a link to an editable spreadsheet.\n\nDiscord Threads; providing the link, #-link or ID of the thread to write to. Unless you are staff, this must be a thread you have created.\n\nA text file, in which case you would use `%export file`.", colour = embcol))
+        return
+
+    await message.delete()
+
+    mess = [joinedMessages async for joinedMessages in message.channel.history(limit = None, oldest_first= True)]
+    mess.sort(key=lambda x: x.created_at)
+
+    sheetarray = [["Author", "Content", "Avatar Link", "Timestamp", "Character Count", "Wordcount"]]
+    textarray = []
+    charcount = []
+    wordcount = []
+
+    if desttype == "Spreadsheet" or desttype == "File":
+        for a in range(len(mess)):
+
+            if mess[a] == message or mess[a] == processing:
+                break
+
+            if len(mess[a].content) != 0:
+                #Sheet Layout:
+                sheetarray.append([str(mess[a].author).split("#")[0], str(mess[a].content), str(mess[a].author.avatar), str(mess[a].created_at).split(".")[0], str(len(mess[a].content)), str(len(mess[a].content.split(" ")))])
+                #Text file Layout:
+                textarray.append(str(mess[a].author).split("#")[0] + ": " + str(mess[a].content))
+            else:
+                if mess[a].embeds != 0:
+                    #Sheet Layout:
+                    sheetarray.append([str(mess[a].author).split("#")[0], (str(mess[a].embeds[0].title) + "\n\n" + str(mess[a].embeds[0].description)), str(mess[a].author.avatar), str(mess[a].created_at).split(".")[0], str(len(mess[a].content)), str(len(mess[a].content.split(" ")))])
+                    #Text file Layout:
+                    textarray.append(str(mess[a].author).split("#")[0] + ": " + (str(mess[a].embeds[0].title) + "\n\n" + str(mess[a].embeds[0].description)))
+            charcount.append(len(mess[a].content))
+            wordcount.append(len(mess[a].content.split(" ")))
+
+        if desttype == "Spreadsheet":
+            sheetarray.append(["Total", "", "", str(mess[-3].created_at-mess[0].created_at).split(".")[0], sum(charcount), sum(wordcount)])
+            sheetarray.append(["Average", "", "", "", sum(charcount)/(len(mess)), sum(wordcount)/(len(mess))])
+            ws = dest.get_worksheet(0)
+            ws.update("A1:F" + str(len(mess)+3), sheetarray)
+            await message.channel.send(embed = discord.Embed(title = "Channel written to Spreadsheet.", description = "The contents of this channel have been cloned to a spreadsheet, available at:\n\nhttps://docs.google.com/spreadsheets/d/" + str(dest.id), colour = embcol))
+            dest.share(recip, perm_type = "user", role = "writer")
+        else:
+            filename = str(message.channel) + ".txt"
+            with open(filename, "w") as f:
+                f.write("\n\n".join(textarray))
+            f.close()
+            await message.channel.send("We have attached a text log of this channel.", file = discord.File(r"" + filename))
+            os.remove(filename)
+
+    else:
+        lock = asyncio.Lock()
+        async with aiohttp.ClientSession() as session:
+            whook = SyncWebhook.from_url(hook.url)
+
+            for b in range(len(mess)):
+                if mess[b] == message or mess[b] == processing:
+                    break
+                else:
+                    try:
+                        whook.send(mess[b].content, username = mess[b].author.name, avatar_url = mess[b].author.avatar, thread = dest)
+                    except discord.errors.HTTPException:
+                        pass
+                    if mess[b].attachments:
+                        for c in range(len(mess[b].attachments)):
+                            whook.send(mess[b].attachments[c].url, username = mess[b].author.name, avatar_url = mess[b].author.avatar, thread = dest)
+                    if mess[b].embeds:
+                        whook.send(embed= mess[b].embeds[0], username = mess[b].author.name, avatar_url = mess[b].author.avatar, thread = dest)
+        await hook.delete()
+    await processing.delete()
