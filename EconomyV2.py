@@ -1,4 +1,5 @@
 from CommonDefinitions import *
+import GlobalVars
 
 async def shop(message):
 
@@ -162,3 +163,81 @@ async def item(message):
 
     itememb = discord.Embed(title = itemnames[i], description = Maininfo, colour = embcol)
     await message.channel.send(embed = itememb)
+
+async def inventory(message):
+    pass
+
+async def buyitem(message):
+    pass
+
+async def sellitem(message):
+    pass
+
+async def giveitem(message):
+    pass
+
+async def additem(message):
+    pass
+
+async def giftAll(message):
+    pass
+
+async def shopDisplay(message):
+    pass
+
+async def dezReact(reaction):
+    pass
+
+async def rpDezReact(reaction):
+    pass
+    #-------------------------------Helper Functions-----------------------------------
+
+    #Updates the economy sheet - Needs to be called on startup or on manual changes to the sheet
+    async def loadEconomySheet():
+        GlobalVars.economyData = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
+        return
+    #Writes to the economy sheet. Optional argument "range" used for instances where we only want to write a few or a single cell of the sheet instead of all cells.
+    async def writeEconSheet(values, range = "A1:ZZ8000"):
+        #in case we write a single value
+        if not (":" in range):
+            values = [[values]]
+
+        sheet.values().update(spreadsheetId = EconSheet, range = range, valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values= values)).execute()
+
+
+    #Loads the current Inventory Sheet state. This is not kept internally, so we need to call this every time we work on the sheet.
+    async def loadInventorySheet():
+        return sheet.values().get(spreadsheetId = inventorysheet, range = "Inventories!A1:ZZ8000", majorDimension = 'ROWS').execute().get("values")
+    
+    #Writes values to the Inventory sheet. Optional argument "range" used for instances where we only want to write a few or a single cell of the sheet instead of all cells.
+    async def writeInvetorySheet(values, range = "A1:ZZ8000"):
+        #in case we write a single value
+        if not (":" in range):
+            values = [[values]]
+
+        sheet.values().update(spreadsheetId = EconSheet, range = "Inventories!" + range, valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values= values)).execute()
+
+async def getUserNamestr(message):
+    if "@" in message.content:
+        try:
+            targid = int(str(message.content.split("@")[1]).split(" ")[0].replace("!","").replace("&","").replace(">",""))
+        except ValueError:
+            await message.channel.send(embed = discord.Embed(title = "Error!", description = "Make sure that the user you tagged is valid."))
+            return
+        targname = await client.fetch_user(targid)
+    else:
+
+        targname = message.author
+
+    namestr = str(targname.name)
+
+    return namestr, targid
+
+async def getColumnLetter(columnindex):
+    collet = ""
+    if columnindex > 25:
+        collet = chr(64 + math.floor(columnindex / 26))
+    else:
+        collet = ""                        
+    collet += chr(65 + (int(columnindex % 26)))
+    return collet

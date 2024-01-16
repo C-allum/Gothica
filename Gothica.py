@@ -27,9 +27,7 @@ async def on_ready():
     startmessage = await client.get_channel(logchannel).send('Logged in as {0.user} at '.format(client) + str(datetime.now()).split(".")[0])
 
     print("Loading config...")
-    print(GlobalVars.config)
     await ConfigCommands.reload_config()
-    print(GlobalVars.config)
     print("Done.")
 
     server = startmessage.guild
@@ -54,6 +52,10 @@ async def on_ready():
         for a in range(len(itemlists)):
             itemdatabase.append(itemlists[a].get_all_values())
         print("... done\n")
+        
+    print("Loading economy data...")
+    await EconomyV2.loadEconomySheet()
+    print("Done.")
 
     print("Fetching a list of all players...")
     global player_list 
@@ -4783,6 +4785,7 @@ async def on_raw_reaction_remove(reaction):
 #     await client.get_channel(logchannel).send(message.author.name + "'s message was deleted in " + str(message.channel) + ". The message was:\n\n" + message.content.replace("@", "\@") + "\n\nThis message was deleted at " + str(datetime.now()))
 
 token = botTokens.gettoken(liveVersion)
+#So... Discord can't handle stickers that are animated but not a gif... And throws a Key error. We restart the Gothy client if that happens...
 errorVar = 1
 while errorVar == 1:
     try:

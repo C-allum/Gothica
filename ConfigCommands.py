@@ -33,8 +33,6 @@ async def print_config_raw(message):
     except yaml.error.YAMLError:
         print(f"Error parsing yaml in config file: {config_file_path}")
 
-
-
 async def edit_config(message):
     await message.channel.send("Previous file:")
     await print_config(message)
@@ -93,8 +91,6 @@ async def edit_config(message):
     await message.channel.send("Reloading Config...")
     await reload_config()
     await message.channel.send("Reload completed.")
-
-
 
 async def reload_config():
     with open('config.yaml', 'r') as config_file:
