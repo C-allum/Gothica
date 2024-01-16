@@ -425,7 +425,7 @@ async def on_message(message):
 
                 auth = message.author.name
 
-                pnames = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B1000").execute().get("values")
+                pnames = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B4000").execute().get("values")
 
                 msgspl = message.content.split(" ")
 
@@ -434,9 +434,9 @@ async def on_message(message):
                 foot = None
                 imgurl = None
 
-                pchars = sheet.values().get(spreadsheetId = CharSheet, range = "F1:F1000").execute().get("values")
-                pstat = sheet.values().get(spreadsheetId = CharSheet, range = "X1:X1000").execute().get("values")
-                ppron = sheet.values().get(spreadsheetId = CharSheet, range = "I1:I1000").execute().get("values")
+                pchars = sheet.values().get(spreadsheetId = CharSheet, range = "F1:F4000").execute().get("values")
+                pstat = sheet.values().get(spreadsheetId = CharSheet, range = "X1:X4000").execute().get("values")
+                ppron = sheet.values().get(spreadsheetId = CharSheet, range = "I1:I4000").execute().get("values")
 
                 indexes = []
 
@@ -2383,7 +2383,7 @@ async def on_message(message):
 
                                             sceneno = int(prevs[a].split("#")[1].split(">")[0])
 
-                                            if (not "remove" in message.content) and (not "notif" in message.content):
+                                            if (not "remove" in message.content.lower()) and (not "notif" in message.content.lower()):
 
                                                 try:
 
@@ -2413,7 +2413,7 @@ async def on_message(message):
 
                                         prevlist.append(str("`" + str(a+1) + "` " + str(prevs[a])))
 
-                                if "remove" in message.content:
+                                if "remove" in message.content.lower():
 
                                     scenetemp = await message.channel.send(embed = discord.Embed(title = "Type the number of the scene to stop tracking", description= "\n".join(prevlist), colour = embcol))
 
@@ -2462,31 +2462,31 @@ async def on_message(message):
 
                                         await message.channel.send("Selection Timed Out")
 
-                                elif "notif" in message.content and "all" in message.content:
+                                elif "notif" in message.content.lower() and "all" in message.content.lower():
                                     for scenenum in range(0, len(prevs)):
                                         try:
                                             trackedStatus = prevs[scenenum].split(" ")[-1]
-                                            if (" off" in message.content or " disable"in message.content) and "Enabled" in trackedStatus:
+                                            if (" off" in message.content.lower() or " disable"in message.content.lower()) and "Enabled" in trackedStatus:
                                                 splitScene = prevs[scenenum].rsplit(" ", 1)
                                                 splitScene [-1]= " Notifications:Disabled"
                                                 prevs[scenenum] = "".join(splitScene)
 
 
-                                            elif (" on" in message.content or " enable" in message.content) and "Disabled" in trackedStatus:
+                                            elif (" on" in message.content.lower() or " enable" in message.content.lower()) and "Disabled" in trackedStatus:
                                                 splitScene = prevs[scenenum].rsplit(" ", 1)
                                                 splitScene [-1]= " Notifications:Enabled"
                                                 prevs[scenenum] = "".join(splitScene)
 
                                             elif not "Enabled" in trackedStatus and not "Disabled" in trackedStatus:
-                                                if " off" in message.content or " disable" in message.content:
+                                                if " off" in message.content.lower() or " disable" in message.content.lower():
                                                     prevs[scenenum] = prevs[scenenum] + (" Notifications:Disabled")
 
-                                                elif " on" in message.content or " enable" in message.content:
+                                                elif " on" in message.content.lower() or " enable" in message.content.lower():
                                                     prevs[scenenum] = prevs[scenenum] + (" Notifications:Enabled")
                                                 else: 
                                                     await message.channel.send(embed = discord.Embed(title = "Wrong use of the command!", description = "Include `on` or `off` at the end of this command to specify how you want all scenes toggled.", colour = embcol))
                                                     return
-                                            elif not " off" in message.content and not " disable" in message.content and not " on" in message.content and not " enable" in message.content:
+                                            elif not " off" in message.content.lower() and not " disable" in message.content.lower() and not " on" in message.content.lower() and not " enable" in message.content.lower():
                                                 await message.channel.send(embed = discord.Embed(title = "Wrong use of the command!", description = "Include `on` or `off` at the end of this command to specify how you want all scenes toggled.", colour = embcol))
                                                 return
 
@@ -4786,5 +4786,13 @@ async def on_raw_reaction_remove(reaction):
 #     await client.get_channel(logchannel).send(message.author.name + "'s message was deleted in " + str(message.channel) + ". The message was:\n\n" + message.content.replace("@", "\@") + "\n\nThis message was deleted at " + str(datetime.now()))
 
 token = botTokens.gettoken(liveVersion)
-client.run(token, reconnect=True)
+errorVar = 1
+while errorVar == 1:
+    try:
+        errorVar = 0
+        client.run(token, reconnect=True)
+    except KeyError:
+        print("Gothy crashed with a KeyError, probably from someone posting a GIF sticker again...")
+        errorVar = 1
+
 
