@@ -175,8 +175,6 @@ sluthooks = sheet.values().get(spreadsheetId = Plotsheet, range = "AP2:AQ100", m
 
 rooms = ["the Unlit Passageways", "the Trapped Corridors", "the Moaning Hallways", "the Salamander Hot Springs", "the Monster Girl Cantina", "the Old Burlesque", "the Library of Carnal Knowledge", "the Cathedral", "the Gobblin' Bazaar", "the Fighting Pits"]
 
-roleplay_categories_id = [917234637359702057, 1058839161735483462, 831894394877509682, 952251327143084092, 853176266077110302, 832433588363853845]
-
 guildvar = client.get_guild(828411760365142076)
 
 dezzieemj = "<:dz:844365871350808606>"
