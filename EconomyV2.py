@@ -190,32 +190,30 @@ async def dezReact(reaction):
 
 async def rpDezReact(reaction):
     pass
-    #-------------------------------Helper Functions-----------------------------------
-
-    #Updates the economy sheet - Needs to be called on startup or on manual changes to the sheet
-    async def loadEconomySheet():
-        GlobalVars.economyData = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
-        return
-    #Writes to the economy sheet. Optional argument "range" used for instances where we only want to write a few or a single cell of the sheet instead of all cells.
-    async def writeEconSheet(values, range = "A1:ZZ8000"):
-        #in case we write a single value
-        if not (":" in range):
-            values = [[values]]
-
-        sheet.values().update(spreadsheetId = EconSheet, range = range, valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values= values)).execute()
 
 
-    #Loads the current Inventory Sheet state. This is not kept internally, so we need to call this every time we work on the sheet.
-    async def loadInventorySheet():
-        return sheet.values().get(spreadsheetId = inventorysheet, range = "Inventories!A1:ZZ8000", majorDimension = 'ROWS').execute().get("values")
-    
-    #Writes values to the Inventory sheet. Optional argument "range" used for instances where we only want to write a few or a single cell of the sheet instead of all cells.
-    async def writeInvetorySheet(values, range = "A1:ZZ8000"):
-        #in case we write a single value
-        if not (":" in range):
-            values = [[values]]
+#-------------------------------Helper Functions-----------------------------------
 
-        sheet.values().update(spreadsheetId = EconSheet, range = "Inventories!" + range, valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values= values)).execute()
+#Updates the economy sheet - Needs to be called on startup or on manual changes to the sheet
+async def loadEconomySheet():
+    GlobalVars.economyData = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
+    return
+#Writes to the economy sheet. Optional argument "range" used for instances where we only want to write a few or a single cell of the sheet instead of all cells.
+async def writeEconSheet(values, range = "A1:ZZ8000"):
+    #in case we write a single value
+    if not (":" in range):
+        values = [[values]]
+    sheet.values().update(spreadsheetId = EconSheet, range = range, valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values= values)).execute()
+#Loads the current Inventory Sheet state. This is not kept internally, so we need to call this every time we work on the sheet.
+async def loadInventorySheet():
+    return sheet.values().get(spreadsheetId = inventorysheet, range = "Inventories!A1:ZZ8000", majorDimension = 'ROWS').execute().get("values")
+
+#Writes values to the Inventory sheet. Optional argument "range" used for instances where we only want to write a few or a single cell of the sheet instead of all cells.
+async def writeInvetorySheet(values, range = "A1:ZZ8000"):
+    #in case we write a single value
+    if not (":" in range):
+        values = [[values]]
+    sheet.values().update(spreadsheetId = EconSheet, range = "Inventories!" + range, valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values= values)).execute()
 
 async def getUserNamestr(message):
     if "@" in message.content:

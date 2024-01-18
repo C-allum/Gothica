@@ -194,7 +194,7 @@ async def on_ready():
 @client.event
 async def on_message(message):
 
-    if startup == True:
+    if startup == True and message.author.bot == False:
         print("Error with the startup sequence. Please restart / Look at the error.")
         return
 
