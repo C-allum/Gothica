@@ -4332,7 +4332,7 @@ async def on_message(message):
                     #Check if memeber is already registered
                     if str(message.author.name) in player_list:
                         #check if we are in a channel that awards dezzies for posts
-                        if message.channel.category_id in roleplay_categories_id:
+                        if message.channel.category_id in GlobalVars.config["channels"]["roleplay_categories_id"]:
                             economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
 
                             #calculate reward amount
@@ -4420,7 +4420,7 @@ async def on_message(message):
                                 TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.MessageReward, int(randaward))
 
                 else:   #Things we want to do if a bot posted the message
-                    if not(client.user == message.author) and not("Avrae" == message.author.name) and message.channel.category_id in roleplay_categories_id and not (message.channel.type == discord.ChannelType.private_thread):
+                    if not(client.user == message.author) and not("Avrae" == message.author.name) and message.channel.category_id in GlobalVars.config["channels"]["roleplay_categories_id"] and not (message.channel.type == discord.ChannelType.private_thread):
                         if(random.randint(1, 500) == 1):
                             await MiscellaneuosCommands.impTomeSpawn(message)
 
