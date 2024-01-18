@@ -687,11 +687,20 @@ async def export(message):
                     try:
                         whook.send(mess[b].content, username = mess[b].author.name, avatar_url = mess[b].author.avatar, thread = dest)
                     except discord.errors.HTTPException:
-                        pass
+                        whook.send(mess[b].content, username = mess[b].author.name, avatar_url = mess[b].author.avatar)
+
                     if mess[b].attachments:
                         for c in range(len(mess[b].attachments)):
-                            whook.send(mess[b].attachments[c].url, username = mess[b].author.name, avatar_url = mess[b].author.avatar, thread = dest)
+                            try:
+                                whook.send(mess[b].attachments[c].url, username = mess[b].author.name, avatar_url = mess[b].author.avatar, thread = dest)
+                            except discord.errors.HTTPException:
+                                whook.send(mess[b].attachments[c].url, username = mess[b].author.name, avatar_url = mess[b].author.avatar)
+                                
                     if mess[b].embeds:
-                        whook.send(embed= mess[b].embeds[0], username = mess[b].author.name, avatar_url = mess[b].author.avatar, thread = dest)
+                        try:
+                            whook.send(embed= mess[b].embeds[0], username = mess[b].author.name, avatar_url = mess[b].author.avatar, thread = dest)
+                        except discord.errors.HTTPException:
+                            whook.send(embed= mess[b].embeds[0], username = mess[b].author.name, avatar_url = mess[b].author.avatar)
+
         await hook.delete()
     await processing.delete()
