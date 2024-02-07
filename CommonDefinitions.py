@@ -104,6 +104,8 @@ if liveVersion: #Set to 1 to use the real spreadsheets, or 0 to use the testing 
 
     indexchannel = 898640028174016552
 
+    datingchannel = 1204593716724244520
+
 
 else:
 
@@ -139,6 +141,8 @@ else:
     communityProjectChannel = 891781900388159528
 
     indexchannel = 1031701327169998958
+
+    datingchannel = 1203838135335653416
 
 
 sheet = service.spreadsheets()
@@ -240,7 +244,6 @@ datingcounts = []
 datingscores = []
 datingwaiting = []
 datingstate = 1
-datingchannel = 1204593716724244520#1203838135335653416
 datingmax = 24
 
 #---------------------------------------------

@@ -707,16 +707,19 @@ async def export(message):
 
 #Dating Game
 async def datingjoin(message):
-    try:
-        if not ((str(message.author) in str(datingplayers)) and  (str(message.content.split(" ", 1)[1]) in str(datingchars))):
-            datingplayers.append(str(message.author))
-            datingchars.append(str(message.content.split(" ", 1)[1]))
-            await datingmatch(message)
-        else:
-            await message.channel.send(embed = discord.Embed(title = "This character is already in the game!", description= "You may start a thread for one of your other characters, or wait for a date to start", colour= embcol))
+    if message.channel.type != "private_thread":
+        await message.channel.send("This is not a private thread.")
+    else:
+        try:
+            if not ((str(message.author) in str(datingplayers)) and  (str(message.content.split(" ", 1)[1]) in str(datingchars))):
+                datingplayers.append(str(message.author))
+                datingchars.append(str(message.content.split(" ", 1)[1]))
+                await datingmatch(message)
+            else:
+                await message.channel.send(embed = discord.Embed(title = "This character is already in the game!", description= "You may start a thread for one of your other characters, or wait for a date to start", colour= embcol))
 
-    except IndexError:
-        await message.channel.send(embed = discord.Embed(title= "You need to enter by typing `%datingjoin` followed by your character's name.", description= "For example:\n\n`%datingjoin Lalontra`", colour = embcol))
+        except IndexError:
+            await message.channel.send(embed = discord.Embed(title= "You need to enter by typing `%datingjoin` followed by your character's name.", description= "For example:\n\n`%datingjoin Lalontra`", colour = embcol))
 
 async def datingrelay(message):
 
@@ -822,7 +825,7 @@ async def datingbackup():
         string += str(datingcounts[a]) + "|"
     string = string.lstrip("|")     
 
-    await client.get_channel(indexchannel).send(embed = discord.Embed(title = "Blind Date Backup " + str(datetime.now()), description= string, colour = embcol))
+    await client.get_channel(logchannel).send(embed = discord.Embed(title = "Blind Date Backup " + str(datetime.now()), description= string, colour = embcol))
 
 async def datingrestore(message):
 
