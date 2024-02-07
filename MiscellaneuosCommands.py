@@ -707,8 +707,10 @@ async def export(message):
 
 #Dating Game
 async def datingjoin(message):
-    if message.channel.type != "private_thread":
+    if not "private_thread" in str(message.channel.type):
         await message.channel.send("This is not a private thread.")
+    elif message.channel in str(datingsources):
+        await message.channel.send("This thread is already in the game. You may make another to use another of your characters.")
     else:
         try:
             if not ((str(message.author) in str(datingplayers)) and  (str(message.content.split(" ", 1)[1]) in str(datingchars))):
@@ -735,14 +737,18 @@ async def datingrelay(message):
         if index % 2 == 0: #Get partner thread
             blindthread = datingsources[index+1]
             datcol = 0xfcb603
+            person = random.choice(["Blind dater number 1", "Person 1", "Dater number 1", "Someone wearing blindfold 1"])
         else:
             blindthread = datingsources[index-1]
             datcol = 0x036bfc
+            person = random.choice(["Blind dater number 2", "Person 2", "Dater number 2", "Someone wearing blindfold 2"])
         index = math.floor(index/2)
         if datingcounts[index] < datingmax:
             sendthreads = [datingdests[index], blindthread]
-            for a in range(2):
-                await sendthreads[a].send(embed = discord.Embed(title = random.choice(["Your date sent a message!", "Message from your date!", "Your blind date says:"]), description= message.content + "\n\n*You have " + str(int(datingmax) - int(datingcounts[index]) - 1) + " messages left in this date.*", colour = datcol))
+
+            dattit = random.choice([person + " sent a message!", "Message from " + person + "!", person + " says:"])
+            await sendthreads[0].send(embed = discord.Embed(title = random.choice(["Your date sent a message!", "Message from your date!", "Your blind date says:"]), description= message.content + "\n\n*You have " + str(int(datingmax) - int(datingcounts[index]) - 1) + " messages left in this date.*", colour = datcol))
+            await sendthreads[1].send(embed = discord.Embed(title = dattit, description= message.content + "\n\n*You have " + str(int(datingmax) - int(datingcounts[index]) - 1) + " messages left in this date.*", colour = datcol))
             datingcounts[index] += 1
             if datingcounts[index] == datingmax:
                 await message.channel.send(embed = discord.Embed(title = "The date has now ended!", description= "You need to leave a rating for the date. Type an integer between 0 and 10.", colour  = embcol))
@@ -796,7 +802,7 @@ async def datingmatch(message):
             datingscores.append(-1)
             datingscores.append(-1)
             for a in range(2):
-                await datingsources[-(a+1)].send(embed = discord.Embed(title= "We have set up a date for you!", description= "Your blind date awaits on table " + str(len(datingdests)) + ".\n\nHere's a link to the thread. We don't advise joining it unless many people are as that could give away who you are.\n\n" + str(dest.jump_url) + "\n\nFrom now on, anything you type into this thread will be relayed to that thread, and we will post your blind date's replies here as well for you. Keep your messages brief to keep the game moving, but try to give your date enough to reply to!", colour = embcol))
+                await datingsources[-(a+1)].send(embed = discord.Embed(title= "We have set up a date for you!", description= "Your blind date awaits on table " + str(len(datingdests)) + ".\n\nHere's a link to the thread. We don't advise joining it unless many people are as that could give away who you are.\n\n" + str(dest.jump_url) + "\n\nFrom now on, anything you type into this thread will be relayed to that thread, and we will post your blind date's replies here as well for you. Don't use a tupper, *especially* if your tupper includes the name of your character! Keep your messages brief to keep the game moving, but try to give your date enough to reply to!", colour = embcol))
             await datingbackup()
 
 async def datingsetup(message):

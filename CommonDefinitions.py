@@ -104,7 +104,7 @@ if liveVersion: #Set to 1 to use the real spreadsheets, or 0 to use the testing 
 
     indexchannel = 898640028174016552
 
-    datingchannel = 1204593716724244520
+    datingchannel = 1204872179871653898
 
 
 else:
