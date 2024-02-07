@@ -704,3 +704,161 @@ async def export(message):
 
         await hook.delete()
     await processing.delete()
+
+#Dating Game
+async def datingjoin(message):
+    try:
+        if not ((str(message.author) in str(datingplayers)) and  (str(message.content.split(" ", 1)[1]) in str(datingchars))):
+            datingplayers.append(str(message.author))
+            datingchars.append(str(message.content.split(" ", 1)[1]))
+            await datingmatch(message)
+        else:
+            await message.channel.send(embed = discord.Embed(title = "This character is already in the game!", description= "You may start a thread for one of your other characters, or wait for a date to start", colour= embcol))
+
+    except IndexError:
+        await message.channel.send(embed = discord.Embed(title= "You need to enter by typing `%datingjoin` followed by your character's name.", description= "For example:\n\n`%datingjoin Lalontra`", colour = embcol))
+
+async def datingrelay(message):
+
+    if message.content.startswith("%"):
+        return
+
+    if str(message.channel) in str(datingsources):
+        for a in range(len(datingsources)):
+            if datingsources[a] == message.channel: #Find last source thread.
+                b = a
+        index = b
+
+        if index % 2 == 0: #Get partner thread
+            blindthread = datingsources[index+1]
+            datcol = 0xfcb603
+        else:
+            blindthread = datingsources[index-1]
+            datcol = 0x036bfc
+        index = math.floor(index/2)
+        if datingcounts[index] < datingmax:
+            sendthreads = [datingdests[index], blindthread]
+            for a in range(2):
+                await sendthreads[a].send(embed = discord.Embed(title = random.choice(["Your date sent a message!", "Message from your date!", "Your blind date says:"]), description= message.content + "\n\n*You have " + str(int(datingmax) - int(datingcounts[index]) - 1) + " messages left in this date.*", colour = datcol))
+            datingcounts[index] += 1
+            if datingcounts[index] == datingmax:
+                await message.channel.send(embed = discord.Embed(title = "The date has now ended!", description= "You need to leave a rating for the date. Type an integer between 0 and 10.", colour  = embcol))
+                await blindthread.send(embed = discord.Embed(title = "The date has now ended!", description= "You need to leave a rating for the date. Type an integer between 0 and 10.", colour  = embcol))
+                await datingdests[index].send(embed = discord.Embed(title = random.choice(["Annnd... change!", "Next table, please!", "Time's up, onto the next one!", "That's all this date has time for!"]), description= "This date has now ended.", colour = embcol))
+            await datingbackup()
+
+        else:
+            if datingscores[b] == -1: #Get score
+                try:
+                    datingscores[b] += int(message.content) + 1
+                    if int(datingscores[b]) > 10 or int(datingscores[b]) < 0:
+                        await message.channel.send(embed = discord.Embed(title = "You must type an integer between 1 and 10", description= "We're pretty sure that " + str(datingscores[b]) + " is not between 1 and 10. Try again.", colour = embcol))
+                        datingscores[b] -= int(message.content) + 1
+                    else:
+                        await message.channel.send(embed = discord.Embed(title = "Thanks!", description= "These will be passed to the host, who will pair up the best matches at the end!", colour = embcol))
+                        await datingmatch(message)
+                    await datingbackup()
+                except ValueError:
+                    await message.channel.send(embed = discord.Embed(title = "You must type an integer between 1 and 10", colour = embcol))
+
+async def datingmatch(message):
+    if datingstate > 0:
+        if random.randint(1,20) == 20:
+            random.shuffle(datingwaiting)
+        hasdated = 0
+        for a in range(len(datingsources)):
+            if datingsources[a] == message.channel:
+                if a % 2:
+                    b = a + 1
+                else:
+                    b = a - 1
+                try:
+                    if datingwaiting[0] == datingsources[b]:
+                        hasdated = 1
+                except IndexError:
+                    pass
+        if len(datingwaiting) == 0 or hasdated:
+            await message.channel.send(embed = discord.Embed(title= "You have been added to the waiting list.", description= "We will notify you when a date becomes available.", colour = embcol))
+            datingwaiting.append(message.channel)
+            await datingbackup()
+        else:
+            datingsources.append(datingwaiting.pop(0))
+            datingsources.append(message.channel)
+            tabno = str(len(datingdests)+1)
+            await datingbackup()
+            dest = await client.get_channel(datingchannel).create_thread(name = "Date " + tabno, type = discord.ChannelType.public_thread)
+            await dest.send(embed = discord.Embed(title=random.choice(["This is table " + tabno + "! It's reserved", "You can't sit here - they're on a *date*!", "This table - number " + tabno + " is reserved for our blindfolded dates", "Here we are, table " + tabno + ", ready for your blind date. How romantic!", "Let me guide you to your seats - oh, not there, that's your date's lap!", "Blindfolded dating. Such a good idea until you have to seat people. You're on table " + tabno + ". See if you can find it. No peeking!", "Such a cute couple. Shame we're the only ones that can see them."]), description= "This thread is only to be used for blind dating. Feel free to join the thread to view the messages, but we ask that you don't message here.\n\n To our contestants, messaging in your private thread will relay the message here. After 24 messages, the date will end and you will move on to the next one.", colour = embcol))
+            datingdests.append(dest)
+            datingcounts.append(0)
+            datingscores.append(-1)
+            datingscores.append(-1)
+            for a in range(2):
+                await datingsources[-(a+1)].send(embed = discord.Embed(title= "We have set up a date for you!", description= "Your blind date awaits on table " + str(len(datingdests)) + ".\n\nHere's a link to the thread. We don't advise joining it unless many people are as that could give away who you are.\n\n" + str(dest.jump_url) + "\n\nFrom now on, anything you type into this thread will be relayed to that thread, and we will post your blind date's replies here as well for you. Keep your messages brief to keep the game moving, but try to give your date enough to reply to!", colour = embcol))
+            await datingbackup()
+
+async def datingsetup(message):
+    await message.channel.send(embed = discord.Embed(title = "Valentine's Day Blind Dating!", description= "Welcome to 2024's Valentine's day event: Blind dating! To join in, create a *private* thread in this channel, and type `%datingjoin` followed by your character's name. For example:\n\n`%datingjoin Lalontra`\n\nFeel free to follow any of the threads we open here, but don't message in them. At the end of the night, our host will reveal who matched best with who! Happy dating!", colour = embcol))
+    await message.delete()
+
+async def datingbackup():
+    string = "|".join(datingplayers) + "\n\n"
+    string += "|".join(datingchars) + "\n\n"
+    for a in range(len(datingsources)):
+        string += str(datingsources[a].id) + "|"
+    string = string.lstrip("|") + "\n\n"
+    for a in range(len(datingdests)):
+        string += str(datingdests[a].id) + "|"
+    string = string.lstrip("|") + "\n\n"
+    if len(datingwaiting) == 0:
+        string += "-"
+    else:
+        for a in range(len(datingwaiting)):
+            string += str(datingwaiting[a].id) + "|"
+    string = string.lstrip("|") + "\n\n"
+    for a in range(len(datingscores)):
+        string += str(datingscores[a]) + "|"
+    string = string.lstrip("|") + "\n\n"
+    for a in range(len(datingcounts)):
+        string += str(datingcounts[a]) + "|"
+    string = string.lstrip("|")     
+
+    await client.get_channel(indexchannel).send(embed = discord.Embed(title = "Blind Date Backup " + str(datetime.now()), description= string, colour = embcol))
+
+async def datingrestore(message):
+
+    parts = message.content.split("||",1)[1].split("\n\n")
+
+    for a in range(len(parts[0].split("|"))):
+        datingplayers.append(parts[0].split("|")[a])
+
+    for a in range(len(parts[1].split("|"))):
+        datingchars.append(parts[1].split("|")[a])
+
+    for a in range(len(parts[2].split("|"))):
+        datingsources.append(client.get_channel(datingchannel).get_thread(int(parts[2].split("|")[a])))
+
+    for a in range(len(parts[3].split("|"))):
+        datingdests.append(client.get_channel(datingchannel).get_thread(int(parts[3].split("|")[a])))
+
+    if parts[4].split("|") != "-":
+        for a in range(len(parts[4].split("|"))):
+            datingwaiting.append(client.get_channel(datingchannel).get_thread(int(parts[4].split("|")[a])))
+
+    for a in range(len(parts[5].split("|"))):
+        datingscores.append(int(parts[5].split("|")[a]))
+
+    for a in range(len(parts[6].split("|"))):
+        datingcounts.append(int(parts[6].split("|")[a]))
+
+    await message.channel.send(embed = discord.Embed(title = "Restore successful.", colour = embcol))
+
+async def datingend(message):
+    results = []
+    for a in range(len(datingdests)):
+        ind1 = datingsources.index(datingsources[a])
+        ind2 = datingsources.index(datingsources[a+1])
+        results.append("**" + str(datingchars[ind1]) + "** *and* **" + str(datingchars[ind2]) + "**: " + str(datingscores[ind1] + datingscores[ind2]))
+        a += 1
+    await message.channel.send(embed = discord.Embed(title = "The results are in, here are the final scores of the dating game!", description = "We advise just writing up the results and pairing off the highest scoring ones.\n\n" + "\n".join(results), colour = embcol))
+    datingstate -= 1
+    

@@ -67,7 +67,7 @@ service = build("sheets", "v4", credentials=creds)
 gc = gspread.service_account(filename = SERVICE_ACCOUNT_FILE)
 config_file_path = "config.yaml"
 #-----------------LIVE VERSION/BETA TOGGLE---------------
-liveVersion = 1
+liveVersion = 0
 token = ""
 
 #Sheet Locations:
@@ -231,6 +231,17 @@ curses = ["Clinging Arousal: A thick aura of deep arousal clings to you, making 
 
 speechcursed = []
 speechcurses = []
+
+datingplayers = []
+datingchars = []
+datingsources = []
+datingdests = []
+datingcounts = []
+datingscores = []
+datingwaiting = []
+datingstate = 1
+datingchannel = 1204593716724244520#1203838135335653416
+datingmax = 24
 
 #---------------------------------------------
 
