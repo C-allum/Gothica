@@ -191,6 +191,51 @@ async def dezReact(reaction):
 async def rpDezReact(reaction):
     pass
 
+async def copyEconomy(message):
+
+    newSheet = message.content.split(" ")[-1]
+    await loadEconomySheet()
+    kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
+    newEconData = sheet.values().get(spreadsheetId = newSheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
+    newPlayerInvs = sheet.values().get(spreadsheetId = newSheet, range = "Inventories!A1:GZ2000", majorDimension='ROWS').execute().get("values")
+
+
+    i = 5
+    while i < len(GlobalVars.economyData):
+        #Add the fields for each player
+        newEconData.append([GlobalVars.economyData[i][0]])
+        newEconData[i].append(GlobalVars.economyData[i][1])
+        try: #If they have never RP-messaged, special treatment
+            newEconData.append([GlobalVars.economyData[i + 1][0]])
+        except IndexError:
+            newEconData.append([""])
+        try: #If they have no scenes list, special treatment
+            newEconData.append([GlobalVars.economyData[i + 2][0]])
+        except IndexError:
+            newEconData.append([""])
+        newEconData.append([GlobalVars.economyData[i + 3][0]])
+        index = []
+        name = GlobalVars.economyData[i][0]
+        if any(name in sublist for sublist in kinkdata):    #See if we can grab the discord ID from the kinklist.
+            indexLine = [sublist2 for sublist2 in kinkdata if name in sublist2][0]
+            index.append(kinkdata.index(indexLine))
+            index.append(indexLine.index(newEconData[i][0]))
+
+            newEconData[i+3].append(kinkdata[index[0]][index[1] + 1])
+
+        #TODO: Add experience in for the +1/+2/+3 roles, as well as the character slots.
+            
+        #TODO: Port the items
+        i+=4
+    #Write PlayerInfo sheet
+    sheet.values().update(spreadsheetId = newSheet, range = "A1:ZZ8000", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=newEconData)).execute()
+    #Write Inventory Sheet
+    sheet.values().update(spreadsheetId = newSheet, range = "Inventories!A1:ZZ8000", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=newEconData)).execute()
+
+
+
+
+    
 
 #-------------------------------Helper Functions-----------------------------------
 

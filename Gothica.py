@@ -2557,6 +2557,10 @@ async def on_message(message):
 
                 await waitmess.delete()
 
+            #-------------------------------------Economy V2----------------------------------------
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "copyeconomy") and "staff" in str(message.author.roles).lower():
+                await EconomyV2.copyEconomy(message)
+
             #-------------------------------------The Economy---------------------------------------
 
             #Buy Item
