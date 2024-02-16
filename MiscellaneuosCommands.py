@@ -408,6 +408,7 @@ async def manualDezPoolReset(message):
 
     print("Weekly Dezzie Award Pool Reset!")
 
+#Copies the current economy sheet. Needed for safety and coherency reasons during %migrate
 async def copySheet(message):
     userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension = 'ROWS').execute().get("values")
     rangeAll = 'A1:ZZ8000'
@@ -415,6 +416,7 @@ async def copySheet(message):
     sheet.values().clear(spreadsheetId = EconSheet, range = "copysheet!"+rangeAll, body = body).execute()    #Delete the copy sheet
     sheet.values().update(spreadsheetId = EconSheet, range = "copysheet!A1", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=userinvs)).execute() #save a copy
 
+#Copies the economy sheet and removes the discord discriminators.
 async def removeZeroDiscriminators(message):
     userinvs = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension = 'ROWS').execute().get("values")
     rangeAll = 'A1:ZZ8000'
@@ -432,7 +434,9 @@ async def removeZeroDiscriminators(message):
     sheet.values().update(spreadsheetId = EconSheet, range = "Sheet1!A1", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=userinvs)).execute() #save a copy
 
 
-            
+
+
+
 #----------------View Classes----------------
 
 #This is the view class for a simple accept button.

@@ -48,9 +48,7 @@ async def on_ready():
     #Economy V2 startup
     if not liveVersion:
         print("Fetching item database...")
-        
-        for a in range(len(itemlists)):
-            itemdatabase.append(itemlists[a].get_all_values())
+        await EconomyV2.reloadItemSheet()
         print("... done\n")
         
     print("Loading economy data...")
@@ -196,6 +194,8 @@ async def on_message(message):
 
     if startup == True and message.author.bot == False:
         print("Error with the startup sequence. Please restart / Look at the error.")
+        return
+    elif startup == True:
         return
 
     if message.content.startswith(GlobalVars.config["general"]["gothy_prefix"]):

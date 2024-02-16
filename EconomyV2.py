@@ -199,7 +199,7 @@ async def copyEconomy(message):
     newEconData = sheet.values().get(spreadsheetId = newSheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
     newPlayerInvs = sheet.values().get(spreadsheetId = newSheet, range = "Inventories!A1:GZ2000", majorDimension='ROWS').execute().get("values")
 
-
+    members = message.guild.members #Fetch the memberlist of the server we are in.
     i = 5
     while i < len(GlobalVars.economyData):
         #Add the fields for each player
@@ -214,23 +214,46 @@ async def copyEconomy(message):
         except IndexError:
             newEconData.append([""])
         newEconData.append([GlobalVars.economyData[i + 3][0]])
+
+
+        #Add Levels in for the +1/+2/+3 roles, as well as the character slots.
+        user = None
+        try:
+            user = discord.utils.find(lambda m: m.name == name, members) #Find the user we are currently copying.
+        except:
+            print(f"Couldn't find user {name} in the server.")
+
+        additional_slots = 0
+        if user != None:
+            if "+1" in str(user.roles).lower():
+                additional_slots = 1
+            if "+2" in str(user.roles).lower():
+                additional_slots = 2
+            if "+3" in str(user.roles).lower():
+                additional_slots = 3
+                
+        newEconData[i+2].append(additional_slots)
+
+        #Add user ID to the economy sheet for future reference
         index = []
         name = GlobalVars.economyData[i][0]
-        if any(name in sublist for sublist in kinkdata):    #See if we can grab the discord ID from the kinklist.
+        if user != None:
+            user_id = user.id
+            newEconData[i+1].append(user_id)
+        elif any(name in sublist for sublist in kinkdata):    #See if we can grab the discord ID from the kinklist in case that the person isnt on the server anymore but might return.
             indexLine = [sublist2 for sublist2 in kinkdata if name in sublist2][0]
             index.append(kinkdata.index(indexLine))
             index.append(indexLine.index(newEconData[i][0]))
 
-            newEconData[i+3].append(kinkdata[index[0]][index[1] + 1])
+            newEconData[i+1].append(kinkdata[index[0]][index[1] + 1])
+        #Port the items
+        
 
-        #TODO: Add experience in for the +1/+2/+3 roles, as well as the character slots.
-            
-        #TODO: Port the items
         i+=4
     #Write PlayerInfo sheet
     sheet.values().update(spreadsheetId = newSheet, range = "A1:ZZ8000", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=newEconData)).execute()
     #Write Inventory Sheet
-    sheet.values().update(spreadsheetId = newSheet, range = "Inventories!A1:ZZ8000", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=newEconData)).execute()
+    sheet.values().update(spreadsheetId = newSheet, range = "Inventories!A1:ZZ8000", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=newPlayerInvs)).execute()
 
 
 
@@ -284,3 +307,12 @@ async def getColumnLetter(columnindex):
         collet = ""                        
     collet += chr(65 + (int(columnindex % 26)))
     return collet
+
+async def reloadItemSheet():
+    itemsheet = gc.open_by_key("17M2FS5iWchszIoimqNzk6lzJMOVLBWQgEZZKUPQuMR8") #New for economy rewrite
+    itemlists = itemsheet.worksheets()
+    for a in range(len(itemlists)):
+            GlobalVars.itemdatabase.append(itemlists[a].get_all_values())
+
+async def matchStringToItemBase(itemName):
+    GlobalVars.itemdatabase
