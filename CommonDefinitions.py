@@ -67,7 +67,7 @@ service = build("sheets", "v4", credentials=creds)
 gc = gspread.service_account(filename = SERVICE_ACCOUNT_FILE)
 config_file_path = "config.yaml"
 #-----------------LIVE VERSION/BETA TOGGLE---------------
-liveVersion = 1
+liveVersion = 0
 token = ""
 
 #Sheet Locations:
@@ -243,6 +243,7 @@ datingdests = []
 datingcounts = []
 datingscores = []
 datingwaiting = []
+datingprivatethreads = []
 datingstate = 1
 datingmax = 24
 
