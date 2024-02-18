@@ -583,9 +583,11 @@ async def datingrestore(message):
     for a in range(len(parts[3].split("|"))):
         datingdests.append(client.get_channel(datingchannel).get_thread(int(parts[3].split("|")[a])))
 
-    if parts[4].split("|") != "-":
+    if parts[4] != "-":
         for a in range(len(parts[4].split("|"))):
             datingwaiting.append(client.get_channel(datingchannel).get_thread(int(parts[4].split("|")[a])))
+    else:
+        datingwaiting = []
 
     for a in range(len(parts[5].split("|"))):
         datingscores.append(int(parts[5].split("|")[a]))
