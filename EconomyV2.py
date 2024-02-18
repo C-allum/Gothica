@@ -1,5 +1,6 @@
 from CommonDefinitions import *
 import GlobalVars
+from thefuzz import fuzz
 
 async def shop(message):
 
@@ -165,21 +166,95 @@ async def item(message):
     await message.channel.send(embed = itememb)
 
 async def inventory(message):
+    #Find person in the inventory sheet
+
+    #Get list of all items
+
+    #Collect info about these items
+
+    #Print list of items
     pass
 
 async def buyitem(message):
+    #Find person in the inventory sheet
+    
+    #Check if quantity was provided
+
+    #Prepare the search term
+
+    #Search for item in the item sheet with fuzzy matching
+
+    #See if we have a 100 match
+        #If we have multiple, display *all* 100 matches for choice and wait for the choice
+    
+        #if we only have one with score 100, suggest that one for buying
+    
+        #if we have none, display the top 10 matches and wait for a choice
+
+    #ask for quantity if none was provided
+    
+    #complete the transaction
+    
+    
     pass
 
 async def sellitem(message):
+    #Find person in the inventory sheet
+
+    #Check if quantity was provided
+
+    #Prepare the search term
+
+    #Search for item in the inventory sheet with fuzzy matching
+
+    #Offer top 10 matches for selling in their inventory
+
+    #Ask for quantity to sell if none was provided
+
+    #Remove items from inventory
+
+    #Add dezzies
+
+    #Update PlayerInfo sheet, and Inventory sheet.
     pass
 
 async def giveitem(message):
+    #Find giver in the inventory sheet
+
+    #Find recipient in the inventory sheet
+
+    #prepare search term
+
+    #Search for item in the givers inventory with fuzzy matching
+
+    #Offer top 10 matches in their inventory if no 90-100 match
+
+
     pass
 
 async def additem(message):
+    #Find person in the inventory sheet
+
+    #Check if quantity was provided
+
+    #prepare search term
+
+    #Search for item in the item sheet with fuzzy matching
+
+    #See if we have a 100 match
+        #If we have multiple, display *all* 100 matches for choice and wait for the choice
+    
+        #if we only have one with score 100, suggest that one for buying
+    
+        #if we have none, display the top 10 matches and wait for a choice
+    
+    #Ask for quantity to give if none was provided
+
+    #Update Inventory sheet.
     pass
 
 async def giftAll(message):
+    #
     pass
 
 async def shopDisplay(message):
@@ -191,6 +266,9 @@ async def dezReact(reaction):
 async def rpDezReact(reaction):
     pass
 
+
+#TODO: Rewrite the item function (Fuzzy String matching)
+#TODO: Rewrite the Shop function (Fuzzy String matching)
 async def copyEconomy(message):
 
     newSheet = message.content.split(" ")[-1]
@@ -265,6 +343,8 @@ async def copyEconomy(message):
 #Updates the economy sheet - Needs to be called on startup or on manual changes to the sheet
 async def loadEconomySheet():
     GlobalVars.economyData = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
+    GlobalVars.economyData = loadInventorySheet()
+
     return
 #Writes to the economy sheet. Optional argument "range" used for instances where we only want to write a few or a single cell of the sheet instead of all cells.
 async def writeEconSheet(values, range = "A1:ZZ8000"):
@@ -314,5 +394,23 @@ async def reloadItemSheet():
     for a in range(len(itemlists)):
             GlobalVars.itemdatabase.append(itemlists[a].get_all_values())
 
-async def matchStringToItemBase(itemName):
-    GlobalVars.itemdatabase
+async def stringMatchTest(message):
+    item_name = message.content.split(" ", 1)[1]
+    top10 = []
+    top10 = await matchStringToItemBase(item_name, 10)
+    top10_str = ""
+    for i in range(0, len(top10)):
+        top10_str += str(top10[i][0]) + ", Score: " + str(top10[i][1]) + "\n"
+    print(f"Top 10 results for {item_name}: \n\n{top10_str}")
+
+async def matchStringToItemBase(item_name, top_n_results):
+    levenshtein_tuple_list = []
+    for entry in GlobalVars.itemdatabase[0]:
+        #Maybe do a combination of ratio and partial ratio here to favour stuff like collars appearing when "collar" is the search word?
+        levenshtein_distance_partial = fuzz.partial_token_set_ratio(entry[0].lower(), item_name.lower())
+        levenshtein_distance_complete = fuzz.ratio(entry[0].lower(), item_name.lower())
+        levenshtein_distance = levenshtein_distance_complete * 0.5 + levenshtein_distance_partial * 0.5
+        levenshtein_tuple_list.append([entry[0], levenshtein_distance])
+    sorted_list = sorted(levenshtein_tuple_list,key=lambda l:l[1], reverse=True)
+    return sorted_list[:top_n_results]
+

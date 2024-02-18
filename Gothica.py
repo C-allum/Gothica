@@ -246,6 +246,8 @@ async def on_message(message):
             if message.content.lower().startswith(GlobalVars.config["general"]["gothy_prefix"] + "test"):
                 print("Running Tests")              
 
+            #if message.content.lower().startswith(GlobalVars.config["general"]["gothy_prefix"] + "stringmatch"):
+            #    await EconomyV2.stringMatchTest(message)
             #Voyeur's Lounge Redirect - On OocFun and Working
             if isbot and (str(message.channel).lower() == "general-ooc") and not (message.author.name == "Gothica" or message.author.name == "Gothica Beta"):
 

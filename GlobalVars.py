@@ -11,6 +11,9 @@ async_lock = asyncio.Lock()
 #Global economy data
 global economyData
 economyData = None
+global inventoryData
+inventoryData = None
 
 #Item sheet
-itemdatabase = None
+global itemdatabase
+itemdatabase = []
