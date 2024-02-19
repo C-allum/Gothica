@@ -4093,6 +4093,8 @@ async def on_message(message):
                 await MiscellaneuosCommands.datingrestore(message)
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingend"):
                 await MiscellaneuosCommands.datingend(message)
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingmanual"):
+                await MiscellaneuosCommands.datingmanual(message)
 
 
             if str(message.channel.parent) == "blind-dates" and not "Gothica" in message.author.name:

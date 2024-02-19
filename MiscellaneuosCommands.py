@@ -637,6 +637,40 @@ async def datingend(message):
         a += 1
     await message.channel.send(embed = discord.Embed(title = "The results are in, here are the final scores of the dating game!", description = "We advise just writing up the results and pairing off the highest scoring ones.\n\n" + "\n".join(results), colour = embcol))
     datingstate -= 1
+
+async def datingmanual(message):
+    threads = client.get_channel(datingchannel).threads
+    threaddata = []
+    await message.channel.send("Running. This will take a while.")
+
+    ref = 0
+    for a in range(len(threads)):
+        if not "Gothica" in str(threads[a].owner):
+            mess = [joinedMessages async for joinedMessages in threads[a].history(limit = None, oldest_first= True)]
+            mess.sort(key=lambda x: x.created_at)
+            dateno = []
+
+            for b in range(len(mess)):
+                if mess[b].content.lower().startswith("%datingjoin"):
+                    char = mess[b].content.split(" ", 1)[1]
+                if len(mess[b].embeds) == 1:
+                    if mess[b].embeds[0].title == "Thanks!":
+                        c = 0
+                        embtit = mess[b-c].embeds[0].title
+                        while embtit != "We have set up a date for you!":
+                            c += 1
+                            try:
+                                embtit = mess[b-c].embeds[0].title
+                            except IndexError:
+                                pass
+                        try:
+                            dateno.append(str(mess[b-c].embeds[0].description.split(".")[0].split(" ")[-1]) + ": " + str(mess[b-c].embeds[0].description.split("are.")[1].split(" ")[0].rstrip("From")).lstrip().rstrip() + ", Rated: " + str(mess[b-1].content))
+                        except IndexError:
+                            dateno.append("N/A")
+
+            threaddata.append(str(threads[a].owner) + ": **" + str(char) + "**\n\nDate Numbers:\n\n" + str("\n".join(dateno)) + "\n\nThread: " + str(threads[a].jump_url))
+            await message.channel.send(threaddata[ref])
+            ref += 1
     
             
 #----------------View Classes----------------
