@@ -53,6 +53,7 @@ async def on_ready():
         
     print("Loading economy data...")
     await EconomyV2.loadEconomySheet()
+    await EconomyV2.loadInventorySheet()
     print("Done.")
 
     print("Fetching a list of all players...")

@@ -254,16 +254,23 @@ async def additem(message):
     pass
 
 async def giftAll(message):
-    #
+    #Find quantity of dezzies to add to everyone's balance
+
+    #Add to each balance
+
+    #Write sheet
     pass
 
 async def shopDisplay(message):
+    #????
     pass
 
 async def dezReact(reaction):
+    #Copy the old function, change the way we write
     pass
 
 async def rpDezReact(reaction):
+    #Copy the old function, change the way we write
     pass
 
 
@@ -354,7 +361,7 @@ async def writeEconSheet(values, range = "A1:ZZ8000"):
     sheet.values().update(spreadsheetId = EconSheet, range = range, valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values= values)).execute()
 #Loads the current Inventory Sheet state. This is not kept internally, so we need to call this every time we work on the sheet.
 async def loadInventorySheet():
-    return sheet.values().get(spreadsheetId = inventorysheet, range = "Inventories!A1:ZZ8000", majorDimension = 'ROWS').execute().get("values")
+    GlobalVars.inventoryData = sheet.values().get(spreadsheetId = inventorysheet, range = "Inventories!A1:ZZ8000", majorDimension = 'ROWS').execute().get("values")
 
 #Writes values to the Inventory sheet. Optional argument "range" used for instances where we only want to write a few or a single cell of the sheet instead of all cells.
 async def writeInvetorySheet(values, range = "A1:ZZ8000"):
