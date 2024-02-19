@@ -4087,6 +4087,8 @@ async def on_message(message):
                 await MiscellaneuosCommands.datingjoin(message)
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingsetup"):
                 await MiscellaneuosCommands.datingsetup(message)
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingfromfilerestore"):
+                await MiscellaneuosCommands.datingrestorefromfile(message)
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingrestore"):
                 await MiscellaneuosCommands.datingrestore(message)
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingend"):

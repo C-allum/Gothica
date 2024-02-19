@@ -566,10 +566,41 @@ async def datingbackup():
 
     sheet.values().update(spreadsheetId = Plotsheet, range = str("AZ1"), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[string]])).execute()
 
+async def datingrestorefromfile(message):
+    with open('datingrecovery.txt') as f:
+        string = f.read()
+    f.close
+
+    parts = string.split("\n\n")
+    for a in range(len(parts[0].split("|"))):
+        datingplayers.append(parts[0].split("|")[a])
+
+    for a in range(len(parts[1].split("|"))):
+        datingchars.append(parts[1].split("|")[a])
+
+    for a in range(len(parts[2].split("|"))):
+        datingsources.append(client.get_channel(datingchannel).get_thread(int(parts[2].split("|")[a])))
+
+    for a in range(len(parts[3].split("|"))):
+        datingdests.append(client.get_channel(datingchannel).get_thread(int(parts[3].split("|")[a])))
+
+    if parts[4] != "-":
+        for a in range(len(parts[4].split("|"))):
+            datingwaiting.append(client.get_channel(datingchannel).get_thread(int(parts[4].split("|")[a])))
+    else:
+        datingwaiting = []
+
+    for a in range(len(parts[5].split("|"))):
+        datingscores.append(int(parts[5].split("|")[a]))
+
+    for a in range(len(parts[6].split("|"))):
+        datingcounts.append(int(parts[6].split("|")[a]))
+
+    await message.channel.send(embed = discord.Embed(title = "Restore successful.", colour = embcol))
 
 async def datingrestore(message):
 
-    parts = message.content.split("||",1)[1].split("\n\n")
+    parts = message.content.split("\n\n")
 
     for a in range(len(parts[0].split("|"))):
         datingplayers.append(parts[0].split("|")[a])
