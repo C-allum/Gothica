@@ -652,7 +652,10 @@ async def datingmanual(message):
 
             for b in range(len(mess)):
                 if mess[b].content.lower().startswith("%datingjoin"):
-                    char = mess[b].content.split(" ", 1)[1]
+                    try: 
+                        char = mess[b].content.split(" ", 1)[1]
+                    except IndexError:
+                        pass
                 if len(mess[b].embeds) == 1:
                     if mess[b].embeds[0].title == "Thanks!":
                         c = 0
