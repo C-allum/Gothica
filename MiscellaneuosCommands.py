@@ -674,7 +674,45 @@ async def datingmanual(message):
             threaddata.append(str(threads[a].owner) + ": **" + str(char) + "**\n\nDate Numbers:\n\n" + str("\n".join(dateno)) + "\n\nThread: " + str(threads[a].jump_url))
             await message.channel.send(threaddata[ref])
             ref += 1
-    
+
+async def datingcreatelists(message):
+    await message.channel.send(embed = discord.Embed(title = "The results are in!", description = "With that, our date night has finally concluded!\nSo many of you were eager for love tonight~!\n\nSo much that we managed to hit well over 100 blind dates!\n\nBut you're all probably wondering who matched the best, right~? The following couples were all perfectly matched, each giving their partner a perfect 10/10 for the date!\n\nSamdellsmith's Alibezeh and Fenrisfirebrand's Fenrir\nRuin_enjoyer's Shatter and C_allum's Sinew of Silversilk\nWamzazz's Consumption and Eleif's Devotion\nTdarklordcluthulhu's Cherry and SpitefulChaos's Kalayo\nBunnymando's Ash and... ourselves, Gothica\nSamdellSmith's Alibezeh and Eleif's Devotion\nTasha3624's Kari and Ayucrow's Melissandra\n.Chillbroswaggins's Firras and Onetruemandalore's Victor\nTdarklordcthulhu's Cherry and Artificer_dragon's Liora\nThepandorica's Iona and... ourselves, Gothica\nAyucrow's Melissandra and Greyrandal's Mari\nLenpendragon's Morathi and Ayucrow's Sharia\nGreyrandal's Vayne and Lenpendragon's Erika\n\nCongratulations to all lovebirds~\n\nWe will also be revealing all your blind dates via direct message as well!\n\nThank you to everyone who participated. We will be sure to host another event like this in the future, though we might include ~~fewer~~ *different* bugs.", colour = embcol))
+    await message.delete()
+    datedata = gc.open_by_key("1PRfKMKcut3H-AyJYqCzKnvK0IEspqlTOhiFJ3LBpHGc").sheet1
+    dateno = datedata.col_values(1)
+    dateset = datedata.col_values(2)
+    datelinks = datedata.col_values(3)
+    dateplayers = datedata.col_values(4)
+    datechars = datedata.col_values(5)
+    daterate = datedata.col_values(6) 
+    chars = []
+    players = []
+    for a in range(len(dateno)): #Get characters
+        if a != 0:
+            if not datechars[a] in str(chars):
+                chars.append(datechars[a])
+                players.append(dateplayers[a])
+    for b in range(len(chars)):
+        ratings = []
+        dated = []
+        for c in range(len(dateno)):
+            if chars[b] == datechars[c] and players[b] == dateplayers[c]:
+                if c % 2 != 0:
+                    d = c+1
+                else:
+                    d = c-1
+                try:
+                    ratings.append(int(daterate[d]))
+                    dated.append(dateplayers[d] + "'s " + datechars[d] + ": " + datelinks[c] + ". You rated this date a " + str(daterate[c]))
+                except IndexError:
+                    print("Index Error")
+        datelist = [x for _,x in sorted(zip(ratings, dated))]
+        datelist.reverse()
+        mess = str(players[b] + ", your character, **" + chars[b] + "**'s highest rating from a date was a " + str(sorted(ratings)[-1]) + "!\n\nThe people your character met are (in order of how high they ranked you):\n" + "\n".join(datelist)).replace("rated this date a -1", "never rated this date").replace("a 8", "an 8")
+        print(mess + "\n\n")
+        user = discord.utils.get(client.get_guild(guildid).members, name = players[b])
+        if user != None:
+            await user.send(mess)
             
 #----------------View Classes----------------
 

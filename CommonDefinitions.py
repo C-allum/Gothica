@@ -67,7 +67,7 @@ service = build("sheets", "v4", credentials=creds)
 gc = gspread.service_account(filename = SERVICE_ACCOUNT_FILE)
 config_file_path = "config.yaml"
 #-----------------LIVE VERSION/BETA TOGGLE---------------
-liveVersion = 0
+liveVersion = 1
 token = ""
 
 #Sheet Locations:
@@ -106,6 +106,8 @@ if liveVersion: #Set to 1 to use the real spreadsheets, or 0 to use the testing 
 
     datingchannel = 1204872179871653898
 
+    guildid = 828411760365142076
+
 
 else:
 
@@ -143,6 +145,8 @@ else:
     indexchannel = 1031701327169998958
 
     datingchannel = 1203838135335653416
+
+    guildid = 847968618167795782
 
 
 sheet = service.spreadsheets()
