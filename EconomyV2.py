@@ -168,63 +168,25 @@ async def item(message):
 async def inventory(message):
     #Find person in the inventory sheet
     author_row_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if message.author.name in x][0])
-    
-    #Get list of all items
     player_inventory = GlobalVars.inventoryData[author_row_index:author_row_index+5]
-    item_list = []  #collect a list of the descriptors in order here.
-    embed_string = ""
-    for i in range(2, len(player_inventory[0])):
-        item_descriptor = player_inventory[0][i]
-        item_list.append(item_descriptor)
-        #Find item in database
-        item_database_info = [x for x in GlobalVars.itemdatabase[0] if item_descriptor in x][0]
-        #Collect info about this item
-        item_name = item_database_info[0]
-        item_short_description = item_database_info[7]
-        quantity = player_inventory[1][i]
-        curse_names = ""
-        if player_inventory[2][i] != "-": #If the item has curses
-            curses = player_inventory[2][i].split(",")
-            
-            #Generate the list of curses the item has.
-            for curse in curses:
-                curse_info = [x for x in GlobalVars.itemdatabase[1] if curse in x]
-                if curse_names == "": #Construct the string in a way that it doesn't have trailing commas and spaces.
-                    curse_names += f"{curse_info[0][0]}"
-                else: curse_names += f", {curse_info[0][0]}"
-        if curse_names == "":
-            embed_string += (f"`{i-1}`: {quantity}x `{item_name}`: {item_short_description}\n\n")
-        else: embed_string += (f"`{i-1}`: {quantity}x `{item_name}`: {item_short_description}\n__Curses__: {curse_names}\n\n")
-        
-    #Print list of items
-    inventory_embed = discord.Embed(title = f"{player_inventory[0][0]}'s inventory", description= embed_string + "\n\nFor more information about an item and its curses, enter the according number. This message will time out in 30 seconds.", colour = embcol)
-    await message.channel.send(embed = inventory_embed)
 
-
-    #Wait for a response to show more info about a specific item
-    i = -1
-    try:
-        msg = await client.wait_for('message', timeout = 30, check = check(message.author))
-        try:
-            i = int(msg.content) - 1
-            await msg.delete()
-        except TypeError or ValueError:
-            await message.channel.send(embed=discord.Embed(title="Selection Invalid",description="You must enter an integer", colour = embcol))
-            await msg.delete()
-            return
-    except asyncio.TimeoutError:
-        await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
-        await message.delete()
+    #Get list of all items
+    i, item_list = await showInventoryAndChooseItem(message, author_row_index, "\n\nFor more information about an item and its curses, enter the according number. This message will time out in 30 seconds.")
+    if i == False:
         return
     if i >= 0:
         #Provide information about the item and it's curses.
         item_database_info = [x for x in GlobalVars.itemdatabase[0] if item_list[i] in x][0]
         curses = []
-        curse_descriptors = player_inventory[2][i + 2] #+2 becasue the first two entries are player info
-        curse_descriptors = curse_descriptors.split(",")
-        for curse in curse_descriptors:
-            curse_info = [x for x in GlobalVars.itemdatabase[1] if curse in x]
-            curses.append(curse_info)
+        try:
+            curse_descriptors = player_inventory[2][i + 2] #+2 becasue the first two entries are player info
+            curse_descriptors = curse_descriptors.split(",")
+            if curse_descriptors[0] != "": #Check if curse descriptors are empty (= no curses on the item). For some reason this doesn't work in the for loop.
+                for curse in curse_descriptors:
+                    curse_info = [x for x in GlobalVars.itemdatabase[1] if curse in x]
+                    curses.append(curse_info)
+        except IndexError: #This happens when a trailing item in the inventory has no curse. Just ignore it.
+            pass
         item_name = item_database_info[0]
         #add item type and rarity
         embed_string = f"*{item_database_info[1]}, {item_database_info[4]}*"
@@ -242,7 +204,7 @@ async def inventory(message):
         if item_database_info[8] != "":
             embed_string += f"\n\n**__Default curse:__** \n{item_database_info[8]}"
         #add additional curses
-        if curses[0] != []:
+        if curses != []:
             embed_string += "\n\n**__Additional curses:__**\n"
             for curse in curses:
                 embed_string += f"\n**{curse[0][0]}**(Level {curse[0][1]} curse):\n{curse[0][2]}\n"
@@ -255,8 +217,7 @@ async def inventory(message):
     
 
 async def buyitem(message):
-    #Find person in the inventory sheet
-    author_row_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if message.author.name in x][0])
+    
 
     #Check if quantity was provided and prepare the search term
     buyquant = 1
@@ -332,18 +293,21 @@ async def buyitem(message):
 
     #Check if item is present in multiple shops
     available_in_shops = []
+    shopnumbers = []
     try:
         for j in range(3, 3+GlobalVars.config["general"]["number_of_shops"]):
             for row in GlobalVars.itemdatabase[j]:
                 if selected_item[2] in row:
                     available_in_shops.append(GlobalVars.itemdatabase[j])
+                    shopnumbers.append(j)
     except IndexError: 
         print("Index error in buy function: Possibly a problem with the *number_of_shops* variable in the config. Check if that matches the amount of shops")
         await message.channel.send(embed=discord.Embed(title=f"Error in Buy function.", description="Index error in buy function: Possibly a problem with the *number_of_shops* variable in the config. Check if that matches the amount of shops", colour = embcol))
     
 
     #Check if we need to show multiple shops due to having multiple versions of the item in different shops (cursed and noncursed.)
-    curses = "" #We need this one later again.
+
+    chosenShop = -1
     if len(available_in_shops) > 1:
         shop_embed = "The item is available in the following shops:\n\n"
         for i in range(0, len(available_in_shops)):
@@ -357,7 +321,9 @@ async def buyitem(message):
                 
 
                 n = 0
+                curses = ""
                 for curse in curses_identifier:
+                    
                     try:
                         curse = [x for x in GlobalVars.itemdatabase[1] if curse in x][0]
                     except IndexError:
@@ -391,23 +357,23 @@ async def buyitem(message):
             await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
             await message.delete()
             return
-        #Collect info for that item.
-        item_database_info = [x for x in available_in_shops[userinput] if selected_item[2] in x][0]
-        item_name = item_database_info[1]
-        item_identifier = item_database_info[0]
-        price = int(item_database_info[3]) * int(item_database_info[12])
-        quantity_available = item_database_info[18]
+        
+        #note the shop ID
+        chosenShop = shopnumbers[userinput]
                 
     else:
         #if the item to buy is already clear, collect info.
-        item_database_info = [x for x in available_in_shops[0] if selected_item[2] in x][0]
-        item_name = item_database_info[1]
-        item_identifier = item_database_info[0]
-        price = int(item_database_info[3]) * int(item_database_info[12])
-        quantity_available = item_database_info[18]
-
+        chosenShop = shopnumbers[0]
+    
+    #Collect information about the item to be bought.
+    item_database_info = [x for x in GlobalVars.itemdatabase[chosenShop] if selected_item[2] in x][0]
+    item_name = item_database_info[1]
+    item_identifier = item_database_info[0]
+    price = int(item_database_info[3]) * int(item_database_info[12])
+    quantity_available = item_database_info[18]
+    curses_identifier = item_database_info[14].split(",")
     #add item type and rarity
-    embed_string = f"*{item_database_info[1]}, {item_database_info[4]}*"
+    embed_string = f"*{item_database_info[1]}, {item_database_info[5]}*"
     #add attunement to the string
     if item_database_info[4].lower() == "yes":
         embed_string += f" *(Requires Attunement)*\n\n"
@@ -416,13 +382,17 @@ async def buyitem(message):
             embed_string += f" *(Requires Attunement by {spellcaster})*\n\n"
     else: embed_string += "\n\n"
 
+    if quantity_available == "":
+        quantity_available = "Infinite"
+    embed_string += f"**Quantity Available: {quantity_available}, Price per unit: {price}** \n\n"
+
     #add long description
     embed_string += item_database_info[7] + "\n\n" + item_database_info[6]
     #add default curse
     if item_database_info[9] != "":
         embed_string += f"**\n\n__Default curse:__** \n{item_database_info[9]}"
     #add additional curses
-    if curses != "":
+    if curses_identifier[0] != "":
         embed_string += "**\n\n__Potential curses:__**\n"
         for curse in curses_identifier:
             try:
@@ -430,34 +400,132 @@ async def buyitem(message):
             except IndexError:
                 await message.channel.send(embed=discord.Embed(title=f"Error in Buy function.", description="Index error in buy function: Possibly a problem with the curses in the item sheet. Check for spaces that shouldn't be there, and correct identifiers. Please notify the bot gods.", colour = embcol))
             embed_string+= f"**{full_curse[0]}**: {full_curse[2]}\n\n"
+    if quantity_available != "Infinite":
+        if buyquant > int(quantity_available):
+            await message.channel.send(embed=discord.Embed(title=f"You requested {buyquant} of this item, but only {quantity_available} are available. Please try again and request a lower amount.", colour = embcol))
 
-
-    await message.channel.send(embed=discord.Embed(title=f"Buy this item? (Y/N)", description=embed_string, colour = embcol))
+    await message.channel.send(embed=discord.Embed(title=f"Buy {buyquant} of this item for a total of {price * buyquant}? (Y/N)", description=embed_string, colour = embcol))
     
     #complete the transaction by taking dezzies from the person, and entering the item into their inventory (ID, quantity, additional curses.). Make sure to stack stackable items.
-    
-    
-    pass
+    userinput = "-"
+    try:
+        msg = await client.wait_for('message', timeout = 30, check = checkstr(message.author))
+        try:
+            userinput = msg.content.lower().replace(" ", "")
+            await msg.delete()
+        except TypeError or ValueError:
+            await message.channel.send(embed=discord.Embed(title="Selection Invalid",description="Reply must be yes or no (or y / n)", colour = embcol))
+            await msg.delete()
+            return
+    except asyncio.TimeoutError:
+        await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+        await message.delete()
+        return
+    try:
+        if userinput == "y" or userinput == "yes":
+            #Complete transaction
+            #Find person in the inventory sheet
+            author_row_index_inventory = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if message.author.id in x][0])
+            playerID = GlobalVars.inventoryData[author_row_index_inventory][1]
+            author_row_index_economy = GlobalVars.economyData.index([x for x in GlobalVars.economyData if message.author.id in x][0])
+            old_balance = GlobalVars.economyData[author_row_index_economy][1]
+            success = await removeDezziesFromPlayerWithoutMessage(price, playerID=playerID)
+            if success:
+
+
+
+                await addItemToPlayerWithCurse(message, playerID, item_identifier, buyquant, chosenShop)
+                new_balance = GlobalVars.economyData[author_row_index_economy][1]
+                if quantity_available != "Infinite":
+                    #Update the Stock of the item.
+                    itemindex = GlobalVars.itemdatabase[chosenShop].index(item_database_info)
+                    GlobalVars.itemdatabase[chosenShop][itemindex][18] = int(quantity_available) - buyquant
+                    await updateItemsheetCell(chosenShop, itemindex, 18, int(quantity_available) - buyquant)
+                await message.channel.send(embed=discord.Embed(title="Success!",description=f"Before this transaction you had {old_balance}:dz:. You paid {price}:dz: and your new balance is {new_balance}:dz:", colour = embcol))
+            else:
+                await message.channel.send(embed=discord.Embed(title="Not enough funds!",description="Your funds are insufficient to buy this item!", colour = embcol))
+        else:
+            await message.channel.send(embed=discord.Embed(title="Buy process cancelled!", colour = embcol))
+    except TypeError:
+        await message.channel.send(embed=discord.Embed(title="Selection Invalid",description="Reply must be yes or no (or y / n)", colour = embcol))
+        return
+    return
 
 async def sellitem(message):
     #Find person in the inventory sheet
+    author_inventory_row_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if message.author.id in x][0])
+    author_economy_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if message.author.id in x][0])
+    #Check if quantity was provided and prepare the search term
+    sellquant = 1
+    quantProvided = False
+    try:
+        fullMessage = message.content.split(" ", 1)[1] #cut the %sellitem off
+        #Cut away trailing spaces
+        while fullMessage.rsplit(" ")[-1] == "":
+            fullMessage = fullMessage.rsplit(" ", 1)[0]
+        try:
+            sellquant = int(fullMessage.rsplit(" ", 1)[-1]) #Try to extract a buy quantity from the end of the string
+            quantProvided = True
+            if sellquant < 1:
+                await message.channel.send(embed=discord.Embed(title="Sell quantity must be 1 or higher.", color=embcol))
+        except ValueError:
+            print("Buy function Value Error. Probably didn't specify amount. Defaulting to 1")
+            sellquant = 1  
+        except TypeError:
+            print("Buy function type error. Probably didn't specify amount. Defaulting to 1")
+            sellquant = 1  
+    except IndexError:
+        pass
 
-    #Check if quantity was provided
+    i, item_list = await showInventoryAndChooseItem(message, author_inventory_row_index, "\n\nTo choose which item to sell, enter the according number. This message will time out in 30 seconds.")
+    if i == False:
+        return
+    if i >= 0:
+        i = i+2 #Because the first two columns are for personal info.
 
-    #Prepare the search term
-
-    #Search for item in the inventory sheet with fuzzy matching
-
-    #Offer top 10 matches for selling in their inventory
-
+    
     #Ask for quantity to sell if none was provided
+    if quantProvided == False:
+        await message.channel.send(embed=discord.Embed(title="Please enter an amount you want to sell of the chosen item.", color=embcol))
+        #Wait for user input as to which shop to choose
+        userinput = -1
+        try:
+            msg = await client.wait_for('message', timeout = 30, check = check(message.author))
+            try:
+                userinput = int(msg.content) - 1
+                await msg.delete()
+            except TypeError or ValueError:
+                await message.channel.send(embed=discord.Embed(title="Selection Invalid",description="You must enter an integer", colour = embcol))
+                await msg.delete()
+                return
+        except asyncio.TimeoutError:
+            await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+            await message.delete()
+            return
+        sellquant = userinput
 
+    item_identifier = GlobalVars.inventoryData[author_inventory_row_index][i]
     #Remove items from inventory
+    if sellquant < int(GlobalVars.inventoryData[author_inventory_row_index+1][i]):
+        GlobalVars.inventoryData[author_inventory_row_index+1][i] = int(GlobalVars.inventoryData[author_inventory_row_index+1][i]) - sellquant
+    else:
+        del GlobalVars.inventoryData[author_inventory_row_index+1][i]
+        del GlobalVars.inventoryData[author_inventory_row_index+2][i]
+        try:
+            del GlobalVars.inventoryData[author_inventory_row_index+3][i]
+        except IndexError: #If we get an index error, that cell wasn't occupied anyways and was a trailing cell.
+            pass
 
     #Add dezzies
+    item_index = GlobalVars.itemdatabase.index([x for x in GlobalVars.itemdatabase[0] if item_identifier in x][0])
+    item_price = GlobalVars.itemdatabase[0][item_index][2]
+    await addDezziesToPlayer(message, item_price * GlobalVars.config["economy"]["sellpricemultiplier"], playerID=message.author.id)
+
+    #Add one to the item stock in the shop.
 
     #Update PlayerInfo sheet, and Inventory sheet.
-    pass
+    await writeEconSheet(GlobalVars.economyData)
+    await writeInvetorySheet(GlobalVars.inventoryData)
 
 async def giveitem(message):
     #Find giver in the inventory sheet
@@ -496,15 +564,18 @@ async def additem(message):
 
 async def giftAll(message):
     #Find quantity of dezzies to add to everyone's balance
+    amount = message.content.split(" ")[-1]
 
     #Add to each balance
+    i = 5
+    while i < len(GlobalVars.economyData):
+        GlobalVars.economyData[i][1] = int(GlobalVars.economyData[i][1]) + int(amount)
 
+        i += 4
+    print(f"Someone gifted {amount} dezzies to everyone")
     #Write sheet
-    pass
-
-async def shopDisplay(message):
-    #????
-    pass
+    await writeEconSheet(GlobalVars.economyData)
+    await message.channel.send(embed=discord.Embed(title="You gifted dezzies to all players!",description=f"You gifted {amount}:dz: to everyone!", colour = embcol))
 
 async def dezReact(reaction):
     #Copy the old function, change the way we write
@@ -517,6 +588,8 @@ async def rpDezReact(reaction):
 
 #TODO: Rewrite the item function (Fuzzy String matching)
 #TODO: Rewrite the Shop function (Fuzzy String matching)
+#TODO: Fix copy economy! Make sure Name and ID are in the first row of each player section.
+
 async def copyEconomy(message):
 
     newSheet = message.content.split(" ")[-1]
@@ -590,8 +663,8 @@ async def copyEconomy(message):
 
 #Updates the economy sheet - Needs to be called on startup or on manual changes to the sheet
 async def loadEconomySheet():
-    GlobalVars.economyData = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
-    GlobalVars.economyData = loadInventorySheet()
+    GlobalVars.economyData = sheet.values().get(spreadsheetId = inventorysheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
+    GlobalVars.inventoryData = await loadInventorySheet()
 
     return
 #Writes to the economy sheet. Optional argument "range" used for instances where we only want to write a few or a single cell of the sheet instead of all cells.
@@ -599,7 +672,7 @@ async def writeEconSheet(values, range = "A1:ZZ8000"):
     #in case we write a single value
     if not (":" in range):
         values = [[values]]
-    sheet.values().update(spreadsheetId = EconSheet, range = range, valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values= values)).execute()
+    sheet.values().update(spreadsheetId = inventorysheet, range = range, valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values= values)).execute()
 #Loads the current Inventory Sheet state. This is not kept internally, so we need to call this every time we work on the sheet.
 async def loadInventorySheet():
     GlobalVars.inventoryData = sheet.values().get(spreadsheetId = inventorysheet, range = "Inventories!A1:ZZ8000", majorDimension = 'ROWS').execute().get("values")
@@ -609,7 +682,18 @@ async def writeInvetorySheet(values, range = "A1:ZZ8000"):
     #in case we write a single value
     if not (":" in range):
         values = [[values]]
-    sheet.values().update(spreadsheetId = EconSheet, range = "Inventories!" + range, valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values= values)).execute()
+    sheet.values().update(spreadsheetId = inventorysheet, range = "Inventories!" + range, valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values= values)).execute()
+
+async def reloadItemSheet():
+    itemsheet = gc.open_by_key("17M2FS5iWchszIoimqNzk6lzJMOVLBWQgEZZKUPQuMR8") #New for economy rewrite
+    itemlists = itemsheet.worksheets()
+    for a in range(len(itemlists)):
+            GlobalVars.itemdatabase.append(itemlists[a].get_all_values())
+
+async def updateItemsheetCell(shopnumber, row, column, values):
+    itemsheet.worksheets()[shopnumber].update_cell(row + 1, column + 1, values)
+
+
 
 async def getUserNamestr(message):
     if "@" in message.content:
@@ -636,11 +720,7 @@ async def getColumnLetter(columnindex):
     collet += chr(65 + (int(columnindex % 26)))
     return collet
 
-async def reloadItemSheet():
-    itemsheet = gc.open_by_key("17M2FS5iWchszIoimqNzk6lzJMOVLBWQgEZZKUPQuMR8") #New for economy rewrite
-    itemlists = itemsheet.worksheets()
-    for a in range(len(itemlists)):
-            GlobalVars.itemdatabase.append(itemlists[a].get_all_values())
+
 
 async def stringMatchTest(message):
     item_name = message.content.split(" ", 1)[1]
@@ -655,7 +735,7 @@ async def stringMatchTest(message):
 #shows one potential item candidate in the form of [name, levenshtein distance score, unique id]
 async def matchStringToItemBase(item_name, top_n_results):
     levenshtein_tuple_list = []
-    for entry in GlobalVars.itemdatabase[0]:
+    for entry in GlobalVars.itemdatabase[0][1:]:
         #Maybe do a combination of ratio and partial ratio here to favour stuff like collars appearing when "collar" is the search word?
         levenshtein_distance_partial = fuzz.partial_token_set_ratio(entry[0].lower(), item_name.lower())
         levenshtein_distance_complete = fuzz.ratio(entry[0].lower(), item_name.lower())
@@ -664,3 +744,173 @@ async def matchStringToItemBase(item_name, top_n_results):
     sorted_list = sorted(levenshtein_tuple_list,key=lambda l:l[1], reverse=True)
     return sorted_list[:top_n_results]
 
+async def removeDezziesFromPlayerWithoutMessage( amount, playerID = None, playerName = None):
+
+    if playerID != None:
+        author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if playerID in x][0])
+    elif playerName != None:
+        author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if playerName in x][0])
+    else:
+        await message.channel.send(embed = discord.Embed(title="Player to give dezzies to not found."))
+        return False
+
+    if int(GlobalVars.economyData[author_row_index][1]) > amount:
+            #Remove the money from the player
+            GlobalVars.economyData[author_row_index][1] = int(GlobalVars.economyData[author_row_index][1]) - amount
+
+            #Write to sheet
+            await writeEconSheet(GlobalVars.economyData)
+
+            return True
+    return False
+
+
+async def addDezziesToPlayer(message, amount, playerID=None, playerName=None):
+
+    if playerID != None:
+        author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if playerID in x][0])
+    elif playerName != None:
+        author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if playerName in x][0])
+    else:
+        await message.channel.send(embed = discord.Embed(title="Player to give dezzies to not found."))
+        return
+    GlobalVars.economyData[author_row_index][1] = int(GlobalVars.economyData[author_row_index][1]) + amount
+
+    #Write to sheet
+    await writeEconSheet(GlobalVars.economyData)
+    await message.channel.send(embed=discord.Embed(title=f"Added {amount} to {GlobalVars.economyData[author_row_index][0]}'s balance!", description="Don't spend it all in one place!", colour = embcol))
+    return True
+
+async def addItemToPlayerWithCurse(message, playerID, itemID, amount, shop_number):
+    author_row_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if playerID in x][0])
+    
+    already_in_inventory = False
+
+    #Roll curses on the item
+    item_database_info = [x for x in GlobalVars.itemdatabase[shop_number] if itemID in x][0]
+    curses_identifier = item_database_info[14].split(",")
+    curses = ""
+    if curses_identifier[0] != "":
+        for curse in curses_identifier:
+            if random.randint(1,2) == 2: #50% chance for every curse to occur
+                if curses == "":
+                    curses += curse
+                else: curses += f",{curse}"
+    #Check if item is already in the player's inventory
+    if itemID in GlobalVars.inventoryData[author_row_index]:
+        #Check if rolled curses align with curses already present on an instance of the item in the inventory
+        item_inv_index = GlobalVars.inventoryData[author_row_index].index(itemID)
+        item_inv_indices = [y for y, x in enumerate(GlobalVars.inventoryData[author_row_index]) if x  == itemID] #Find all occurences of the item in the player's inventory
+        for item_instance in item_inv_indices:
+            try:
+                if curses == GlobalVars.inventoryData[author_row_index+2][item_instance]:
+                    GlobalVars.inventoryData[author_row_index+1][item_instance] = int(GlobalVars.inventoryData[author_row_index+1][item_instance]) + amount
+                    already_in_inventory = True
+                    await writeInvetorySheet(GlobalVars.inventoryData)
+                    await message.channel.send(embed=discord.Embed(title=f"{amount}x {item_database_info[1]} added to your already present items!", description="You already owned that exact item, so we just added the requested quantity.", colour = embcol))
+                    return
+            except IndexError: #This happens when a trailing item has no curse.
+                if curses == "":
+                    GlobalVars.inventoryData[author_row_index+1][item_instance] = int(GlobalVars.inventoryData[author_row_index+1][item_instance]) + amount
+                    already_in_inventory = True
+                    await writeInvetorySheet(GlobalVars.inventoryData)
+                    await message.channel.send(embed=discord.Embed(title=f"{amount}x {item_database_info[1]} added to your already present items!", description="You already owned that exact item, so we just added the requested quantity.", colour = embcol))
+                    return
+                else: pass
+        if already_in_inventory == False: #If curses do not match on any instance
+            GlobalVars.inventoryData[author_row_index].append(itemID)
+            GlobalVars.inventoryData[author_row_index+1].append(amount)
+            while len(GlobalVars.inventoryData[author_row_index+2]) < len(GlobalVars.inventoryData[author_row_index]) - 1:
+                GlobalVars.inventoryData[author_row_index+2].append("")
+            GlobalVars.inventoryData[author_row_index+2].append(curses)
+            await writeInvetorySheet(GlobalVars.inventoryData)
+            await message.channel.send(embed=discord.Embed(title=f"{amount}x {item_database_info[1]} added to your inventory!", description="Seems to be your first one. Go and have fun with it!", colour = embcol))
+            return
+
+
+    else: #If Item is new in the inventory
+        GlobalVars.inventoryData[author_row_index].append(itemID)
+        GlobalVars.inventoryData[author_row_index+1].append(amount)
+        while len(GlobalVars.inventoryData[author_row_index+2]) < len(GlobalVars.inventoryData[author_row_index]) - 1:
+                GlobalVars.inventoryData[author_row_index+2].append("")
+        GlobalVars.inventoryData[author_row_index+2].append(curses)
+        await writeInvetorySheet(GlobalVars.inventoryData)
+        await message.channel.send(embed=discord.Embed(title=f"{amount}x {item_database_info[1]} added to your inventory!", description="Seems to be your first one. Go and have fun with it!", colour = embcol))
+        return
+    
+'''
+Function that prints the inventory, and waits for a selection. Embed_bottom_note is a string that is shown at the 
+very bottom of the last inventory embed to tell the user what the selection is for
+'''
+async def showInventoryAndChooseItem(message, author_row_index, embed_bottom_note):
+    #Get list of all items
+    player_inventory = GlobalVars.inventoryData[author_row_index:author_row_index+5]
+    item_list = []  #collect a list of the descriptors in order here.
+    embed_string = [""]
+    y = 0
+    for i in range(2, len(player_inventory[0])):
+        item_descriptor = player_inventory[0][i]
+        item_list.append(item_descriptor)
+        #Find item in database
+        item_database_info = [x for x in GlobalVars.itemdatabase[0] if item_descriptor in x][0]
+        #Collect info about this item
+        item_name = item_database_info[0]
+        item_short_description = item_database_info[7]
+        quantity = player_inventory[1][i]
+        curse_names = ""
+        try:
+            if player_inventory[2][i] != "": #If the item has curses
+                curses = player_inventory[2][i].split(",")
+
+                #Generate the list of curses the item has.
+                for curse in curses:
+                    curse_info = [x for x in GlobalVars.itemdatabase[1] if curse in x]
+                    if curse_names == "": #Construct the string in a way that it doesn't have trailing commas and spaces.
+                        curse_names += f"{curse_info[0][0]}"
+                    else: curse_names += f", {curse_info[0][0]}"
+        except IndexError: #This happens when a trailing item in the inventory has no curse. Just ignore it.
+            pass
+        if curse_names == "":
+            add_string = f"`{i-1}`: {quantity}x `{item_name}`: {item_short_description}\n\n"
+        else: 
+            add_string = f"`{i-1}`: {quantity}x `{item_name}`: {item_short_description}\n__Curses__: {curse_names}\n\n"
+
+        if len(embed_string[y]) + len(add_string) > 4096:
+            embed_string.append(add_string)
+            y += 1
+        else:
+            embed_string[y] += add_string
+
+    #Print list of items
+    if len(embed_string) == 1:
+        embed_string[0] += embed_bottom_note
+
+    inventory_embed = discord.Embed(title = f"{player_inventory[0][0]}'s inventory", description= embed_string[0], colour = embcol)
+    await message.channel.send(embed = inventory_embed)
+    if len(embed_string) > 1:
+        for i in range(1, len(embed_string)):
+                if i == len(embed_string) - 1:
+                    inventory_embed = discord.Embed(title = f"{player_inventory[0][0]}'s inventory", description= embed_string[i] + embed_bottom_note, colour = embcol)
+                else:
+                    inventory_embed = discord.Embed(title = f"{player_inventory[0][0]}'s inventory", description= embed_string[i], colour = embcol)
+
+                await message.channel.send(embed = inventory_embed)
+
+
+
+    #Wait for a response to show more info about a specific item
+    i = -1
+    try:
+        msg = await client.wait_for('message', timeout = 30, check = check(message.author))
+        try:
+            i = int(msg.content) - 1
+            await msg.delete()
+        except TypeError or ValueError:
+            await message.channel.send(embed=discord.Embed(title="Selection Invalid",description="You must enter an integer", colour = embcol))
+            await msg.delete()
+            return False, None
+    except asyncio.TimeoutError:
+        await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+        await message.delete()
+        return False, None
+    return i, item_list

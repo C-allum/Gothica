@@ -109,12 +109,15 @@ else:
 
     CharSheet = "1Vgxa8C5j5XnEUGhaGqAANVhsWSIOra87wCE2f5C75tQ"
 
+    #OldEconSheet
     EconSheet = "1mmWxHhDUPI0PjLC2UXJZmj5wNqXnucFMz-er9NpVC2c"
-
+    
     shopsheet = "1tj64lIs9qvfv3wUDjU5AHplhRoXU4i-qgHj21-Q7olk"
 
+    #newEconsheet
     inventorysheet = "15u6xzZsY5mZAUVmXPolRqUkPeQcGFH1_H-sNCjfNhNM"
 
+    itemsheetID = "17M2FS5iWchszIoimqNzk6lzJMOVLBWQgEZZKUPQuMR8"
     itemsheet = gc.open_by_key("17M2FS5iWchszIoimqNzk6lzJMOVLBWQgEZZKUPQuMR8") #New for economy rewrite
     itemlists = itemsheet.worksheets()
 
