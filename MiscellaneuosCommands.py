@@ -566,6 +566,8 @@ async def datingbackup():
 
     sheet.values().update(spreadsheetId = Plotsheet, range = str("AZ1"), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[string]])).execute()
 
+#--------------Dating Game-------------------
+
 async def datingrestorefromfile(message):
     with open('datingrecovery.txt') as f:
         string = f.read()
@@ -713,7 +715,87 @@ async def datingcreatelists(message):
         user = discord.utils.get(client.get_guild(guildid).members, name = players[b])
         if user != None:
             await user.send(mess)
+
+#--------------Labyrinth Game-----------------
             
+async def mazetest(message):
+    wallsides, enc, paths = await mazeupdate("north")
+    mazeEmbed = discord.Embed(title = "Maze Test", description = "In the deep fog that has taken over the arena, you find yourself and your randomly assigned acquiantence in a maze. You can barely see 5 feet in front of your face, because Callum cannot be bothered coding lines of sight into this right now.\n\nThis room has the entrance behind you to the South.\n" + wallsides + "\n" + enc + "\n\nRp here, and then use the buttons below to decide where to go next!", colour = embcol)
+    await message.channel.send(embed = mazeEmbed, view = MazeView(0,0,0,1))
+
+async def mazeupdate(direction):
+    if direction == "north":
+        playerlocation[0] -= 1
+    elif direction == "east":
+        playerlocation[1] += 1
+    elif direction == "south":
+        playerlocation[0] += 1
+    else:
+        playerlocation[1] -= 1
+    pr = playerlocation[0]
+    pc = playerlocation[1]
+    walls = []
+    paths = [1, 1, 1, 1]
+    if "N" in mazearray[pr][pc]:
+        walls.append("North")
+        paths[0] -= 1
+    if "E" in mazearray[pr][pc]:
+        walls.append("East")
+        paths[1] -= 1
+    if "S" in mazearray[pr][pc]:
+        walls.append("South")
+        paths[2] -= 1
+    if "W" in mazearray[pr][pc]:
+        walls.append("West")
+        paths[3] -= 1
+    if len(walls) == 0:
+        wallsides = "This room doesn't seem to have walls on any sides."
+    elif len(walls) == 1:
+        wallsides = "This room has a wall to the " + walls[0]
+    elif len(walls) == 2:
+        wallsides = "This room has walls to the " + walls[0] + " and " + walls[1]
+    else:
+        wallsides = "This room has walls to the " + walls[0] + ", " + walls[1] + ", and " + walls[2]
+    if mazeencounters[pr][pc] != "":
+        enc = "In this space, you find: " + mazeencounters[pr][pc]
+    else:
+        enc = ""
+    return(wallsides, enc, paths)
+
+#Mazebutton
+class MazeView(discord.ui.View):
+    def __init__(self, north, east, south, west):
+        super().__init__()
+        self.buttons = []
+
+        if north:
+            nbut = discord.ui.Button(label = "North", style = discord.ButtonStyle.green, custom_id = "north")
+            self.buttons.append(nbut)
+            self.add_item(nbut)
+        if east:
+            ebut = discord.ui.Button(label = "East", style = discord.ButtonStyle.green, custom_id = "east")
+            self.buttons.append(ebut)
+            self.add_item(ebut)
+        if south:
+            sbut = discord.ui.Button(label = "South", style = discord.ButtonStyle.green, custom_id = "south")
+            self.buttons.append(sbut)
+            self.add_item(sbut)
+        if west:
+            wbut = discord.ui.Button(label = "West", style = discord.ButtonStyle.green, custom_id = "west")
+            self.buttons.append(wbut)
+            self.add_item(wbut)
+
+        for a in range(len(self.buttons)):
+            self.buttons[a].callback = self.callback
+
+    async def callback(self, interaction: discord.Interaction):
+        resp = await interaction.response.send_message("Going!")
+        wallsides, enc, paths = await mazeupdate(interaction.data["custom_id"])
+        mazeEmbed = discord.Embed(title = "Maze Test", description = wallsides + "\n" + enc + "\n\nRp here, and then use the buttons below to decide where to go next!", colour = embcol)
+        await interaction.channel.send(embed = mazeEmbed, view = MazeView(paths[0], paths[1], paths[2], paths[3]))
+        self.value = True
+        self.stop()
+
 #----------------View Classes----------------
 
 #This is the view class for a simple accept button.

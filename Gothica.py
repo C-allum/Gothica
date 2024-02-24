@@ -48,17 +48,17 @@ async def on_ready():
     TupperDatabase.initTupperDatabase()
 
     #Economy V2 startup
-    if not liveVersion:
+    if not 1:#liveVersion:
         print("Fetching item database...")
         
         for a in range(len(itemlists)):
             itemdatabase.append(itemlists[a].get_all_values())
         print("... done\n")
 
-    print("Fetching a list of all players...")
-    global player_list 
-    player_list = await MiscellaneuosCommands.getPlayerNameList()
-    print("... done")
+        print("Fetching a list of all players...")
+        global player_list 
+        player_list = await MiscellaneuosCommands.getPlayerNameList()
+        print("... done")
 
     #------------------DezzieAwardPoolReset---------------------
 
@@ -4082,25 +4082,27 @@ async def on_message(message):
                 else:
                     await message.add_reaction('♥️')
 
-            #Dating Game
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingjoin"):
-                await MiscellaneuosCommands.datingjoin(message)
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingsetup"):
-                await MiscellaneuosCommands.datingsetup(message)
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingfromfilerestore"):
-                await MiscellaneuosCommands.datingrestorefromfile(message)
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingrestore"):
-                await MiscellaneuosCommands.datingrestore(message)
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingend"):
-                await MiscellaneuosCommands.datingend(message)
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingmanual"):
-                await MiscellaneuosCommands.datingmanual(message)
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingcreatelists"):
-                await MiscellaneuosCommands.datingcreatelists(message)
+            # #Dating Game
+            # elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingjoin"):
+            #     await MiscellaneuosCommands.datingjoin(message)
+            # elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingsetup"):
+            #     await MiscellaneuosCommands.datingsetup(message)
+            # elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingfromfilerestore"):
+            #     await MiscellaneuosCommands.datingrestorefromfile(message)
+            # elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingrestore"):
+            #     await MiscellaneuosCommands.datingrestore(message)
+            # elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingend"):
+            #     await MiscellaneuosCommands.datingend(message)
+            # elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingmanual"):
+            #     await MiscellaneuosCommands.datingmanual(message)
+            # elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingcreatelists"):
+            #     await MiscellaneuosCommands.datingcreatelists(message)
 
+            # if str(message.channel.parent) == "blind-dates" and not "Gothica" in message.author.name:
+            #     await MiscellaneuosCommands.datingrelay(message)
 
-            if str(message.channel.parent) == "blind-dates" and not "Gothica" in message.author.name:
-                await MiscellaneuosCommands.datingrelay(message)
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "mazetest"):
+                await MiscellaneuosCommands.mazetest(message)
 
             #Timestamp Message
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "timestamp"):

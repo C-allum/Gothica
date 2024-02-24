@@ -251,6 +251,10 @@ datingprivatethreads = []
 datingstate = 1
 datingmax = 24
 
+mazearray = [["NW", "NS", "E", "NSW", "NE"], ["EW", "NSW", "ES", "NW", "E"], ["SW", "N", "NE", "ESW", "E"], ["NW", "E", "SW", "NS", "E"], ["ESW", "SW", "NE", "NSW", "ES"]]
+mazeencounters = [["", "", "The Exit!", "", "A very horny minotaur. We can ping a lorekeep or something to run him here?"], ["The ground is missing! There appears to be a bottomless pit here!", "I didn't expect you to go here, as the exit was back there...", "", "A treasure chest?", ""], ["", "A mimic?", "2 kobolds, having sex?", "Me, running out of ideas for this showcase.", "A single dezzie"], ["A horny minotaur. We could ping lorekeeps here?", "", "The floor to be covered in slime, make a dex check or fall prone!", "The skeleton of a fallen adventurer. It looks at you.", "A sudden desire to kiss your partner"], ["", "A chest that is obviously not a mimic", "The entrance", "A map of this maze. It is obviously wrong.", ""]]
+playerlocation = [5, 2]
+
 #---------------------------------------------
 
 def check(author):
