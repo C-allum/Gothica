@@ -55,10 +55,10 @@ async def on_ready():
             itemdatabase.append(itemlists[a].get_all_values())
         print("... done\n")
 
-        print("Fetching a list of all players...")
-        global player_list 
-        player_list = await MiscellaneuosCommands.getPlayerNameList()
-        print("... done")
+    print("Fetching a list of all players...")
+    global player_list 
+    player_list = await MiscellaneuosCommands.getPlayerNameList()
+    print("... done")
 
     #------------------DezzieAwardPoolReset---------------------
 
