@@ -48,7 +48,7 @@ async def on_ready():
     #Economy V2 startup
     if not liveVersion:
         print("Fetching item database...")
-        await EconomyV2.reloadItemSheet()
+        await EconomyV2.loadItemSheet()
         print("... done\n")
         
     print("Loading economy data...")
@@ -2578,6 +2578,8 @@ async def on_message(message):
                     await EconomyV2.buyitem(message)
                 elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~giftall"):
                     await EconomyV2.giftAll(message)
+                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~sellitem"):
+                    await EconomyV2.sellitem(message)
                 
                 
             #-------------------------------------The Economy---------------------------------------

@@ -425,22 +425,22 @@ async def buyitem(message):
         if userinput == "y" or userinput == "yes":
             #Complete transaction
             #Find person in the inventory sheet
-            author_row_index_inventory = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if message.author.id in x][0])
+            author_row_index_inventory = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if str(message.author.id) in x][0])
             playerID = GlobalVars.inventoryData[author_row_index_inventory][1]
-            author_row_index_economy = GlobalVars.economyData.index([x for x in GlobalVars.economyData if message.author.id in x][0])
-            old_balance = GlobalVars.economyData[author_row_index_economy][1]
+            author_row_index_economy = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0])
+            old_balance = GlobalVars.economyData[author_row_index_economy+1][1]
             success = await removeDezziesFromPlayerWithoutMessage(price, playerID=playerID)
             if success:
 
 
 
                 await addItemToPlayerWithCurse(message, playerID, item_identifier, buyquant, chosenShop)
-                new_balance = GlobalVars.economyData[author_row_index_economy][1]
+                new_balance = GlobalVars.economyData[author_row_index_economy+1][1]
                 if quantity_available != "Infinite":
                     #Update the Stock of the item.
                     itemindex = GlobalVars.itemdatabase[chosenShop].index(item_database_info)
                     GlobalVars.itemdatabase[chosenShop][itemindex][18] = int(quantity_available) - buyquant
-                    await updateItemsheetCell(chosenShop, itemindex, 18, int(quantity_available) - buyquant)
+                    await writeItemsheetCell(chosenShop, itemindex, 18, int(quantity_available) - buyquant)
                 await message.channel.send(embed=discord.Embed(title="Success!",description=f"Before this transaction you had {old_balance}:dz:. You paid {price}:dz: and your new balance is {new_balance}:dz:", colour = embcol))
             else:
                 await message.channel.send(embed=discord.Embed(title="Not enough funds!",description="Your funds are insufficient to buy this item!", colour = embcol))
@@ -453,8 +453,8 @@ async def buyitem(message):
 
 async def sellitem(message):
     #Find person in the inventory sheet
-    author_inventory_row_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if message.author.id in x][0])
-    author_economy_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if message.author.id in x][0])
+    author_inventory_row_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if str(message.author.id) in x][0])
+    author_economy_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0])
     #Check if quantity was provided and prepare the search term
     sellquant = 1
     quantProvided = False
@@ -492,7 +492,7 @@ async def sellitem(message):
         try:
             msg = await client.wait_for('message', timeout = 30, check = check(message.author))
             try:
-                userinput = int(msg.content) - 1
+                userinput = int(msg.content)
                 await msg.delete()
             except TypeError or ValueError:
                 await message.channel.send(embed=discord.Embed(title="Selection Invalid",description="You must enter an integer", colour = embcol))
@@ -505,27 +505,79 @@ async def sellitem(message):
         sellquant = userinput
 
     item_identifier = GlobalVars.inventoryData[author_inventory_row_index][i]
-    #Remove items from inventory
-    if sellquant < int(GlobalVars.inventoryData[author_inventory_row_index+1][i]):
-        GlobalVars.inventoryData[author_inventory_row_index+1][i] = int(GlobalVars.inventoryData[author_inventory_row_index+1][i]) - sellquant
-    else:
-        del GlobalVars.inventoryData[author_inventory_row_index+1][i]
-        del GlobalVars.inventoryData[author_inventory_row_index+2][i]
+    
+   
+
+    #find the shop that sells this item to later add stock to it.
+    shops_containing_sold_item = []
+    for y in range(3, len(GlobalVars.itemdatabase)):
         try:
-            del GlobalVars.inventoryData[author_inventory_row_index+3][i]
-        except IndexError: #If we get an index error, that cell wasn't occupied anyways and was a trailing cell.
-            pass
+            GlobalVars.itemdatabase[y].index([x for x in GlobalVars.itemdatabase[y] if item_identifier in x][0])
+            success = True
+        except IndexError:
+            success = False
+        if success == True:
+            shops_containing_sold_item.append(y)
+    #If multiple shops have the item, choose one at random.
+    if len(shops_containing_sold_item) > 1:
+        sell_shop_index = random.randint(1, len(shops_containing_sold_item)) - 1
+    elif len(shops_containing_sold_item) == 1: 
+        sell_shop_index = shops_containing_sold_item[0]
+    else:
+        await message.channel.send(embed=discord.Embed(title="Did not find a shop that sells, and therefore buys this item. Talk to the Bot Gods about that.", color=embcol))
 
-    #Add dezzies
-    item_index = GlobalVars.itemdatabase.index([x for x in GlobalVars.itemdatabase[0] if item_identifier in x][0])
-    item_price = GlobalVars.itemdatabase[0][item_index][2]
-    await addDezziesToPlayer(message, item_price * GlobalVars.config["economy"]["sellpricemultiplier"], playerID=message.author.id)
+    #ask for confirmation
+    
+    item_index = GlobalVars.itemdatabase[sell_shop_index].index([x for x in GlobalVars.itemdatabase[sell_shop_index] if item_identifier in x][0])
+    item_price = GlobalVars.itemdatabase[sell_shop_index][item_index][13]
+    itemname = GlobalVars.itemdatabase[sell_shop_index][item_index][1]
+    await message.channel.send(embed=discord.Embed(title=f"Do you want to sell {sellquant}x {itemname} for {int(int(item_price) * GlobalVars.config["economy"]["sellpricemultiplier"] * sellquant)}? (y/n)"))
+    userinput = "-"
+    try:
+        msg = await client.wait_for('message', timeout = 30, check = checkstr(message.author))
+        try:
+            userinput = msg.content.lower().replace(" ", "")
+            await msg.delete()
+        except TypeError or ValueError:
+            await message.channel.send(embed=discord.Embed(title="Selection Invalid",description="Reply must be yes or no (or y / n)", colour = embcol))
+            await msg.delete()
+            return
+    except asyncio.TimeoutError:
+        await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+        await message.delete()
+        return
+    
+    if userinput == "y" or userinput == "yes":
+        deleted = False
+        #Remove items from inventory
+        if sellquant < int(GlobalVars.inventoryData[author_inventory_row_index+1][i]):
+            GlobalVars.inventoryData[author_inventory_row_index+1][i] = int(GlobalVars.inventoryData[author_inventory_row_index+1][i]) - sellquant
+        else:
+            GlobalVars.inventoryData[author_inventory_row_index][i] = ""
+            GlobalVars.inventoryData[author_inventory_row_index+1][i] = ""
+            deleted = True
+            try:
+                GlobalVars.inventoryData[author_inventory_row_index+2][i] = ""
+            except IndexError: #If we get an index error, that cell wasn't occupied anyways and was a trailing cell.
+                pass
+        item_row_index = GlobalVars.itemdatabase[sell_shop_index].index([x for x in GlobalVars.itemdatabase[sell_shop_index] if item_identifier in x][0])
+        new_stock = int(GlobalVars.itemdatabase[sell_shop_index][item_row_index][18]) + sellquant
+        #Add dezzies
+        
+        await addDezziesToPlayer(message, int(int(item_price) * GlobalVars.config["economy"]["sellpricemultiplier"]) * sellquant, playerID=message.author.id)
+        #Update PlayerInfo sheet, and Inventory sheet.
+        await writeEconSheet(GlobalVars.economyData)
+        await writeInvetorySheet(GlobalVars.inventoryData)
+        await writeItemsheetCell(sell_shop_index, item_row_index, 18, new_stock)
 
-    #Add one to the item stock in the shop.
+        if deleted == True: #Clean up the internal inventory representation from trailing spaces
+            del GlobalVars.inventoryData[author_inventory_row_index][i]
+            del GlobalVars.inventoryData[author_inventory_row_index+1][i]
+            try:
+                del GlobalVars.inventoryData[author_inventory_row_index+2][i]
+            except IndexError: #If we get an index error, that cell wasn't occupied anyways and was a trailing cell.
+                pass
 
-    #Update PlayerInfo sheet, and Inventory sheet.
-    await writeEconSheet(GlobalVars.economyData)
-    await writeInvetorySheet(GlobalVars.inventoryData)
 
 async def giveitem(message):
     #Find giver in the inventory sheet
@@ -684,13 +736,13 @@ async def writeInvetorySheet(values, range = "A1:ZZ8000"):
         values = [[values]]
     sheet.values().update(spreadsheetId = inventorysheet, range = "Inventories!" + range, valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values= values)).execute()
 
-async def reloadItemSheet():
+async def loadItemSheet():
     itemsheet = gc.open_by_key("17M2FS5iWchszIoimqNzk6lzJMOVLBWQgEZZKUPQuMR8") #New for economy rewrite
     itemlists = itemsheet.worksheets()
     for a in range(len(itemlists)):
             GlobalVars.itemdatabase.append(itemlists[a].get_all_values())
 
-async def updateItemsheetCell(shopnumber, row, column, values):
+async def writeItemsheetCell(shopnumber, row, column, values):
     itemsheet.worksheets()[shopnumber].update_cell(row + 1, column + 1, values)
 
 
@@ -756,7 +808,7 @@ async def removeDezziesFromPlayerWithoutMessage( amount, playerID = None, player
 
     if int(GlobalVars.economyData[author_row_index][1]) > amount:
             #Remove the money from the player
-            GlobalVars.economyData[author_row_index][1] = int(GlobalVars.economyData[author_row_index][1]) - amount
+            GlobalVars.economyData[author_row_index+1][1] = int(GlobalVars.economyData[author_row_index+1][1]) - amount
 
             #Write to sheet
             await writeEconSheet(GlobalVars.economyData)
@@ -768,21 +820,23 @@ async def removeDezziesFromPlayerWithoutMessage( amount, playerID = None, player
 async def addDezziesToPlayer(message, amount, playerID=None, playerName=None):
 
     if playerID != None:
-        author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if playerID in x][0])
+        author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(playerID) in x][0])
     elif playerName != None:
         author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if playerName in x][0])
     else:
         await message.channel.send(embed = discord.Embed(title="Player to give dezzies to not found."))
         return
-    GlobalVars.economyData[author_row_index][1] = int(GlobalVars.economyData[author_row_index][1]) + amount
+    old_balance = int(GlobalVars.economyData[author_row_index+1][1])
+    new_balance = old_balance + amount
 
+    GlobalVars.economyData[author_row_index+1][1] = new_balance
     #Write to sheet
     await writeEconSheet(GlobalVars.economyData)
-    await message.channel.send(embed=discord.Embed(title=f"Added {amount} to {GlobalVars.economyData[author_row_index][0]}'s balance!", description="Don't spend it all in one place!", colour = embcol))
+    await message.channel.send(embed=discord.Embed(title=f"Added {amount} to {GlobalVars.economyData[author_row_index][0]}'s balance!", description=f"Before this transaction you had {old_balance}:dz:, now you have {new_balance}:dz:.Don't spend it all in one place!", colour = embcol))
     return True
 
 async def addItemToPlayerWithCurse(message, playerID, itemID, amount, shop_number):
-    author_row_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if playerID in x][0])
+    author_row_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if str(playerID) in x][0])
     
     already_in_inventory = False
 
