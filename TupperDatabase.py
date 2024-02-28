@@ -105,12 +105,12 @@ async def lookup(imgURL:str, message:discord.Message):
         playerID = None
         charName = None
 
-        #iterate through the last 4000 embedded messages
+        #iterate through the last 8000 embedded messages
         for currMess in messages:
             #we found the message if the RP message matches, and the author (character name) matches as well.
             if message.content in currMess.embeds[0].description and message.author.name == currMess.embeds[0].title:
                 playerID = currMess.embeds[0].fields[0].value.split("!")[1].split(">")[0]
-                charName = currMess.embeds[0].title
+                charName = currMess.embeds[0].title.replace("'", "")
                 break
         
         #check if the tupper is in the database, but the url has changed
@@ -136,11 +136,11 @@ async def lookup(imgURL:str, message:discord.Message):
                 print(f"Updated the img url from: {data[0][1]} to: {imgURL}.")
                 data[0][1] = imgURL
 
-    elif data[0][2] != message.author.name:
+    elif data[0][2] != message.author.name.replace("'", ""):
         #check if tup name needs updating.
-        updateTupName(data[0][0], imgURL, message.author.name)
-        print(f"Updated tupper name from {data[0][2]} to {message.author.name}")
-        data[0][2] = message.author.name
+        updateTupName(data[0][0], imgURL, message.author.name.replace("'", ""))
+        print(f"Updated tupper name from {data[0][2]} to {message.author.name.replace("'", "")}")
+        data[0][2] = message.author.name.replace("'", "")
     
     playerID = data[0][0]
     imgURL = data[0][1]

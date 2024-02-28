@@ -2565,6 +2565,8 @@ async def on_message(message):
                 await EconomyV2.copyEconomy(message)
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "reloadeconomy") and "staff" in str(message.author.roles).lower():
                 await EconomyV2.loadEconomySheet()
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "reloadshops") and "staff" in str(message.author.roles).lower():
+                await EconomyV2.loadItemSheet()
     
             #New economy commands (EconomyV2)
             elif message.author.name == "c_allum" or message.author.name == "artificer_dragon":
@@ -2576,10 +2578,14 @@ async def on_message(message):
                     await EconomyV2.inventory(message)
                 elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~buy"):
                     await EconomyV2.buyitem(message)
-                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~giftall"):
+                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~giftall") and "staff" in str(message.author.roles).lower():
                     await EconomyV2.giftAll(message)
                 elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~sellitem"):
                     await EconomyV2.sellitem(message)
+                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~giveitem"):
+                    await EconomyV2.giveitem(message)
+                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~additem"):
+                    await EconomyV2.additem(message)
                 
                 
             #-------------------------------------The Economy---------------------------------------
