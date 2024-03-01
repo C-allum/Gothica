@@ -848,10 +848,12 @@ async def on_message(message):
 
                 except ValueError:
 
-                    await message.channel.send("Not a valid integer, set to 1 hour.")
-
-                    time = 3600
-
+                    await message.channel.send("Not a valid integer, toggling the role instead.")
+                    if "Looking for Role Play" in message.author.roles:
+                        await vermemb.add_roles(role)
+                    else:
+                        await vermemb.remove_roles(role)
+                    return
                 except IndexError:
 
                     time = 3600

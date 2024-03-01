@@ -445,7 +445,7 @@ class ImpTomeView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=3600*2)
         self.value = None
-    #This defines the button. The button_calback function defines what happened when we click it. We save the click in the variable to make sure
+    #This defines the button. The button_calback function defines what happens when we click it. We save the click in the variable to make sure
     # that we can later see if the button was actually pressed.´
     # The interaction.response is important as otherwise the interaction (button) will be seen as failed.
     # You can also silently acknowledge the interaction with interaction.response.defer() - This makes the bot think it properly responded with "" for full invisibility.
