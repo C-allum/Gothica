@@ -2588,6 +2588,13 @@ async def on_message(message):
                     await EconomyV2.giveitem(message)
                 elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~additem"):
                     await EconomyV2.additem(message)
+                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~givemoney"):
+                    await EconomyV2.giveMoney(message)
+                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~addmoney"):
+                    await EconomyV2.addMoney(message)
+                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~removemoney"):
+                    await EconomyV2.removeMoney(message)
+
                 
                 
             #-------------------------------------The Economy---------------------------------------

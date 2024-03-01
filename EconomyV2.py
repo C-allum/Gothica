@@ -1042,8 +1042,46 @@ async def giftAll(message):
         await writeEconSheet(GlobalVars.economyData)
     await message.channel.send(embed=discord.Embed(title="You gifted dezzies to all players!",description=f"You gifted {amount}:dz: to everyone!", colour = embcol))
 
+async def giveMoney(message):
+    amount = message.content.split(" ")[-1]
+    recipient_name, recipient_id = await getUserNamestr(message)
+    author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0])
+    recipient_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(recipient_id) in x][0])
+    await addDezziesToPlayer(message, int(amount), playerID=recipient_id, write_econ_sheet=True, send_message=False)
+    await removeDezziesFromPlayerWithoutMessage(amount, message.author.id)
+    await message.channel.send(embed=discord.Embed(title=f"{message.author.name} has given {amount}:dz: to {recipient_name}!", description=f"{message.author.name} now has {GlobalVars.economyData[author_row_index+1][1]}:dz:\n\n{recipient_name} now has {GlobalVars.economyData[recipient_row_index+1][1]}:dz:"))
+    
+
+async def addMoney(message):
+    amount = message.content.split(" ")[-1]
+    recipient_name, recipient_id = await getUserNamestr(message)
+    recipient_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(recipient_id) in x][0])
+    await addDezziesToPlayer(message, int(amount), playerID=recipient_id, write_econ_sheet=True, send_message=True)
+    
+
+async def removeMoney(message):
+    amount = message.content.split(" ")[-1]
+    recipient_name, recipient_id = await getUserNamestr(message)
+    recipient_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(recipient_id) in x][0])
+    await removeDezziesFromPlayerWithoutMessage(int(amount), recipient_id)
+    new_balance = GlobalVars.economyData[recipient_row_index+1][1]
+    await message.channel.send(embed=discord.Embed(title=f"Removed {amount}:dz: from {GlobalVars.economyData[recipient_row_index][0]}'s balance!", description=f"Their new balance is {new_balance}:dz:.", colour = embcol))
+
+
 async def useitem(message):
     pass
+
+async def money(message):
+    author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0])
+    balance = GlobalVars.economyData[author_row_index+1][1]
+    await message.channel.send(embed=discord.Embed(title=f"{message.author.name} has {balance}", description=f"Leaderboard Rank: FIX THIS KEN!", colour = embcol))
+
+    pass
+
+async def leaderboard(message):
+    pass
+
+
 
 async def dezReact(reaction):
     #Copy the old function, change the way we write
@@ -1056,6 +1094,7 @@ async def rpDezReact(reaction):
 
 #TODO: Rewrite the item function (Fuzzy String matching)
 #TODO: Rewrite the Shop function (Fuzzy String matching)
+#TODO: Add leaderboard rank to money function
 
 async def copyEconomy(message):
 
@@ -1220,16 +1259,16 @@ async def matchStringToItemBase(item_name, top_n_results):
 async def removeDezziesFromPlayerWithoutMessage( amount, playerID = None, playerName = None):
 
     if playerID != None:
-        author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if playerID in x][0])
+        author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(playerID) in x][0])
     elif playerName != None:
         author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if playerName in x][0])
     else:
         await message.channel.send(embed = discord.Embed(title="Player to remove dezzies from not found."))
         return False
 
-    if int(GlobalVars.economyData[author_row_index][1]) > amount:
+    if int(GlobalVars.economyData[author_row_index][1]) > int(amount):
         #Remove the money from the player
-        GlobalVars.economyData[author_row_index+1][1] = int(GlobalVars.economyData[author_row_index+1][1]) - amount
+        GlobalVars.economyData[author_row_index+1][1] = int(GlobalVars.economyData[author_row_index+1][1]) - int(amount)
 
         #Write to sheet
         await writeEconSheet(GlobalVars.economyData)
@@ -1255,7 +1294,7 @@ async def addDezziesToPlayer(message, amount, playerID=None, playerName=None, wr
         if write_econ_sheet == True:
             await writeEconSheet(GlobalVars.economyData)
         if send_message == True:
-            await message.channel.send(embed=discord.Embed(title=f"Added {amount} to {GlobalVars.economyData[author_row_index][0]}'s balance!", description=f"Before this transaction you had {old_balance}:dz:, now you have {new_balance}:dz:.Don't spend it all in one place!", colour = embcol))
+            await message.channel.send(embed=discord.Embed(title=f"Added {amount}:dz: to {GlobalVars.economyData[author_row_index][0]}'s balance!", description=f"Before this transaction you had {old_balance}:dz:, now you have {new_balance}:dz:. Don't spend it all in one place!", colour = embcol))
         return True
 
 async def addItemToPlayerWithCurseFromShop(message, playerID, itemID, amount, shop_number):
@@ -1635,5 +1674,3 @@ class Dropdown_Select_View(discord.ui.View):
         self.button_response = self.select.values
         await interaction.response.defer()
         self.stop()
-
-
