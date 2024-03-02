@@ -2586,14 +2586,20 @@ async def on_message(message):
                     await EconomyV2.sellitem(message)
                 elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~giveitem"):
                     await EconomyV2.giveitem(message)
-                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~additem"):
+                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~additem") and "staff" in str(message.author.roles).lower():
                     await EconomyV2.additem(message)
                 elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~givemoney"):
                     await EconomyV2.giveMoney(message)
-                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~addmoney"):
+                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~addmoney") and "staff" in str(message.author.roles).lower():
                     await EconomyV2.addMoney(message)
-                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~removemoney"):
+                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~removemoney") and "staff" in str(message.author.roles).lower():
                     await EconomyV2.removeMoney(message)
+                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~money"):
+                    await EconomyV2.money(message)
+                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~useitem"):
+                    await EconomyV2.useitem(message)
+                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~leaderboard"):
+                    await EconomyV2.leaderboard(message)
 
                 
                 
