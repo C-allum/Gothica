@@ -446,6 +446,8 @@ async def buyitem(message):
                         rolled_curse_string += f"**{potential_curses[curse][0]}**: {potential_curses[curse][2]}\n\n"
                     await message.channel.send(embed=discord.Embed(title="Take a look at the item and it's rolled curses!",description=embed_string + rolled_curse_string, colour = embcol))
 
+                TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.Buy, price * buyquant)
+
             else:
                 await message.channel.send(embed=discord.Embed(title="Not enough funds!",description="Your funds are insufficient to buy this item!", colour = embcol))
         else:
@@ -549,30 +551,31 @@ async def sellitem(message):
     if confirm_view.button_response == "yes":
         deleted = False
         #Remove items from inventory
-        await removeItemFromInventory(author_inventory_row_index, i, sellquant)
+        if await removeItemFromInventory(author_inventory_row_index, i, sellquant):
+            #Add stock to the inventory of the shop
+            item_row_index = GlobalVars.itemdatabase[sell_shop_index].index([x for x in GlobalVars.itemdatabase[sell_shop_index] if item_identifier in x][0])
+            if GlobalVars.itemdatabase[sell_shop_index][item_row_index][18] == "":
+                new_stock = ""
+            else:
+                new_stock = int(GlobalVars.itemdatabase[sell_shop_index][item_row_index][18]) + sellquant
 
-        #Add stock to the inventory of the shop
-        item_row_index = GlobalVars.itemdatabase[sell_shop_index].index([x for x in GlobalVars.itemdatabase[sell_shop_index] if item_identifier in x][0])
-        if GlobalVars.itemdatabase[sell_shop_index][item_row_index][18] == "":
-            new_stock = ""
-        else:
-            new_stock = int(GlobalVars.itemdatabase[sell_shop_index][item_row_index][18]) + sellquant
+            #Add dezzies
+            await addDezziesToPlayer(message, int(int(item_price) * GlobalVars.config["economy"]["sellpricemultiplier"]) * sellquant, playerID=message.author.id, write_econ_sheet=False)
 
-        #Add dezzies
-        await addDezziesToPlayer(message, int(int(item_price) * GlobalVars.config["economy"]["sellpricemultiplier"]) * sellquant, playerID=message.author.id, write_econ_sheet=False)
+            #Update PlayerInfo sheet, and Inventory sheet.
+            await writeEconSheet(GlobalVars.economyData)
+            await writeInvetorySheet(GlobalVars.inventoryData)
+            await writeItemsheetCell(sell_shop_index, item_row_index, 18, new_stock)
 
-        #Update PlayerInfo sheet, and Inventory sheet.
-        await writeEconSheet(GlobalVars.economyData)
-        await writeInvetorySheet(GlobalVars.inventoryData)
-        await writeItemsheetCell(sell_shop_index, item_row_index, 18, new_stock)
-
-        if deleted == True: #Clean up the internal inventory representation from trailing spaces
-            del GlobalVars.inventoryData[author_inventory_row_index][-1]
-            del GlobalVars.inventoryData[author_inventory_row_index+1][-1]
-            try:
-                del GlobalVars.inventoryData[author_inventory_row_index+2][-1]
-            except IndexError: #If we get an index error, that cell wasn't occupied anyways and was a trailing cell.
-                pass
+            if deleted == True: #Clean up the internal inventory representation from trailing spaces
+                del GlobalVars.inventoryData[author_inventory_row_index][-1]
+                del GlobalVars.inventoryData[author_inventory_row_index+1][-1]
+                try:
+                    del GlobalVars.inventoryData[author_inventory_row_index+2][-1]
+                except IndexError: #If we get an index error, that cell wasn't occupied anyways and was a trailing cell.
+                    pass
+            
+            TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.Sell, int(int(item_price) * GlobalVars.config["economy"]["sellpricemultiplier"]) * sellquant)
 
 #Guides the user through giving an item
 async def giveitem(message):
@@ -1043,15 +1046,29 @@ async def giftAll(message):
         await writeEconSheet(GlobalVars.economyData)
     await message.channel.send(embed=discord.Embed(title="You gifted dezzies to all players!",description=f"You gifted {amount}:dz: to everyone!", colour = embcol))
 
+    i = 5
+    while i < len(GlobalVars.economyData):
+        TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.Add, amount)
+        i += 4
+
+
 #Guides a player through giving money to another player
 async def giveMoney(message):
     amount = message.content.split(" ")[-1]
     recipient_name, recipient_id = await getUserNamestr(message)
     author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0])
     recipient_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(recipient_id) in x][0])
-    await addDezziesToPlayer(message, int(amount), playerID=recipient_id, write_econ_sheet=True, send_message=False)
-    await removeDezziesFromPlayerWithoutMessage(amount, message.author.id)
-    await message.channel.send(embed=discord.Embed(title=f"{message.author.name} has given {amount}:dz: to {recipient_name}!", description=f"{message.author.name} now has {GlobalVars.economyData[author_row_index+1][1]}:dz:\n\n{recipient_name} now has {GlobalVars.economyData[recipient_row_index+1][1]}:dz:"))
+
+    if await removeDezziesFromPlayerWithoutMessage(amount, message.author.id):
+        await addDezziesToPlayer(message, int(amount), playerID=recipient_id, write_econ_sheet=True, send_message=False)
+        await message.channel.send(embed=discord.Embed(title=f"{message.author.name} has given {amount}:dz: to {recipient_name}!", description=f"{message.author.name} now has {GlobalVars.economyData[author_row_index+1][1]}:dz:\n\n{recipient_name} now has {GlobalVars.economyData[recipient_row_index+1][1]}:dz:"))
+        
+        TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.Give, -amount)
+        TransactionsDatabaseInterface.addTransaction(recipient_name, TransactionsDatabaseInterface.DezzieMovingAction.Give, amount)
+    else:
+        await message.channel.send(embed=discord.Embed(title=f"{message.author.name} has not enough :dz: to give {amount}:dz: to {recipient_name}!", description=f"{message.author.name} has {GlobalVars.economyData[author_row_index+1][1]}:dz:"))
+        
+
 
 #Guides a staff member through adding money to a players balance
 async def addMoney(message):
@@ -1059,15 +1076,22 @@ async def addMoney(message):
     recipient_name, recipient_id = await getUserNamestr(message)
     recipient_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(recipient_id) in x][0])
     await addDezziesToPlayer(message, int(amount), playerID=recipient_id, write_econ_sheet=True, send_message=True)
+    
+    TransactionsDatabaseInterface.addTransaction(recipient_name, TransactionsDatabaseInterface.DezzieMovingAction.Add, amount)
 
 #Guides staff member through removing money from a players balance
 async def removeMoney(message):
     amount = message.content.split(" ")[-1]
     recipient_name, recipient_id = await getUserNamestr(message)
     recipient_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(recipient_id) in x][0])
-    await removeDezziesFromPlayerWithoutMessage(int(amount), recipient_id)
-    new_balance = GlobalVars.economyData[recipient_row_index+1][1]
-    await message.channel.send(embed=discord.Embed(title=f"Removed {amount}:dz: from {GlobalVars.economyData[recipient_row_index][0]}'s balance!", description=f"Their new balance is {new_balance}:dz:.", colour = embcol))
+    if await removeDezziesFromPlayerWithoutMessage(int(amount), recipient_id):
+        new_balance = GlobalVars.economyData[recipient_row_index+1][1]
+        await message.channel.send(embed=discord.Embed(title=f"Removed {amount}:dz: from {GlobalVars.economyData[recipient_row_index][0]}'s balance!", description=f"Their new balance is {new_balance}:dz:.", colour = embcol))
+        
+        TransactionsDatabaseInterface.addTransaction(recipient_name, TransactionsDatabaseInterface.DezzieMovingAction.Remove, -amount)
+    else:
+        await message.channel.send(embed=discord.Embed(title=f"Could not remove {amount}:dz: from {GlobalVars.economyData[recipient_row_index][0]}'s balance!", description=f"Their balance is {new_balance}:dz:.", colour = embcol))
+
 
 #Allows user to use item.
 async def useitem(message):
@@ -1656,7 +1680,7 @@ async def removeItemFromInventory(inventory_row_index, item_inventory_index, qua
     #Remove items from inventory
     if quantity < int(GlobalVars.inventoryData[inventory_row_index+1][item_inventory_index]):
         GlobalVars.inventoryData[inventory_row_index+1][item_inventory_index] = int(GlobalVars.inventoryData[inventory_row_index+1][item_inventory_index]) - quantity
-    else:
+    elif quantity == int(GlobalVars.inventoryData[inventory_row_index+1][item_inventory_index]):
         del GlobalVars.inventoryData[inventory_row_index][item_inventory_index]
         GlobalVars.inventoryData[inventory_row_index].append("")
         del GlobalVars.inventoryData[inventory_row_index+1][item_inventory_index]
@@ -1667,6 +1691,9 @@ async def removeItemFromInventory(inventory_row_index, item_inventory_index, qua
             GlobalVars.inventoryData[inventory_row_index+2].append("")
         except IndexError: #If we get an index error, that cell wasn't occupied anyways and was a trailing cell.
             pass
+    else:
+        await message.channel.send(embed=discord.Embed(title=f"You have less than {quantity} of selected item in your inventory!", description="You cannot sell more than you own! It's not the stock market!", colour = embcol))
+        return False
         
     await writeInvetorySheet(GlobalVars.inventoryData)
     if deleted == True: #Clean up the internal inventory representation from trailing spaces
