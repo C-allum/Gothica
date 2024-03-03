@@ -180,7 +180,7 @@ async def inventory(message):
 
     #Get list of all items
     i, item_list = await showInventoryAndChooseItem(message, author_row_index, "\n\nFor more information about an item and its curses, enter the according number. This message will time out in 30 seconds.")
-    if i == False:
+    if i == False and i != 0:
         return
     if i >= 0:
         #Provide information about the item and it's curses.
@@ -438,7 +438,7 @@ async def buyitem(message):
                     itemindex = GlobalVars.itemdatabase[chosenShop].index(item_database_info)
                     GlobalVars.itemdatabase[chosenShop][itemindex][18] = int(quantity_available) - buyquant
                     await writeItemsheetCell(chosenShop, itemindex, 18, int(quantity_available) - buyquant)
-                await message.channel.send(embed=discord.Embed(title="Success!",description=f"Before this transaction you had {old_balance}:dz:. You paid {price}:dz: and your new balance is {new_balance}:dz:", colour = embcol))
+                await message.channel.send(embed=discord.Embed(title="Success!",description=f"Before this transaction you had {old_balance}{dezzieemj}. You paid {price}{dezzieemj} and your new balance is {new_balance}{dezzieemj}", colour = embcol))
                 rolled_curse_string = ""
                 if potential_curses != []:
                     rolled_curse_string += "\n\n**__Actual Curses:__**\n\n"
@@ -815,7 +815,7 @@ async def additem(message):
         item_database_info = [x for x in GlobalVars.itemdatabase[chosenShop] if selected_item[2] in x][0]
         item_name = item_database_info[1]
         item_identifier = item_database_info[0]
-        price = int(item_database_info[3]) * int(item_database_info[12])
+        price = int(int(item_database_info[3]) * float(item_database_info[12]))
         quantity_available = item_database_info[18]
         curses_identifier = item_database_info[14].split(",")
         rarity = item_database_info[5]
@@ -839,7 +839,10 @@ async def additem(message):
     embed_string += f"**Quantity Available: {quantity_available}, Price per unit: {price}** \n\n"
 
     #add long description
-    embed_string += mechanics + "\n\n" + flavour
+    if mechanics != "":
+        embed_string += mechanics + "\n\n" + flavour
+    else:
+        embed_string += flavour
     if default_curse != "":
         embed_string += f"**\n\n__Default curse:__** \n{default_curse}"
     #add additional curses
@@ -1041,7 +1044,7 @@ async def giftAll(message):
         print(f"Someone gifted {amount} dezzies to everyone")
         #Write sheet
         await writeEconSheet(GlobalVars.economyData)
-    await message.channel.send(embed=discord.Embed(title="You gifted dezzies to all players!",description=f"You gifted {amount}:dz: to everyone!", colour = embcol))
+    await message.channel.send(embed=discord.Embed(title="You gifted dezzies to all players!",description=f"You gifted {amount}{dezzieemj} to everyone!", colour = embcol))
 
 #Guides a player through giving money to another player
 async def giveMoney(message):
@@ -1051,7 +1054,9 @@ async def giveMoney(message):
     recipient_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(recipient_id) in x][0])
     await addDezziesToPlayer(message, int(amount), playerID=recipient_id, write_econ_sheet=True, send_message=False)
     await removeDezziesFromPlayerWithoutMessage(amount, message.author.id)
-    await message.channel.send(embed=discord.Embed(title=f"{message.author.name} has given {amount}:dz: to {recipient_name}!", description=f"{message.author.name} now has {GlobalVars.economyData[author_row_index+1][1]}:dz:\n\n{recipient_name} now has {GlobalVars.economyData[recipient_row_index+1][1]}:dz:"))
+    await message.channel.send(embed=discord.Embed(title=f"{message.author.name} has given {amount}{dezzieemj} to {recipient_name}!", description=f"{message.author.name} now has {GlobalVars.economyData[author_row_index+1][1]}{dezzieemj}\n\n{recipient_name} now has {GlobalVars.economyData[recipient_row_index+1][1]}{dezzieemj}"))
+    if int(amount) > 15000:
+        await client.get_channel(918257057428279326).send(embed=discord.Embed(title = message.author.name + f" gave {amount} Dezzies to " + recipient_name, url=message.jump_url))
 
 #Guides a staff member through adding money to a players balance
 async def addMoney(message):
@@ -1067,11 +1072,80 @@ async def removeMoney(message):
     recipient_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(recipient_id) in x][0])
     await removeDezziesFromPlayerWithoutMessage(int(amount), recipient_id)
     new_balance = GlobalVars.economyData[recipient_row_index+1][1]
-    await message.channel.send(embed=discord.Embed(title=f"Removed {amount}:dz: from {GlobalVars.economyData[recipient_row_index][0]}'s balance!", description=f"Their new balance is {new_balance}:dz:.", colour = embcol))
+    await message.channel.send(embed=discord.Embed(title=f"Removed {amount}{dezzieemj} from {GlobalVars.economyData[recipient_row_index][0]}'s balance!", description=f"Their new balance is {new_balance}{dezzieemj}.", colour = embcol))
 
 #Allows user to use item.
 async def useitem(message):
-    pass
+    #Find person in the inventory sheet
+    author_row_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if message.author.name in x][0])
+    player_inventory = GlobalVars.inventoryData[author_row_index:author_row_index+5]
+
+    #Get list of all items
+    i, item_list = await showInventoryAndChooseItem(message, author_row_index, "\n\nTo select an item to use, enter the according number. This message will time out in 30 seconds.")
+    if i == False and i != 0:
+        return
+    #Show chosen item
+    if i >= 0:
+        #Provide information about the item and it's curses.
+        item_database_info = [x for x in GlobalVars.itemdatabase[0] if item_list[i] in x][0]
+        curses = []
+        try:
+            curse_descriptors = player_inventory[2][i + 2] #+2 becasue the first two entries are player info
+            curse_descriptors = curse_descriptors.split(",")
+            if curse_descriptors[0] != "": #Check if curse descriptors are empty (= no curses on the item). For some reason this doesn't work in the for loop.
+                for curse in curse_descriptors:
+                    curse_info = [x for x in GlobalVars.itemdatabase[1] if curse in x]
+                    curses.append(curse_info)
+        except IndexError: #This happens when a trailing item in the inventory has no curse. Just ignore it.
+            pass
+        item_name = item_database_info[0]
+        #add item type and rarity
+        embed_string = f"*{item_database_info[1]}, {item_database_info[4]}*"
+        #add attunement to the string
+        if item_database_info[3].lower() == "yes":
+            embed_string += f" *(Requires Attunement)*\n\n"
+        elif "by" in item_database_info[3]:
+                spellcaster = item_database_info[3].replace("Yes, by ", "")
+                embed_string += f" *(Requires Attunement by {spellcaster})*\n\n"
+        else: embed_string += "\n\n"
+
+        #add long description
+        embed_string += item_database_info[6] + "\n\n" + item_database_info[5]
+        #add default curse
+        if item_database_info[8] != "":
+            embed_string += f"\n\n**__Default curse:__** \n{item_database_info[8]}"
+        #add additional curses
+        if curses != []:
+            embed_string += "\n\n**__Additional curses:__**\n"
+            for curse in curses:
+                embed_string += f"\n**{curse[0][0]}**(Level {curse[0][1]} curse):\n{curse[0][2]}\n"
+
+        item_embed = discord.Embed(title=f"Do you want to use {item_name}?", description=embed_string, colour=embcol)
+        confirm_view = Yes_No_View()
+        await message.channel.send(embed = item_embed, view = confirm_view)
+
+        #Wait for response
+        if await confirm_view.wait():
+            await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+            return
+
+        if confirm_view.button_response == "yes":
+            use_response = item_database_info[10]
+            if use_response == "":
+                await message.channel.send(embed=discord.Embed(title="Nothing happened",description="This item is not a consumable. It cannot be used in this way.", colour = embcol))
+                return
+            else:
+                user = message.author
+                await message.channel.send(embed=discord.Embed(title=f"You used 1x {item_name}",description=use_response.replace("{user.mention}", message.author.name), colour = embcol))
+                if item_list[i] == "CharSlot00":
+                    author_econ_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if message.author.name in x][0])
+                    GlobalVars.economyData[author_econ_row_index+2][1] = GlobalVars.economyData[author_econ_row_index+2][1] + 1
+                await removeItemFromInventory(author_row_index, i+2, 1)
+
+                #TODO: Special treatment for stuff like character slot additions.
+
+
+    
 
 #Shows the user their dezzie balance
 async def money(message):
@@ -1080,30 +1154,32 @@ async def money(message):
     leaderboard_list = []
     i = 5
     while i < len(GlobalVars.economyData):
-        leaderboard_list.append(GlobalVars.economyData[i][0], GlobalVars.economyData[i+1][1])
+        leaderboard_list.append([GlobalVars.economyData[i][0], GlobalVars.economyData[i+1][1]])
+        i += 4
     sorted(leaderboard_list,key=lambda l:l[1], reverse=True)
-    user_leaderboard_rank = leaderboard_list.index(message.author.name)
-    await message.channel.send(embed=discord.Embed(title=f"{message.author.name} has {balance}", description=f"Leaderboard Rank: {user_leaderboard_rank + 1}", colour = embcol))
+    user_leaderboard_rank = leaderboard_list.index([a for a in leaderboard_list if message.author.name == a[0]][0])
+    await message.channel.send(embed=discord.Embed(title=f"{message.author.name} has {balance}{dezzieemj}", description=f"Leaderboard Rank: {user_leaderboard_rank + 1}", colour = embcol))
 
 #Shows the leaderboard of the top 20 richest persons
 async def leaderboard(message):
     leaderboard_list = []
     i = 5
     while i < len(GlobalVars.economyData):
-        leaderboard_list.append(GlobalVars.economyData[i][0], GlobalVars.economyData[i+1][1])
+        leaderboard_list.append([GlobalVars.economyData[i][0], GlobalVars.economyData[i+1][1]])
+        i += 4
     sorted(leaderboard_list,key=lambda l:l[1], reverse=True)
-    leaderboard_list = leaderboard_list[0:19]
+    leaderboard_list = leaderboard_list[0:20]
     embedstring = "The 20 people with the most dezzies in the dungeon are:\n\n"
     i = 1
     for entry in leaderboard_list:
-        embedstring += f"`{i:}` **{entry[0]}**\n{entry[1]}:dz:"
+        embedstring += f"`{i:}` **{entry[0]}**\n{entry[1]}{dezzieemj}\n\n"
         i += 1
     await message.channel.send(embed = discord.Embed(title="Dezzie Leaderboard:", description= embedstring, color=embcol))
     
 async def dezReact(reaction):
     mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
 
-    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
+    #economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
 
     reciprow = ""
     targid = mess.author.id
@@ -1117,11 +1193,11 @@ async def dezReact(reaction):
 
     #Find recipients row in the economy sheet
     try:
-        for a in range(math.floor(len(economydata)/4)):
+        for a in range(math.floor(len(GlobalVars.economyData)/4)):
             b = a * 4 + 5
 
-            if str(targetName) in str(economydata[b][0]):
-                reciprow = b + 1
+            if str(targetName) == str(GlobalVars.economyData[b][0]):
+                reciprow = b
                 break
 
     except IndexError:
@@ -1130,11 +1206,11 @@ async def dezReact(reaction):
     
     #Find giver row in the economy sheet
     try:
-        for a in range(math.floor(len(economydata)/4)):
+        for a in range(math.floor(len(GlobalVars.economyData)/4)):
             b = a * 4 + 5
 
-            if str(givename) in str(economydata[b][0]):
-                giverow = b + 1
+            if str(givename) == str(GlobalVars.economyData[b][0]):
+                giverow = b
                 break
     except IndexError:
         if not mess.author.bot:
@@ -1157,7 +1233,7 @@ async def dezReact(reaction):
 
     #Retrieve users current react dezzie pool
     try:
-        prevDezziePool = int(economydata[giverow+2][0])
+        prevDezziePool = int(GlobalVars.economyData[giverow+3][0])
 
     except IndexError:
         prevDezziePool = GlobalVars.config["economy"]["weeklydezziepoolverified"]
@@ -1173,45 +1249,46 @@ async def dezReact(reaction):
     if reaction.channel_id != 828545311898468352: #Disable Noticeboard Reacts
 
         if reaction.member.name == targetName:
-            await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = "No.", description = targetName + ", you can't just award dezzzies to yourself.", colour = embcol))
+            await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = "No.", description = targetName + ", you can't just award dezzies to yourself.", colour = embcol))
             await client.get_channel(918257057428279326).send(targetName + " tried to award dezzies to themself.")
 
         else:
             #Enough dezzies left in users dezzie pool:
             if giveamount <= prevDezziePool:
                 try:
-                    recipNewTot = int(economydata[int(reciprow)-1][1]) + int(giveamount)
+                    #Update the dezzie balance of the recipient
+                    GlobalVars.economyData[int(reciprow)+1][1] = int(GlobalVars.economyData[int(reciprow)+1][1]) + int(giveamount)
                 except ValueError:
                     await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " seems to not be in the economy", description = targetName + "This should not be the case. Please talk one of the @bot gods as there is most likely something wrong with your entry in our data.", colour = embcol, url = mess.jump_url))
                     return
 
+                #Update the dezzie pool of the giver
                 newDezziePool = prevDezziePool - giveamount
-                sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipNewTot]])).execute()
-
+                GlobalVars.economyData[giverow+3][0] = int(GlobalVars.economyData[giverow+3][0])- giveamount
+                await writeEconSheet(GlobalVars.economyData)
+                #Add transaction
                 TransactionsDatabaseInterface.addTransaction(target.name, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
 
-                sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(int(giverow)+3)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newDezziePool]])).execute()
+                
 
                 if newDezziePool == 0:
-                    await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
+                    await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(GlobalVars.economyData[reciprow+1][1]) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
 
                 else:
-                    await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has " + str(newDezziePool) + dezzieemj + " in their dezzie award pool left for the week!", colour = embcol, url = mess.jump_url))
+                    await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(GlobalVars.economyData[reciprow+1][1]) + dezzieemj + "\n\n" + givename + " has " + str(GlobalVars.economyData[giverow+3][0]) + dezzieemj + " in their dezzie award pool left for the week!", colour = embcol, url = mess.jump_url))
 
-                await client.get_channel(918257057428279326).send(givename + " awarded Dezzies to " + targetName)
+                await client.get_channel(918257057428279326).send(embed=discord.Embed(title = givename + " awarded Dezzies to " + targetName, url=mess.jump_url))
 
             #User has less dezzies in their pool than they reacted with
             elif prevDezziePool > 0:
                 newDezziePool = 0
                 giveamount = prevDezziePool
-                recipNewTot = int(economydata[reciprow-1][1]) + int(giveamount)
-                sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipNewTot]])).execute()
-
+                GlobalVars.economyData[giverow+3][0] = newDezziePool
+                GlobalVars.economyData[reciprow+1][1] = int(GlobalVars.economyData[reciprow+1][1]) + int(giveamount)
+                await writeEconSheet(GlobalVars.economyData)
                 TransactionsDatabaseInterface.addTransaction(target.name, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
-
-                sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(giverow+3)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newDezziePool]])).execute()
-                await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
-                await client.get_channel(918257057428279326).send(givename + " awarded Dezzies to " + targetName)
+                await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(GlobalVars.economyData[reciprow+1][1]) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
+                await client.get_channel(918257057428279326).send(embed=discord.Embed(title = givename + " awarded Dezzies to " + targetName, url=mess.jump_url))
 
             #User dezzie pool is empty:
             else:
@@ -1234,7 +1311,7 @@ async def rpDezReact(reaction):
         await client.get_channel(botchannel).send(embed=discord.Embed(title = str(giver.display_name) + ": The post you tried to award is too old, or was too long (< ~2000 characters) and edited.", description = "The first time a character is awarded dezzies, the post has to be rather new and can't be a long, edited post! Try awarding a different, unedited post of that character. If the issue persists, contact the bot gods.", colour = embcol, url = mess.jump_url))
         return
 
-    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
+    #economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
 
     reciprow = ""
     targid = playerID
@@ -1248,25 +1325,14 @@ async def rpDezReact(reaction):
 
     #Find recipients row in the economy sheet
     try:
-        for a in range(math.floor(len(economydata)/4)):
-            b = a * 4 + 5
-
-            if str(targetName) in str(economydata[b][0]):
-                reciprow = b + 1
-                break
-
+        reciprow = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(targid) in x][0])
     except IndexError:
         if not mess.author.bot:
             await client.get_channel(botchannel).send(embed=discord.Embed(title = str(mess.author) + " is not in the economy.", description = "If this should not be the case, speak to Callum", colour = embcol))
     
     #Find giver row in the economy sheet
     try:
-        for a in range(math.floor(len(economydata)/4)):
-            b = a * 4 + 5
-
-            if str(givename) in str(economydata[b][0]):
-                giverow = b + 1
-                break
+        giverow = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(giveid) in x][0])
     except IndexError:
         if not mess.author.bot:
             await client.get_channel(botchannel).send(embed=discord.Embed(title = str(givename) + " is not in the economy.", description = "If this should not be the case, speak to Callum", colour = embcol))
@@ -1288,7 +1354,7 @@ async def rpDezReact(reaction):
 
     #Retrieve users current react dezzie pool
     try:
-        prevDezziePool = int(economydata[giverow+2][0])
+        prevDezziePool = int(GlobalVars.economyData[giverow+3][0])
 
     except IndexError:
         prevDezziePool = GlobalVars.config["economy"]["weeklydezziepoolverified"]
@@ -1310,35 +1376,32 @@ async def rpDezReact(reaction):
         else:
             #Enough dezzies left in users dezzie pool:
             if giveamount <= prevDezziePool:
+                
                 reward = int(giveamount * GlobalVars.config["economy"]["rpreactmodifier"])
-                recipNewTot = int(economydata[int(reciprow)-1][1]) + reward
-                newDezziePool = prevDezziePool - giveamount
-                sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipNewTot]])).execute()
-
+                GlobalVars.economyData[int(reciprow)+1][1] = int(GlobalVars.economyData[int(reciprow)+1][1]) + reward
+                GlobalVars.economyData[int(giverow)+3][0] = int(GlobalVars.economyData[int(giverow)+3][0]) - giveamount
+                await writeEconSheet(GlobalVars.economyData)
                 TransactionsDatabaseInterface.addTransaction(target.name, TransactionsDatabaseInterface.DezzieMovingAction.React, int(reward))
-
-                sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(int(giverow)+3)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newDezziePool]])).execute()
-
-                if newDezziePool == 0:
-                    await client.get_channel(botchannel).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(reward) + dezzieemj + " to " + targetName + " for an RP message", description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
+                
+                if GlobalVars.economyData[int(giverow)+3][0] == 0:
+                    await client.get_channel(botchannel).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(reward) + dezzieemj + " to " + targetName + " for an RP message", description = targetName + " now has " + str(GlobalVars.economyData[int(reciprow)+1][1]) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
 
                 else:
-                    await client.get_channel(botchannel).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(reward) + dezzieemj + " to " + targetName + " for an RP message", description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has " + str(newDezziePool) + dezzieemj + " in their dezzie award pool left for the week! (RP Rewards award 25% more while costing the same!)", colour = embcol, url = mess.jump_url))
+                    await client.get_channel(botchannel).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(reward) + dezzieemj + " to " + targetName + " for an RP message", description = targetName + " now has " + str(GlobalVars.economyData[int(reciprow)+1][1]) + dezzieemj + "\n\n" + givename + " has " + str(GlobalVars.economyData[int(giverow)+3][0]) + dezzieemj + " in their dezzie award pool left for the week! (RP Rewards award 25% more while costing the same!)", colour = embcol, url = mess.jump_url))
 
-                await client.get_channel(918257057428279326).send(givename + " awarded Dezzies to " + targetName)
+                await client.get_channel(918257057428279326).send(embed=discord.Embed(title = givename + " awarded Dezzies to " + targetName, url=mess.jump_url))
 
             #User has less dezzies in their pool than they reacted with
             elif prevDezziePool > 0:
-                newDezziePool = 0
-                giveamount = prevDezziePool
-                recipNewTot = int(economydata[reciprow-1][1]) + int(giveamount)
-                sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipNewTot]])).execute()
+                reward = prevDezziePool * int( GlobalVars.config["economy"]["rpreactmodifier"])
+                GlobalVars.economyData[int(reciprow)+1][1] = int(GlobalVars.economyData[reciprow+1][1]) + int(reward)
+                GlobalVars.economyData[int(giverow)+3][0] = 0
+                await writeEconSheet(GlobalVars.economyData)
 
                 TransactionsDatabaseInterface.addTransaction(target.name, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
 
-                sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(giverow+3)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newDezziePool]])).execute()
-                await client.get_channel(botchannel).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(reward) + dezzieemj + " to " + targetName + " for an RP message", description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
-                await client.get_channel(918257057428279326).send(givename + " awarded Dezzies to " + targetName)
+                await client.get_channel(botchannel).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(reward) + dezzieemj + " to " + targetName + " for an RP message", description = targetName + " now has " + str(GlobalVars.economyData[int(reciprow)+1][1]) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
+                await client.get_channel(918257057428279326).send(embed=discord.Embed(title = givename + " awarded Dezzies to " + targetName, url=mess.jump_url))
 
             #User dezzie pool is empty:
             else:
@@ -1460,7 +1523,8 @@ async def loadItemSheet():
             GlobalVars.itemdatabase.append(itemlists[a].get_all_values())
 
 async def writeItemsheetCell(shopnumber, row, column, values):
-    itemsheet.worksheets()[shopnumber].update_cell(row + 1, column + 1, values)
+    async with economy_lock:
+        itemsheet.worksheets()[shopnumber].update_cell(row + 1, column + 1, values)
 
 
 
@@ -1551,7 +1615,7 @@ async def addDezziesToPlayer(message, amount, playerID=None, playerName=None, wr
         if write_econ_sheet == True:
             await writeEconSheet(GlobalVars.economyData)
         if send_message == True:
-            await message.channel.send(embed=discord.Embed(title=f"Added {amount}:dz: to {GlobalVars.economyData[author_row_index][0]}'s balance!", description=f"Before this transaction you had {old_balance}:dz:, now you have {new_balance}:dz:. Don't spend it all in one place!", colour = embcol))
+            await message.channel.send(embed=discord.Embed(title=f"Added {amount}{dezzieemj} to {GlobalVars.economyData[author_row_index][0]}'s balance!", description=f"Before this transaction you had {old_balance}{dezzieemj}, now you have {new_balance}{dezzieemj}. Don't spend it all in one place!", colour = embcol))
         return True
 
 async def addItemToPlayerWithCurseFromShop(message, playerID, itemID, amount, shop_number):
@@ -1640,6 +1704,9 @@ async def addItemToInventory(recipient_inventory_row_index, item_identifier, qua
             GlobalVars.inventoryData[recipient_inventory_row_index].append(item_identifier)
             while len(GlobalVars.inventoryData) < recipient_inventory_row_index + 3:    #Enlarge the inventory sheet if the last person on it is trying to buy an item, and their additional cells arent on it yet
                 GlobalVars.inventoryData.append(["", ""])
+            #Make sure we hit the correct column
+            while len(GlobalVars.inventoryData[recipient_inventory_row_index + 1]) < len(GlobalVars.inventoryData[recipient_inventory_row_index]) - 1:
+                GlobalVars.inventoryData[recipient_inventory_row_index + 1].append("")
             GlobalVars.inventoryData[recipient_inventory_row_index+1].append(quantity)
             while len(GlobalVars.inventoryData[recipient_inventory_row_index+2]) < len(GlobalVars.inventoryData[recipient_inventory_row_index]) - 1:
                 GlobalVars.inventoryData[recipient_inventory_row_index+2].append("")
