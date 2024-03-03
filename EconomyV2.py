@@ -1287,7 +1287,7 @@ async def dezReact(reaction):
 
                 #Update the dezzie pool of the giver
                 newDezziePool = prevDezziePool - giveamount
-                GlobalVars.economyData[giverow+3][0] = int(GlobalVars.economyData[giverow+3][0])- giveamount
+                await addDezziesToPlayer(message, giveamount, targid)
                 await writeEconSheet(GlobalVars.economyData)
                 #Add transaction
                 TransactionsDatabaseInterface.addTransaction(target.name, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
@@ -1307,6 +1307,7 @@ async def dezReact(reaction):
                 newDezziePool = 0
                 giveamount = prevDezziePool
                 GlobalVars.economyData[giverow+3][0] = newDezziePool
+                await addDezziesToPlayer(message, giveamount, targid)
                 GlobalVars.economyData[reciprow+1][1] = int(GlobalVars.economyData[reciprow+1][1]) + int(giveamount)
                 await writeEconSheet(GlobalVars.economyData)
                 TransactionsDatabaseInterface.addTransaction(target.name, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
@@ -1402,7 +1403,7 @@ async def rpDezReact(reaction):
                 
                 reward = int(giveamount * GlobalVars.config["economy"]["rpreactmodifier"])
                 GlobalVars.economyData[int(reciprow)+1][1] = int(GlobalVars.economyData[int(reciprow)+1][1]) + reward
-                GlobalVars.economyData[int(giverow)+3][0] = int(GlobalVars.economyData[int(giverow)+3][0]) - giveamount
+                await addDezziesToPlayer(message, giveamount, targid)
                 await writeEconSheet(GlobalVars.economyData)
                 TransactionsDatabaseInterface.addTransaction(target.name, TransactionsDatabaseInterface.DezzieMovingAction.React, int(reward))
                 
@@ -1417,7 +1418,7 @@ async def rpDezReact(reaction):
             #User has less dezzies in their pool than they reacted with
             elif prevDezziePool > 0:
                 reward = prevDezziePool * int( GlobalVars.config["economy"]["rpreactmodifier"])
-                GlobalVars.economyData[int(reciprow)+1][1] = int(GlobalVars.economyData[reciprow+1][1]) + int(reward)
+                await addDezziesToPlayer(message, giveamount, reward)                
                 GlobalVars.economyData[int(giverow)+3][0] = 0
                 await writeEconSheet(GlobalVars.economyData)
 
