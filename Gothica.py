@@ -2123,6 +2123,7 @@ async def on_message(message):
 
             #Bid Command
             elif (message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "bid")):
+                #TODO Change logic to use new Economy Data, which is read Row wise, not Column wise
                 economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='COLUMNS').execute().get("values")
                 debugvar = message.content.lower().split(" ")
                 if isbot:

@@ -67,6 +67,7 @@ service = build("sheets", "v4", credentials=creds)
 gc = gspread.service_account(filename = SERVICE_ACCOUNT_FILE)
 config_file_path = "config.yaml"
 #-----------------LIVE VERSION/BETA TOGGLE---------------
+# 0 is Test Server, 1 is Live Server
 liveVersion = 0
 token = ""
 
