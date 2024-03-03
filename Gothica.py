@@ -247,8 +247,6 @@ async def on_message(message):
             if message.content.lower().startswith(GlobalVars.config["general"]["gothy_prefix"] + "test"):
                 print("Running Tests")              
 
-            #if message.content.lower().startswith(GlobalVars.config["general"]["gothy_prefix"] + "stringmatch"):
-            #    await EconomyV2.stringMatchTest(message)
             #Voyeur's Lounge Redirect - On OocFun and Working
             if isbot and (str(message.channel).lower() == "general-ooc") and not (message.author.name == "Gothica" or message.author.name == "Gothica Beta"):
 
@@ -2572,34 +2570,34 @@ async def on_message(message):
                 await EconomyV2.loadItemSheet()
     
             #New economy commands (EconomyV2)
-            elif message.author.name == "c_allum" or message.author.name == "artificer_dragon":
-                if message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~shop"):
+
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~shop"):
                     await EconomyV2.shop(message)
-                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~item"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~item"):
                     await EconomyV2.item(message)
-                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~inventory"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~inventory"):
                     await EconomyV2.inventory(message)
-                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~buy"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~buy"):
                     await EconomyV2.buyitem(message)
-                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~giftall") and "staff" in str(message.author.roles).lower():
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~giftall") and "staff" in str(message.author.roles).lower():
                     await EconomyV2.giftAll(message)
-                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~sellitem"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~sellitem"):
                     await EconomyV2.sellitem(message)
-                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~giveitem"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~giveitem"):
                     await EconomyV2.giveitem(message)
-                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~additem") and "staff" in str(message.author.roles).lower():
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~additem") and "staff" in str(message.author.roles).lower():
                     await EconomyV2.additem(message)
-                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~givemoney"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~givemoney"):
                     await EconomyV2.giveMoney(message)
-                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~addmoney") and "staff" in str(message.author.roles).lower():
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~addmoney") and "staff" in str(message.author.roles).lower():
                     await EconomyV2.addMoney(message)
-                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~removemoney") and "staff" in str(message.author.roles).lower():
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~removemoney") and "staff" in str(message.author.roles).lower():
                     await EconomyV2.removeMoney(message)
-                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~money"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~money"):
                     await EconomyV2.money(message)
-                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~useitem"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~useitem"):
                     await EconomyV2.useitem(message)
-                elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~leaderboard"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~leaderboard"):
                     await EconomyV2.leaderboard(message)
 
                 
@@ -4657,12 +4655,12 @@ async def on_raw_reaction_add(reaction):
     #Dezzie Reacts with weekly pool on OOC messages
     if (reaction.emoji.name == "dz" or reaction.emoji.name == "cashmoney" or reaction.emoji.name == "makeitrain" or reaction.emoji.name == "Dezzieheart" or reaction.emoji.name == "DzCrit") and mess.author.bot == False:
 
-        await EconomyCommands.dezReact(reaction)
+        await EconomyV2.dezReact(reaction)
 
     #Dezzie React on Tupper
     elif (reaction.emoji.name == "dz" or reaction.emoji.name == "cashmoney" or reaction.emoji.name == "makeitrain" or reaction.emoji.name == "Dezzieheart" or reaction.emoji.name == "DzCrit") and mess.author.bot == True and not mess.author.name in botnames :
         
-        await EconomyCommands.rpDezReact(reaction)
+        await EconomyV2.rpDezReact(reaction)
         
 
     if reaction.emoji.name == "cuffs" and mess.channel.name != "Server Economy":
