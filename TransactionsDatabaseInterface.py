@@ -140,41 +140,74 @@ def playerTransactionsInfo(person:str, timeframe:str = None):
     except sqlite3.Error as error:
         print(f'Error occured while printing database contents for - {person}', error)
 
-#Fetch database, filter by given timeframe and print it into spreadsheet
-#Throws an error if there is no Sheet in the Spreadsheet with the timeframe as name
-def dataToSpreadsheet(timeframe:str = None):
+def transactionSummary(timeframe:str = None):
     try:
         transactionsConnection = sqlite3.connect('CLDTransactions.db')
         transactionsCursor = transactionsConnection.cursor()
         
-        if timeframe == None:
-            sheetName = "Total"
-            data = transactionsCursor.execute(f'''SELECT * FROM Transactions''').fetchall()
-
+        #Prints for each person each action plus summed value
+        if timeframe is None:
+            #data=transactionsCursor.execute(f'''SELECT Person, Action, SUM(Amount) FROM Transactions GROUP BY Person, Action ORDER BY Person, SUM(Amount)''')
+            data = transactionsCursor.execute(f'''SELECT Person, Action, SUM(Amount) FROM Transactions GROUP BY Person, Action ORDER BY Person, SUM(Amount)''').fetchall()
         else:
-            sheetName = timeframe
             timeframe = "-" + timeframe
-            data = transactionsCursor.execute(f'''SELECT * FROM Transactions WHERE Date > datetime('now', '{timeframe}') ''').fetchall()
+            data = transactionsCursor.execute(f'''SELECT Person, Action, SUM(Amount) FROM Transactions WHERE Date > date('now', '{timeframe}') GROUP BY Person, Action ORDER BY Person, SUM(Amount)''').fetchall()
+        
+        transactionsConnection.close()
+
+        return data
+
+    except sqlite3.Error as error:
+        print(f'Error occured getting the transaction summary', error)
+
+def fetchData(timeframe:str = None, summary:bool = False):
+    try:
+        transactionsConnection = sqlite3.connect('CLDTransactions.db')
+        transactionsCursor = transactionsConnection.cursor()
+
+        if summary is True:
+            sqlQuery = "SELECT Person, Action, SUM(Amount) FROM Transactions"
+        else:
+            sqlQuery = "SELECT * FROM Transactions"
+        
+        if timeframe is not None:
+            timeframe = "-" + timeframe
+            sqlQuery += f" WHERE Date > datetime('now', '{timeframe}') "
+
+        if summary is True:
+            sqlQuery += f" GROUP BY Person, Action ORDER BY Person, Action"
+
+        data = transactionsCursor.execute(sqlQuery).fetchall()
+
+        return data
+    
+    except sqlite3.Error as error:
+        print('Error occured fetching transaction data - ', error)
+
+
+#Write data into spreadsheet
+#Throws an error if there is no Sheet in the Spreadsheet with the timeframe as name
+def dataToSpreadsheet(data, timeframe:str = None):
+    try:        
+        if timeframe == None:
+            timeframe = "Total"
 
         if liveVersion == 1:
-            SheetsService.values().clear(spreadsheetId=TransactionSheet, range=sheetName).execute()
-            SheetsService.values().update(spreadsheetId=TransactionSheet, range=sheetName, body=dict(majorDimension='ROWS', values=data), valueInputOption='USER_ENTERED').execute()
-            print('Wrote data to spreadsheet')
+            SheetsService.values().clear(spreadsheetId=TransactionSheet, range=timeframe).execute()
+            SheetsService.values().update(spreadsheetId=TransactionSheet, range=timeframe, body=dict(majorDimension='ROWS', values=data), valueInputOption='USER_ENTERED').execute()
+            print(f'Wrote transaction data to spreadsheet: {timeframe}')
                     
-        transactionsConnection.close()
     except sqlite3.Error as error:
         print('Error occured while printing the database into the spreadsheet - ', error)
 
 #Write a selection of recent transactions to sheets
 def automaticTransactionDump():
-    dataToSpreadsheet('1 Week')
-    dataToSpreadsheet('1 Month')
-
-    #Removed due to row limitations of gsheets
-    # dataToSpreadsheet('3 Months')
-    # dataToSpreadsheet('6 Months')
-    # dataToSpreadsheet('1 Year')
-    # dataToSpreadsheet()
+    dataToSpreadsheet(fetchData('7 Days'), '7 Days')
+    dataToSpreadsheet(fetchData('1 Month'), '1 Month')
+    dataToSpreadsheet(fetchData('3 Months', summary=True), '3 Months')
+    dataToSpreadsheet(fetchData('6 Months', summary=True), '6 Months')
+    dataToSpreadsheet(fetchData('1 Year', summary=True), '1 Year')
+    dataToSpreadsheet(fetchData(summary=True))
 
 #Given a list, finds and removes outliers. IMPORTANT: ASSUMES NUMBERS ARE IN THIRD ARRAY PLACE
 def removeOutliers(data):
@@ -189,6 +222,22 @@ def removeOutliers(data):
     cleanData = [x for x in data if x not in outliers]
 
     return cleanData, outliers
+
+
+#Collects all entries where a '#0' identifier is appended to the name and removes those identifiers
+def removeZeroIdentifiers():
+    transactionsConnection = sqlite3.connect('CLDTransactions.db')
+    transactionsCursor = transactionsConnection.cursor()
+
+    data = transactionsCursor.execute(f'''SELECT Person FROM Transactions WHERE Person LIKE '%#0' GROUP BY Person''').fetchall()
+    
+    listOfNames = [x[0] for x in data]
+    listOfNamesWithoutIdentifier = [x[0].split('#')[0] for x in data]
+
+    for (oldName, newName) in zip(listOfNames, listOfNamesWithoutIdentifier):
+        updatePerson(oldName, newName)
+
+    transactionsConnection.close()
 
 
 def testing():
@@ -222,31 +271,12 @@ def testing():
     except sqlite3.Error as error:
         print('Error occured while testing - ', error)
 
-#Collects all entries where a '#0' identifier is appended to the name and removes those identifiers
-def removeZeroIdentifiers():
+
+def adaptiveQueryTest():
     transactionsConnection = sqlite3.connect('CLDTransactions.db')
     transactionsCursor = transactionsConnection.cursor()
 
-    data = transactionsCursor.execute(f'''SELECT Person FROM Transactions WHERE Person LIKE '%#0' GROUP BY Person''').fetchall()
-    
-    listOfNames = [x[0] for x in data]
-    listOfNamesWithoutIdentifier = [x[0].split('#')[0] for x in data]
-
-    for (oldName, newName) in zip(listOfNames, listOfNamesWithoutIdentifier):
-        updatePerson(oldName, newName)
-
-    transactionsConnection.close()
-    
-
-#--- --- --- EXECUTED IF THIS FILE IS RUN --- --- ---
-if __name__ == "__main__":
-    #playerTransactionsInfo('tophelin', '2 months')
-
-    printTransactions("TransactionDump.txt")
-
-    transactionsConnection = sqlite3.connect('CLDTransactions.db')
-    transactionsCursor = transactionsConnection.cursor()
-
+    activePersons = transactionsCursor.execute(f'''SELECT Person FROM Transactions WHERE Date > date('now', '-3 Months') GROUP BY Person, Action ORDER BY Person''').fetchall()
 
     whatString = "Person, Action, SUM(Amount)"
     sqlQuery = f'''SELECT {whatString} FROM Transactions'''
@@ -265,7 +295,7 @@ if __name__ == "__main__":
     sqlQuery += " \n" + f"ORDER BY {orderString}"
 
 
-    # data = transactionsCursor.execute(f'''SELECT Person, Action, SUM(Amount) FROM Transactions WHERE Date > date('now', '-3 Months') GROUP BY Person, Action ORDER BY Person''').fetchall()
+    data = transactionsCursor.execute(f'''SELECT Person, Action, SUM(Amount) FROM Transactions WHERE Date > date('now', '-3 Months') GROUP BY Person, Action ORDER BY Person, Action''').fetchall()
 
     print(f"Executing SQL Query:\n{sqlQuery}")
 
@@ -275,10 +305,12 @@ if __name__ == "__main__":
     
     for row in data:
         print(row)
-
-    # with open("Transactions3Months.txt", 'w', encoding='utf8') as f:
-    #     for row in data:
-    #         print(row, file=f)
     
 
-    #data=transactionsCursor.execute(f'''SELECT * FROM Transactions WHERE Person in ('{person}') AND Date > date('now', '{timeframe}')''')
+#--- --- --- EXECUTED IF THIS FILE IS RUN --- --- ---
+if __name__ == "__main__":
+    playerTransactionsInfo('tophelin', '2 months')
+
+    # printTransactions("TransactionDump.txt")
+
+    # automaticTransactionDump()
