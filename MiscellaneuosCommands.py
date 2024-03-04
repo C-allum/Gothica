@@ -780,7 +780,7 @@ async def mazeupdate(direction, mazeinstance, state):
 
 #Mazebutton
 class MazeView(discord.ui.View):
-    def __init__(self, north, east, south, west, prev):
+    def __init__(self, north, east, south, west, prev, state):
         super().__init__(timeout = 0)
         self.buttons = []
 
@@ -789,19 +789,31 @@ class MazeView(discord.ui.View):
         forwardindex = directs.index(prev)
 
         if north:
-            nbut = discord.ui.Button(label = "North" + relatdirects[-forwardindex], style = discord.ButtonStyle.green, custom_id = "north")
+            if state == 2 and relatdirects[-forwardindex] == " (Back)":
+                nbut = discord.ui.Button(label = "North" + relatdirects[-forwardindex], style = discord.ButtonStyle.red, custom_id = "north")
+            else:
+                nbut = discord.ui.Button(label = "North" + relatdirects[-forwardindex], style = discord.ButtonStyle.green, custom_id = "north")
             self.buttons.append(nbut)
             self.add_item(nbut)
         if east:
-            ebut = discord.ui.Button(label = "East" + relatdirects[-forwardindex+1], style = discord.ButtonStyle.green, custom_id = "east")
+            if state == 2 and relatdirects[-forwardindex+1] == " (Back)":
+                ebut = discord.ui.Button(label = "East" + relatdirects[-forwardindex+1], style = discord.ButtonStyle.red, custom_id = "east")
+            else:
+                ebut = discord.ui.Button(label = "East" + relatdirects[-forwardindex+1], style = discord.ButtonStyle.green, custom_id = "east")
             self.buttons.append(ebut)
             self.add_item(ebut)
         if south:
-            sbut = discord.ui.Button(label = "South" + relatdirects[-forwardindex+2], style = discord.ButtonStyle.green, custom_id = "south")
+            if state == 2 and relatdirects[-forwardindex+2] == " (Back)":
+                sbut = discord.ui.Button(label = "South" + relatdirects[-forwardindex+2], style = discord.ButtonStyle.red, custom_id = "south")
+            else:
+                sbut = discord.ui.Button(label = "South" + relatdirects[-forwardindex+2], style = discord.ButtonStyle.green, custom_id = "south")
             self.buttons.append(sbut)
             self.add_item(sbut)
         if west:
-            wbut = discord.ui.Button(label = "West" + relatdirects[-forwardindex+3], style = discord.ButtonStyle.green, custom_id = "west")
+            if state == 2 and relatdirects[-forwardindex+3] == " (Back)":
+                wbut = discord.ui.Button(label = "West" + relatdirects[-forwardindex+3], style = discord.ButtonStyle.red, custom_id = "west")
+            else:
+                wbut = discord.ui.Button(label = "West" + relatdirects[-forwardindex+3], style = discord.ButtonStyle.green, custom_id = "west")
             self.buttons.append(wbut)
             self.add_item(wbut)
 
@@ -809,7 +821,7 @@ class MazeView(discord.ui.View):
             self.buttons[a].callback = self.callback
 
     async def callback(self, interaction: discord.Interaction):
-        if (interaction.user == mazedata[int(interaction.message.channel.name.split(" ")[2])][2]) or (interaction.user == mazedata[int(interaction.message.channel.name.split(" ")[2])][2]):
+        if (interaction.user == mazedata[int(interaction.message.channel.name.split(" ")[2])][2]) or (interaction.user == mazedata[int(interaction.message.channel.name.split(" ")[2])][3]):
             await interaction.response.send_message("Going " + str(interaction.data["custom_id"]).title() + "!\n" + interaction.user.name + " selected this path!")
             wallsides, enc, paths, prev, state = await mazeupdate(interaction.data["custom_id"], int(interaction.message.channel.name.split(" ")[2]), mazedata[int(interaction.message.channel.name.split(" ")[2])][6])
 
@@ -817,11 +829,11 @@ class MazeView(discord.ui.View):
 
             if state == 1: #Normal
                 mazeEmbed = discord.Embed(title = mazetitle, description = wallsides + "\n" + enc + "\n\nRoleplay here, and then use the buttons below to decide where to go next!", colour = embcol)
-                await interaction.channel.send(embed = mazeEmbed, view = MazeView(paths[0], paths[1], paths[2], paths[3], prev))
+                await interaction.channel.send(embed = mazeEmbed, view = MazeView(paths[0], paths[1], paths[2], paths[3], prev, state))
             
             elif state == 1.5: #Chase starting
                 mazeEmbed = discord.Embed(title = mazetitle, description = wallsides + "\n" + enc + "\n\nRoleplay here, and then use the buttons below to decide where to go next! " + random.choice(["Remember, the minotaur is behind you!", "The thundering of hooves reminds you not to linger here long!", "Looking over your shoulder, the fog swirls, as though the minotaur might burst through at any moment!", "You're outrunning the miontaur for now, but keep moving! The end will be around here somewhere!", "We would advise against spending too long here. There is a minotaur after you, after all...", "He's hot on your heels! He's hot in general, actually.", "Keep running!"]), colour = embcol)
-                await interaction.channel.send(embed = mazeEmbed, view = MazeView(paths[0], paths[1], paths[2], paths[3], prev))
+                await interaction.channel.send(embed = mazeEmbed, view = MazeView(paths[0], paths[1], paths[2], paths[3], prev, state))
                 mazedata[int(interaction.message.channel.name.split(" ")[2])][6] = 2
                 directs = ["north", "east", "south", "west"]
                 mazedata[int(interaction.message.channel.name.split(" ")[2])][8] = interaction.data["custom_id"]
@@ -834,7 +846,7 @@ class MazeView(discord.ui.View):
                     mazedata[int(interaction.message.channel.name.split(" ")[2])-1][6] = 4
                 else:
                     mazeEmbed = discord.Embed(title = mazetitle, description = wallsides + "\n" + enc + "\n\nRoleplay here, and then use the buttons below to decide where to go next! " + random.choice(["Remember, the minotaur is behind you!", "The thundering of hooves reminds you not to linger here long!", "Looking over your shoulder, the fog swirls, as though the minotaur might burst through at any moment!", "You're outrunning the miontaur for now, but keep moving! The end will be around here somewhere!", "We would advise against spending too long here. There is a minotaur after you, after all...", "He's hot on your heels! He's hot in general, actually.", "Keep running!"]), colour = embcol)
-                    await interaction.channel.send(embed = mazeEmbed, view = MazeView(paths[0], paths[1], paths[2], paths[3], prev))
+                    await interaction.channel.send(embed = mazeEmbed, view = MazeView(paths[0], paths[1], paths[2], paths[3], prev, state))
                     mazedata[int(interaction.message.channel.name.split(" ")[2])][6] = 2
                     directs = ["north", "east", "south", "west"]
                     mazedata[int(interaction.message.channel.name.split(" ")[2])][8] = directs[directs.index(interaction.data["custom_id"])-2]
@@ -904,7 +916,7 @@ class mazejoin(discord.ui.View):
             print(interaction.user.name + " is player 1 in maze 0")
             await addp1tomaze(interaction.user, 0)
 
-        await lock.release()
+        lock.release()
 
 async def addp1tomaze(player, mazeno):
     mazedata.append(["", random.randint(0, len(mazearray)-1), player])
@@ -913,8 +925,8 @@ async def addp1tomaze(player, mazeno):
     for a in range(len(mazearray[mazedata[mazeno][1]])):
         encline = []
         for b in range(len(mazearray[mazedata[mazeno][1]][a])):
-            rand = random.randint(1, 2)
-            if rand == 1:
+            rand = random.randint(1, 6)
+            if rand != 1:
                 enc = random.randint(0, len(mazeoptions)-1)
                 if encs.count(enc) >= 1:
                     enc = random.randint(0, len(mazeoptions)-1)
@@ -946,7 +958,8 @@ async def addp2tomaze(player, mazeno):
 
     walls, enc, paths, prev, state = await mazeupdate("north", mazeno, 1)
     await oocthread.send(mazedata[mazeno][2].mention + " and " + mazedata[mazeno][3].mention + ", this is your ooc thread for " + rpthread.jump_url + ". Please roleplay in that thread. This thread should be used to discuss kinks and limits, as well as agree on directions to take in game. We recommend running `%kinkcompare` and also pulling up your character entries here.")
-    await rpthread.send(embed = discord.Embed(title = mazedata[mazeno][2].display_name + " and " + mazedata[mazeno][3].display_name + "'s Maze Encounter", description = "*A mysterious obelisk has appeared in the arena. After touching it, your characters find themselves magically transported into a strange, arcane space. The space is shrouded in fog, and has walls " + random.choice(["made of polished black obsidian. They extend upwards higher than you can see through the fog", "carved from the rocky cave itself. They could almost be natural.", "Formed of large, flawless mirrors. Oddly, your clothes are not reflected in them.", "that seem grown from hedges. No matter how you try though, you cannot cut through them."]) + " The space appears to be a " + str(random.randint(1, 4)) + "0 foot square, and you surmise that you are in a maze comprised of other equally sized spaces. There is nothing in this room except for the other player's character, who your character feels a strong compulsion to not leave alone down here.*\n\n*" + walls + "*\n\nFor this event, you roleplay using your tuppers as normal, and use your ooc thread to discuss the direction that you want to take in the maze. When you have decided, use the buttons on the message below to choose the direction to move, in which case we will describe the next square of space. Some rooms have obstacles in them, which are designed to prompt roleplay. The buttons below each message here have both cardinal directions and \n\n **To everyone else, you are encouraged to watch this thread, but do not message here or use the buttons**.", colour= embcol), view= MazeView(paths[0], paths[1], paths[2], paths[3], prev))
+    await rpthread.send(embed = discord.Embed(title = mazedata[mazeno][2].display_name + " and " + mazedata[mazeno][3].display_name + "'s Maze Encounter", description = "*A mysterious obelisk has appeared in the arena. After touching it, your characters find themselves magically transported into a strange, arcane space. The space is shrouded in fog, and has walls " + random.choice(["made of polished black obsidian. They extend upwards higher than you can see through the fog", "carved from the rocky cave itself. They could almost be natural.", "Formed of large, flawless mirrors. Oddly, your clothes are not reflected in them.", "that seem grown from hedges. No matter how you try though, you cannot cut through them."]) + " The space appears to be a " + str(random.randint(1, 4)) + "0 foot square, and you surmise that you are in a maze comprised of other equally sized spaces. There is nothing in this room except for the other player's character, who your character feels a strong compulsion to not leave alone down here.*\n\n*" + walls + "*\n\nFor this event, you roleplay using your tuppers as normal, and use your ooc thread to discuss the direction that you want to take in the maze. When you have decided, use the buttons on the message below to choose the direction to move, in which case we will describe the next square of space. Some rooms have obstacles in them, which are designed to prompt roleplay. The buttons below each message here have both cardinal directions and \n\n **To everyone else, you are encouraged to watch this thread, but do not message here or use the buttons**.", colour= embcol), view= MazeView(paths[0], paths[1], paths[2], paths[3], prev, state))
+    await rpthread.send(mazedata[mazeno][2].mention + " and " + mazedata[mazeno][3].mention)
 
 async def mazetrack(instance):
     await mazedata[instance][7].edit(embed = discord.Embed(title = "Maze Instance " + str(instance), description = "Thread: " + str(mazedata[instance][0].jump_url) + "\nPlayers: " + str(mazedata[instance][2].name) + " (" + str(mazedata[instance][2].id) + ") & " + str(mazedata[instance][3].name) + " (" + str(mazedata[instance][3].id) + ")\nCoordinates: " + str(mazedata[instance][4][0]) + ", " + str(mazedata[instance][4][1]) + "\nState: " + str(mazedata[instance][6]) + "\n" + "Maze Map Index: " + str(mazedata[instance][1]) + "\nMinotaur Direction: " + mazedata[instance][8] + "\n\n" + str(mazeencounters[instance]).replace("], [", "],\n[")))
@@ -1006,7 +1019,7 @@ async def mazerestore(message):
                                 
                                 walls, enc, paths, prev, state = await mazeupdate(rev, mazeinstance, int(mazedata[mazeinstance][6]))
 
-                                await rpmess[b].edit(embed=discord.Embed(title = rpmess[b].embeds[0].title, description = rpmess[b].embeds[0].description, colour = embcol), view = MazeView(paths[0], paths[1], paths[2], paths[3], prev))
+                                await rpmess[b].edit(embed=discord.Embed(title = rpmess[b].embeds[0].title, description = rpmess[b].embeds[0].description, colour = embcol), view = MazeView(paths[0], paths[1], paths[2], paths[3], prev, state))
 
         
             except IndexError:
