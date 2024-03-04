@@ -994,32 +994,33 @@ async def mazerestore(message):
                     mazeencounters.append(maze)
 
                     #Restoring Buttons
-                    rpmess = [joinedMessages async for joinedMessages in mazedata[a][0].history(limit = None, oldest_first= True)]
-                    rpmess.sort(key=lambda x: x.created_at)
-                    rpmess.reverse()
+                    if int(embeddata[3].split(" ")[1]) <= 2:
+                        rpmess = [joinedMessages async for joinedMessages in mazedata[a][0].history(limit = None, oldest_first= True)]
+                        rpmess.sort(key=lambda x: x.created_at)
+                        rpmess.reverse()
 
-                    for b in range(len(rpmess)):
-                        if rpmess[b].author == client.user:
-                            if "Maze Encounter" in rpmess[b].embeds[0].title:
-                                prev = rpmess[b+1].content.split("!")[0].split(" ")[1]
-                                mazeinstance = a
+                        for b in range(len(rpmess)):
+                            if rpmess[b].author == client.user:
+                                if "Maze Encounter" in rpmess[b].embeds[0].title:
+                                    prev = rpmess[b+1].content.split("!")[0].split(" ")[1]
+                                    mazeinstance = a
 
-                                if prev == "North":
-                                    mazedata[mazeinstance][4][0] = int(mazedata[mazeinstance][4][0]) + 1
-                                    rev = "south"
-                                elif prev == "East":
-                                    mazedata[mazeinstance][4][1] = int(mazedata[mazeinstance][4][1]) - 1
-                                    rev = "west"
-                                elif prev == "South":
-                                    mazedata[mazeinstance][4][0] = int(mazedata[mazeinstance][4][0]) - 1
-                                    rev = "north"
-                                else:
-                                    mazedata[mazeinstance][4][1] = int(mazedata[mazeinstance][4][1]) + 1
-                                    rev = "east"
-                                
-                                walls, enc, paths, prev, state = await mazeupdate(rev, mazeinstance, int(mazedata[mazeinstance][6]))
+                                    if prev == "North":
+                                        mazedata[mazeinstance][4][0] = int(mazedata[mazeinstance][4][0]) + 1
+                                        rev = "south"
+                                    elif prev == "East":
+                                        mazedata[mazeinstance][4][1] = int(mazedata[mazeinstance][4][1]) - 1
+                                        rev = "west"
+                                    elif prev == "South":
+                                        mazedata[mazeinstance][4][0] = int(mazedata[mazeinstance][4][0]) - 1
+                                        rev = "north"
+                                    else:
+                                        mazedata[mazeinstance][4][1] = int(mazedata[mazeinstance][4][1]) + 1
+                                        rev = "east"
+                                    
+                                    walls, enc, paths, prev, state = await mazeupdate(rev, mazeinstance, int(mazedata[mazeinstance][6]))
 
-                                await rpmess[b].edit(embed=discord.Embed(title = rpmess[b].embeds[0].title, description = rpmess[b].embeds[0].description, colour = embcol), view = MazeView(paths[0], paths[1], paths[2], paths[3], prev, state))
+                                    await rpmess[b].edit(embed=discord.Embed(title = rpmess[b].embeds[0].title, description = rpmess[b].embeds[0].description, colour = embcol), view = MazeView(paths[0], paths[1], paths[2], paths[3], prev, state))
 
         
             except IndexError:
