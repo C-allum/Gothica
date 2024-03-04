@@ -19,7 +19,7 @@ import GlobalVars
 player_list = []
 global startup
 startup = True
-#test
+
 @client.event
 async def on_ready():
     global startup
@@ -48,20 +48,19 @@ async def on_ready():
     TupperDatabase.initTupperDatabase()
 
     #Economy V2 startup
-    if not 1:#liveVersion:
+    if not liveVersion:
         print("Fetching item database...")
         
         for a in range(len(itemlists)):
             itemdatabase.append(itemlists[a].get_all_values())
         print("... done\n")
 
-        print("Fetching a list of all players...")
-        global player_list 
-        player_list = await MiscellaneuosCommands.getPlayerNameList()
-        print("... done")
+    print("Fetching a list of all players...")
+    global player_list 
+    player_list = await MiscellaneuosCommands.getPlayerNameList()
+    print("... done")
 
     #------------------DezzieAwardPoolReset---------------------
-
 
     #Read old dezzie award reset date
     economyResetDate = sheet.values().get(spreadsheetId = EconSheet, range = "D2", majorDimension='ROWS').execute().get("values")
@@ -4101,8 +4100,10 @@ async def on_message(message):
             # if str(message.channel.parent) == "blind-dates" and not "Gothica" in message.author.name:
             #     await MiscellaneuosCommands.datingrelay(message)
 
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "mazetest"):
-                await MiscellaneuosCommands.mazetest(message)
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "mazestart") and "staff" in str(message.author.roles).lower():
+                await MiscellaneuosCommands.mazestart(message)
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "mazerestore") and "staff" in str(message.author.roles).lower():
+                await MiscellaneuosCommands.mazerestore(message)
 
             #Timestamp Message
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "timestamp"):
