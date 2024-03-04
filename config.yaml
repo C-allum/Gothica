@@ -51,5 +51,6 @@ experience:
 general:
   administrative_role: admin
   gothy_prefix: '%'
+  index_of_first_shop: 3
   number_of_shops: 11
   staff_role: staff

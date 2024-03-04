@@ -17,17 +17,17 @@ async def shop(message):
         if message.content.split(" ", 1)[1].lower() in str(itemlists).lower():
 
             for a in range(len(itemlists)):
-                if a >= 3:
+                if a >= int(GlobalVars.config["general"]["index_of_first_shop"]):
                     if message.content.split(" ", 1)[1].lower() in itemlists[a].title.lower(): #Check if searchkey is in shopname
                         shoplist.append(a)
 
         else:
             shoplist = range(len(itemlists))
-            shoplist = shoplist[3:]
+            shoplist = shoplist[int(GlobalVars.config["general"]["index_of_first_shop"]):]
 
     except IndexError:
         shoplist = range(len(itemlists)) #Adds all shops to list
-        shoplist = shoplist[3:]
+        shoplist = shoplist[int(GlobalVars.config["general"]["index_of_first_shop"]):]
 
     if len(shoplist) == 1:
         i = shoplist[0] #Get index of worksheet
@@ -288,7 +288,7 @@ async def buyitem(message):
     available_in_shops = []
     shopnumbers = []
     try:
-        for j in range(3, 3+GlobalVars.config["general"]["number_of_shops"]):
+        for j in range(GlobalVars.config["general"]["index_of_first_shop"], GlobalVars.config["general"]["index_of_first_shop"]+GlobalVars.config["general"]["number_of_shops"]):
             for row in GlobalVars.itemdatabase[j]:
                 if selected_item[2] in row:
                     available_in_shops.append(GlobalVars.itemdatabase[j])
@@ -704,8 +704,7 @@ async def additem(message):
     else:
         selector_options = item_matches #Omit the Levenshtein Score
 
-     #Generate a message to show the top list
-
+    #Generate a message to show the top list
     selected_item = None
     if len(selector_options) > 1:
         top10_string = ""
@@ -733,7 +732,7 @@ async def additem(message):
     available_in_shops = []
     shopnumbers = []
     try:
-        for j in range(3, 3+GlobalVars.config["general"]["number_of_shops"]):
+        for j in range(GlobalVars.config["general"]["index_of_first_shop"], GlobalVars.config["general"]["index_of_first_shop"]+GlobalVars.config["general"]["number_of_shops"]):
             for row in GlobalVars.itemdatabase[j]:
                 if selected_item[2] in row:
                     available_in_shops.append(GlobalVars.itemdatabase[j])
@@ -1071,8 +1070,6 @@ async def giveMoney(message):
         TransactionsDatabaseInterface.addTransaction(recipient_name, TransactionsDatabaseInterface.DezzieMovingAction.Give, amount)
     else:
         await message.channel.send(embed=discord.Embed(title=f"{message.author.name} has not enough {dezzieemj} to give {amount}{dezzieemj} to {recipient_name}!", description=f"{message.author.name} has {GlobalVars.economyData[author_row_index+1][1]}{dezzieemj}"))
-        
-
 
 #Guides a staff member through adding money to a players balance
 async def addMoney(message):
@@ -1095,7 +1092,6 @@ async def removeMoney(message):
         TransactionsDatabaseInterface.addTransaction(recipient_name, TransactionsDatabaseInterface.DezzieMovingAction.Remove, -amount)
     else:
         await message.channel.send(embed=discord.Embed(title=f"Could not remove {amount}{dezzieemj}: from {GlobalVars.economyData[recipient_row_index][0]}'s balance!", description=f"Their balance is {new_balance}{dezzieemj}.", colour = embcol))
-
 
 #Allows user to use item.
 async def useitem(message):
@@ -1167,9 +1163,6 @@ async def useitem(message):
 
                 #TODO: Special treatment for stuff like character slot additions.
 
-
-    
-
 #Shows the user their dezzie balance
 async def money(message):
     author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0])
@@ -1199,6 +1192,273 @@ async def leaderboard(message):
         i += 1
     await message.channel.send(embed = discord.Embed(title="Dezzie Leaderboard:", description= embedstring, color=embcol))
     
+async def invest(message):
+    devdata = sheet.values().get(spreadsheetId = Plotsheet, range = "AS1:AX200", majorDimension='COLUMNS').execute().get("values")
+    row = devdata[0].index(str(message.channel))
+
+    if str(message.channel).lower() in str(devdata[0]).lower():
+        reciprow = ""
+        target = message.author
+        targname = target.name
+        recipient_economy_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if message.author.name in x][0])
+        
+        try:
+            giveamount = int(message.content.split(" ")[1].strip("-"))
+        except ValueError:
+            giveamount = int(message.content.split(" ")[2].strip("-"))
+
+        if giveamount >= float((int(devdata[1][row])/4) + 1):
+            giveamount = math.floor(int(devdata[1][row])/4)
+            await message.channel.send(embed = discord.Embed(title = "You cannot donate that much!", description = "You cannot donate more than 1/4 of the project cost by yourself. We appreciate your generosity, and have set your donation to the maximum of " + str(math.floor(int(devdata[1][row])/4))))
+
+        if giveamount > int(GlobalVars.economyData[recipient_economy_index+1][1]):
+            await message.channel.send(embed=discord.Embed(title = "You don't have enough money to do that.", description = "You only have " + str((GlobalVars.economyData[recipient_economy_index+1][1]) + dezzieemj), colour = embcol))
+        else:            
+            recipnewtot = int(GlobalVars.economyData[recipient_economy_index+1][1]) - int(giveamount)
+
+            if int(giveamount > 0):
+                if await removeDezziesFromPlayerWithoutMessage(giveamount, playerName=targname):
+                    await writeEconSheet(GlobalVars.economyData)
+                    TransactionsDatabaseInterface.addTransaction(targname, TransactionsDatabaseInterface.DezzieMovingAction.Invest, int(-giveamount))
+            if str(message.channel).lower() in str(devdata).lower():
+                for a in range(len(devdata[0])):
+                    if (message.channel.name).lower() in str(devdata[0][a]).lower():
+                        row = a
+
+                #Contributors
+                try:
+                    devconts = devdata[5][row].split("|")
+                except IndexError:
+                    devconts = ""
+                    while len(devdata[5]) < row+1:
+                        devdata[5].append("")
+
+                if str(message.author) in devdata[5][row]:
+                    prevconts = []
+                    for c in range(len(devconts)):
+                        if str(message.author) in devconts[c]:
+                            prevconts.append(str(message.author) + "£" + str(int(devconts[c].split("£")[1]) + giveamount) + "|")
+                        else:
+                            prevconts.append(devconts[c] + "|")
+                        contributors = "".join(prevconts)
+
+                else:
+                    contributors = str(devdata[5][row]) + str(message.author) + "£" + str(giveamount) + "|"
+                
+                contributors = contributors.replace("||", "|")
+                highcont = 0
+                highplayer = ""
+                for d in range(len(contributors.split("|"))):
+                    try:
+                        if int(highcont) < int(contributors.split("|")[d].split("£")[1]):
+                            highcont = contributors.split("|")[d].split("£")[1]
+                            highplayer = contributors.split("|")[d].split("£")[0]
+
+                    except IndexError:
+                        pass
+
+                rand20 = random.randint(1,20)
+
+                if message.author.name == "C_allum" and "-" in message.content:
+                    rand20 = int(message.content.split(" ")[0].split("-")[1])
+
+                randDC = int(devdata[2][row])
+                give1 = giveamount
+
+                if rand20 == 1:
+                    #Partial Fail
+                    amountlost = random.randint(1,giveamount)
+                    mess = "You rolled a " + str(rand20) + " on the dice.\n\n"
+                    lost = str(amountlost)
+                    remain = str(int(giveamount) - int(amountlost)) + dezzieemj
+                    mess += random.choice(["The tipping jar begins to chew on your dezzies… a mimic? Wait - how did you not notice there were two with the same label? Anyways, you fed " + lost + " to the mimic. You shouldn't stick something you value more than dezzies into that one…","Someone embezzled some of the donated dezzies! " + lost + " were lost, leaving only " + remain, "Upon donating, you noticed that there was a hole in your pocket, so when you intended to give " + str(giveamount) + ", you found that you actually only had " + remain + " there.", "An irrate centaur trotted up as you were donating, and demanded the money you owed her for a *ride*. She took " + lost + ", so the donation was reduced to only " + remain, "The donation was overseen by the receptionist at the guild, and somehow came out to only " + remain + "? Janine shrugs as she pockets " + lost + ".", "It turns out that the big dezzie you had been carrying was a mimic, and it didn't want to leave your side. As you thought it was worth about " + lost + ", your donation is now only worth " + remain, "A purplish pixie was in your coin pouch, and had apparently been feasting upon the dezzies there. She managed to eat " + lost + ", so the donation was reduced to " + remain])
+                    giveamount -= amountlost
+
+                elif rand20 != 20:
+                    #Success
+                    mess = "You rolled a " + str(rand20) + " on the dice.\n\n"
+                    mess += random.choice(["The dezzies fall into the jar with a pleasant, jingly noise. It " + random.choice(["makes you feel warm inside", "fills you with determination", "leaves you considering learning to use dezzies as a musical instrument"]),"T̴̂͗h̸̊͝e̶͛̃ ̸̑̿M̶̾͐í̸͠s̶͆͋t̷̄̊ȓ̶̂e̶̹͗s̸̽̽s̸̈́̀ smiles upon you. After the orgasm fades, you find yourself bearing a slave crest of " + random.choice(["Abundance", "Altruism", "Bestial Instinct", "Denial", "Echoes" "Emptiness", "False Dominance", "Infatuation", "Infertility", "Obsession", "Seduction", "Slavery", "Transformation", "Virility"]) + " that wasn't there before. it fades after " + str(random.randint(1,6)) + " hours", "T̴̂͗h̸̊͝e̶͛̃ ̸̑̿M̶̾͐í̸͠s̶͆͋t̷̄̊ȓ̶̂e̶̹͗s̸̽̽s̸̈́̀ knows you could have given more and is disappointed. For the next 24 hours, any cum produced within 100ft of you becomes a cum sprite that chases you and leaps into your face", "T̴̂͗h̸̊͝e̶͛̃ ̸̑̿M̶̾͐í̸͠s̶͆͋t̷̄̊ȓ̶̂e̶̹͗s̸̽̽s̸̈́̀ has offered you a great blessing.  For the next 24 hours, any cum produced within 100ft of you becomes a cum sprite that chases you and leaps into your chest", "Tony the tentacle monster gives you a high five... or is that a high one?", "Your donation, as well as your eternal loyalty is accepted . . . . Did you not read the contract?", "A handsomely scarred witch offers to thank you for your donation... personally", "An aspect of Gothica blows you ||a kiss|| as you donate.", "The Keepers offer you a place of honor in their next " + random.choice(["Initiation", "Seed-Drinking", "Breeding"]) + " ritual for your contributions.", "You were given a crumpled voucher for 100 dezzies off at participating shops (but the fine print says the only participating shop is the discount and used sex toy shop run by one of the kobolds)", "You feel T̴̂͗h̸̊͝e̶͛̃ ̸̑̿M̶̾͐í̸͠s̶͆͋t̷̄̊ȓ̶̂e̶̹͗s̸̽̽s̸̈́̀'s blessing upon you... don't go in the kobold dens... or do?", "In thanks, the Adventurer's Guild would like to present a waiver for fees of the next quest.", "", "", "", "", "", "", "", "", "", ""])
+
+                else:
+                    #Crit Success
+                    mess = "You rolled a " + str(rand20) + " on the dice!\n\n"
+                    mess += random.choice(["A kind hearted citizen decided to match your donation!", "You find that the dezzies you donated had been especially pure, and were worth double!", "The tiefling in line to donate after you felt " + random.choice(["intimidated", "aroused", "inspired"]) + "by your donation, and decided to match it!", "The receptionist at the Adventurer's Guild smiles at you as she take the donation, and offers you a voucher for 100" + dezzieemj + " which is valid for any store, if you buy her something nice. She also matches your donation.", "A strange portal opened right as you were depositing dezzies, and exactly the same number of dezzies fell through it - doubling your donation!"])
+                    giveamount = 2 * giveamount
+
+                await message.delete()
+                namew = message.author.name
+                newtotal = int(devdata[3][row]) + giveamount
+                progress = str(str(round(newtotal / int(devdata[1][row]),2) * 100) + "%").replace(".0%","%")
+                investemb = discord.Embed(title = str(namew) + " invested " + str(give1) + dezzieemj + " in " + str(message.channel), description = mess + "\n\nWe are now " + progress + " towards our goal." + "\n\n" + namew + " has " + str(recipnewtot) + dezzieemj + "\n\n" + str(highplayer.split("#")[0]) + " has contributed the most towards this goal, having invested " + str(highcont) + dezzieemj + " so far!", colour = embcol)
+               
+                if newtotal >= int(devdata[1][row]):
+                    investemb.set_footer(text = str(devdata[4][row]))
+                    investemb.set_image(url = "https://i.ibb.co/Nt3NCRN/loading-dezzie0100.png")
+                    await client.get_channel(996826636358000780).send("A progress bar has been completed in " + str(message.channel) + "\n\nThe players that contributed to this project were:\n\n" + contributors.replace("|", str(dezzieemj + "\n")).replace("£"," - "))
+
+                elif newtotal < 0:
+                    investemb.set_footer(text = "Somehow, we're further behind than we were when we started.")
+                    investemb.set_image(url = "https://i.ibb.co/qx7Hj0z/loading-dezzie0000.png")
+
+                else:
+                    percentage = newtotal / int(devdata[1][row]) * 100
+                    #Image Percentage
+                    percent = math.floor(percentage)
+                    imglist = ["https://i.ibb.co/qx7Hj0z/loading-dezzie0000.png", "https://i.ibb.co/TPRKffZ/loading-dezzie0001.png","https://i.ibb.co/1m60NWV/loading-dezzie0002.png","https://i.ibb.co/FnfHtf3/loading-dezzie0003.png","https://i.ibb.co/28h1xK4/loading-dezzie0004.png","https://i.ibb.co/pnv2RSL/loading-dezzie0005.png","https://i.ibb.co/7nyXP9t/loading-dezzie0006.png","https://i.ibb.co/HPtc5QW/loading-dezzie0007.png","https://i.ibb.co/H7SG2rV/loading-dezzie0008.png","https://i.ibb.co/NTDGY9b/loading-dezzie0009.png","https://i.ibb.co/tqQLm7L/loading-dezzie0010.png","https://i.ibb.co/nzgJR1M/loading-dezzie0011.png","https://i.ibb.co/nD7jHjT/loading-dezzie0012.png","https://i.ibb.co/T2jVx0h/loading-dezzie0013.png","https://i.ibb.co/s3bb0Gt/loading-dezzie0014.png","https://i.ibb.co/RjCXnY8/loading-dezzie0015.png","https://i.ibb.co/3mKY69j/loading-dezzie0016.png","https://i.ibb.co/f4Xjg63/loading-dezzie0017.png","https://i.ibb.co/7Qh98cb/loading-dezzie0018.png","https://i.ibb.co/k0mW2hZ/loading-dezzie0019.png","https://i.ibb.co/wRxCQVM/loading-dezzie0020.png","https://i.ibb.co/tz7fFFg/loading-dezzie0021.png","https://i.ibb.co/pxkBpP5/loading-dezzie0022.png","https://i.ibb.co/SNLbxt1/loading-dezzie0023.png","https://i.ibb.co/HGV26LQ/loading-dezzie0024.png","https://i.ibb.co/FzxGXX1/loading-dezzie0025.png","https://i.ibb.co/4KkZcqh/loading-dezzie0026.png","https://i.ibb.co/p4mkH4x/loading-dezzie0027.png","https://i.ibb.co/z6LZgCs/loading-dezzie0028.png","https://i.ibb.co/GnQKHGS/loading-dezzie0029.png","https://i.ibb.co/rbbjzNP/loading-dezzie0030.png","https://i.ibb.co/m8D5YqF/loading-dezzie0031.png","https://i.ibb.co/nfysj4L/loading-dezzie0032.png","https://i.ibb.co/1T4f7YQ/loading-dezzie0033.png","https://i.ibb.co/tLp7RK2/loading-dezzie0034.png","https://i.ibb.co/t8Ygm5C/loading-dezzie0035.png","https://i.ibb.co/1zB0yPV/loading-dezzie0036.png","https://i.ibb.co/SBB5d6f/loading-dezzie0037.png","https://i.ibb.co/4mPvSdy/loading-dezzie0038.png","https://i.ibb.co/3S9Dhrt/loading-dezzie0039.png","https://i.ibb.co/M1XKkYB/loading-dezzie0040.png","https://i.ibb.co/b5VzVYz/loading-dezzie0041.png","https://i.ibb.co/5rwTJQj/loading-dezzie0042.png","https://i.ibb.co/cK9y4t6/loading-dezzie0043.png","https://i.ibb.co/qDYBfFs/loading-dezzie0044.png","https://i.ibb.co/grW8NsN/loading-dezzie0045.png","https://i.ibb.co/Vj84zY4/loading-dezzie0046.png","https://i.ibb.co/mX7FMBY/loading-dezzie0047.png","https://i.ibb.co/MZBmZqR/loading-dezzie0048.png","https://i.ibb.co/zSxQsbM/loading-dezzie0049.png","https://i.ibb.co/7pSkMxj/loading-dezzie0050.png","https://i.ibb.co/DG2KqYG/loading-dezzie0051.png","https://i.ibb.co/84bngKX/loading-dezzie0052.png","https://i.ibb.co/S5scHyC/loading-dezzie0053.png","https://i.ibb.co/kQsmr9q/loading-dezzie0054.png","https://i.ibb.co/r5PTVPj/loading-dezzie0055.png","https://i.ibb.co/j9KcKsf/loading-dezzie0056.png","https://i.ibb.co/3NVMCNG/loading-dezzie0057.png","https://i.ibb.co/9rfyp5h/loading-dezzie0058.png","https://i.ibb.co/7KCSQ90/loading-dezzie0059.png","https://i.ibb.co/vQVJQRp/loading-dezzie0060.png","https://i.ibb.co/HPRxwJ8/loading-dezzie0061.png","https://i.ibb.co/pbBTqS8/loading-dezzie0062.png","https://i.ibb.co/563ZBfN/loading-dezzie0063.png","https://i.ibb.co/FY065ty/loading-dezzie0064.png","https://i.ibb.co/qxCzJR3/loading-dezzie0065.png","https://i.ibb.co/T8PBnJN/loading-dezzie0066.png","https://i.ibb.co/fFm92D0/loading-dezzie0067.png","https://i.ibb.co/mcJ47qj/loading-dezzie0068.png","https://i.ibb.co/4VyvV9G/loading-dezzie0069.png","https://i.ibb.co/Y2qFHN1/loading-dezzie0070.png","https://i.ibb.co/593DGqF/loading-dezzie0071.png","https://i.ibb.co/v30RgH4/loading-dezzie0072.png","https://i.ibb.co/b351RF0/loading-dezzie0073.png","https://i.ibb.co/x3rv11r/loading-dezzie0074.png","https://i.ibb.co/ySNh943/loading-dezzie0075.png","https://i.ibb.co/BjPSpDZ/loading-dezzie0076.png","https://i.ibb.co/NNwSpKy/loading-dezzie0077.png","https://i.ibb.co/mN8mdt9/loading-dezzie0078.png","https://i.ibb.co/TK3jtVx/loading-dezzie0079.png","https://i.ibb.co/WgjtBZ5/loading-dezzie0080.png","https://i.ibb.co/BKxybMV/loading-dezzie0081.png","https://i.ibb.co/kBRxqZk/loading-dezzie0082.png","https://i.ibb.co/CzmTPbK/loading-dezzie0083.png","https://i.ibb.co/sQr72KL/loading-dezzie0084.png","https://i.ibb.co/4j3fdf0/loading-dezzie0085.png","https://i.ibb.co/x1jGjxM/loading-dezzie0086.png","https://i.ibb.co/jD4NVCY/loading-dezzie0087.png","https://i.ibb.co/S6yKQYb/loading-dezzie0088.png","https://i.ibb.co/bNkrGSn/loading-dezzie0089.png","https://i.ibb.co/d0NXt5z/loading-dezzie0090.png","https://i.ibb.co/smfYLDV/loading-dezzie0091.png","https://i.ibb.co/XS1c3x6/loading-dezzie0092.png","https://i.ibb.co/1vJtBtS/loading-dezzie0093.png","https://i.ibb.co/98BCvYt/loading-dezzie0094.png","https://i.ibb.co/cYctMPp/loading-dezzie0095.png","https://i.ibb.co/pP6SQvd/loading-dezzie0096.png","https://i.ibb.co/gSSqZGp/loading-dezzie0097.png","https://i.ibb.co/hLP8k2R/loading-dezzie0098.png","https://i.ibb.co/XyLFCn3/loading-dezzie0099.png"]
+                    imlink = imglist[percent]
+                    investemb.set_image(url = imlink)
+
+                await message.channel.send(embed = investemb)
+                sheet.values().update(spreadsheetId = Plotsheet, range = str("AV" + str(row+1)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newtotal]])).execute()
+                sheet.values().update(spreadsheetId = Plotsheet, range = str("AX" + str(row+1)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[contributors]])).execute()
+
+    else:
+        await message.delete()
+        await message.channel.send(embed = discord.Embed(title = "This channel isn't set up to receive donations", description = "If you believe this to be in error, contact the moderator team", colour = embcol))
+
+async def bid(message, isbot):
+    #TODO Change logic to use new Economy Data, which is read Row wise, not Column wise
+    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='COLUMNS').execute().get("values")
+    debugvar = message.content.lower().split(" ")
+    if isbot:
+        await message.delete()
+
+    elif "setup" == message.content.lower().split(" ")[1] and "staff" in str(message.author.roles).lower():
+        for a in range(len(message.content.split(" ")[2].split("|"))):
+            bidstock.append(message.content.split(" ")[2].split("|")[a])
+            bidprice.append(0)
+            bidders.append("")
+        global bidthread
+        bidthreadseed = await message.channel.send(embed = discord.Embed(title = "Bidding is open!", description = "This weekend's ~~slaves~~ *wares* are:\n" + "\n".join(bidstock), colour = embcol))
+        bidthread = await bidthreadseed.create_thread(name = "Bids")
+
+    elif "results" == message.content.lower().split(" ")[1]:
+        bidsummary = []
+        auctiontot = 0
+        for c in range(len(bidstock)):
+            if bidders[c] != "":
+                bidsummary.append(bidstock[c] + ": " + str(bidprice[c]) + dezzieemj + ", " + bidders[c].name)
+                auctiontot += bidprice[c]
+            else:
+                bidsummary.append(bidstock[c] + ": No bids yet")
+        await message.channel.send(embed = discord.Embed(title = "Current bids for this weekend's auctions", description = "\n".join(bidsummary) + "\n\nIn total, " + str(auctiontot) + " is being spent at this auction.",  colour = embcol))
+
+    elif "end" == message.content.lower().split(" ")[1] and "staff" in str(message.author.roles).lower():
+        bidtotal = sum(bidprice)
+        bidsfinal = []
+        bidwinners = []
+        for d in range(len(bidstock)):
+            if str(bidders[d]) in str(bidwinners):
+                try:
+                    bidsfinal[bidwinners.index(bidders[d])] += bidprice[d]
+                except ValueError:
+                    pass
+            else:
+                bidwinners.append(bidders[d])
+                bidsfinal.append(bidprice[d]) 
+        bidstatement = []
+
+        indexes = []
+        newbal = []
+        balances = []
+
+        for e in range(len(bidsfinal)):
+            if await removeDezziesFromPlayerWithoutMessage(int(bidsfinal[e]), playerID=bidwinners[e].id):
+                bidstatement.append(str(bidwinners[e]) + ": " + str(bidsfinal[e]))
+            else:
+                await message.channel.send(embed = discord.Embed(title = "Something went wrong in concluding the auction.", description = f"Couldn't remove dezzies from {bidwinners[e].name}. We don't know why that happened. Please ask the botgods.", colour = embcol))
+                return
+
+        await writeEconSheet(GlobalVars.economyData)
+        await message.channel.send(embed = discord.Embed(title = "Bidding concluded", description = "The following dezzies have been removed:\n\n" + "\n".join(bidstatement), colour = embcol))
+
+    elif "reset" == message.content.lower().split(" ")[1] and "staff" in str(message.author.roles).lower():
+        if len(message.content.split(" ")) > 2:
+            bidtarget = " ".join(message.content.split(" ")[2:])
+            try:
+                if bidtarget.lower() in str(bidstock).lower():
+                    for b in range(len(bidstock)):
+                        if bidtarget.lower() in bidstock[b].lower():
+                            slaveindex = b
+                            break
+                    await message.channel.send(embed = discord.Embed(title = "Reset successful!", description = "You have reset the bid for " + bidstock[slaveindex], colour = embcol))
+                    bidders[slaveindex] = ""
+                    bidprice[slaveindex] = 0
+                    await bidthread.send(message.author.name + " has reset the bid for " + bidstock[slaveindex])
+
+                else:
+                    await message.channel.send(embed = discord.Embed(title = "Could not find a slave of that name.", description = "Current slaves for sale are:\n\n" + "\n".join(bidstock), colour = embcol))
+
+            except ValueError:
+                await message.channel.send(embed = discord.Embed(title = "The price you bid needs to be an integer  ", description = "", colour = embcol))
+        
+        else:
+            await message.channel.send(embed = discord.Embed(title = "You didn't format that correctly.", description = "It needs to be `%bid reset slavename`.", colour = embcol))
+    
+    elif "set" == message.content.lower().split(" ")[1] and "staff" in str(message.author.roles).lower():
+        bidsections = message.content.split(" ", 1)[2].split("|")
+        try:
+            if bidsections[0].lower() in str(bidstock).lower():
+                for b in range(len(bidstock)):
+                    if bidsections[0].lower() in bidstock[b].lower():
+                        slaveindex = b
+                        bidders[b] = get(client.get_all_members(), id=int(bidsections[1]))
+                        bidprice[b] = int(bidsections[2])
+                        break
+            else:
+                bidstock.append(bidsections[0])
+                biduser = get(client.get_all_members(), id=int(bidsections[1]))
+                bidders.append(biduser)
+                bidprice.append(int(bidsections[2]))
+                slaveindex = -1
+
+            await message.channel.send(embed = discord.Embed(title = "Success!", description = "You have set the bid for " + str(bidstock[slaveindex]) + " to " + str(bidprice[slaveindex]) + " bid by " + str(bidders[slaveindex]), colour = embcol))
+
+        except ValueError:
+            await message.channel.send(embed = discord.Embed(title = "The price you bid needs to be an integer  ", description = "", colour = embcol))
+
+    elif "thread" == message.content.lower().split(" ")[1] and "staff" in str(message.author.roles).lower():
+        bidthread = message.channel
+        await message.channel.send("Bidding Thread Set")
+
+    else:
+        if len(message.content.split(" ")) >= 3:
+            bidtarget = " ".join(message.content.split(" ")[1:-1])
+            try:
+                bidamount = int(message.content.split(" ")[-1])
+                bidattempt = bidamount
+                author_econ_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0])
+                if message.author.name in str(bidders):
+                    for e in range(len(bidstock)):
+                        if bidders[e] == message.author:
+                            bidattempt += bidprice[e]
+
+                if bidtarget.lower() in str(bidstock).lower():
+                    for b in range(len(bidstock)):
+                        if bidtarget.lower() in bidstock[b].lower():
+                            slaveindex = b
+                            break
+                    if bidamount <= bidprice[slaveindex]:
+                        await message.channel.send(embed = discord.Embed(title = "You need to bid more than that!", description = "The current bid for " + bidstock[slaveindex] + " is " + str(bidprice[slaveindex]) + dezzieemj + ", bid by " + bidders[slaveindex].name, colour = embcol))
+                    elif bidattempt > int(GlobalVars.economyData[author_econ_index+1][1]):
+                        await message.channel.send(embed = discord.Embed(title = "You can't bid that much.", description = "You only have " + GlobalVars.economyData[author_econ_index+1][1] + dezzieemj + ".", colour = embcol))
+                    elif bidamount < 1000:
+                        await message.channel.send(embed = discord.Embed(title = "The minimum bid is 1000" + dezzieemj, description = "Please increase your bid.", colour = embcol))
+                    else:
+                        await message.channel.send(embed = discord.Embed(title = "Bid successful!", description = "You have bid " + str(bidamount) + dezzieemj + " for " + bidstock[slaveindex], colour = embcol))
+                        bidders[slaveindex] = message.author
+                        bidprice[slaveindex] = bidamount
+                        await bidthread.send(message.author.name + " has bid " + str(bidamount) + dezzieemj + " on " + bidstock[slaveindex])
+
+                else:
+                    await message.channel.send(embed = discord.Embed(title = "Could not find a slave of that name.", description = "Current slaves for sale are:\n\n" + "\n".join(bidstock), colour = embcol))
+
+            except ValueError:
+                await message.channel.send(embed = discord.Embed(title = "The price you bid needs to be an integer  ", description = "", colour = embcol))
+
+        else:
+            await message.channel.send(embed = discord.Embed(title = "You didn't format that correctly.", description = "It needs to be `%bid slavename amount`.", colour = embcol))
+
 async def dezReact(reaction):
     mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
 
@@ -1435,10 +1695,8 @@ async def rpDezReact(reaction):
         await client.get_channel(botchannel).send(embed=discord.Embed(title = "You can't use this at the here.", colour = embcol, url = mess.jump_url))
 
 
-
 #TODO: Rewrite the item function (Fuzzy String matching)
 #TODO: Rewrite the Shop function (Fuzzy String matching)
-#TODO: Add leaderboard rank to money function
 
 async def copyEconomy(message):
 
@@ -1550,8 +1808,6 @@ async def writeItemsheetCell(shopnumber, row, column, values):
     async with economy_lock:
         itemsheet.worksheets()[shopnumber].update_cell(row + 1, column + 1, values)
 
-
-
 async def getUserNamestr(message):
     if "@" in message.content:
         try:
@@ -1576,8 +1832,6 @@ async def getColumnLetter(columnindex):
         collet = ""                        
     collet += chr(65 + (int(columnindex % 26)))
     return collet
-
-
 
 async def stringMatchTest(message):
     item_name = message.content.split(" ", 1)[1]
@@ -1620,7 +1874,6 @@ async def removeDezziesFromPlayerWithoutMessage( amount, playerID = None, player
 
         return True
     return False
-
 
 async def addDezziesToPlayer(message, amount, playerID=None, playerName=None, write_econ_sheet=True, send_message=True):
     async with add_dezzie_lock: #THIS LOCK COULD LEAD TO INSANE GOTHY LAG IF OOC MESSAGES TRIGGER THIS.
@@ -1706,7 +1959,6 @@ async def addItemToPlayerWithCurseFromShop(message, playerID, itemID, amount, sh
         await writeInvetorySheet(GlobalVars.inventoryData)
         await message.channel.send(embed=discord.Embed(title=f"{amount}x {item_database_info[1]} added to your inventory!", description="Seems to be your first one. Go and have fun with it!", colour = embcol))
         return rolled_curses
-
 
 async def addItemToInventory(recipient_inventory_row_index, item_identifier, quantity, curses):
 
@@ -1933,7 +2185,6 @@ class AddItem_Curse_View_No_Shopcurses(discord.ui.View):
         self.button_response = "cancel"
         self.stop()
 
-
 class Yes_No_View(discord.ui.View):
     def __init__(self, timeout=90):
         super().__init__(timeout=timeout)
@@ -1953,8 +2204,6 @@ class Yes_No_View(discord.ui.View):
         await interaction.response.defer()
         self.button_response = "no"
         self.stop()
-
-
 
 class Yes_No_Quantity_View(discord.ui.View):
     def __init__(self, timeout=90):

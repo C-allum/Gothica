@@ -329,6 +329,208 @@ async def regCommunityProject(message):
     sheet.values().update(spreadsheetId = Plotsheet, range = "AS1:AX200", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=projdata)).execute()
     await message.channel.send(embed = discord.Embed(title = f"Success!", description = f"New community project generated", colour = embcol))
 
+#TODO: Complete rewrite eventually
+async def scenes(message):
+    await message.delete()
+
+    waitmess = await message.channel.send("We are processing your request now.")
+    author_scenes_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0]) + 2
+
+    if len(GlobalVars.economyData[author_scenes_index]) > 0 and not GlobalVars.economyData[author_scenes_index][0] == "":
+        if len(GlobalVars.economyData[author_scenes_index][0]) == 1:
+            prevscenes = [GlobalVars.economyData[author_scenes_index][0]]
+        else:
+            prevscenes = GlobalVars.economyData[author_scenes_index][0].split("|")
+    else:
+        prevscenes = ""
+        await message.channel.send(embed = discord.Embed(title = "You have no scenes tracked.", description = "Add one using:\n\n`%scenes add Brief Scene Description #Channel Name`\n\nFor example, to watch the a particular scene in the cantina, you might type:\n\n`%scenes add Dinner Date #<832842032073670676>`", colour = embcol))
+
+    #Scenes add
+    if message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "scenes add"):
+        scenestr = message.content.split(" ", 2)[2]
+
+        if scenestr.replace(" ", "") == "":
+            await message.channel.send("Add help here")
+
+        else:
+            if prevscenes != "":
+                scenelist = "|".join(prevscenes) + "|" + scenestr
+            else:
+                scenelist = scenestr
+            GlobalVars.economyData[author_scenes_index][0] = scenelist
+            await EconomyV2.writeEconSheet(GlobalVars.economyData)
+        await message.channel.send(embed = discord.Embed(title = "Added to your scenes", description = "We have added '" + scenestr + "' to your tracked scenes.", colour = embcol))
+
+    else:
+        if "|" in prevscenes:
+            prevs = prevscenes.split("|")
+
+        else:
+            prevs = prevscenes
+
+        if prevs != "":
+            prevlist = []
+            prevscenelist = []
+            for a in range(0, len(prevs)):
+                if "#" in prevs[a]:
+                    try:
+                        sceneno = int(prevs[a].split("#")[1].split(">")[0])
+
+                        if (not "remove" in message.content.lower()) and (not "notif" in message.content.lower()):
+                            try:
+                                #last = await client.get_channel(sceneno).history(limit=1, oldest_first=False).flatten()
+                                last = [joinedMessages async for joinedMessages in client.get_channel(sceneno).history(limit=1, oldest_first=False)] #Fix for pebblehost Await issue
+                                prevlist.append(str("`" + str(a+1) + "` " + str(prevs[a]) + " - Last message by: " + last[0].author.name))
+
+                            except AttributeError:
+                                prevname = ""
+                                prevlist.append(str("`" + str(a+1) + "` " + str(prevs[a]) + " - Thread archived or channel deleted."))
+
+                        else:
+                            prevlist.append(str("`" + str(a+1) + "` " + str(prevs[a])))
+                            prevscenelist.append(str(prevs[a]))
+
+                    except ValueError:
+                        prevlist.append(str("`" + str(a+1) + "` " + str(prevs[a])))
+
+                else:
+                    prevlist.append(str("`" + str(a+1) + "` " + str(prevs[a])))
+
+            if "remove" in message.content.lower():
+                scenetemp = await message.channel.send(embed = discord.Embed(title = "Type the number of the scene to stop tracking", description= "\n".join(prevlist), colour = embcol))
+                try:
+                    scenerechoice = await client.wait_for('message', timeout = 30, check = check(message.author))
+                    await scenerechoice.delete()
+                    try:
+                        scenenum = int(scenerechoice.content)
+                        prevs = prevs[:scenenum-1] + prevs[scenenum:]
+                        await message.channel.send(embed = discord.Embed(title = "Scene removed", description = "The requested scene has been removed from your tracked scene list.", colour = embcol))
+                        if len(prevs) > 1:
+                            GlobalVars.economyData[author_scenes_index][0] = "|".join(prevs)
+                            await EconomyV2.writeEconSheet(GlobalVars.economyData)
+                        elif len(prevs) == 0:
+                            GlobalVars.economyData[author_scenes_index][0] = ""
+                            await EconomyV2.writeEconSheet(GlobalVars.economyData)
+                        else:
+                            GlobalVars.economyData[author_scenes_index][0] = prevs[0]
+                            await EconomyV2.writeEconSheet(GlobalVars.economyData) 
+
+                    except TypeError:
+                        await message.channel.send("Value not recognised")
+
+                except TimeoutError:
+                    await message.channel.send("Selection Timed Out")
+
+            elif "notif" in message.content.lower() and "all" in message.content.lower():
+                for scenenum in range(0, len(prevs)):
+                    try:
+                        trackedStatus = prevs[scenenum].split(" ")[-1]
+                        if (" off" in message.content.lower() or " disable"in message.content.lower()) and "Enabled" in trackedStatus:
+                            splitScene = prevs[scenenum].rsplit(" ", 1)
+                            splitScene [-1]= " Notifications:Disabled"
+                            prevs[scenenum] = "".join(splitScene)
+
+                        elif (" on" in message.content.lower() or " enable" in message.content.lower()) and "Disabled" in trackedStatus:
+                            splitScene = prevs[scenenum].rsplit(" ", 1)
+                            splitScene [-1]= " Notifications:Enabled"
+                            prevs[scenenum] = "".join(splitScene)
+
+                        elif not "Enabled" in trackedStatus and not "Disabled" in trackedStatus:
+                            if " off" in message.content.lower() or " disable" in message.content.lower():
+                                prevs[scenenum] = prevs[scenenum] + (" Notifications:Disabled")
+
+                            elif " on" in message.content.lower() or " enable" in message.content.lower():
+                                prevs[scenenum] = prevs[scenenum] + (" Notifications:Enabled")
+                            else: 
+                                await message.channel.send(embed = discord.Embed(title = "Wrong use of the command!", description = "Include `on` or `off` at the end of this command to specify how you want all scenes toggled.", colour = embcol))
+                                return
+                        elif not " off" in message.content.lower() and not " disable" in message.content.lower() and not " on" in message.content.lower() and not " enable" in message.content.lower():
+                            await message.channel.send(embed = discord.Embed(title = "Wrong use of the command!", description = "Include `on` or `off` at the end of this command to specify how you want all scenes toggled.", colour = embcol))
+                            return
+
+                    except TypeError:
+                        await message.channel.send("Value not recognised")
+                #Save new scenes field to sheet.
+                if len(prevs) > 1:
+                    GlobalVars.economyData[author_scenes_index][0] = "|".join(prevs)
+                    await EconomyV2.writeEconSheet(GlobalVars.economyData)
+                elif len(prevs) == 0:
+                    GlobalVars.economyData[author_scenes_index][0] = ""
+                    await EconomyV2.writeEconSheet(GlobalVars.economyData)
+                else:
+                    GlobalVars.economyData[author_scenes_index][0] = prevs[0]
+                    await EconomyV2.writeEconSheet(GlobalVars.economyData)
+                if " off" in message.content:
+                    await message.channel.send(embed = discord.Embed(title = "Scene notifications disabled on all tracked scenes", description = "The notfication function for the all scenes has been disabled. It is now enabled and we will notify you of new messages for your scenes.", colour = embcol))
+                if " on" in message.content:
+                    await message.channel.send(embed = discord.Embed(title = "Scene notifications enabled on all tracked scenes", description = "The notfication function for the all scenes has been enabled. It is now enabled and we will notify you of new messages for your scenes.", colour = embcol))
+
+            elif "notif" in message.content:
+                #Make user choose the scene to toggle
+                scenetemp = await message.channel.send(embed = discord.Embed(title = "Type the number of the scene to toggle notifications for", description= "\n".join(prevlist), colour = embcol))
+
+                try:
+                    scenerechoice = await client.wait_for('message', timeout = 30, check = check(message.author))
+                    scenenum = int(scenerechoice.content) - 1
+
+                    try:
+                        trackedStatus = prevs[scenenum].split(" ")[-1]
+                        if trackedStatus == "Notifications:Enabled":
+                            splitScene = prevs[scenenum].rsplit(" ", 1)
+                            splitScene [-1]= " Notifications:Disabled"
+                            prevs[scenenum] = "".join(splitScene)
+                            await message.channel.send(embed = discord.Embed(title = "Scene notifications disabled", description = "The notfication function for the requested scene has been toggled. It is now disabled and we will not notify you of new messages for that scene.", colour = embcol))
+
+
+                        elif trackedStatus == "Notifications:Disabled":
+                            splitScene = prevs[scenenum].rsplit(" ", 1)
+                            splitScene [-1]= " Notifications:Enabled"
+                            prevs[scenenum] = "".join(splitScene)
+                            await message.channel.send(embed = discord.Embed(title = "Scene notifications enabled", description = "The notfication function for the requested scene has been toggled. It is now enabled and we will notify you of new messages for that scene.", colour = embcol))
+
+                        else:
+                            prevs[scenenum] = prevs[scenenum] + (" Notifications:Enabled")
+                            await message.channel.send(embed = discord.Embed(title = "Scene notifications enabled", description = "The notfication function for the requested scene has been toggled. It is now enabled and we will notify you of new messages for that scene.", colour = embcol))
+
+                        #Save new scenes field to sheet.
+                        if len(prevs) > 1:
+                            GlobalVars.economyData[author_scenes_index][0] = "|".join(prevs)
+                            await EconomyV2.writeEconSheet(GlobalVars.economyData)
+                        elif len(prevs) == 0:
+                            GlobalVars.economyData[author_scenes_index][0] = ""
+                            await EconomyV2.writeEconSheet(GlobalVars.economyData)
+                        else:
+                            GlobalVars.economyData[author_scenes_index][0] = prevs[0]
+                            await EconomyV2.writeEconSheet(GlobalVars.economyData) 
+                    except TypeError:
+                        await message.channel.send("Value not recognised")
+
+                except TimeoutError:
+                    await message.channel.send("Selection Timed Out")
+            else:
+                await message.channel.send(embed = discord.Embed(title = message.author.name + "'s tracked scenes", description= "\n".join(prevlist), colour = embcol))
+
+    await waitmess.delete()
+
+async def countscenes(message):
+    scenesWithNotifications = 0
+    scenesWithoutNotifications = 0
+    
+    economyData = GlobalVars.economyData[7:]
+    
+    for x in range(0,len(economyData),4):
+      currentRow = economyData[x]
+      if (currentRow != []):
+        scenes = currentRow[0]
+        splitScenes = scenes.split('|')
+        for scene in splitScenes:
+          if ("Notifications:Enabled" in scene):
+            scenesWithNotifications += 1
+          else:
+            scenesWithoutNotifications += 1
+
+    embed = discord.Embed(title = "Scene Count", description = "We are currently tracking " + str(scenesWithNotifications) + " with notifications and " + str(scenesWithoutNotifications) + " without notifications. Also, Callum is a cutie.", colour = embcol)
+    await message.channel.send(embed = embed)
 
 #Refresh dezzie pool of users
 async def manualDezPoolReset(message):

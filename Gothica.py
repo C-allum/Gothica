@@ -357,7 +357,6 @@ async def on_message(message):
 
             #Character List Subroutine - On CharRegistry, untested
             elif (message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "charlist") or message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "list")) and not isbot:
-
                 await CharRegistry.charlist(message)
 
             #Search Subroutine - On CharRegistry, untested
@@ -1176,214 +1175,6 @@ async def on_message(message):
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "communityproject") and "staff" in str(message.author.roles).lower():
                 await MiscellaneuosCommands.regCommunityProject(message)
 
-            #Invest Command
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "invest"):
-
-                devdata = sheet.values().get(spreadsheetId = Plotsheet, range = "AS1:AX200", majorDimension='COLUMNS').execute().get("values")
-                row = devdata[0].index(str(message.channel))
-
-                if str(message.channel).lower() in str(devdata[0]).lower():
-
-                    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
-
-                    reciprow = ""
-
-                    target = message.author
-
-                    targname = target.name
-
-                    for a in range(math.floor(len(economydata)/4)):
-
-                        b = a * 4 + 5
-
-                        if str(targname) in str(economydata[b][0]):
-
-                            reciprow = b + 1
-
-                            break
-
-                    try:
-
-                        giveamount = int(message.content.split(" ")[1].strip("-"))
-
-                    except ValueError:
-
-                        giveamount = int(message.content.split(" ")[2].strip("-"))
-
-                    if giveamount >= float((int(devdata[1][row])/4) + 1):
-
-                        giveamount = math.floor(int(devdata[1][row])/4)
-
-                        await message.channel.send(embed = discord.Embed(title = "You cannot donate that much!", description = "You cannot donate more than 1/4 of the project cost by yourself. We appreciate your generosity, and have set your donation to the maximum of " + str(math.floor(int(devdata[1][row])/4))))
-
-                    if giveamount > int(economydata[reciprow-1][1]):
-
-                        await message.channel.send(embed=discord.Embed(title = "You don't have enough money to do that.", description = "You only have " + str((economydata[reciprow-1][1]) + dezzieemj), colour = embcol))
-
-                    else:
-
-                        recipnewtot = int(economydata[reciprow-1][1]) - int(giveamount)
-
-                        if not (str(message.author) == "C_allum#5225" and "-" in message.content):
-
-                            sheet.values().update(spreadsheetId = EconSheet, range = str("B" + str(reciprow)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[recipnewtot]])).execute()
-
-                            TransactionsDatabaseInterface.addTransaction(targname, TransactionsDatabaseInterface.DezzieMovingAction.Invest, int(-giveamount))
-
-                        if str(message.channel).lower() in str(devdata).lower():
-
-                            for a in range(len(devdata[0])):
-
-                                if (message.channel.name).lower() in str(devdata[0][a]).lower():
-
-                                    row = a
-
-                            #Contributors
-
-                            try:
-
-                                devconts = devdata[5][row].split("|")
-
-                            except IndexError:
-
-                                devconts = ""
-                                while len(devdata[5]) < row+1:
-                                    devdata[5].append("")
-
-                            if str(message.author) in devdata[5][row]:
-
-                                prevconts = []
-
-                                for c in range(len(devconts)):
-
-                                    if str(message.author) in devconts[c]:
-
-                                        prevconts.append(str(message.author) + "£" + str(int(devconts[c].split("£")[1]) + giveamount) + "|")
-
-                                    else:
-
-                                        prevconts.append(devconts[c] + "|")
-
-                                    contributors = "".join(prevconts)
-
-                            else:
-
-                                contributors = str(devdata[5][row]) + str(message.author) + "£" + str(giveamount) + "|"
-
-                            contributors = contributors.replace("||", "|")
-
-                            highcont = 0
-
-                            highplayer = ""
-
-                            for d in range(len(contributors.split("|"))):
-
-                                try:
-
-                                    if int(highcont) < int(contributors.split("|")[d].split("£")[1]):
-
-                                        highcont = contributors.split("|")[d].split("£")[1]
-
-                                        highplayer = contributors.split("|")[d].split("£")[0]
-
-                                except IndexError:
-
-                                    pass
-
-                            rand20 = random.randint(1,20)
-
-                            if message.author.name == "C_allum" and "-" in message.content:
-
-                                rand20 = int(message.content.split(" ")[0].split("-")[1])
-
-                            randDC = int(devdata[2][row])
-
-                            give1 = giveamount
-
-                            if rand20 == 1:
-
-                                #Partial Fail
-
-                                amountlost = random.randint(1,giveamount)
-
-                                mess = "You rolled a " + str(rand20) + " on the dice.\n\n"
-
-                                lost = str(amountlost)
-
-                                remain = str(int(giveamount) - int(amountlost)) + dezzieemj
-
-                                mess += random.choice(["The tipping jar begins to chew on your dezzies… a mimic? Wait - how did you not notice there were two with the same label? Anyways, you fed " + lost + " to the mimic. You shouldn't stick something you value more than dezzies into that one…","Someone embezzled some of the donated dezzies! " + lost + " were lost, leaving only " + remain, "Upon donating, you noticed that there was a hole in your pocket, so when you intended to give " + str(giveamount) + ", you found that you actually only had " + remain + " there.", "An irrate centaur trotted up as you were donating, and demanded the money you owed her for a *ride*. She took " + lost + ", so the donation was reduced to only " + remain, "The donation was overseen by the receptionist at the guild, and somehow came out to only " + remain + "? Janine shrugs as she pockets " + lost + ".", "It turns out that the big dezzie you had been carrying was a mimic, and it didn't want to leave your side. As you thought it was worth about " + lost + ", your donation is now only worth " + remain, "A purplish pixie was in your coin pouch, and had apparently been feasting upon the dezzies there. She managed to eat " + lost + ", so the donation was reduced to " + remain])
-
-                                giveamount -= amountlost
-
-                            elif rand20 != 20:
-
-                                #Success
-
-                                mess = "You rolled a " + str(rand20) + " on the dice.\n\n"
-
-                                mess += random.choice(["The dezzies fall into the jar with a pleasant, jingly noise. It " + random.choice(["makes you feel warm inside", "fills you with determination", "leaves you considering learning to use dezzies as a musical instrument"]),"T̴̂͗h̸̊͝e̶͛̃ ̸̑̿M̶̾͐í̸͠s̶͆͋t̷̄̊ȓ̶̂e̶̹͗s̸̽̽s̸̈́̀ smiles upon you. After the orgasm fades, you find yourself bearing a slave crest of " + random.choice(["Abundance", "Altruism", "Bestial Instinct", "Denial", "Echoes" "Emptiness", "False Dominance", "Infatuation", "Infertility", "Obsession", "Seduction", "Slavery", "Transformation", "Virility"]) + " that wasn't there before. it fades after " + str(random.randint(1,6)) + " hours", "T̴̂͗h̸̊͝e̶͛̃ ̸̑̿M̶̾͐í̸͠s̶͆͋t̷̄̊ȓ̶̂e̶̹͗s̸̽̽s̸̈́̀ knows you could have given more and is disappointed. For the next 24 hours, any cum produced within 100ft of you becomes a cum sprite that chases you and leaps into your face", "T̴̂͗h̸̊͝e̶͛̃ ̸̑̿M̶̾͐í̸͠s̶͆͋t̷̄̊ȓ̶̂e̶̹͗s̸̽̽s̸̈́̀ has offered you a great blessing.  For the next 24 hours, any cum produced within 100ft of you becomes a cum sprite that chases you and leaps into your chest", "Tony the tentacle monster gives you a high five... or is that a high one?", "Your donation, as well as your eternal loyalty is accepted . . . . Did you not read the contract?", "A handsomely scarred witch offers to thank you for your donation... personally", "An aspect of Gothica blows you ||a kiss|| as you donate.", "The Keepers offer you a place of honor in their next " + random.choice(["Initiation", "Seed-Drinking", "Breeding"]) + " ritual for your contributions.", "You were given a crumpled voucher for 100 dezzies off at participating shops (but the fine print says the only participating shop is the discount and used sex toy shop run by one of the kobolds)", "You feel T̴̂͗h̸̊͝e̶͛̃ ̸̑̿M̶̾͐í̸͠s̶͆͋t̷̄̊ȓ̶̂e̶̹͗s̸̽̽s̸̈́̀'s blessing upon you... don't go in the kobold dens... or do?", "In thanks, the Adventurer's Guild would like to present a waiver for fees of the next quest.", "", "", "", "", "", "", "", "", "", ""])
-
-                            else:
-
-                                #Crit Success
-
-                                mess = "You rolled a " + str(rand20) + " on the dice!\n\n"
-
-                                mess += random.choice(["A kind hearted citizen decided to match your donation!", "You find that the dezzies you donated had been especially pure, and were worth double!", "The tiefling in line to donate after you felt " + random.choice(["intimidated", "aroused", "inspired"]) + "by your donation, and decided to match it!", "The receptionist at the Adventurer's Guild smiles at you as she take the donation, and offers you a voucher for 100" + dezzieemj + " which is valid for any store, if you buy her something nice. She also matches your donation.", "A strange portal opened right as you were depositing dezzies, and exactly the same number of dezzies fell through it - doubling your donation!"])
-
-                                giveamount = 2 * giveamount
-
-                            await message.delete()
-
-                            namew = message.author.name
-
-                            newtotal = int(devdata[3][row]) + giveamount
-
-                            progress = str(str(round(newtotal / int(devdata[1][row]),2) * 100) + "%").replace(".0%","%")
-
-                            investemb = discord.Embed(title = str(namew) + " invested " + str(give1) + dezzieemj + " in " + str(message.channel), description = mess + "\n\nWe are now " + progress + " towards our goal." + "\n\n" + namew + " has " + str(recipnewtot) + dezzieemj + "\n\n" + str(highplayer.split("#")[0]) + " has contributed the most towards this goal, having invested " + str(highcont) + dezzieemj + " so far!", colour = embcol)
-
-                            if newtotal >= int(devdata[1][row]):
-
-                                investemb.set_footer(text = str(devdata[4][row]))
-
-                                investemb.set_image(url = "https://i.ibb.co/Nt3NCRN/loading-dezzie0100.png")
-
-                                await client.get_channel(996826636358000780).send("A progress bar has been completed in " + str(message.channel) + "\n\nThe players that contributed to this project were:\n\n" + contributors.replace("|", str(dezzieemj + "\n")).replace("£"," - "))
-
-                            elif newtotal < 0:
-
-                                investemb.set_footer(text = "Somehow, we're further behind than we were when we started.")
-
-                                investemb.set_image(url = "https://i.ibb.co/qx7Hj0z/loading-dezzie0000.png")
-
-                            else:
-
-                                percentage = newtotal / int(devdata[1][row]) * 100
-
-                                #Image Percentage
-
-                                percent = math.floor(percentage)
-
-                                imglist = ["https://i.ibb.co/qx7Hj0z/loading-dezzie0000.png", "https://i.ibb.co/TPRKffZ/loading-dezzie0001.png","https://i.ibb.co/1m60NWV/loading-dezzie0002.png","https://i.ibb.co/FnfHtf3/loading-dezzie0003.png","https://i.ibb.co/28h1xK4/loading-dezzie0004.png","https://i.ibb.co/pnv2RSL/loading-dezzie0005.png","https://i.ibb.co/7nyXP9t/loading-dezzie0006.png","https://i.ibb.co/HPtc5QW/loading-dezzie0007.png","https://i.ibb.co/H7SG2rV/loading-dezzie0008.png","https://i.ibb.co/NTDGY9b/loading-dezzie0009.png","https://i.ibb.co/tqQLm7L/loading-dezzie0010.png","https://i.ibb.co/nzgJR1M/loading-dezzie0011.png","https://i.ibb.co/nD7jHjT/loading-dezzie0012.png","https://i.ibb.co/T2jVx0h/loading-dezzie0013.png","https://i.ibb.co/s3bb0Gt/loading-dezzie0014.png","https://i.ibb.co/RjCXnY8/loading-dezzie0015.png","https://i.ibb.co/3mKY69j/loading-dezzie0016.png","https://i.ibb.co/f4Xjg63/loading-dezzie0017.png","https://i.ibb.co/7Qh98cb/loading-dezzie0018.png","https://i.ibb.co/k0mW2hZ/loading-dezzie0019.png","https://i.ibb.co/wRxCQVM/loading-dezzie0020.png","https://i.ibb.co/tz7fFFg/loading-dezzie0021.png","https://i.ibb.co/pxkBpP5/loading-dezzie0022.png","https://i.ibb.co/SNLbxt1/loading-dezzie0023.png","https://i.ibb.co/HGV26LQ/loading-dezzie0024.png","https://i.ibb.co/FzxGXX1/loading-dezzie0025.png","https://i.ibb.co/4KkZcqh/loading-dezzie0026.png","https://i.ibb.co/p4mkH4x/loading-dezzie0027.png","https://i.ibb.co/z6LZgCs/loading-dezzie0028.png","https://i.ibb.co/GnQKHGS/loading-dezzie0029.png","https://i.ibb.co/rbbjzNP/loading-dezzie0030.png","https://i.ibb.co/m8D5YqF/loading-dezzie0031.png","https://i.ibb.co/nfysj4L/loading-dezzie0032.png","https://i.ibb.co/1T4f7YQ/loading-dezzie0033.png","https://i.ibb.co/tLp7RK2/loading-dezzie0034.png","https://i.ibb.co/t8Ygm5C/loading-dezzie0035.png","https://i.ibb.co/1zB0yPV/loading-dezzie0036.png","https://i.ibb.co/SBB5d6f/loading-dezzie0037.png","https://i.ibb.co/4mPvSdy/loading-dezzie0038.png","https://i.ibb.co/3S9Dhrt/loading-dezzie0039.png","https://i.ibb.co/M1XKkYB/loading-dezzie0040.png","https://i.ibb.co/b5VzVYz/loading-dezzie0041.png","https://i.ibb.co/5rwTJQj/loading-dezzie0042.png","https://i.ibb.co/cK9y4t6/loading-dezzie0043.png","https://i.ibb.co/qDYBfFs/loading-dezzie0044.png","https://i.ibb.co/grW8NsN/loading-dezzie0045.png","https://i.ibb.co/Vj84zY4/loading-dezzie0046.png","https://i.ibb.co/mX7FMBY/loading-dezzie0047.png","https://i.ibb.co/MZBmZqR/loading-dezzie0048.png","https://i.ibb.co/zSxQsbM/loading-dezzie0049.png","https://i.ibb.co/7pSkMxj/loading-dezzie0050.png","https://i.ibb.co/DG2KqYG/loading-dezzie0051.png","https://i.ibb.co/84bngKX/loading-dezzie0052.png","https://i.ibb.co/S5scHyC/loading-dezzie0053.png","https://i.ibb.co/kQsmr9q/loading-dezzie0054.png","https://i.ibb.co/r5PTVPj/loading-dezzie0055.png","https://i.ibb.co/j9KcKsf/loading-dezzie0056.png","https://i.ibb.co/3NVMCNG/loading-dezzie0057.png","https://i.ibb.co/9rfyp5h/loading-dezzie0058.png","https://i.ibb.co/7KCSQ90/loading-dezzie0059.png","https://i.ibb.co/vQVJQRp/loading-dezzie0060.png","https://i.ibb.co/HPRxwJ8/loading-dezzie0061.png","https://i.ibb.co/pbBTqS8/loading-dezzie0062.png","https://i.ibb.co/563ZBfN/loading-dezzie0063.png","https://i.ibb.co/FY065ty/loading-dezzie0064.png","https://i.ibb.co/qxCzJR3/loading-dezzie0065.png","https://i.ibb.co/T8PBnJN/loading-dezzie0066.png","https://i.ibb.co/fFm92D0/loading-dezzie0067.png","https://i.ibb.co/mcJ47qj/loading-dezzie0068.png","https://i.ibb.co/4VyvV9G/loading-dezzie0069.png","https://i.ibb.co/Y2qFHN1/loading-dezzie0070.png","https://i.ibb.co/593DGqF/loading-dezzie0071.png","https://i.ibb.co/v30RgH4/loading-dezzie0072.png","https://i.ibb.co/b351RF0/loading-dezzie0073.png","https://i.ibb.co/x3rv11r/loading-dezzie0074.png","https://i.ibb.co/ySNh943/loading-dezzie0075.png","https://i.ibb.co/BjPSpDZ/loading-dezzie0076.png","https://i.ibb.co/NNwSpKy/loading-dezzie0077.png","https://i.ibb.co/mN8mdt9/loading-dezzie0078.png","https://i.ibb.co/TK3jtVx/loading-dezzie0079.png","https://i.ibb.co/WgjtBZ5/loading-dezzie0080.png","https://i.ibb.co/BKxybMV/loading-dezzie0081.png","https://i.ibb.co/kBRxqZk/loading-dezzie0082.png","https://i.ibb.co/CzmTPbK/loading-dezzie0083.png","https://i.ibb.co/sQr72KL/loading-dezzie0084.png","https://i.ibb.co/4j3fdf0/loading-dezzie0085.png","https://i.ibb.co/x1jGjxM/loading-dezzie0086.png","https://i.ibb.co/jD4NVCY/loading-dezzie0087.png","https://i.ibb.co/S6yKQYb/loading-dezzie0088.png","https://i.ibb.co/bNkrGSn/loading-dezzie0089.png","https://i.ibb.co/d0NXt5z/loading-dezzie0090.png","https://i.ibb.co/smfYLDV/loading-dezzie0091.png","https://i.ibb.co/XS1c3x6/loading-dezzie0092.png","https://i.ibb.co/1vJtBtS/loading-dezzie0093.png","https://i.ibb.co/98BCvYt/loading-dezzie0094.png","https://i.ibb.co/cYctMPp/loading-dezzie0095.png","https://i.ibb.co/pP6SQvd/loading-dezzie0096.png","https://i.ibb.co/gSSqZGp/loading-dezzie0097.png","https://i.ibb.co/hLP8k2R/loading-dezzie0098.png","https://i.ibb.co/XyLFCn3/loading-dezzie0099.png"]
-
-                                imlink = imglist[percent]
-
-                                investemb.set_image(url = imlink)
-
-                            await message.channel.send(embed = investemb)
-
-                            sheet.values().update(spreadsheetId = Plotsheet, range = str("AV" + str(row+1)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newtotal]])).execute()
-
-                            sheet.values().update(spreadsheetId = Plotsheet, range = str("AX" + str(row+1)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[contributors]])).execute()
-
-                else:
-
-                    await message.delete()
-
-                    await message.channel.send(embed = discord.Embed(title = "This channel isn't set up to receive donations", description = "If you believe this to be in error, contact the moderator team", colour = embcol))
-
             #Poker Setup Command
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "poker"):
 
@@ -2119,153 +1910,6 @@ async def on_message(message):
                 await message.delete()
                 await message.channel.send(embed = discord.Embed(title = "A quick reference sheet for the lewd rules in the dungeon", description = "**Full Rulebook:** https://www.dropbox.com/sh/q2wt7nsihxldam2/AAB1yTPUsPo57BNkapEXgxxya/00%20Full%20Lewd%20handbook%20%28WIP%29.pdf?dl=0\n\n**Inhibition:** 10 + Proficiency Bonus + Your choice of mental stat modifier\n**Arousal Maximum:** Rolled Hit Dice (or rounded average) plus Con mod per level\n**Climaxing:** DC 15 Inhibition save, fail halves arousal and incapacitates for 1d4 rounds (unless overstimulating)\n\n**Conditions:**\n    *Hyperaroused:* Disadvantage on saves against indirect advances and direct advances against the creature have advantage\n    *Edged:* Hyperaroused, Must save against climaxing, drops items, falls prone, stunned, advances do maximal stimulation.\n    *Denied:* Automatic success on climax saves.\n    *Infatuated:* Charmed by the source, willing for all advances by charmer, commands and suggestions require checks.\n    *Intoxicated:* Disadvantage on mental saves\n    *Uninhibited:* Inhibition score at 0. Hyperaroused, intoxicated, willing for all stimulation, disadvantage on checks and saves that are not sexual advances. Uses their turn to move towards and stimulate others, or themself.\n\n**Natural Implements:**\n    *Cock:*\n      Tiny: 1d4 Piercing\n      Small: 1d6 Piercing\n      Medium: 1d8 Piercing\n      Large: 1d10 Piercing\n      Huge: 1d12 Piercing\n      Gargantuan: 2d8 Piercing\n    Tits: 1d6 Bludgeoning\n    Pussy: 1d8 Bludgeoning\n    Ass: 1d8 Bludgeoning\n    Mouth: 1d4 Bludgeoning\n    Hand: 1d4 Bludgeoning\n    Tail: 1d4 Piercing\n    Tentacle: 1d6 Piercing\n    Pseudopod: 1d6 Bludgeoning", colour = embcol))
 
-            #Bid Command
-            elif (message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "bid")):
-                #TODO Change logic to use new Economy Data, which is read Row wise, not Column wise
-                economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='COLUMNS').execute().get("values")
-                debugvar = message.content.lower().split(" ")
-                if isbot:
-                    await message.delete()
-
-                elif "setup" == message.content.lower().split(" ")[1] and "staff" in str(message.author.roles).lower():
-                    for a in range(len(message.content.split(" ")[2].split("|"))):
-                        bidstock.append(message.content.split(" ")[2].split("|")[a])
-                        bidprice.append(0)
-                        bidders.append("")
-                    global bidthread
-                    bidthreadseed = await message.channel.send(embed = discord.Embed(title = "Bidding is open!", description = "This weekend's ~~slaves~~ *wares* are:\n" + "\n".join(bidstock), colour = embcol))
-                    bidthread = await bidthreadseed.create_thread(name = "Bids")
-
-                elif "results" == message.content.lower().split(" ")[1]:
-                    bidsummary = []
-                    auctiontot = 0
-                    for c in range(len(bidstock)):
-                        if bidders[c] != "":
-                            bidsummary.append(bidstock[c] + ": " + str(bidprice[c]) + dezzieemj + ", " + bidders[c].name)
-                            auctiontot += bidprice[c]
-                        else:
-                            bidsummary.append(bidstock[c] + ": No bids yet")
-                    await message.channel.send(embed = discord.Embed(title = "Current bids for this weekend's auctions", description = "\n".join(bidsummary) + "\n\nIn total, " + str(auctiontot) + " is being spent at this auction.",  colour = embcol))
-
-                elif "end" == message.content.lower().split(" ")[1] and "staff" in str(message.author.roles).lower():
-                    bidtotal = sum(bidprice)
-                    bidsfinal = []
-                    bidwinners = []
-                    for d in range(len(bidstock)):
-                        if str(bidders[d]) in str(bidwinners):
-                            try:
-                                bidsfinal[bidwinners.index(bidders[d])] += bidprice[d]
-                            except ValueError:
-                                pass
-                        else:
-                            bidwinners.append(bidders[d])
-                            bidsfinal.append(bidprice[d]) 
-                    bidstatement = []
-
-                    indexes = []
-                    newbal = []
-                    balances = []
-
-                    for e in range(len(bidsfinal)):
-                        indexes.append(economydata[0].index(str(bidwinners[e].name)))
-                        newbal.append(int(economydata[1][economydata[0].index(str(bidwinners[e].name))]) - int(bidsfinal[e]))
-                        bidstatement.append(str(bidwinners[e]) + ": " + str(bidsfinal[e]))
-
-                    for f in range(max(indexes)+1):
-                        if f in indexes:
-                            balances.append(newbal[indexes.index(f)])
-                        else:
-                            balances.append(economydata[1][f])
-                        
-                    sheet.values().update(spreadsheetId = EconSheet, range = str("B1:B" + str(max(indexes)+1)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='COLUMNS', values=[balances])).execute()
-                    await message.channel.send(embed = discord.Embed(title = "Bidding concluded", description = "The following dezzies have been removed:\n\n" + "\n".join(bidstatement), colour = embcol))
-
-                elif "reset" == message.content.lower().split(" ")[1] and "staff" in str(message.author.roles).lower():
-                    if len(message.content.split(" ")) > 2:
-                        bidtarget = " ".join(message.content.split(" ")[2:])
-                        try:
-                            if bidtarget.lower() in str(bidstock).lower():
-                                for b in range(len(bidstock)):
-                                    if bidtarget.lower() in bidstock[b].lower():
-                                        slaveindex = b
-                                        break
-                                await message.channel.send(embed = discord.Embed(title = "Reset successful!", description = "You have reset the bid for " + bidstock[slaveindex], colour = embcol))
-                                bidders[slaveindex] = ""
-                                bidprice[slaveindex] = 0
-                                await bidthread.send(message.author.name + " has reset the bid for " + bidstock[slaveindex])
-
-                            else:
-                                await message.channel.send(embed = discord.Embed(title = "Could not find a slave of that name.", description = "Current slaves for sale are:\n\n" + "\n".join(bidstock), colour = embcol))
-
-                        except ValueError:
-                            await message.channel.send(embed = discord.Embed(title = "The price you bid needs to be an integer  ", description = "", colour = embcol))
-                    
-                    else:
-                        await message.channel.send(embed = discord.Embed(title = "You didn't format that correctly.", description = "It needs to be `%bid reset slavename`.", colour = embcol))
-                
-                elif "set" == message.content.lower().split(" ")[1] and "staff" in str(message.author.roles).lower():
-                    bidsections = message.content.split(" ", 1)[2].split("|")
-                    try:
-                        if bidsections[0].lower() in str(bidstock).lower():
-                            for b in range(len(bidstock)):
-                                if bidsections[0].lower() in bidstock[b].lower():
-                                    slaveindex = b
-                                    bidders[b] = get(client.get_all_members(), id=int(bidsections[1]))
-                                    bidprice[b] = int(bidsections[2])
-                                    break
-                        else:
-                            bidstock.append(bidsections[0])
-                            biduser = get(client.get_all_members(), id=int(bidsections[1]))
-                            bidders.append(biduser)
-                            bidprice.append(int(bidsections[2]))
-                            slaveindex = -1
-
-                        await message.channel.send(embed = discord.Embed(title = "Success!", description = "You have set the bid for " + str(bidstock[slaveindex]) + " to " + str(bidprice[slaveindex]) + " bid by " + str(bidders[slaveindex]), colour = embcol))
-
-                    except ValueError:
-                        await message.channel.send(embed = discord.Embed(title = "The price you bid needs to be an integer  ", description = "", colour = embcol))
-
-                elif "thread" == message.content.lower().split(" ")[1] and "staff" in str(message.author.roles).lower():
-                    bidthread = message.channel
-                    await message.channel.send("Bidding Thread Set")
-
-                else:
-                    if len(message.content.split(" ")) >= 3:
-                        bidtarget = " ".join(message.content.split(" ")[1:-1])
-                        try:
-                            bidamount = int(message.content.split(" ")[-1])
-                            bidattempt = bidamount
-                            if message.author.name in str(bidders):
-                                for e in range(len(bidstock)):
-                                    if bidders[e] == message.author:
-                                        bidattempt += bidprice[e]
-
-                            if bidtarget.lower() in str(bidstock).lower():
-                                for b in range(len(bidstock)):
-                                    if bidtarget.lower() in bidstock[b].lower():
-                                        slaveindex = b
-                                        break
-                                if bidamount <= bidprice[slaveindex]:
-                                    await message.channel.send(embed = discord.Embed(title = "You need to bid more than that!", description = "The current bid for " + bidstock[slaveindex] + " is " + str(bidprice[slaveindex]) + dezzieemj + ", bid by " + bidders[slaveindex].name, colour = embcol))
-                                elif bidattempt > int(economydata[1][economydata[0].index(str(message.author.name))]):
-                                    await message.channel.send(embed = discord.Embed(title = "You can't bid that much.", description = "You only have " + economydata[1][economydata[0].index(str(message.author.name))] + dezzieemj + ".", colour = embcol))
-                                elif bidamount < 1000:
-                                    await message.channel.send(embed = discord.Embed(title = "The minimum bid is 1000" + dezzieemj, description = "Please increase your bid.", colour = embcol))
-                                else:
-                                    await message.channel.send(embed = discord.Embed(title = "Bid successful!", description = "You have bid " + str(bidamount) + dezzieemj + " for " + bidstock[slaveindex], colour = embcol))
-                                    bidders[slaveindex] = message.author
-                                    bidprice[slaveindex] = bidamount
-                                    await bidthread.send(message.author.name + " has bid " + str(bidamount) + dezzieemj + " on " + bidstock[slaveindex])
-
-                            else:
-                                await message.channel.send(embed = discord.Embed(title = "Could not find a slave of that name.", description = "Current slaves for sale are:\n\n" + "\n".join(bidstock), colour = embcol))
-
-                        except ValueError:
-                            await message.channel.send(embed = discord.Embed(title = "The price you bid needs to be an integer  ", description = "", colour = embcol))
-
-                    else:
-                        await message.channel.send(embed = discord.Embed(title = "You didn't format that correctly.", description = "It needs to be `%bid slavename amount`.", colour = embcol))
-
             #Easter egg hunt
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "egg"):
 
@@ -2312,254 +1956,7 @@ async def on_message(message):
 
             #Scenes Command
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "scenes"):
-
-                await message.delete()
-
-                waitmess = await message.channel.send("We are processing your request now.")
-
-                econdata = sheet.values().get(spreadsheetId = EconSheet, range = "A6:ZZ8000", majorDimension = 'ROWS').execute().get("values")
-
-                row = 0
-
-                for n in range(math.ceil(len(econdata)/4)):
-
-                    r = 4 * n
-
-                    if str(message.author.name) in econdata[r][0]:
-
-                        if len(econdata[r+2]) > 0 and not econdata[r+2][0] == "":
-
-                            if len(econdata[r+2][0]) == 1:
-
-                                prevscenes = [econdata[r+2][0]]
-
-                            else:
-
-                                prevscenes = econdata[r+2][0].split("|")
-
-                        else:
-
-                            prevscenes = ""
-
-                            await message.channel.send(embed = discord.Embed(title = "You have no scenes tracked.", description = "Add one using:\n\n`%scenes add Brief Scene Description #Channel Name`\n\nFor example, to watch the a particular scene in the cantina, you might type:\n\n`%scenes add Dinner Date #<832842032073670676>`", colour = embcol))
-
-                        if message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "scenes add"):
-
-                            scenestr = message.content.split(" ", 2)[2]
-
-                            if scenestr.replace(" ", "") == "":
-
-                                await message.channel.send("Add help here")
-
-                            else:
-
-                                if prevscenes != "":
-
-                                    scenelist = "|".join(prevscenes) + "|" + scenestr
-
-                                else:
-
-                                    scenelist = scenestr
-
-                                sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(r+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[scenelist]])).execute()
-
-                            await message.channel.send(embed = discord.Embed(title = "Added to your scenes", description = "We have added '" + scenestr + "' to your tracked scenes.", colour = embcol))
-
-                        else:
-
-                            if "|" in prevscenes:
-
-                                prevs = prevscenes.split("|")
-
-                            else:
-
-                                prevs = prevscenes
-
-                            if prevs != "":
-
-                                prevlist = []
-
-                                prevscenelist = []
-
-                                for a in range(0, len(prevs)):
-
-                                    if "#" in prevs[a]:
-
-                                        try:
-
-                                            sceneno = int(prevs[a].split("#")[1].split(">")[0])
-
-                                            if (not "remove" in message.content.lower()) and (not "notif" in message.content.lower()):
-
-                                                try:
-
-                                                    #last = await client.get_channel(sceneno).history(limit=1, oldest_first=False).flatten()
-                                                    last = [joinedMessages async for joinedMessages in client.get_channel(sceneno).history(limit=1, oldest_first=False)] #Fix for pebblehost Await issue
-
-                                                    prevlist.append(str("`" + str(a+1) + "` " + str(prevs[a]) + " - Last message by: " + last[0].author.name))
-
-                                                except AttributeError:
-
-                                                    prevname = ""
-
-                                                    prevlist.append(str("`" + str(a+1) + "` " + str(prevs[a]) + " - Thread archived or channel deleted."))
-
-                                            else:
-
-                                                prevlist.append(str("`" + str(a+1) + "` " + str(prevs[a])))
-
-                                                prevscenelist.append(str(prevs[a]))
-
-
-                                        except ValueError:
-
-                                            prevlist.append(str("`" + str(a+1) + "` " + str(prevs[a])))
-
-                                    else:
-
-                                        prevlist.append(str("`" + str(a+1) + "` " + str(prevs[a])))
-
-                                if "remove" in message.content.lower():
-
-                                    scenetemp = await message.channel.send(embed = discord.Embed(title = "Type the number of the scene to stop tracking", description= "\n".join(prevlist), colour = embcol))
-
-                                    try:
-
-                                        scenerechoice = await client.wait_for('message', timeout = 30, check = check(message.author))
-
-                                        await scenerechoice.delete()
-
-                                        # if scenerechoice.content.lower() == "all":
-
-                                        #     sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(n+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[""]])).execute()
-
-                                        #     await message.channel.send(embed = discord.Embed(title = "Scenes removed", description = "Your tracked scenes have been wiped.", colour = embcol))
-
-                                        # elif scenerechoice.content.lower() == "clean":
-
-                                        #     sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(n+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[scenelist]])).execute()
-
-                                        #     await message.channel.send(embed = discord.Embed(title = "Scenes removed", description = "Your tracked scenes have been wiped.", colour = embcol))
-
-                                        try:
-
-                                            scenenum = int(scenerechoice.content)
-                                            prevs = prevs[:scenenum-1] + prevs[scenenum:]
-
-                                            await message.channel.send(embed = discord.Embed(title = "Scene removed", description = "The requested scene has been removed from your tracked scene list.", colour = embcol))
-
-                                            if len(prevs) > 1:
-
-                                                sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(4*n+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[["|".join(prevs)]])).execute()
-
-                                            elif len(prevs) == 0:
-
-                                                sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(4*n+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[""]])).execute()
-
-                                            else:
-
-                                                sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(4*n+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[prevs[0]]])).execute()
-
-                                        except TypeError:
-
-                                            await message.channel.send("Value not recognised")
-
-                                    except TimeoutError:
-
-                                        await message.channel.send("Selection Timed Out")
-
-                                elif "notif" in message.content.lower() and "all" in message.content.lower():
-                                    for scenenum in range(0, len(prevs)):
-                                        try:
-                                            trackedStatus = prevs[scenenum].split(" ")[-1]
-                                            if (" off" in message.content.lower() or " disable"in message.content.lower()) and "Enabled" in trackedStatus:
-                                                splitScene = prevs[scenenum].rsplit(" ", 1)
-                                                splitScene [-1]= " Notifications:Disabled"
-                                                prevs[scenenum] = "".join(splitScene)
-
-
-                                            elif (" on" in message.content.lower() or " enable" in message.content.lower()) and "Disabled" in trackedStatus:
-                                                splitScene = prevs[scenenum].rsplit(" ", 1)
-                                                splitScene [-1]= " Notifications:Enabled"
-                                                prevs[scenenum] = "".join(splitScene)
-
-                                            elif not "Enabled" in trackedStatus and not "Disabled" in trackedStatus:
-                                                if " off" in message.content.lower() or " disable" in message.content.lower():
-                                                    prevs[scenenum] = prevs[scenenum] + (" Notifications:Disabled")
-
-                                                elif " on" in message.content.lower() or " enable" in message.content.lower():
-                                                    prevs[scenenum] = prevs[scenenum] + (" Notifications:Enabled")
-                                                else: 
-                                                    await message.channel.send(embed = discord.Embed(title = "Wrong use of the command!", description = "Include `on` or `off` at the end of this command to specify how you want all scenes toggled.", colour = embcol))
-                                                    return
-                                            elif not " off" in message.content.lower() and not " disable" in message.content.lower() and not " on" in message.content.lower() and not " enable" in message.content.lower():
-                                                await message.channel.send(embed = discord.Embed(title = "Wrong use of the command!", description = "Include `on` or `off` at the end of this command to specify how you want all scenes toggled.", colour = embcol))
-                                                return
-
-                                        except TypeError:
-                                            await message.channel.send("Value not recognised")
-                                    #Save new scenes field to sheet.
-                                    if len(prevs) > 1:
-                                        sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(4*n+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[["|".join(prevs)]])).execute()
-
-                                    elif len(prevs) == 0:
-                                        sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(4*n+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[""]])).execute()
-
-                                    else:
-                                        sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(4*n+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[prevs[0]]])).execute()
-                                    if " off" in message.content:
-                                        await message.channel.send(embed = discord.Embed(title = "Scene notifications disabled on all tracked scenes", description = "The notfication function for the all scenes has been disabled. It is now enabled and we will notify you of new messages for your scenes.", colour = embcol))
-                                    if " on" in message.content:
-                                        await message.channel.send(embed = discord.Embed(title = "Scene notifications enabled on all tracked scenes", description = "The notfication function for the all scenes has been enabled. It is now enabled and we will notify you of new messages for your scenes.", colour = embcol))
-
-                                elif "notif" in message.content:
-                                    #Make user choose the scene to toggle
-                                    scenetemp = await message.channel.send(embed = discord.Embed(title = "Type the number of the scene to toggle notifications for", description= "\n".join(prevlist), colour = embcol))
-
-                                    try:
-                                        scenerechoice = await client.wait_for('message', timeout = 30, check = check(message.author))
-                                        scenenum = int(scenerechoice.content) - 1
-
-                                        try:
-                                            trackedStatus = prevs[scenenum].split(" ")[-1]
-                                            if trackedStatus == "Notifications:Enabled":
-                                                splitScene = prevs[scenenum].rsplit(" ", 1)
-                                                splitScene [-1]= " Notifications:Disabled"
-                                                prevs[scenenum] = "".join(splitScene)
-                                                await message.channel.send(embed = discord.Embed(title = "Scene notifications disabled", description = "The notfication function for the requested scene has been toggled. It is now disabled and we will not notify you of new messages for that scene.", colour = embcol))
-
-
-                                            elif trackedStatus == "Notifications:Disabled":
-                                                splitScene = prevs[scenenum].rsplit(" ", 1)
-                                                splitScene [-1]= " Notifications:Enabled"
-                                                prevs[scenenum] = "".join(splitScene)
-                                                await message.channel.send(embed = discord.Embed(title = "Scene notifications enabled", description = "The notfication function for the requested scene has been toggled. It is now enabled and we will notify you of new messages for that scene.", colour = embcol))
-
-                                            else:
-                                                prevs[scenenum] = prevs[scenenum] + (" Notifications:Enabled")
-                                                await message.channel.send(embed = discord.Embed(title = "Scene notifications enabled", description = "The notfication function for the requested scene has been toggled. It is now enabled and we will notify you of new messages for that scene.", colour = embcol))
-
-                                            #Save new scenes field to sheet.
-                                            if len(prevs) > 1:
-                                                sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(4*n+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[["|".join(prevs)]])).execute()
-
-                                            elif len(prevs) == 0:
-                                                sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(4*n+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[""]])).execute()
-
-                                            else:
-                                                sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(4*n+8)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[prevs[0]]])).execute()
-
-                                        except TypeError:
-                                            await message.channel.send("Value not recognised")
-
-                                    except TimeoutError:
-                                        await message.channel.send("Selection Timed Out")
-                                else:
-                                    await message.channel.send(embed = discord.Embed(title = message.author.name + "'s tracked scenes", description= "\n".join(prevlist), colour = embcol))
-
-                        break
-
-                await waitmess.delete()
+                await MiscellaneuosCommands.scenes(message)
 
             #-------------------------------------Economy V2----------------------------------------
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "copyeconomy") and "staff" in str(message.author.roles).lower():
@@ -2599,7 +1996,10 @@ async def on_message(message):
                     await EconomyV2.useitem(message)
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~leaderboard"):
                     await EconomyV2.leaderboard(message)
-
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~invest"):
+                    await EconomyV2.invest(message)
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~bid"):
+                    await EconomyV2.bid(message, isbot)
                 
                 
             #-------------------------------------The Economy---------------------------------------
@@ -4183,7 +3583,6 @@ async def on_message(message):
                             memlist = 0
                             mems = []
 
-
             #Timestamp Message
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "timestamp"):
 
@@ -4267,6 +3666,7 @@ async def on_message(message):
 
                 await message.channel.send(embed = discord.Embed(title = "Timestamp Converter", description = str(inittime) + " in " + str(timezone) + " is <t:" + str(dtsp) + ":T>. It will next be " + str(inittime) + " in that timezone in " + "<t:" + str(dtsp) + ":R>", colour = embcol))
                 await message.delete()
+            
             #Manually spawn Imp Tome
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "imptome") and message.author.id == imptomeWielder:
                 messageLink = message.content.rsplit(" ")[1]
@@ -4278,51 +3678,10 @@ async def on_message(message):
                 channel = client.get_channel(channel_id)
                 msg = await channel.fetch_message(msg_id)
                 await MiscellaneuosCommands.impTomeSpawn(msg)
+            
+            #Countscenes command
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "countscenes"):
-              scenesWithNotifications = 0
-              scenesWithoutNotifications = 0
-
-              economyData = sheet.values().get(spreadsheetId = EconSheet, range = "A8:A2250", majorDimension = 'ROWS').execute().get("values")
-              
-              for x in range(0,len(economyData),4):
-                currentRow = economyData[x]
-                if (currentRow != []):
-                  scenes = currentRow[0]
-                  splitScenes = scenes.split('|')
-                  for scene in splitScenes:
-                    if ("Notifications:Enabled" in scene):
-                      scenesWithNotifications += 1
-                    else:
-                      scenesWithoutNotifications += 1
-
-              embed = discord.Embed(title = "Scene Count", description = "We are currently tracking " + str(scenesWithNotifications) + " with notifications and " + str(scenesWithoutNotifications) + " without notifications. Also, Callum is a cutie.", colour = embcol)
-              await message.channel.send(embed = embed)
-            #Shop Break Command
-
-            # else:
-            #     messcomm = 0
-            #     rooms = ["🏺the-golden-jackal🏺", "🐍venom-ink🐍", "🧵widows-boutique🧵", "🍄sophies-garden🍄", "📜menagerie-magiks📜", "🔔the-polished-knob🔔", "🐾purrfect-petshop🐾", "🏥the-clinic🏥", "💰adventurers-guild💰", "⛓black-market⛓"]
-
-            #     for n in range(len(rooms)):
-            #         roomcur = rooms[n]
-            #         roomchannel = discord.utils.get(client.get_all_channels(), name = roomcur)
-
-            #         if message.channel != roomchannel and message.channel.name != "alias-bot" and roomchannel != None:
-            #             roomlatest = [joinedMessages async for joinedMessages in client.get_channel(roomchannel.id).history(limit=2, oldest_first=False)] #Fix for pebblehost Await issue
-
-            #             if roomlatest[0].author == client.user:
-            #                 roomlatest[0] = roomlatest[1]
-            #                 scenebroken = True
-            #             else:
-            #                 scenebroken = False
-            #             rtimestamp = datetime.timestamp(roomlatest[0].created_at)
-            #             mestimestamp = datetime.timestamp(message.created_at)
-            #             diff = int(math.floor(mestimestamp - rtimestamp))
-
-            #             if diff >= 3*60*60*24:
-            #                 if not scenebroken:
-            #                     await client.get_channel(roomchannel.id).send("```\u200b```")
-            #                     await client.get_channel(logchannel).send("Automatically created a scene break in " + roomcur + ". The time difference was: " + str(diff) + " seconds, which equates to " + str(float(diff/3600)) + " hours.")
+                await MiscellaneuosCommands.countscenes(message)
 
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "tuptest"):
                 await message.add_reaction("❓")
@@ -4336,11 +3695,6 @@ async def on_message(message):
                         await message.channel.send(embed = discord.Embed(title = functionnames[a], description = functiondesc[a], colour = embcol))
                 await message.delete()
 
-            #elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "functionsetup"):
-            
-            # if message.channel.parent.name == "official-functions":
-            #     prevmess = [joinedMessages async for joinedMessages in message.channel.history(limit = 2, oldest_first= False)]
-            #     print(prevmess)
 
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "tour"):
                 await message.channel.send(embed = discord.Embed(title = TourNames[0], description = TourDescriptions[0], colour = embcol), view = MiscellaneuosCommands.TourView1())
@@ -4348,8 +3702,6 @@ async def on_message(message):
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "demo"):
                 await message.delete()
                 await message.channel.send(embed = discord.Embed(title = "Setting the scene in the Unlit Passageways!", description = "*A small door of fine oak panelling swings open to reveal a cosy bedchamber. The bed is a simple wrought iron frame with a comfortable looking mattress, flanked by small wooden bedside tables. The room is lit by a single torch in a sconce in the wall, which is spluttering low and almost out.*\n\n---------------------------------------------------------------------\n\nCasting Detect Magic in the room reveals a source of magic in the bedsheets and two in the right bedside table.\n\n---------------------------------------------------------------------\n\nItems inside the drawers on the left table:\n* One medium dildo\n* A set of red lacy lingerie\n\nItems inside the drawers on the right table:\n* A spell scroll, containing the spell 'Cure Wounds'\n* Upon a DC 14 *Investigation* Check: ||A false bottom in the drawer, revealing a Temporeal Collar of Wealth||\n\n---------------------------------------------------------------------\n\nCasting Identify on the bedsheets reveals that they are charmed to be luxuriosly comfortable Temporeal items. They are also cursed, such that anyone under them is subjected to ||Mantle of Agreability||\n\n---------------------------------------------------------------------\n\n*Temporeal items are magical temporary items, which vanish after 1d4 hours or if they are removed from the room in which they are found.*", colour = embcol))
-
-            
 
             #Per message income and Scene tracker pings.
             if not "verification" in str(message.channel).lower():
