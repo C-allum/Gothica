@@ -247,12 +247,8 @@ async def charcreate(message):
 
     roles = str(message.author.roles)
 
-    if "+" in roles:
-        rolenum = roles.split("+")
-        rolenumber = rolenum[1][0]
-        maxchars = 5 + int(rolenumber)
-    else:
-        maxchars = 5
+    player_econ_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0])
+    maxchars = 5 + int(GlobalVars.economyData[player_econ_index + 2][1])
 
     for a in range(len(headers)):
         if headers[a] == "Status":
@@ -491,12 +487,8 @@ async def chartransfer(message):
 
                     roles = str(str(message.author.roles))
 
-                    if "+" in roles:
-                        rolenum = roles.split("+")
-                        rolenumber = rolenum[1][0]
-                        maxchars = 5 + int(rolenumber)
-                    else:
-                        maxchars = 5
+                    player_econ_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0])
+                    maxchars = 5 + int(GlobalVars.economyData[player_econ_index + 2][1])
 
                     if pcharsreg > maxchars:
                         foot ="\n\n----------------------------------\n\n" + recipname + " does not have an available slot, so this character has been marked as Unavailable"
@@ -636,12 +628,9 @@ async def charlist(message):
 
     roles = str(str(message.author.roles))
 
-    if "+" in roles:
-        rolenum = roles.split("+")
-        rolenumber = rolenum[1][0]
-        maxchars = 5 + int(rolenumber)
-    else:
-        maxchars = 5
+    player_econ_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0])
+    maxchars = 5 + int(GlobalVars.economyData[player_econ_index + 2][1])
+
 
     emb = discord.Embed(title = tit, description = desc, colour = embcol)
 
@@ -985,12 +974,8 @@ async def charactivate(message):
 
                     roles = str(str(message.author.roles))
 
-                    if "+" in roles:
-                        rolenum = roles.split("+")
-                        rolenumber = rolenum[1][0]
-                        maxchars = 5 + int(rolenumber)
-                    else:
-                        maxchars = 5
+                    player_econ_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0])
+                    maxchars = 5 + int(GlobalVars.economyData[player_econ_index + 2][1])
 
                     if pcharsreg <= maxchars-1:
 
