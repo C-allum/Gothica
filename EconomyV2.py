@@ -175,7 +175,7 @@ async def item(message):
 #Summons the player's inventory
 async def inventory(message):
     #Find person in the inventory sheet
-    author_row_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if message.author.name in x][0])
+    author_row_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if message.author.id in x][0])
     player_inventory = GlobalVars.inventoryData[author_row_index:author_row_index+5]
 
     #Get list of all items
@@ -1096,7 +1096,7 @@ async def removeMoney(message):
 #Allows user to use item.
 async def useitem(message):
     #Find person in the inventory sheet
-    author_row_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if message.author.name in x][0])
+    author_row_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if message.author.id in x][0])
     player_inventory = GlobalVars.inventoryData[author_row_index:author_row_index+5]
 
     #Get list of all items
@@ -1157,7 +1157,7 @@ async def useitem(message):
                 user = message.author
                 await message.channel.send(embed=discord.Embed(title=f"You used 1x {item_name}",description=use_response.replace("{user.mention}", message.author.name), colour = embcol))
                 if item_list[i] == "CharSlot00":
-                    author_econ_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if message.author.name in x][0])
+                    author_econ_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if message.author.id in x][0])
                     GlobalVars.economyData[author_econ_row_index+2][1] = GlobalVars.economyData[author_econ_row_index+2][1] + 1
                 await removeItemFromInventory(author_row_index, i+2, 1)
 
@@ -1200,7 +1200,7 @@ async def invest(message):
         reciprow = ""
         target = message.author
         targname = target.name
-        recipient_economy_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if message.author.name in x][0])
+        recipient_economy_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if message.author.id in x][0])
         
         try:
             giveamount = int(message.content.split(" ")[1].strip("-"))
@@ -1317,8 +1317,6 @@ async def invest(message):
         await message.channel.send(embed = discord.Embed(title = "This channel isn't set up to receive donations", description = "If you believe this to be in error, contact the moderator team", colour = embcol))
 
 async def bid(message, isbot):
-    #TODO Change logic to use new Economy Data, which is read Row wise, not Column wise
-    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='COLUMNS').execute().get("values")
     debugvar = message.content.lower().split(" ")
     if isbot:
         await message.delete()
@@ -1763,7 +1761,28 @@ async def copyEconomy(message):
     #Write Inventory Sheet
     sheet.values().update(spreadsheetId = newSheet, range = "Inventories!A1:ZZ8000", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=newPlayerInvs)).execute()
 
-
+async def addUserToEconomy(name, id, last_message_time = datetime.timestamp(datetime.now()), total_dezzies = 0, scenes_list = "", additional_charslots = 0, weekly_award_pool = 500):
+    async with economy_lock:
+        #Line 1: Name & ID
+        GlobalVars.economyData.append([name])
+        GlobalVars.economyData[-1].append(str(id))
+        #Line 2: Last Message Award & Total Dezzies
+        GlobalVars.economyData.append([last_message_time])
+        GlobalVars.economyData[-1].append(total_dezzies)
+        #Line 3: Scene list & Additional Charslots
+        GlobalVars.economyData.append([scenes_list])
+        GlobalVars.economyData[-1].append(additional_charslots)
+        #Line 4: Weekly award pool
+        GlobalVars.economyData.append([weekly_award_pool])
+        #-----------------Inventory------------
+        while (len(GlobalVars.inventoryData )- 7) % 6 != 5:
+            GlobalVars.inventoryData.append([""])
+        ##Line 1: Name & ID
+        GlobalVars.inventoryData.append([name])
+        GlobalVars.inventoryData[-1].append(str(id))
+    await writeEconSheet(GlobalVars.economyData)
+    await writeInvetorySheet(GlobalVars.inventoryData)
+    return
 
 
     
