@@ -67,7 +67,7 @@ service = build("sheets", "v4", credentials=creds)
 gc = gspread.service_account(filename = SERVICE_ACCOUNT_FILE)
 config_file_path = "config.yaml"
 #-----------------LIVE VERSION/BETA TOGGLE---------------
-liveVersion = 1
+liveVersion = 0
 token = ""
 
 #Sheet Locations:
@@ -271,6 +271,7 @@ mazedata = [] #First array is maze instance number. Second contains an array of:
 mazestartmessage = []
 mazestartembed = discord.Embed(title = "March's Maddening Mazes!", description = "Welcome to our March roleplay event in the dungeon!\nWhen you're ready to be randomly paired with someone to embark on a random adventure, press the 'Join' button below. Pressing the button a second time will remove you from the waiting list.", colour = embcol)
 mazechannel = [0, 0]
+mazelocks = []
 
 #---------------------------------------------
 

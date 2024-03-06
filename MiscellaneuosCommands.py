@@ -821,6 +821,7 @@ class MazeView(discord.ui.View):
             self.buttons[a].callback = self.callback
 
     async def callback(self, interaction: discord.Interaction):
+        await mazelocks[int(interaction.message.channel.name.split(" ")[2])].acquire()
         if (interaction.user == mazedata[int(interaction.message.channel.name.split(" ")[2])][2]) or (interaction.user == mazedata[int(interaction.message.channel.name.split(" ")[2])][3]):
             await interaction.response.send_message("Going " + str(interaction.data["custom_id"]).title() + "!\n" + interaction.user.name + " selected this path!")
             wallsides, enc, paths, prev, state = await mazeupdate(interaction.data["custom_id"], int(interaction.message.channel.name.split(" ")[2]), mazedata[int(interaction.message.channel.name.split(" ")[2])][6])
@@ -862,6 +863,8 @@ class MazeView(discord.ui.View):
 
         else:
             await interaction.user.send("Please do not interact in scenes that you are not part of. If you want to play, press the join button in the main channel.")
+        
+        mazelocks[int(interaction.message.channel.name.split(" ")[2])].release()
 
 class mazejoin(discord.ui.View):
     def __init__(self):
@@ -952,6 +955,7 @@ async def addp2tomaze(player, mazeno):
     mazedata[mazeno].append(entry)
     mazedata[mazeno].append(oocthread)
     mazedata[mazeno].append(1)
+    await mazelocks.append(asyncio.Lock().acquire())
 
     mazedata[mazeno].append(await mazechannel[1].send(embed = discord.Embed(title = "Maze Instance " + str(mazeno), description = "Thread: " + str(mazedata[mazeno][0].jump_url) + "\nPlayers: " + str(mazedata[mazeno][2].name) + " (" + str(mazedata[mazeno][2].id) + ") & " + str(mazedata[mazeno][3].name) + " (" + str(mazedata[mazeno][3].id) + ")\nCoordinates: " + str(mazedata[mazeno][4][0]) + ", " + str(mazedata[mazeno][4][1]) + "\nState: 1\n" + "Maze Map Index: " + str(mazedata[mazeno][1]) + "\nMinotaur Direction: none\n\n" + str(mazeencounters[mazeno]).replace("], [", "],\n["))))
     mazedata[mazeno].append("none")
