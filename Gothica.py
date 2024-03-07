@@ -390,6 +390,11 @@ async def on_message(message):
             #manual account migration command
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "manualmigrate") and not isbot and "staff" in str(message.author.roles).lower():
                 await MiscellaneuosCommands.manualMigrateAcc(message)
+                
+            #Income History
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "income") and not isbot:
+                await EconomyV2.incomeWeek(message)
+
 
             #------------------------ Config Commands -------------------------------
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "editconfig") and not isbot and GlobalVars.config["general"]["administrative_role"] in str(message.author.roles).lower():
@@ -409,6 +414,7 @@ async def on_message(message):
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "removezerodiscrim") and not isbot and GlobalVars.config["general"]["administrative_role"] in str(message.author.roles).lower():
                 await MiscellaneuosCommands.removeZeroDiscriminators(message)
             #------------------------------------------------------------------------
+
 
             #Plothook Command
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "plothook") and not isbot:

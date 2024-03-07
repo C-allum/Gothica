@@ -1694,6 +1694,16 @@ async def rpDezReact(reaction):
     else:
         await client.get_channel(botchannel).send(embed=discord.Embed(title = "You can't use this at the here.", colour = embcol, url = mess.jump_url))
 
+async def incomeWeek(message):
+    income = await TransactionsDatabaseInterface.playerTransactionsInfo(message.author.name, "7 Days")
+    
+    incomeString = ""
+    for row in income:
+        for i in range(1, len(row)):
+            incomeString += str(row[i]) + " "
+        incomeString +="\n"
+
+    await message.channel.send(embed = discord.Embed(title = "Your dezzie earnings over the last week:", description = incomeString, colour = embcol))
 
 #TODO: Rewrite the item function (Fuzzy String matching)
 #TODO: Rewrite the Shop function (Fuzzy String matching)
