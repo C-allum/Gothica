@@ -769,7 +769,7 @@ async def beasttongue(message, animal):
     return('"'.join(beastresult))
 
 async def getPlayerNameList():
-    economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
+    economydata = GlobalVars.economyData
     playerList = []
     for a in range(math.floor(len(economydata)/4) -1):
 

@@ -16,7 +16,6 @@ import ConfigCommands
 import GlobalVars
 
 
-player_list = []
 global startup
 startup = True
 #test
@@ -55,12 +54,6 @@ async def on_ready():
     await EconomyV2.loadEconomySheet()
     await EconomyV2.loadInventorySheet()
     print("Done.")
-
-    print("Fetching a list of all players...")
-    global player_list 
-    player_list = await MiscellaneuosCommands.getPlayerNameList()
-    print("... done")
-
     #------------------DezzieAwardPoolReset---------------------
 
 
@@ -747,15 +740,18 @@ async def on_message(message):
 
                 verid = int(vertarget.replace("!","").replace("&","").replace(">",""))
 
-                vermem = await message.guild.query_members(user_ids=[verid])
+                vermember = await message.guild.query_members(user_ids=[verid])
 
                 vername = await client.fetch_user(verid)
 
-                if vermem[0] != []:
+                if vermember[0] != []:
 
-                    vermemb = vermem[0]
+                    vermemb = vermember[0]
 
                     role = discord.utils.get(vermemb.guild.roles, name="Verified")
+
+                    await EconomyV2.addUserToEconomy(vername.name, vername.id)
+                    print(str(vername.name) + " has been added to the economy at " + str(datetime.now()))
 
                     await vermemb.add_roles(role)
 
@@ -765,13 +761,13 @@ async def on_message(message):
 
                     vername = str(vername).split("#")[0]
 
-                    verping = "<@" + vertarget
+                    verping = "<@" + vertarget + ">"
 
                     rand = random.randint(0,9)
 
                     titles = ["Say hello to " + str(vername) + "!", "Look - we found someone new - " + str(vername) + "!", "Can someone look after " + str(vername) + "?", str(vername) + " just turned up!", "We caught " + str(vername) + " trying to sneak in!", str(vername) + " just dropped in!", str(vername) + " could use some help", str(vername) + " has discovered a portal into the Dungeon!", "Helpfully discovering a hole in our ceiling, here's " + str(vername), str(vername) + " has swung in!"]
 
-                    welcomes = ["Hello everyone! We were taking detailed notes about the xio colony in the lower halls and found a new visitor! Please say hello to " + str(verping) + "!\nNow if you'll excuse us, we must go back to find out precisely how quickly those broodmothers spawn.", "Pardon me. We were helping Sophie care for a sick tentacle, and it spat up a person! Would one of you please take care of " + str(verping) + " while We help Sophie clean up the excess slime?", str(verping) + ", here, got caught trying to look under Our skirts. Apparently, they have never heard what happens when you stare into the Abyss because they seem to be stunned by what was down there. We're sure a hot meal will do the trick though.", "We were mucking out the Cathedral's prison cells and found " + str(verping) + " tied to a post, promising to be good. Come say hello to the newest lewd convert!", str(verping) + " thought they could get in without us noticing. Everybody, make sure they feel welcome!", "This poor soul fell through a portal onto a pile of lightly used mattresses while We were changing, and seemed unable to handle the psychic stress of our unfiltered form. They've passed out from shock for now, would someone make sure they still remember their name when they wake up? I believe it's " + str(verping) + ".", str(verping) + " seems to have had a recent encounter with some of the dungeon slimes. Could someone get them some clothes, and see to it that they are taken care of?", "Oh Dear," + str(verping) + "appears to have been transported here from their native plane of existence! Could someone help them get settled into their new home?", "It's odd, We thought we had fixed that hole already? Could someone check if " + str(verping) + " is alright while we go see to the repairs again?", "We think " + str(verping) + " must have had a run in with one of the amnesia blooms in the garden. They dont seem to remember where they are! Could someone help them get settled back in while We do some weeding?"]
+                    welcomes = ["Hello everyone! We were taking detailed notes about the xio colony in the lower halls and found a new visitor! Please say hello to " + str(verping) + "!\nNow if you'll excuse us, we must go back to find out precisely how quickly those broodmothers spawn.", "Pardon me. We were helping Sophie care for a sick tentacle, and it spat up a person! Would one of you please take care of " + str(verping) + " while We help Sophie clean up the excess slime?", str(verping) + ", here, got caught trying to look under Our skirts. Apparently, they have never heard what happens when you stare into the Abyss because they seem to be stunned by what was down there. We're sure a hot meal will do the trick though.", "We were mucking out the Cathedral's prison cells and found " + str(verping) + " tied to a post, promising to be good. Come say hello to the newest lewd convert!", str(verping) + " thought they could get in without us noticing. Everybody, make sure they feel welcome!", "This poor soul fell through a portal onto a pile of lightly used mattresses while We were changing, and seemed unable to handle the psychic stress of our unfiltered form. They've passed out from shock for now, would someone make sure they still remember their name when they wake up? I believe it's " + str(verping) + ".", str(verping) + " seems to have had a recent encounter with some of the dungeon slimes. Could someone get them some clothes, and see to it that they are taken care of?", "Oh Dear," + str(verping) + " appears to have been transported here from their native plane of existence! Could someone help them get settled into their new home?", "It's odd, We thought we had fixed that hole already? Could someone check if " + str(verping) + " is alright while we go see to the repairs again?", "We think " + str(verping) + " must have had a run in with one of the amnesia blooms in the garden. They dont seem to remember where they are! Could someone help them get settled back in while We do some weeding?"]
 
                     await client.get_channel(828411760847356005).send(embed = discord.Embed(title = titles[rand], description = welcomes[rand], colour = embcol))#, view = MiscellaneuosCommands.TourView0())
 
@@ -3716,62 +3712,54 @@ async def on_message(message):
 
                 if not isbot:
 
-
-                    row = 0
-
-                    newtot = 0
-
-                    randaward = 0
-
-                    #Existing Member
-                    if player_list == []:
-                        return
-                    #Check if memeber is already registered
-                    if str(message.author.name) in player_list:
+                    f = lambda x: [""]if x == [] else x
+                    columnOne = [ f(x)[1] for x in GlobalVars.economyData]
+                    #Check if member is already registered
+                    if str(message.author.id) in columnOne:
                         #check if we are in a channel that awards dezzies for posts
                         if message.channel.category_id in GlobalVars.config["channels"]["roleplay_categories_id"]:
-                            economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
-
-                            #calculate reward amount
-                            for a in range(math.floor(len(economydata)/4)):
-
-                                b = a * 4 + 5
-
-                                charcount = len(message.content)
-
-                                randaward = (math.floor(charcount/100) + random.randint(1,4))
-
-                                if str(message.author.name) in str(economydata[b][0]):
-
-                                    row = b + 1
-
-                                    newtot = int(economydata[b][1]) + int(randaward)
-
-                                    break
-                            
-                            #Ping user for a tracked scene.
+                            #ignore edit calls
                             if not "?edit" in message.content:
+                                #Message reward
+                                if int(str(datetime.timestamp(datetime.now())).split(".")[0]) - int(prevtime) >= 300:
+                                    #calculate reward amount
+                                    charcount = len(message.content)
+                                    message_award = (math.floor(charcount/100) + random.randint(1,4))
+
+                                    #Set correct timestamp and add dezzies to player
+                                    author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(playerID) in x][0])
+                                    EconomyV2.EconSheet[author_row_index+1][0] = datetime.timestamp(datetime.now())
+                                    await EconomyV2.addDezziesToPlayer(message, message_award, message.author.id, write_econ_sheet=True, send_message=False)
+                                    TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.MessageReward, int(message_award))
+
+                                #Tracked Scenes Ping
                                 f = lambda x: [""]if x == [] else x
-                                columnZero = [ f(x)[0] for x in economydata]
-                                for a in range(math.floor((len(economydata))/4) - 1):
+                                columnZero = [ f(x)[0] for x in GlobalVars.economyData]
+                                for a in range(math.floor((len(GlobalVars.economyData))/4) - 1): #Go through each user.
                                     playerindex = a * 4 + 5
                                     scenedataIndex =  playerindex + 2
 
                                     if str(message.channel.id) in columnZero[scenedataIndex]:
+                                        #Make a list of the tracked scenes
                                         scenearray = columnZero[scenedataIndex].split("|")
+                                        #Find the index of the currently relevant scene in the list
                                         sceneindex = [idx for idx, s in enumerate(scenearray) if str(message.channel.id) in s][0]
+                                        #Read the tracking status of that scene for this player
                                         trackedStatus = scenearray[sceneindex].split(" ")[-1]
 
                                         if trackedStatus == "Notifications:Enabled":
-                                            if economydata[playerindex][0] != message.author.name:
-                                                user = discord.utils.get(client.guilds[0].members, name = economydata[playerindex][0])
-                                                timeos.sleep(3.0)
+                                            if GlobalVars.economyData[playerindex][0] != message.author.name: #Do not ping the author.
+                                                #Fetch player
+                                                user = discord.utils.get(client.guilds[0].members, name = GlobalVars.economyData[playerindex][0])
+                                                #Wait for 3s to let tupper send the embed.
+                                                await asyncio.sleep(3.0)
+                                                #Send DM to user
                                                 await user.send(f"New message in <#{message.channel.id}> by {message.channel.last_message.author.name}")
 
                                         elif trackedStatus == "Notifications:Disabled":
                                             pass
                                         
-                                        else:
+                                        else: #If no status is present, add Notif Disabled as the default.
                                             scenearray[sceneindex] = scenearray[sceneindex] + (" Notifications:Disabled")
                                             dataup = "|".join(scenearray)
                                             scene_row = scenedataIndex + 1
@@ -3779,43 +3767,10 @@ async def on_message(message):
                             
 
                     #New member
-
                     else:
-                        economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
-
-                        newtot = 0
-
+                        await EconomyV2.addUserToEconomy(message.author.name, message.author.id)
                         print(str(message.author.name) + " has been added to the economy at " + str(datetime.now()))
-                        player_list.append(str(message.author.name))
-                        if (int(len(economydata) - 1) / 4).is_integer():
-                            row = len(economydata) + 1
-
-                        else:
-                            row = ((int(int(len(economydata) - 1) / 4) + 1) * 4) + 2 #Calculates the next line on the sheet that is divisible by 4. This is a bit of a magic formula.
-                            #len econdata-1 / 4 gives us the player number of the current last player. that + 1 and * 4 gives us the cell that is one before the last one of that player (because we did -1 earlier).
-                            #+1 gives us the last line of the currently last registered player, meaning +2 gives us the line the new player's entry needs to start at.
-                    
-                    if 'economydata' in locals():
-                        try:
-                            prevtime = int(str(economydata[row][0]))
-
-                        except IndexError:
-                            prevtime = 0
-
-                        except ValueError:
-                            prevtime = 0
-
-                        dataup = [str(message.author.name), str(newtot)]
-
-                        if int(str(datetime.timestamp(datetime.now())).split(".")[0]) - int(prevtime) >= 300 and row != 0:
-
-                            sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(row + 1)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[datetime.timestamp(datetime.now())]])).execute()
-
-                            sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[dataup])).execute()
-
-                            if (newtot > 0) and (randaward > 0):
-                                TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.MessageReward, int(randaward))
-
+                        
                 else:   #Things we want to do if a bot posted the message
                     if not(client.user == message.author) and not("Avrae" == message.author.name) and message.channel.category_id in GlobalVars.config["channels"]["roleplay_categories_id"] and not (message.channel.type == discord.ChannelType.private_thread):
                         if(random.randint(1, 500) == 1):
