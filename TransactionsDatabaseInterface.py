@@ -4,20 +4,24 @@ import numpy as np
 from enum import Enum
 from CommonDefinitions import sheet as SheetsService, TransactionSheet, liveVersion
 
+import asyncio
+
 #Enum defining valid dezzie moving actions
 class DezzieMovingAction(Enum):
-    Work = 1    #work command
-    Slut = 2    #slut command
-    React = 3   #From Dezzie reacts
-    Give = 4    #give-money command
-    Buy = 5     #When buying items
-    Sell = 6    #When selling items
-    Add = 7     #LK-command add-money
-    Remove = 8  #LK-command remove-money
-    Invest = 9  #Investing into community projects
-    MessageReward = 10  #Reward for posting in roleplay channels
-    RolePay = 11        #Reward for persons with roles, added when working
-    StreakReward = 12   #Reward for working without missing a day
+    Work = 1        #work command
+    Slut = 2        #slut command
+    React = 3       #From Dezzie reacts
+    Give = 4        #give-money command
+    Buy = 5         #When buying items
+    Sell = 6        #When selling items
+    Add = 7         #LK-command add-money
+    Remove = 8      #LK-command remove-money
+    Invest = 9      #Investing into community projects
+    MessageReward = 10      #Reward for posting in roleplay channels
+    RolePay = 11            #Reward for persons with roles, added when working
+    StreakReward = 12       #Reward for working without missing a day
+    OOCMessageReward = 13   #Reward for posting in non-roleplay channels
+    DailyInteraction = 14   #Reward for first interaction per day
 
 
 #Initialize the transactions database: connect and create a cursor
@@ -111,7 +115,7 @@ def printTransactions():
         print('Error occured while printing the database contents - ', error)
 
 #Fetch all accumulated information for one person over a given timeframe
-def playerTransactionsInfo(person:str, timeframe:str = None):
+async def playerTransactionsInfo(person:str, timeframe:str = None):
     try:
         transactionsConnection = sqlite3.connect('CLDTransactions.db')
         transactionsCursor = transactionsConnection.cursor()
@@ -119,19 +123,18 @@ def playerTransactionsInfo(person:str, timeframe:str = None):
         #Prints for each person each action plus summed value
         if timeframe is None:
             #data=transactionsCursor.execute(f'''SELECT Person, Action, SUM(Amount) FROM Transactions GROUP BY Person, Action ORDER BY Person, SUM(Amount)''')
-            data=transactionsCursor.execute(f'''SELECT Person, Action, SUM(Amount) FROM Transactions WHERE Person in ('{person}') GROUP BY Person, Action ORDER BY Person, SUM(Amount)''')
+            data = transactionsCursor.execute(f'''SELECT Person, Action, SUM(Amount) FROM Transactions WHERE Person in ('{person}') GROUP BY Person, Action ORDER BY Person, SUM(Amount)''').fetchall()
         else:
             timeframe = "-" + timeframe
-            data=transactionsCursor.execute(f'''SELECT Person, Action, SUM(Amount) FROM Transactions WHERE Person in ('{person}') AND Date > date('now', '{timeframe}') GROUP BY Person, Action ORDER BY Person, SUM(Amount)''')
+            data = transactionsCursor.execute(f'''SELECT Person, Action, SUM(Amount) FROM Transactions WHERE Person in ('{person}') AND Date > date('now', '{timeframe}') GROUP BY Person, Action ORDER BY Person, SUM(Amount)''').fetchall()
             #data=transactionsCursor.execute(f'''SELECT * FROM Transactions WHERE Person in ('{person}') AND Date > date('now', '{timeframe}')''')
 
         #Print whole database
         #data=transactionsCursor.execute('''SELECT * FROM Transactions''')
-
-        for row in data:
-            print(row)
             
         transactionsConnection.close()
+
+        return data
     except sqlite3.Error as error:
         print(f'Error occured while printing database contents for - {person}', error)
 
@@ -216,4 +219,7 @@ def testing():
 
 #--- --- --- EXECUTED IF THIS FILE IS RUN --- --- ---
 if __name__ == "__main__":
-    playerTransactionsInfo('Toph#9851', '2 months')
+    data = asyncio.run(playerTransactionsInfo('tophelin', '7 Days'))
+
+    for row in data:
+        print(row)
