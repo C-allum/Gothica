@@ -272,7 +272,7 @@ async def buyitem(message):
         for i in range(0, len(selector_options)):
             top10_string += f"`{i+1}:` {selector_options[i][0]}\n"
         #Generate top10 dropdown selector
-        top10_view = Dropdown_Select_View(timeout=30, optionamount=len(selector_options), maxselectionamount=1, namelist=[a[0] for a in selector_options])
+        top10_view = Dropdown_Select_View(message=message, timeout=30, optionamount=len(selector_options), maxselectionamount=1, namelist=[a[0] for a in selector_options])
         await message.channel.send(embed = discord.Embed(title="Didn't find a perfect match to what you are looking for.", description="Here are the top 10 closest results. Please choose which of these you want.\n\n" + top10_string + "\n\n" + "This message will time out in 30 seconds."), view=top10_view)
         #Wait for reply
         #ask to choose an item
@@ -334,7 +334,7 @@ async def buyitem(message):
                 shop_embed += f"`{i+1}:` **{available_in_shops[i][0][22]}{available_in_shops[i][0][26]}{available_in_shops[i][0][22]}**:\n{item_name}, Price: {price}, Stock: {quantity_available}\n\n"
         
         #Generate selector view to choose items.
-        shop_selection_view = Dropdown_Select_View(timeout=30, optionamount=len(shopnumbers), maxselectionamount=1) #Only let them choose one item.
+        shop_selection_view = Dropdown_Select_View(message=message, timeout=30, optionamount=len(shopnumbers), maxselectionamount=1) #Only let them choose one item.
         await message.channel.send(embed=discord.Embed(title=f"There are multiple versions of this item. Which do you want to choose?", description=shop_embed, colour = embcol), view = shop_selection_view)
         #Wait for reply
         if await shop_selection_view.wait():
@@ -396,7 +396,7 @@ async def buyitem(message):
             await message.channel.send(embed=discord.Embed(title=f"You requested {buyquant} of this item, but only {quantity_available} are available. Please try again and request a lower amount.", colour = embcol))
 
     #Ask for confirmation or quantity change
-    confirm_view = Yes_No_Quantity_View()
+    confirm_view = Yes_No_Quantity_View(message=message)
     await message.channel.send(embed=discord.Embed(title=f"Buy {buyquant} of this item for a total of {price * buyquant}?", description=embed_string + potential_curses_string, colour = embcol), view=confirm_view)
 
     if await confirm_view.wait():
@@ -404,7 +404,7 @@ async def buyitem(message):
             return
     
     if confirm_view.button_response == "modifyquantity":
-        quantity_view = Dropdown_Select_View(optionamount=25, maxselectionamount=1, namelist=[])
+        quantity_view = Dropdown_Select_View(message=message, optionamount=25, maxselectionamount=1, namelist=[])
         await message.channel.send(embed=discord.Embed(title=f"How many of these items do you want to buy? __Keep in mind, all items bought in bulk will have the same random curse roll.__", colour = embcol), view=quantity_view)
 
         if await quantity_view.wait():
@@ -414,7 +414,7 @@ async def buyitem(message):
         buyquant = int(quantity_view.button_response[0])
 
         #Ask if this is fine now
-        confirm_view = Yes_No_View()
+        confirm_view = Yes_No_View(message=message)
         await message.channel.send(embed=discord.Embed(title=f"Buy {buyquant} of this item for a total of {price * buyquant}?", description=embed_string + potential_curses_string, colour = embcol), view = confirm_view)
         if await confirm_view.wait():
             await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
@@ -524,7 +524,7 @@ async def sellitem(message):
     item_price = GlobalVars.itemdatabase[sell_shop_index][item_index][13]
     itemname = GlobalVars.itemdatabase[sell_shop_index][item_index][1]
     
-    confirm_view = Yes_No_Quantity_View()
+    confirm_view = Yes_No_Quantity_View(message=message)
     await message.channel.send(embed=discord.Embed(title=f"Do you want to sell {sellquant}x {itemname} for {int(int(item_price) * GlobalVars.config["economy"]["sellpricemultiplier"] * sellquant)}?"), view = confirm_view)
     
     if await confirm_view.wait():
@@ -532,7 +532,7 @@ async def sellitem(message):
         return
     
     if confirm_view.button_response == "modifyquantity":
-        quantity_view = Dropdown_Select_View(optionamount=int(GlobalVars.inventoryData[author_inventory_row_index+1][i]), maxselectionamount=1, namelist=[])
+        quantity_view = Dropdown_Select_View(message=message, optionamount=int(GlobalVars.inventoryData[author_inventory_row_index+1][i]), maxselectionamount=1, namelist=[])
         await message.channel.send(embed=discord.Embed(title=f"How many of these items do you want to sell? You own {int(GlobalVars.inventoryData[author_inventory_row_index+1][i])}.", colour = embcol), view=quantity_view)
 
         if await quantity_view.wait():
@@ -542,7 +542,7 @@ async def sellitem(message):
         sellquant = int(quantity_view.button_response[0])
 
         #Ask if this is fine now
-        confirm_view = Yes_No_View()
+        confirm_view = Yes_No_View(message=message)
         await message.channel.send(embed=discord.Embed(title=f"Do you want to sell {sellquant}x {itemname} for {int(int(item_price) * GlobalVars.config["economy"]["sellpricemultiplier"] * sellquant)}?"), view = confirm_view)
         if await confirm_view.wait():
             await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
@@ -624,7 +624,7 @@ async def giveitem(message):
     item_quantity = int(player_inventory[1][i+2])
     #Ask for quantity to sell if none was provided
     if quantProvided == False:
-        quantity_view = Dropdown_Select_View(optionamount=item_quantity, maxselectionamount=1, namelist=[])
+        quantity_view = Dropdown_Select_View(message=message, optionamount=item_quantity, maxselectionamount=1, namelist=[])
         await message.channel.send(embed=discord.Embed(title="Please select an amount you want to give away of the chosen item.", color=embcol), view=quantity_view)
 
         if await quantity_view.wait():
@@ -634,7 +634,7 @@ async def giveitem(message):
         givequant = int(quantity_view.button_response[0])
 
     #Confirmation
-    confirm_view = Yes_No_View()
+    confirm_view = Yes_No_View(message=message)
     await message.channel.send(embed=discord.Embed(title=f"Do you want to give {givequant}x {itemname} to {recipient_name}?", colour=embcol), view=confirm_view)
     
     if await confirm_view.wait():
@@ -712,7 +712,7 @@ async def additem(message):
             top10_string += f"`{i+1}:` {selector_options[i][0]}\n"
 
         #Generate selector view to choose items.
-        item_selection_view = Dropdown_Select_View(timeout=30, optionamount=len(selector_options), maxselectionamount=1, namelist=[i[0] for i in selector_options]) #Only let them choose one item.
+        item_selection_view = Dropdown_Select_View(message=message, timeout=30, optionamount=len(selector_options), maxselectionamount=1, namelist=[i[0] for i in selector_options]) #Only let them choose one item.
         await message.channel.send(embed = discord.Embed(title="Didn't find a perfect match to what you are looking for.", description="Here are the top 10 closest results. Please choose which of these you want.\n\n" + top10_string + "\n\n" + "This message will time out in 30 seconds."), view = item_selection_view)
         #Wait for reply
         if await item_selection_view.wait():
@@ -781,7 +781,7 @@ async def additem(message):
         
 
         #Generate selector view to choose items.
-        shop_selection_view = Dropdown_Select_View(timeout=30, optionamount=len(shopnumbers), maxselectionamount=1) #Only let them choose one item.
+        shop_selection_view = Dropdown_Select_View(message=message, timeout=30, optionamount=len(shopnumbers), maxselectionamount=1) #Only let them choose one item.
         await message.channel.send(embed=discord.Embed(title=f"There are multiple versions of this item. Which do you want to choose?", description=shop_embed, colour = embcol), view = shop_selection_view)
         #Wait for reply
         if await shop_selection_view.wait():
@@ -863,9 +863,9 @@ async def additem(message):
             curseCount += 1
     #Prepare buttons
     if potential_curses != "":
-        curse_view = AddItem_Curse_View()
+        curse_view = AddItem_Curse_View(message=message)
     else:
-        curse_view = AddItem_Curse_View_No_Shopcurses()
+        curse_view = AddItem_Curse_View_No_Shopcurses(message=message)
     await message.channel.send(embed=discord.Embed(title=f"Should the item contain curses?", description=embed_string + potential_curses + "\n\nThis selection will time out in 90 seconds.", colour = embcol), view =curse_view)
     
     #Wait for button press 
@@ -963,7 +963,7 @@ async def additem(message):
     elif curse_view.button_response == "shopcurses": #Here we ask for a list of integers.
         if curseCount > 0:
             #Create dropdown and wait for user to select
-            select_view = Dropdown_Select_View(optionamount=curseCount - 1, maxselectionamount=25, namelist=potential_curse_names)
+            select_view = Dropdown_Select_View(message=message, optionamount=curseCount - 1, maxselectionamount=25, namelist=potential_curse_names)
             await message.channel.send(embed=discord.Embed(title="Select the numbers of the curses above that you want on the item. (Max. 25)",description="This selection will time out in 120 seconds.", colour = embcol),view=select_view)
             
             if await select_view.wait():
@@ -996,14 +996,14 @@ async def additem(message):
     if curses != "":
         embed_string += f"\n\n**Selected Curses:**\n\n{curse_names}"
 
-    confirm_view = Yes_No_Quantity_View()
+    confirm_view = Yes_No_Quantity_View(message=message)
     await message.channel.send(embed=discord.Embed(title=f"Give {givequant} of this item to {recipient_name}?", description=embed_string, colour = embcol), view = confirm_view)
     if await confirm_view.wait():
         await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
         return
     
     if confirm_view.button_response == "modifyquantity":
-        quantity_view = Dropdown_Select_View(optionamount=25, maxselectionamount=1, namelist=[])
+        quantity_view = Dropdown_Select_View(message=message, optionamount=25, maxselectionamount=1, namelist=[])
         await message.channel.send(embed=discord.Embed(title=f"How many of these items do you want to add to {recipient_name}'s inventory?", colour = embcol), view=quantity_view)
 
         if await quantity_view.wait():
@@ -1013,7 +1013,7 @@ async def additem(message):
         givequant = int(quantity_view.button_response[0])
 
         #Ask if this is fine now
-        confirm_view = Yes_No_View()
+        confirm_view = Yes_No_View(message=message)
         await message.channel.send(embed=discord.Embed(title=f"Give {givequant} of this item to {recipient_name}?", description=embed_string, colour = embcol), view = confirm_view)
         if await confirm_view.wait():
             await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
@@ -1140,7 +1140,7 @@ async def useitem(message):
                 embed_string += f"\n**{curse[0][0]}**(Level {curse[0][1]} curse):\n{curse[0][2]}\n"
 
         item_embed = discord.Embed(title=f"Do you want to use {item_name}?", description=embed_string, colour=embcol)
-        confirm_view = Yes_No_View()
+        confirm_view = Yes_No_View(message=message)
         await message.channel.send(embed = item_embed, view = confirm_view)
 
         #Wait for response
@@ -2151,9 +2151,10 @@ async def getUserNamestr(message):
 
 #----------------------------------Views---------------------------------
 class AddItem_Curse_View(discord.ui.View):
-    def __init__(self, timeout=90):
+    def __init__(self, message, timeout=90):
         super().__init__(timeout=timeout)
         self.button_response = ""
+        self.message = message
     async def on_timeout(self):
         # This method is called when the view times out (if a timeout is set)
         pass
@@ -2188,10 +2189,18 @@ class AddItem_Curse_View(discord.ui.View):
         self.button_response = "cancel"
         self.stop()
 
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if self.message.author.id == interaction.user.id:
+            return True
+        else:
+            await interaction.response.send_message("That is not your button to click!", ephemeral=True)
+            return False
+
 class AddItem_Curse_View_No_Shopcurses(discord.ui.View):
-    def __init__(self, timeout=90):
+    def __init__(self, message, timeout=90):
         super().__init__(timeout=timeout)
         self.button_response = ""
+        self.message = message
     async def on_timeout(self):
         # This method is called when the view times out (if a timeout is set)
         pass
@@ -2214,10 +2223,18 @@ class AddItem_Curse_View_No_Shopcurses(discord.ui.View):
         self.button_response = "cancel"
         self.stop()
 
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if self.message.author.id == interaction.user.id:
+            return True
+        else:
+            await interaction.response.send_message("That is not your button to click!", ephemeral=True)
+            return False
+
 class Yes_No_View(discord.ui.View):
-    def __init__(self, timeout=90):
+    def __init__(self, message, timeout=90):
         super().__init__(timeout=timeout)
         self.button_response = ""
+        self.message = message
     async def on_timeout(self):
         # This method is called when the view times out (if a timeout is set)
         pass
@@ -2234,10 +2251,18 @@ class Yes_No_View(discord.ui.View):
         self.button_response = "no"
         self.stop()
 
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if self.message.author.id == interaction.user.id:
+            return True
+        else:
+            await interaction.response.send_message("That is not your button to click!", ephemeral=True)
+            return False
+
 class Yes_No_Quantity_View(discord.ui.View):
-    def __init__(self, timeout=90):
+    def __init__(self, message, timeout=90):
         super().__init__(timeout=timeout)
         self.button_response = ""
+        self.message = message
     async def on_timeout(self):
         # This method is called when the view times out (if a timeout is set)
         pass
@@ -2260,12 +2285,20 @@ class Yes_No_Quantity_View(discord.ui.View):
         self.button_response = "modifyquantity"
         self.stop()
 
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if self.message.author.id == interaction.user.id:
+            return True
+        else:
+            await interaction.response.send_message("That is not your button to click!", ephemeral=True)
+            return False
+
 class Dropdown_Select_View(discord.ui.View):
-    def __init__(self, timeout=120, optionamount=1, maxselectionamount = 1, namelist = []):
+    def __init__(self, message, timeout=120, optionamount=1, maxselectionamount = 1, namelist = []):
         super().__init__(timeout=timeout)
         self.button_response = []
         self.choices = []
         self.namelist = namelist
+        self.message = message
         #Make sure we can only choose between 1 and 25 as per specification.
         if maxselectionamount > 0 and maxselectionamount < 26:
             self.selection_amount = maxselectionamount
@@ -2303,3 +2336,10 @@ class Dropdown_Select_View(discord.ui.View):
         self.button_response = self.select.values
         await interaction.response.defer()
         self.stop()
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if self.message.author.id == interaction.user.id:
+            return True
+        else:
+            await interaction.response.send_message("That is not your dropdown to click!", ephemeral=True)
+            return False
