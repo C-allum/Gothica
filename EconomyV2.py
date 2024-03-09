@@ -140,7 +140,7 @@ async def item(message):
                     try:
                         curse = [x for x in GlobalVars.itemdatabase[1] if curse in x][0]
                     except IndexError:
-                        await message.channel.send(embed=discord.Embed(title=f"Error in Buy function.", description="Index error in buy function: Possibly a problem with the curses in the item sheet. Check for spaces that shouldn't be there, and correct identifiers. Please notify the bot gods.", colour = embcol))
+                        await message.channel.send(embed=discord.Embed(title=f"Error in Item function.", description="Index error in item function: Possibly a problem with the curses in the item sheet. Check for spaces that shouldn't be there, and correct identifiers. Please notify the bot gods.", colour = embcol))
  
                     if n == 0:
                         curses+= f"{curse[0]}"
@@ -185,6 +185,7 @@ async def item(message):
             mechanics = item_database_info[5]
             flavour = item_database_info[6]
             default_curse = item_database_info[8]
+            additional_reference = ""
 
     #Collect information about the item to be bought. Only do so if the item is in a shop.
     if item_in_shop == True:
@@ -208,49 +209,21 @@ async def item(message):
         mechanics = item_database_info[7]
         flavour = item_database_info[6]
         default_curse = item_database_info[9]
+        try:
+            additional_reference = item_database_info[17]
+        except IndexError:
+            additional_reference = ""
 
-    #add item type and rarity
-    embed_string = f"*{item_type}, {rarity}*"
-    #add attunement to the string
-    if attunement_requirement.lower() == "yes":
-        embed_string += f" *(Requires Attunement)*\n\n"
-    elif "by" in attunement_requirement:
-            spellcaster = attunement_requirement.replace("Yes, by ", "")
-            embed_string += f" *(Requires Attunement by {spellcaster})*\n\n"
-    else: embed_string += "\n\n"
+    embed_string, potential_curses, potential_curses_string, potential_curse_names, curse_count = await showItem(item_name, item_type, price, quantity_available, curses_identifier, rarity, attunement_requirement, mechanics, flavour, default_curse, additional_reference)
 
-    if quantity_available == "":
-        quantity_available = "Infinite"
-    embed_string += f"**Quantity Available: {quantity_available}, Price per unit: {price}** \n\n"
-
-    #add long description
-    if mechanics != "":
-        embed_string += mechanics + "\n\n" + flavour
-    else:
-        embed_string += flavour
-    if default_curse != "":
-        embed_string += f"**\n\n__Default curse:__** \n{default_curse}"
-    #add additional curses
-    potential_curses = ""
-    if curses_identifier[0] != "":
-        potential_curses += "**\n\n__Potential curses:__**\n"
-        curseCount = 1
-        potential_curse_names = []
-        for curse in curses_identifier:
-            try:
-                full_curse = [x for x in GlobalVars.itemdatabase[1] if curse in x][0]
-            except IndexError:
-                await message.channel.send(embed=discord.Embed(title=f"Error in additem function.", description="Index error in additem function: Possibly a problem with the curses in the item sheet. Check for spaces that shouldn't be there, and correct identifiers. Please notify the bot gods.", colour = embcol))
-            potential_curses+= f"`{curseCount}:` **{full_curse[0]}**: {full_curse[2]}\n\n"
-            potential_curse_names.append(full_curse[0])
-            curseCount += 1
-    await message.channel.send(embed=discord.Embed(title=f"**{item_name}**", description=embed_string + potential_curses, colour = embcol))
+    await message.channel.send(embed=discord.Embed(title=f"**{item_name}**", description=embed_string + potential_curses_string, colour = embcol))
     return
 
 #Summons the player's inventory
 async def inventory(message):
     #Find person in the inventory sheet
-    author_row_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if message.author.id in x][0])
+    test = [x for x in GlobalVars.inventoryData if str(message.author.id) in x]
+    author_row_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if str(message.author.id) in x][0])
     player_inventory = GlobalVars.inventoryData[author_row_index:author_row_index+5]
 
     #Get list of all items
@@ -266,34 +239,39 @@ async def inventory(message):
             curse_descriptors = curse_descriptors.split(",")
             if curse_descriptors[0] != "": #Check if curse descriptors are empty (= no curses on the item). For some reason this doesn't work in the for loop.
                 for curse in curse_descriptors:
+                    curse = curse.replace("[", "").replace("]", "") 
                     curse_info = [x for x in GlobalVars.itemdatabase[1] if curse in x]
                     curses.append(curse_info)
         except IndexError: #This happens when a trailing item in the inventory has no curse. Just ignore it.
             pass
-        item_name = item_database_info[0]
-        #add item type and rarity
-        embed_string = f"*{item_database_info[1]}, {item_database_info[4]}*"
-        #add attunement to the string
-        if item_database_info[3].lower() == "yes":
-            embed_string += f" *(Requires Attunement)*\n\n"
-        elif "by" in item_database_info[3]:
-                spellcaster = item_database_info[3].replace("Yes, by ", "")
-                embed_string += f" *(Requires Attunement by {spellcaster})*\n\n"
-        else: embed_string += "\n\n"
+        
 
-        #add long description
-        embed_string += item_database_info[6] + "\n\n" + item_database_info[5]
-        #add default curse
-        if item_database_info[8] != "":
-            embed_string += f"\n\n**__Default curse:__** \n{item_database_info[8]}"
+        item_name = item_database_info[0]
+        item_type = item_database_info[1]
+        item_identifier = item_database_info[11]
+        price = int(item_database_info[2])
+        quantity_available = ""
+        curses_identifier = [""]  
+        rarity = item_database_info[4]
+        attunement_requirement = item_database_info[3]
+        mechanics = item_database_info[5]
+        flavour = item_database_info[6]
+        default_curse = item_database_info[8]
+        additional_reference = ""
+
+
+        embed_string, unused, potential_curses, potential_curse_names, curseCount = await showItem(item_name, item_type, price, quantity_available, curses_identifier, rarity, attunement_requirement, mechanics, flavour, default_curse, additional_reference)
+
         #add additional curses
         if curses != []:
             embed_string += "\n\n**__Additional curses:__**\n"
             for curse in curses:
-                embed_string += f"\n**{curse[0][0]}**(Level {curse[0][1]} curse):\n{curse[0][2]}\n"
+                embed_string += f"\n**{curse[0][0]}** (Level {curse[0][1]} curse):\n{curse[0][2]}\n"
 
         item_embed = discord.Embed(title=f"Item Info for {item_name}", description=embed_string, colour=embcol)
         await message.channel.send(embed = item_embed)
+        return
+
 
 #Guides the user through buying an item
 async def buyitem(message):
@@ -426,7 +404,8 @@ async def buyitem(message):
 
     #display Item.
     embed_string, potential_curses, potential_curses_string, potential_curse_names, curse_count = await showItem(item_name, item_type, price, quantity_available, curses_identifier, rarity, attunement, mechanics, flavour, default_curse, additional_reference)
-    
+    if quantity_available == "":
+            quantity_available = "Infinite"
     if quantity_available != "Infinite":
         if buyquant > int(quantity_available):
             await message.channel.send(embed=discord.Embed(title=f"You requested {buyquant} of this item, but only {quantity_available} are available. Please try again and request a lower amount.", colour = embcol))
@@ -1968,6 +1947,8 @@ async def addDezziesToPlayer(message, amount, playerID=None, playerName=None, wr
 
 async def showItem(item_name, item_type, price, quantity_available, curses_identifier, rarity, attunement_requirement, mechanics, flavour, default_curse, additional_reference, show_quant_and_price = True):
         #add item type and rarity
+    if item_type[0] == " ":
+        item_type = item_type[1:]
     embed_string = f"**{item_name}**\n\n*{item_type}, {rarity}*"
     #add attunement to the string
     if attunement_requirement.lower() == "yes":
@@ -2010,10 +1991,10 @@ async def showItem(item_name, item_type, price, quantity_available, curses_ident
             except IndexError:
                 await message.channel.send(embed=discord.Embed(title=f"Error in additem function.", description="Index error in additem function: Possibly a problem with the curses in the item sheet. Check for spaces that shouldn't be there, and correct identifiers. Please notify the bot gods.", colour = embcol))
             if "[" in curse:
-                potential_curses_string+= f"`{curseCount}:` **[Mandatory] {full_curse[0]}**: {full_curse[2]}\n\n"
+                potential_curses_string+= f"`{curseCount}:` **[Mandatory] {full_curse[0]}** Level {full_curse[1]} curse): {full_curse[2]}\n\n"
                 potential_curse_names.append(full_curse[0].replace("[", "").replace("]", ""))
             else:
-                potential_curses_string+= f"`{curseCount}:` **{full_curse[0]}**: {full_curse[2]}\n\n"
+                potential_curses_string+= f"`{curseCount}:` **{full_curse[0]}** (Level {full_curse[1]} curse): {full_curse[2]}\n\n"
                 potential_curse_names.append(full_curse[0])
             curseCount += 1
     return embed_string, potential_curses, potential_curses_string, potential_curse_names, curseCount
