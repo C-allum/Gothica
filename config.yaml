@@ -19,7 +19,6 @@ channels:
 economy:
   currency_multiplier_per_rp_word: 0.001
   currency_per_rp_word: 0.25
-  daily_interaction_count: 5
   daily_interaction_value: 300
   reactcashmoney: 100
   reactdz: 20

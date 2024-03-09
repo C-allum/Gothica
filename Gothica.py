@@ -3711,26 +3711,40 @@ async def on_message(message):
                 #-------THIS CODE IS SUPER MESSY AND NEEDS A SERIOUS REWORK----------
 
                 if not isbot:
+                    try:
+                        playerID = message.author.id
+                        author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(playerID) in x][0])
 
-                    f = lambda x: [""]if x == [] else x
-                    columnOne = [ f(x)[1] for x in GlobalVars.economyData]
+                    except:
+                        #New User
+                        await EconomyV2.addUserToEconomy(message.author.name, message.author.id)
+                        print(str(message.author.name) + " has been added to the economy at " + str(datetime.now()))
+                        return
+
                     #Check if member is already registered
-                    if str(message.author.id) in columnOne:
+                    if author_row_index != None:
+                        #Check if that user already got their reward in the last 24h
+                        print(f"Datetime.today() = {datetime.timestamp(datetime.today().replace(hour=0, minute=0, second=0, microsecond=0))}  , Datetime.now() = {datetime.timestamp(datetime.now())}")
+                        try:
+                            int(GlobalVars.economyData[author_row_index+3][1])
+                        except IndexError:
+                            GlobalVars.economyData[author_row_index+3].append(0)
+                        if int(GlobalVars.economyData[author_row_index+3][1]) < int(datetime.timestamp(datetime.today().replace(hour=0, minute=0, second=0, microsecond=0))):
+                            GlobalVars.economyData[author_row_index+3][1] = int(datetime.timestamp(datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)))
+                            await EconomyV2.addDezziesToPlayer(message, GlobalVars.config["economy"]["daily_interaction_value"],message.author.id, write_econ_sheet=True, send_message=False)
+
+                        
                         #check if we are in a channel that awards dezzies for posts
                         if message.channel.category_id in GlobalVars.config["channels"]["roleplay_categories_id"]:
                             #ignore edit calls
                             if not "?edit" in message.content:
-                                #Message reward
-                                if int(str(datetime.timestamp(datetime.now())).split(".")[0]) - int(prevtime) >= 300:
-                                    #calculate reward amount
-                                    charcount = len(message.content)
-                                    message_award = (math.floor(charcount/100) + random.randint(1,4))
+                                #calculate reward amount
+                                charcount = len(message.content)
+                                message_award = (math.floor(charcount/100) + random.randint(1,4))
 
-                                    #Set correct timestamp and add dezzies to player
-                                    author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(playerID) in x][0])
-                                    EconomyV2.EconSheet[author_row_index+1][0] = datetime.timestamp(datetime.now())
-                                    await EconomyV2.addDezziesToPlayer(message, message_award, message.author.id, write_econ_sheet=True, send_message=False)
-                                    TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.MessageReward, int(message_award))
+                                #Set and add dezzies to player
+                                await EconomyV2.addDezziesToPlayer(message, message_award, message.author.id, write_econ_sheet=True, send_message=False)
+                                TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.MessageReward, int(message_award))
 
                                 #Tracked Scenes Ping
                                 f = lambda x: [""]if x == [] else x
@@ -3762,14 +3776,26 @@ async def on_message(message):
                                         else: #If no status is present, add Notif Disabled as the default.
                                             scenearray[sceneindex] = scenearray[sceneindex] + (" Notifications:Disabled")
                                             dataup = "|".join(scenearray)
-                                            scene_row = scenedataIndex + 1
-                                            sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(scene_row)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[dataup]])).execute()
-                            
+                                            GlobalVars.economyData[scenedataIndex][0] = dataup
+                                            await EconomyV2.writeEconSheet(GlobalVars.economyData)
+                                            
+                        else:   #If we aren't in an RP category, adjust the dezzie payout
+                            try:
+                                prevtime = GlobalVars.economyData[author_row_index + 3][2]
+                            except IndexError:
+                                GlobalVars.economyData[author_row_index + 3].append(0)
+                            #Give users dezzies every 5 min if they interact in an OOC channel
+                            if int(str(datetime.timestamp(datetime.now())).split(".")[0]) - int(prevtime) >= 300:
+                                
+                                #calculate reward amount
+                                charcount = len(message.content)
+                                message_award = (math.floor(charcount/100) + random.randint(1,4))
 
-                    #New member
-                    else:
-                        await EconomyV2.addUserToEconomy(message.author.name, message.author.id)
-                        print(str(message.author.name) + " has been added to the economy at " + str(datetime.now()))
+                                #Set correct timestamp and add dezzies to player
+                                author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(playerID) in x][0])
+                                GlobalVars.economyData[author_row_index+3][2] = str(int(datetime.timestamp(datetime.now())))
+                                await EconomyV2.addDezziesToPlayer(message, message_award, message.author.id, write_econ_sheet=True, send_message=False)
+                                TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.MessageReward, int(message_award))                     
                         
                 else:   #Things we want to do if a bot posted the message
                     if not(client.user == message.author) and not("Avrae" == message.author.name) and message.channel.category_id in GlobalVars.config["channels"]["roleplay_categories_id"] and not (message.channel.type == discord.ChannelType.private_thread):
