@@ -343,11 +343,11 @@ async def on_message(message):
             elif (str(message.channel) == "character-creation" or str(message.channel.name) == "NPC Creation") and message.content.lower().lstrip("*").startswith("name") and not isbot:
                 await CharRegistry.charcreate(message)
 
-            #Character Edit Subroutine - On CharRegistry, untested
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "edit ") and not isbot:
-                await CharRegistry.charedit(message)
+            #Character Edit Subroutine - On CharRegistry
+            # elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "edit ") and not isbot:
+            #     await CharRegistry.charedit(message)
             
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "edit2") and not isbot:
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "edit") and not isbot:
                 await CharRegistry.charedit2(message)
 
             #Character Transfer Subroutine - On CharRegistry, untested
