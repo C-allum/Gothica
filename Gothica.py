@@ -32,153 +32,155 @@ async def on_ready():
     print(GlobalVars.config)
     print("Done.")
 
-    server = startmessage.guild
-    MVProle = discord.utils.get(server.roles, name="Staff MVP")
-    LFGrole = discord.utils.get(server.roles, name="Looking for Role Play")
-    temprole = discord.utils.get(server.roles, name="Temporary Role")
-    for a in server.members:
-        if MVProle in a.roles:
-            await a.remove_roles(MVProle)
-        if LFGrole in a.roles:
-            await a.remove_roles(LFGrole)
-        if temprole in a.roles:
-            await a.remove_roles(temprole)
+    if 1: #Set to 0 to skip startup routine
 
-    TransactionsDatabaseInterface.initTransactionsDataBase()
-    TupperDatabase.initTupperDatabase()
+        server = startmessage.guild
+        MVProle = discord.utils.get(server.roles, name="Staff MVP")
+        LFGrole = discord.utils.get(server.roles, name="Looking for Role Play")
+        temprole = discord.utils.get(server.roles, name="Temporary Role")
+        for a in server.members:
+            if MVProle in a.roles:
+                await a.remove_roles(MVProle)
+            if LFGrole in a.roles:
+                await a.remove_roles(LFGrole)
+            if temprole in a.roles:
+                await a.remove_roles(temprole)
 
-    #Economy V2 startup
-    if not liveVersion:
-        print("Fetching item database...")
-        
-        for a in range(len(itemlists)):
-            itemdatabase.append(itemlists[a].get_all_values())
-        print("... done\n")
+        TransactionsDatabaseInterface.initTransactionsDataBase()
+        TupperDatabase.initTupperDatabase()
 
-    print("Fetching a list of all players...")
-    global player_list 
-    player_list = await MiscellaneuosCommands.getPlayerNameList()
-    print("... done")
+        #Economy V2 startup
+        if not liveVersion:
+            print("Fetching item database...")
+            
+            for a in range(len(itemlists)):
+                itemdatabase.append(itemlists[a].get_all_values())
+            print("... done\n")
 
-    #------------------DezzieAwardPoolReset---------------------
+        print("Fetching a list of all players...")
+        global player_list 
+        player_list = await MiscellaneuosCommands.getPlayerNameList()
+        print("... done")
 
-    #Read old dezzie award reset date
-    economyResetDate = sheet.values().get(spreadsheetId = EconSheet, range = "D2", majorDimension='ROWS').execute().get("values")
+        #------------------DezzieAwardPoolReset---------------------
 
-    #Grab current date and time
-    today = datetime.now()
+        #Read old dezzie award reset date
+        economyResetDate = sheet.values().get(spreadsheetId = EconSheet, range = "D2", majorDimension='ROWS').execute().get("values")
 
-    #Prepare dates for Dezzie Award Pool Reset
-    try:
-        oldResetDateTime = int(economyResetDate[0][0])
-    except:
-        #Happens if the date isn't initialized on the econ sheet. Initialize it then.
-        print("Initial reset date added!")
-        resetDateInitVal = [[int(datetime.timestamp(datetime(2022, 10, 22)))]]
-        sheet.values().update(spreadsheetId = EconSheet, range = "D2", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=resetDateInitVal)).execute()
-        oldResetDateTime = resetDateInitVal[0][0]
+        #Grab current date and time
+        today = datetime.now()
 
-    if oldResetDateTime < datetime.timestamp(today):
+        #Prepare dates for Dezzie Award Pool Reset
+        try:
+            oldResetDateTime = int(economyResetDate[0][0])
+        except:
+            #Happens if the date isn't initialized on the econ sheet. Initialize it then.
+            print("Initial reset date added!")
+            resetDateInitVal = [[int(datetime.timestamp(datetime(2022, 10, 22)))]]
+            sheet.values().update(spreadsheetId = EconSheet, range = "D2", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=resetDateInitVal)).execute()
+            oldResetDateTime = resetDateInitVal[0][0]
 
-        #Write transaction data to spreadsheets CURRENTLY BROKEN!
-        #TransactionsDatabaseInterface.automaticTransactionDump()
+        if oldResetDateTime < datetime.timestamp(today):
 
-        #Calculate new timestamp
-        newResetDatetime = (today - timedelta(days=today.weekday()) + timedelta(days=7)).replace(hour=0, minute=0, second=0) #Takes todays date, subtracts the passed days of the week and adds 7, resulting in the date for next monday. Then replaces time component with 0
-        newResetDateTimestamp = int(datetime.timestamp(newResetDatetime))
+            #Write transaction data to spreadsheets CURRENTLY BROKEN!
+            #TransactionsDatabaseInterface.automaticTransactionDump()
 
-        #Set timestamp in data
-        newResetValue = [[newResetDateTimestamp]]
+            #Calculate new timestamp
+            newResetDatetime = (today - timedelta(days=today.weekday()) + timedelta(days=7)).replace(hour=0, minute=0, second=0) #Takes todays date, subtracts the passed days of the week and adds 7, resulting in the date for next monday. Then replaces time component with 0
+            newResetDateTimestamp = int(datetime.timestamp(newResetDatetime))
 
-
-
-        print("Last reset timestamp:" + str(datetime.fromtimestamp(oldResetDateTime)))
-        print("Next reset timestamp:" + str(datetime.fromtimestamp(newResetDateTimestamp)))
+            #Set timestamp in data
+            newResetValue = [[newResetDateTimestamp]]
 
 
 
-        #On reboot refresh dezzie pool of users
-        economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:A8000", majorDimension='ROWS').execute().get("values")
+            print("Last reset timestamp:" + str(datetime.fromtimestamp(oldResetDateTime)))
+            print("Next reset timestamp:" + str(datetime.fromtimestamp(newResetDateTimestamp)))
 
-        for i in range(5, len(economydata)-1, 4):
-            #Grab the name on the member
-            try:
-                name = economydata[i][0]
-            except IndexError:
-                print("Index error at: " + str(i) + ". Probably something broke in the economy sheet, and the registration of new people.")
-            userStillOnServer = 1
 
-            #Get Roles of the member. Attribute Error if they are not in the specified Guild (server)
-            try:
-                if not "#" in name:
-                    roles = client.get_guild(828411760365142076).get_member_named(name).roles
-                elif len(name.split('#')[1]) == 4:
-                    roles = client.get_guild(828411760365142076).get_member_named(name).roles
-                else:
-                    roles = client.get_guild(828411760365142076).get_member_named(name.split('#')[0]).roles
-            except AttributeError:
+
+            #On reboot refresh dezzie pool of users
+            economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:A8000", majorDimension='ROWS').execute().get("values")
+
+            for i in range(5, len(economydata)-1, 4):
+                #Grab the name on the member
+                try:
+                    name = economydata[i][0]
+                except IndexError:
+                    print("Index error at: " + str(i) + ". Probably something broke in the economy sheet, and the registration of new people.")
+                userStillOnServer = 1
+
+                #Get Roles of the member. Attribute Error if they are not in the specified Guild (server)
                 try:
                     if not "#" in name:
                         roles = client.get_guild(828411760365142076).get_member_named(name).roles
                     elif len(name.split('#')[1]) == 4:
-                        roles = client.get_guild(847968618167795782).get_member_named(name).roles
+                        roles = client.get_guild(828411760365142076).get_member_named(name).roles
                     else:
-                        roles = client.get_guild(847968618167795782).get_member_named(name.split('#')[0]).roles
+                        roles = client.get_guild(828411760365142076).get_member_named(name.split('#')[0]).roles
                 except AttributeError:
-                    userStillOnServer = 0
+                    try:
+                        if not "#" in name:
+                            roles = client.get_guild(828411760365142076).get_member_named(name).roles
+                        elif len(name.split('#')[1]) == 4:
+                            roles = client.get_guild(847968618167795782).get_member_named(name).roles
+                        else:
+                            roles = client.get_guild(847968618167795782).get_member_named(name.split('#')[0]).roles
+                    except AttributeError:
+                        userStillOnServer = 0
 
-                
+                    
 
-            dezziePool = 0
+                dezziePool = 0
 
-            #If they aren't on the server anymore, we can just not refresh their dezzie pool.
-            if userStillOnServer == 1:
-                #Base values
-                if "+3" in str(roles).lower():
-                    dezziePool = GlobalVars.config["economy"]["weeklydezziepoolplus3"]
-                elif "+2" in str(roles).lower():
-                    dezziePool = GlobalVars.config["economy"]["weeklydezziepoolplus2"]
-                elif "+1" in str(roles).lower():
-                    dezziePool = GlobalVars.config["economy"]["weeklydezziepoolplus1"]
-                else:
-                    dezziePool = GlobalVars.config["economy"]["weeklydezziepoolverified"]
-                #Bonus
-                if "licensed fucksmith" in str(roles).lower():
-                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonusfucksmith"]
-                if "server booster" in str(roles).lower():
-                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonusboost"]
-                if "server veteran" in str(roles).lower():
-                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonusveteran"]
-                if "staff" in str(roles).lower():
-                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonusstaff"]
-                if "patron tier 1" in str(roles).lower():
-                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront1"]
-                if "patron tier 2" in str(roles).lower():
-                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront2"]
-                if "patron tier 3" in str(roles).lower():
-                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront3"]
-                if "cult of the mistress" in str(roles).lower():
-                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront4"]
+                #If they aren't on the server anymore, we can just not refresh their dezzie pool.
+                if userStillOnServer == 1:
+                    #Base values
+                    if "+3" in str(roles).lower():
+                        dezziePool = GlobalVars.config["economy"]["weeklydezziepoolplus3"]
+                    elif "+2" in str(roles).lower():
+                        dezziePool = GlobalVars.config["economy"]["weeklydezziepoolplus2"]
+                    elif "+1" in str(roles).lower():
+                        dezziePool = GlobalVars.config["economy"]["weeklydezziepoolplus1"]
+                    else:
+                        dezziePool = GlobalVars.config["economy"]["weeklydezziepoolverified"]
+                    #Bonus
+                    if "licensed fucksmith" in str(roles).lower():
+                        dezziePool += GlobalVars.config["economy"]["weeklydezziebonusfucksmith"]
+                    if "server booster" in str(roles).lower():
+                        dezziePool += GlobalVars.config["economy"]["weeklydezziebonusboost"]
+                    if "server veteran" in str(roles).lower():
+                        dezziePool += GlobalVars.config["economy"]["weeklydezziebonusveteran"]
+                    if "staff" in str(roles).lower():
+                        dezziePool += GlobalVars.config["economy"]["weeklydezziebonusstaff"]
+                    if "patron tier 1" in str(roles).lower():
+                        dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront1"]
+                    if "patron tier 2" in str(roles).lower():
+                        dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront2"]
+                    if "patron tier 3" in str(roles).lower():
+                        dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront3"]
+                    if "cult of the mistress" in str(roles).lower():
+                        dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront4"]
 
-            try:
-                economydata[i+3][0] = dezziePool
-            except IndexError:
-                #Occurs when Dezzie pool is null. Initialize dezzie pool
                 try:
-                    economydata[i+3] = [dezziePool]
+                    economydata[i+3][0] = dezziePool
                 except IndexError:
-                    #Also triggers at the last person in the spreadsheet, as the cell is not just empty, but unreachable.
-                    pass
+                    #Occurs when Dezzie pool is null. Initialize dezzie pool
+                    try:
+                        economydata[i+3] = [dezziePool]
+                    except IndexError:
+                        #Also triggers at the last person in the spreadsheet, as the cell is not just empty, but unreachable.
+                        pass
 
 
-        #update dezzie pools
-        sheet.values().update(spreadsheetId = EconSheet, range = "A1:A8000", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=economydata)).execute()
+            #update dezzie pools
+            sheet.values().update(spreadsheetId = EconSheet, range = "A1:A8000", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=economydata)).execute()
 
-        #update sheet with new refresh time
-        sheet.values().update(spreadsheetId = EconSheet, range = "D2", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=newResetValue)).execute()
-        print("Weekly Dezzie Award Pool Reset!")
-    else:
-        print("It is not dezzie award pool reset time yet!")
+            #update sheet with new refresh time
+            sheet.values().update(spreadsheetId = EconSheet, range = "D2", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=newResetValue)).execute()
+            print("Weekly Dezzie Award Pool Reset!")
+        else:
+            print("It is not dezzie award pool reset time yet!")
 
     print("\n------------------------------------------------------\n")
     startup = False
@@ -343,8 +345,10 @@ async def on_message(message):
 
             #Character Edit Subroutine - On CharRegistry, untested
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "edit ") and not isbot:
-
                 await CharRegistry.charedit(message)
+            
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "edit2") and not isbot:
+                await CharRegistry.charedit2(message)
 
             #Character Transfer Subroutine - On CharRegistry, untested
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "transfer") and not isbot:

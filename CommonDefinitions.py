@@ -25,6 +25,7 @@ from discord import guild
 from discord import channel
 from discord import player
 from discord import embeds
+from discord.ui import View
 from discord.utils import get
 from discord.embeds import Embed
 from discord.enums import NotificationLevel
@@ -200,7 +201,7 @@ selopts = []
 
 column = ["F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","AA","AB"]
 
-
+startingslots = 5
 
 #----------------EconomyValues----------------
 
@@ -273,6 +274,9 @@ mazestartembed = discord.Embed(title = "March's Maddening Mazes!", description =
 mazechannel = [0, 0]
 mazelocks = []
 
+loadingtips = ["The ancient rivalry between Nurse and Maid is not actually ancient. It's pretty new, and everyone thinks they should just go on a date.", "Remember, you can use dezzie reacts to give out rewards to other community members without losing any of your cash. In roleplay channels the target gets a 25% bonus on top!", "There's nothing wrong with checking in periodically on your partners.", "You can use the :kinklist: emote on any message and Gothy will DM you their kink list, if they have filled it out!", "Hydrate. Or else.", "Want to RP but not sure if you want to make it canon? Try the voyeur's lounge!", "Loving yourself is just as important as loving others", "Runar first created the Potion of Reassignment to help Sophie transition. He has kept them regularly stocked ever since.", "Did you know you earn Dezzies just for being active in the RP channels?", "Players can use the %give command to give each other Dezzies, and even transfer items.", "Nubia and Nessa have been dating for half a century now. Their third, Jack is usually gone on 'Missionary' work.", "Madame Webb uses exclusively live models to display her clothes, and will occasionally provide discounts in exchange for modeling services. As long as you don't mind being paralyzed and on display for your entire shift.", "Sophie sought out the dungeon after her first attempt at being and adventurer left her trapped inside a mimic for more than a week. She has been breeding and domesticating them ever since!", "Nessa is a domestic abuse survivor, and will do anything in her power to help others in the same situation - just before she makes certain to teach their abuser a permanent lesson.", "Rumour has it that petshop owner Kat has been working on a ritual that can bond a willing humanoid to the caster like a familiar.", "The Xio took over the Cathedral after the false religion of the Keepers was exposed. They are typically welcoming to those who visits.", "The souls of the dead congregate in the haunted hallows, and ithose that stir them will find the dead relentless in persuit.", "Those of the waters know of the cruel ruler Conquest, that holds dominion over most of the waters outside of the Stormpirate Seas."]
+               
+               
 #---------------------------------------------
 
 def check(author):
