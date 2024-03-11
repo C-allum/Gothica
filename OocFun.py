@@ -243,7 +243,7 @@ async def emoteuncurse(message):
 
 async def laundry(message):
     if not "goblin" in message.content.lower():
-        roll = random.randint(1,20)
+        roll = random.randint(1,19)
         if roll == 1:
             res = "Oh no! The mimic washer got a little hungry and decided to grab you instead! It might have been worth considering purchasing one of our presto scrolls instead, at a *discounted* price? But don't worry! Step-Goblin can get you out, right? Right?"
         elif roll < 11:

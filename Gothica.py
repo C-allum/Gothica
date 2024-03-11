@@ -32,7 +32,7 @@ async def on_ready():
     print(GlobalVars.config)
     print("Done.")
 
-    if 1: #Set to 0 to skip startup routine
+    if 0: #Set to 0 to skip startup routine
 
         server = startmessage.guild
         MVProle = discord.utils.get(server.roles, name="Staff MVP")
@@ -4269,6 +4269,9 @@ async def on_message(message):
                 
             if "prestittydigitation" in message.content.lower() and message.author.bot:
                 await OocFun.laundry(message)
+            
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "tarot"):
+                await MiscellaneuosCommands.tarotfunc(message)
 
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "tour"):
                 await message.channel.send(embed = discord.Embed(title = TourNames[0], description = TourDescriptions[0], colour = embcol), view = MiscellaneuosCommands.TourView1())

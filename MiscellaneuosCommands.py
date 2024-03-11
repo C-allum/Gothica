@@ -1039,6 +1039,74 @@ async def mazerestore(message):
     await message.channel.send("Restored")
 
 
+#--------------Miscellaneous Commands-----------------
+    
+async def tarotfunc(message):
+
+    found = 0
+    index = ""
+    for a in range(len(tarot)):
+        if message.author == tarot[a][0]:
+            found = 1
+            index == a
+            await tarotdrawmany(a, message)
+            break
+    if found == 0:
+        index = len(tarot)
+        tarot.append([message.author, await tarotshuffle()])
+        await message.channel.send(embed = discord.Embed(title = "A Tarot deck has been generated for you.", description= "Use the following commands to manipulate it:\n\n`%tarot`: Draws a single card.\n`%tarotresolve`: Draws cards until revealing a number\n`%tarotshuffle`: Shuffles your deck.", colour = embcol))
+
+    if message.content.startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "tarotshuffle"):
+        tarot.pop(index).append([message.author, await tarotshuffle()])
+        await message.channel.send(embed = discord.Embed(title = "Your tarot deck has been shuffled.", description= "Use the following commands to manipulate it:\n\n`%tarot`: Draws a single card.\n`%tarotresolve`: Draws cards until revealing a number\n`%tarotshuffle`: Shuffles your deck.", colour = embcol))
+    elif message.content.startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "tarotresolve"):
+        await tarotdrawmany(index, message)
+    else:
+        await tarotdraw1(index, message)            
+
+async def tarotdraw1(ind, message):
+    drawncard = tarot[ind][1][0][1:]
+    orientation = tarot[ind][1][0][0]
+
+    if orientation == "U":
+        orientation = "Upright"
+        effect = tarotupright[tarotcards.index(drawncard)]
+    else:
+        orientation = "Reverse"
+        effect = tarotreverse[tarotcards.index(drawncard)]
+    await message.channel.send(embed = discord.Embed(title = message.author.display_name + " has drawn a Tarot Card!", description = "You drew the " + str(drawncard) + " in the " + orientation + " orientation.\n\n***" + effect + "***", colour = embcol))
+    tarot[ind][1].append(random.choice(["U", "R"]) + str(tarot[ind][1].pop(0)[1:]))
+
+async def tarotdrawmany(ind, message):
+    drawnlist = []
+    for a in range(len(tarotcards)):
+        try:
+            drawncard = tarot[ind][1][0][1:]
+            orientation = tarot[ind][1][0][0]
+        
+            if orientation == "U":
+                orientation = "Upright"
+            else:
+                orientation = "Reverse"
+            drawnlist.append("**" + str(drawncard) + "**, " + orientation)
+            tarot[ind][1].append(random.choice(["U", "R"]) + str(tarot[ind][1].pop(0)[1:]))
+            try:
+                num = int(drawncard)
+                break
+            except ValueError:
+                pass
+        except TypeError:
+            pass
+    await message.channel.send(embed = discord.Embed(title = message.author.display_name + " has drawn Tarot Cards!", description = "You drew:\n" + "\n".join(drawnlist), colour = embcol))
+
+
+async def tarotshuffle():
+    unqcards = list(tarotcards)
+    random.shuffle(unqcards)
+    for a in range(len(unqcards)):
+        unqcards[a] = random.choice(["U", "R"]) + str(unqcards[a])
+    return(unqcards)
+
 #----------------View Classes----------------
 
 #This is the view class for a simple accept button.
