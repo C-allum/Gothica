@@ -1097,7 +1097,8 @@ async def tarotdrawmany(ind, message):
                 pass
         except TypeError:
             pass
-    await message.channel.send(embed = discord.Embed(title = message.author.display_name + " has drawn Tarot Cards!", description = "You drew:\n" + "\n".join(drawnlist), colour = embcol))
+    if drawnlist != []:
+        await message.channel.send(embed = discord.Embed(title = message.author.display_name + " has drawn Tarot Cards!", description = "You drew:\n" + "\n".join(drawnlist), colour = embcol))
 
 
 async def tarotshuffle():
