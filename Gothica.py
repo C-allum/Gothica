@@ -32,7 +32,7 @@ async def on_ready():
     print(GlobalVars.config)
     print("Done.")
 
-    if 0: #Set to 0 to skip startup routine
+    if 1: #Set to 0 to skip startup routine
 
         server = startmessage.guild
         MVProle = discord.utils.get(server.roles, name="Staff MVP")
