@@ -192,6 +192,12 @@ async def on_message(message):
     elif startup == True:
         return
 
+    #Staff is allowed to do commands in maintenance mode.
+    if GlobalVars.maintenance_mode == True and message.author.bot == False and not "staff" in str(message.author.roles).lower():
+        if message.content.startswith(GlobalVars.config["general"]["gothy_prefix"]):
+            message.channel.send("We are currently in maintenance mode. Please wait a moment and then try again.")
+        return
+
     if message.content.startswith(GlobalVars.config["general"]["gothy_prefix"]):
 
         messcomm = 1
@@ -1961,14 +1967,21 @@ async def on_message(message):
                 await MiscellaneuosCommands.scenes(message)
 
             #-------------------------------------Economy V2----------------------------------------
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "copyeconomy") and "staff" in str(message.author.roles).lower():
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "copyeconomy") and "staff" in str(message.author.roles).lower() and message.author.name == "artificer_dragon":
                 await EconomyV2.copyEconomy(message)
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "reloadeconomy") and "staff" in str(message.author.roles).lower():
                 await EconomyV2.loadEconomySheet()
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "reloadshops") and "staff" in str(message.author.roles).lower():
                 await EconomyV2.loadItemSheet()
-    
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "maintenance") and "staff" in str(message.author.roles).lower():
+                if GlobalVars.maintenance_mode == True:
+                    GlobalVars.maintenance_mode = False
+                else:
+                    GlobalVars.maintenance_mode = True
             #New economy commands (EconomyV2)
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~test"):
+                oldEconData = sheet.values().get(spreadsheetId = EconSheet, range = "A1:GZ8000", majorDimension='ROWS').execute().get("values")
+                await EconomyV2.computeAllLevenshteinDistancesOldEconItems(message, oldEconData)
 
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~shop"):
                     await EconomyV2.shop(message)
@@ -3723,8 +3736,8 @@ async def on_message(message):
 
                     #Check if member is already registered
                     if author_row_index != None:
+                        #-----DAILY REWARD-------
                         #Check if that user already got their reward in the last 24h
-                        print(f"Datetime.today() = {datetime.timestamp(datetime.today().replace(hour=0, minute=0, second=0, microsecond=0))}  , Datetime.now() = {datetime.timestamp(datetime.now())}")
                         try:
                             int(GlobalVars.economyData[author_row_index+3][1])
                         except IndexError:
@@ -3732,15 +3745,18 @@ async def on_message(message):
                         if int(GlobalVars.economyData[author_row_index+3][1]) < int(datetime.timestamp(datetime.today().replace(hour=0, minute=0, second=0, microsecond=0))):
                             GlobalVars.economyData[author_row_index+3][1] = int(datetime.timestamp(datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)))
                             await EconomyV2.addDezziesToPlayer(message, GlobalVars.config["economy"]["daily_interaction_value"],message.author.id, write_econ_sheet=True, send_message=False)
+                            TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.DailyInteraction, int(GlobalVars.config["economy"]["daily_interaction_value"]))
 
-                        
+
+                        #---------RP REWARD AND NOTIFICATIONS--------------
                         #check if we are in a channel that awards dezzies for posts
                         if message.channel.category_id in GlobalVars.config["channels"]["roleplay_categories_id"]:
                             #ignore edit calls
                             if not "?edit" in message.content:
                                 #calculate reward amount
                                 charcount = len(message.content)
-                                message_award = (math.floor(charcount/100) + random.randint(1,4))
+                                #TODO: Do some more elaborate math on the RP rewards.
+                                message_award = math.floor(charcount/20) * (1+charcount * GlobalVars.config["economy"]["currency_multiplier_per_rp_word"]) + GlobalVars.config["economy"]["fixed_currecy_per_rp_message"]
 
                                 #Set and add dezzies to player
                                 await EconomyV2.addDezziesToPlayer(message, message_award, message.author.id, write_econ_sheet=True, send_message=False)
@@ -3778,24 +3794,25 @@ async def on_message(message):
                                             dataup = "|".join(scenearray)
                                             GlobalVars.economyData[scenedataIndex][0] = dataup
                                             await EconomyV2.writeEconSheet(GlobalVars.economyData)
-                                            
+                         #----------OOC REWARD--------------                   
                         else:   #If we aren't in an RP category, adjust the dezzie payout
                             try:
                                 prevtime = GlobalVars.economyData[author_row_index + 3][2]
                             except IndexError:
                                 GlobalVars.economyData[author_row_index + 3].append(0)
+                                prevtime = 0
                             #Give users dezzies every 5 min if they interact in an OOC channel
                             if int(str(datetime.timestamp(datetime.now())).split(".")[0]) - int(prevtime) >= 300:
                                 
                                 #calculate reward amount
                                 charcount = len(message.content)
-                                message_award = (math.floor(charcount/100) + random.randint(1,4))
+                                message_award = math.floor(charcount/100) + GlobalVars.config["economy"]["fixed_currecy_per_ooc_message"]
 
                                 #Set correct timestamp and add dezzies to player
                                 author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(playerID) in x][0])
                                 GlobalVars.economyData[author_row_index+3][2] = str(int(datetime.timestamp(datetime.now())))
-                                await EconomyV2.addDezziesToPlayer(message, message_award, message.author.id, write_econ_sheet=True, send_message=False)
-                                TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.MessageReward, int(message_award))                     
+                                await EconomyV2.addDezziesToPlayer(message, message_award, message.author.id, write_econ_sheet=False, send_message=False) #We don't write the economy back for every OOC message.
+                                TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.OOCMessageReward, int(message_award))                     
                         
                 else:   #Things we want to do if a bot posted the message
                     if not(client.user == message.author) and not("Avrae" == message.author.name) and message.channel.category_id in GlobalVars.config["channels"]["roleplay_categories_id"] and not (message.channel.type == discord.ChannelType.private_thread):

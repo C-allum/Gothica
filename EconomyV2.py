@@ -228,11 +228,14 @@ async def inventory(message):
 
     #Get list of all items
     i, item_list = await showInventoryAndChooseItem(message, author_row_index, "\n\nFor more information about an item and its curses, enter the according number. This message will time out in 30 seconds.")
-    if i == False and i != 0:
+    if i == -1:
         return
     if i >= 0:
         #Provide information about the item and it's curses.
-        item_database_info = [x for x in GlobalVars.itemdatabase[0] if item_list[i] in x][0]
+        try:
+            item_database_info = [x for x in GlobalVars.itemdatabase[0] if item_list[i] in x][0]
+        except TypeError:
+            print(f"Error with item: {item_list[i]}")
         curses = []
         try:
             curse_descriptors = player_inventory[2][i + 2] #+2 becasue the first two entries are player info
@@ -464,7 +467,7 @@ async def buyitem(message):
                 TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.Buy, price * buyquant)
 
             else:
-                await message.channel.send(embed=discord.Embed(title="Not enough funds!",description="Your funds are insufficient to buy this item!", colour = embcol))
+                await message.channel.send(embed=discord.Embed(title="Not enough funds!",description=f"Your funds are insufficient to buy this item! You have {old_balance}{dezzieemj}, and the item(s) cost {price*buyquant}{dezzieemj}", colour = embcol))
         else:
             await message.channel.send(embed=discord.Embed(title="Buy process cancelled!", colour = embcol))
     except TypeError:
@@ -501,7 +504,7 @@ async def sellitem(message):
 
     #Show inventory to select item
     i, item_list = await showInventoryAndChooseItem(message, author_inventory_row_index, "\n\n__To choose which item to sell, enter the according number.__ This message will time out in 30 seconds.")
-    if i == False:
+    if i == -1:
         return
     if i >= 0:
         i = i+2 #Because the first two columns are for personal info.
@@ -627,7 +630,7 @@ async def giveitem(message):
 
     #Show inventory to select item
     i, item_list = await showInventoryAndChooseItem(message, author_inventory_row_index, "\n\nTo choose which item to sell, enter the according number. This message will time out in 30 seconds.")
-    if i == False:
+    if i == -1:
         if i == 0:
             pass
         else:
@@ -1041,8 +1044,8 @@ async def giveMoney(message):
     if await removeDezziesFromPlayerWithoutMessage(amount, message.author.id):
         await addDezziesToPlayer(message, int(amount), playerID=recipient_id, write_econ_sheet=True, send_message=False)
         await message.channel.send(embed=discord.Embed(title=f"{message.author.name} has given {amount}{dezzieemj} to {recipient_name}!", description=f"{message.author.name} now has {GlobalVars.economyData[author_row_index+1][1]}{dezzieemj}\n\n{recipient_name} now has {GlobalVars.economyData[recipient_row_index+1][1]}{dezzieemj}"))
-        if int(amount) > 15000:
-            await client.get_channel(918257057428279326).send(embed=discord.Embed(title = message.author.name + f" gave {amount} Dezzies to " + recipient_name, url=message.jump_url))
+        #Log give commands.
+        await client.get_channel(918257057428279326).send(embed=discord.Embed(title = message.author.name + f" gave {amount} Dezzies to " + recipient_name, url=message.jump_url))
         
         TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.Give, -amount)
         TransactionsDatabaseInterface.addTransaction(recipient_name, TransactionsDatabaseInterface.DezzieMovingAction.Give, amount)
@@ -1079,7 +1082,7 @@ async def useitem(message):
 
     #Get list of all items
     i, item_list = await showInventoryAndChooseItem(message, author_row_index, "\n\nTo select an item to use, enter the according number. This message will time out in 30 seconds.")
-    if i == False and i != 0:
+    if i == -1:
         return
     #Show chosen item
     if i >= 0:
@@ -1148,7 +1151,7 @@ async def money(message):
     leaderboard_list = []
     i = 5
     while i < len(GlobalVars.economyData):
-        leaderboard_list.append([GlobalVars.economyData[i][0], GlobalVars.economyData[i+1][1]])
+        leaderboard_list.append([GlobalVars.economyData[i][0], int(GlobalVars.economyData[i+1][1])])
         i += 4
     sorted(leaderboard_list,key=lambda l:l[1], reverse=True)
     user_leaderboard_rank = leaderboard_list.index([a for a in leaderboard_list if message.author.name == a[0]][0])
@@ -1159,7 +1162,7 @@ async def leaderboard(message):
     leaderboard_list = []
     i = 5
     while i < len(GlobalVars.economyData):
-        leaderboard_list.append([GlobalVars.economyData[i][0], GlobalVars.economyData[i+1][1]])
+        leaderboard_list.append([GlobalVars.economyData[i][0], int(GlobalVars.economyData[i+1][1])])
         i += 4
     sorted(leaderboard_list,key=lambda l:l[1], reverse=True)
     leaderboard_list = leaderboard_list[0:20]
@@ -1683,30 +1686,31 @@ async def incomeWeek(message):
 
 
 async def copyEconomy(message):
+    GlobalVars.economyData = sheet.values().get(spreadsheetId = inventorysheet, range = "A1:E5", majorDimension='ROWS').execute().get("values")
+    GlobalVars.inventoryData = sheet.values().get(spreadsheetId = inventorysheet, range = "Inventories!A1:E7", majorDimension = 'ROWS').execute().get("values")
 
-    newSheet = message.content.split(" ")[-1]
-    await loadEconomySheet()
-    kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
-    newEconData = sheet.values().get(spreadsheetId = newSheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
-    newPlayerInvs = sheet.values().get(spreadsheetId = newSheet, range = "Inventories!A1:GZ2000", majorDimension='ROWS').execute().get("values")
+    oldSheet = message.content.split(" ")[-1]
+    kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ8000", majorDimension='ROWS').execute().get("values")
+    oldEconData = sheet.values().get(spreadsheetId = oldSheet, range = "A1:GZ8000", majorDimension='ROWS').execute().get("values")
 
     members = message.guild.members #Fetch the memberlist of the server we are in.
     i = 5
-    while i < len(GlobalVars.economyData):
-        #Add the fields for each player
-        newEconData.append([GlobalVars.economyData[i][0]]) #Name
-        
-        try: #If they have never RP-messaged, special treatment
-            newEconData.append([GlobalVars.economyData[i + 1][0]]) #LastMessageRewardTime
-        except IndexError:
-            newEconData.append([""])
-        newEconData[i+1].append(GlobalVars.economyData[i][1]) #Dezzies
-        try: #If they have no scenes list, special treatment
-            newEconData.append([GlobalVars.economyData[i + 2][0]]) #Scenes List
-        except IndexError:
-            newEconData.append([""])
-        newEconData.append([GlobalVars.economyData[i + 3][0]])
+    while i < len(oldEconData):
+        name = oldEconData[i][0] #Name
 
+        try: #If they have never RP-messaged, special treatment
+            last_message_reward = oldEconData[i + 1][0] #LastMessageRewardTime
+        except IndexError:
+            last_message_reward = ""
+        try: #If they have no scenes list, special treatment
+            scenes_list = oldEconData[i + 2][0] #Scenes List
+        except IndexError:
+            scenes_list= ""
+        try:
+            weekly_dezzie_pool = oldEconData[i + 3][0] #Dezzie pool
+        except IndexError:
+            weekly_dezzie_pool = ""
+        dezzies = oldEconData[i][1] #Dezzies
 
         #Add Levels in for the +1/+2/+3 roles, as well as the character slots.
         user = None
@@ -1714,6 +1718,8 @@ async def copyEconomy(message):
             user = discord.utils.find(lambda m: m.name == name, members) #Find the user we are currently copying.
         except:
             print(f"Couldn't find user {name} in the server.")
+            i += 4
+            continue
 
         additional_slots = 0
         if user != None:
@@ -1723,29 +1729,82 @@ async def copyEconomy(message):
                 additional_slots = 2
             if "+3" in str(user.roles).lower():
                 additional_slots = 3
-                
-        newEconData[i+2].append(additional_slots)
+
+        character_slots = additional_slots
 
         #Add user ID to the economy sheet for future reference
         index = []
-        name = GlobalVars.economyData[i][0]
         if user != None:
             user_id = user.id
-            newEconData[i].append(user_id)
-        elif any(name in sublist for sublist in kinkdata):    #See if we can grab the discord ID from the kinklist in case that the person isnt on the server anymore but might return.
-            indexLine = [sublist2 for sublist2 in kinkdata if name in sublist2][0]
-            index.append(kinkdata.index(indexLine))
-            index.append(indexLine.index(newEconData[i][0]))
+        else:
+            print(f"Couldn't find user {name} in the server.")
+            i += 4
+            continue
 
-            newEconData[i+1].append(kinkdata[index[0]][index[1] + 1])
-        #Port the items
+        if user.discriminator != "0":
+            print(f"User {name} still has an old username. Skipping.")
+            i += 4
+            continue
         
+        await addUserToEconomy(name, user_id, last_message_reward, dezzies, scenes_list, character_slots, weekly_dezzie_pool)
+        
+        #Port the items
 
+        j = 2
+        while j < len(oldEconData[i]):
+            if oldEconData[i][j] == "":
+                break
+            itemname = oldEconData[i][j].split("|")[0]
+            try:
+                amount = oldEconData[i][j].split("|")[1]
+            except IndexError:
+                amount = 1
+                print(f"Item {itemname} had no quantity attached.")
+
+            if itemname[0].isalpha() == False:
+                itemname = itemname[1:]
+            if "EasterEgg:964636527432978482" in itemname:
+                itemname = itemname.split("-")[0][0:-1]
+            new_item = await matchStringToItemBase(itemname, 1, add_item_name_in_list=True)
+            if new_item[0][1] >= 89.0:
+                new_item_name = new_item[0][0]
+            else:
+                #Manual matching goes here.
+                new_item_name = "Scroll03"
+                
+            user_inventory_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if str(user_id) in x][0])
+            item_identifier = GlobalVars.itemdatabase[0][GlobalVars.itemdatabase[0].index([x for x in GlobalVars.itemdatabase[0] if new_item_name in x][0])][11]
+            await addItemToInventory(user_inventory_index, item_identifier, amount, "", "")
+            j += 1
         i+=4
     #Write PlayerInfo sheet
-    sheet.values().update(spreadsheetId = newSheet, range = "A1:ZZ8000", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=newEconData)).execute()
+    await writeEconSheet(GlobalVars.economyData)
     #Write Inventory Sheet
-    sheet.values().update(spreadsheetId = newSheet, range = "Inventories!A1:ZZ8000", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=newPlayerInvs)).execute()
+    await writeInvetorySheet(GlobalVars.inventoryData)
+
+async def computeAllLevenshteinDistancesOldEconItems(message, oldEconData):
+    item_match_list = []
+    i = 5
+    while i < len(oldEconData):
+        j = 2
+        while j < len(oldEconData[i]):
+            itemname = oldEconData[i][j].split("|")[0]
+            if "EasterEgg:964636527432978482" in itemname:
+                itemname = itemname.split("-")[0][0:-1]
+            if itemname[0].isalpha() == False:
+                itemname = itemname[1:]
+            item_match_list.append((await matchStringToItemBase(itemname, 1, add_item_name_in_list=True))[0])
+            j += 1
+        i += 4
+    sorted_list = sorted(item_match_list, key=lambda l:l[1], reverse=True)
+    #remove duplicates
+    res = []
+    [res.append(x) for x in sorted_list if x not in res]
+    res = [[x[3], x[0], x[1], x[2]] for x in res]
+    with open("output.txt", "a",encoding="utf8") as f:
+        for element in res:
+            print(element)
+            print(element, file=f)
 
 async def addUserToEconomy(name, id, last_message_time = datetime.timestamp(datetime.now()), total_dezzies = 0, scenes_list = "", additional_charslots = 0, weekly_award_pool = 500):
     async with economy_lock:
@@ -1760,15 +1819,16 @@ async def addUserToEconomy(name, id, last_message_time = datetime.timestamp(date
         GlobalVars.economyData[-1].append(additional_charslots)
         #Line 4: Weekly award pool and an empty field for the new dailies system.
         GlobalVars.economyData.append([weekly_award_pool])
-        GlobalVars.economyData[-1].append("n/a")
+        GlobalVars.economyData[-1].append(0)
         #-----------------Inventory------------
-        while (len(GlobalVars.inventoryData )- 7) % 6 != 5:
-            GlobalVars.inventoryData.append([""])
+        if len(GlobalVars.inventoryData) != 7:
+            while (len(GlobalVars.inventoryData )- 7) % 6 != 5:
+                GlobalVars.inventoryData.append([""])
         ##Line 1: Name & ID
         GlobalVars.inventoryData.append([name])
         GlobalVars.inventoryData[-1].append(str(id))
-    await writeEconSheet(GlobalVars.economyData)
-    await writeInvetorySheet(GlobalVars.inventoryData)
+    #await writeEconSheet(GlobalVars.economyData)
+    #await writeInvetorySheet(GlobalVars.inventoryData)
     return
 
 
@@ -1805,7 +1865,8 @@ async def writeInvetorySheet(values, range = "A1:ZZ8000"):
         sheet.values().update(spreadsheetId = inventorysheet, range = "Inventories!" + range, valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values= values)).execute()
 
 async def loadItemSheet():
-    itemsheet = gc.open_by_key("17M2FS5iWchszIoimqNzk6lzJMOVLBWQgEZZKUPQuMR8") #New for economy rewrite
+    #itemsheet = gc.open_by_key("17M2FS5iWchszIoimqNzk6lzJMOVLBWQgEZZKUPQuMR8") #New for economy rewrite
+    itemsheet = gc.open_by_key("1rS4yTmVtaaCZEbfyAAEkB3KnVC_jkI9e2zhSI0AA7ws") #New for economy rewrite
     itemlists = itemsheet.worksheets()
     for a in range(len(itemlists)):
             GlobalVars.itemdatabase.append(itemlists[a].get_all_values())
@@ -1850,14 +1911,19 @@ async def stringMatchTest(message):
 
 #Receives a string that represents an item name, and an integer that represents the amount of results desired. Returns a list of lists. Each entry
 #shows one potential item candidate in the form of [name, levenshtein distance score, unique id]
-async def matchStringToItemBase(item_name, top_n_results):
+async def matchStringToItemBase(item_name, top_n_results, add_item_name_in_list = False):
     levenshtein_tuple_list = []
     for entry in GlobalVars.itemdatabase[0][1:]:
         #Maybe do a combination of ratio and partial ratio here to favour stuff like collars appearing when "collar" is the search word?
+        
         levenshtein_distance_partial = fuzz.partial_token_set_ratio(entry[0].lower(), item_name.lower())
         levenshtein_distance_complete = fuzz.ratio(entry[0].lower(), item_name.lower())
         levenshtein_distance = levenshtein_distance_complete * 0.5 + levenshtein_distance_partial * 0.5
-        levenshtein_tuple_list.append([entry[0], levenshtein_distance, entry[11]])
+        if add_item_name_in_list == True:
+            levenshtein_tuple_list.append([entry[0], levenshtein_distance, entry[11], item_name])
+        else:
+            levenshtein_tuple_list.append([entry[0], levenshtein_distance, entry[11]])
+
     sorted_list = sorted(levenshtein_tuple_list,key=lambda l:l[1], reverse=True)
     return sorted_list[:top_n_results]
 
@@ -1970,7 +2036,8 @@ async def showItem(item_name, item_type, price, quantity_available, curses_ident
         embed_string += flavour
     #add additional reference
     if additional_reference != "":
-        embed_string += f"\n\n{additional_reference}"
+        add_ref_data = [x for x in GlobalVars.itemdatabase[2] if additional_reference.replace("[", "").replace("]", "") in x][0]
+        embed_string += f"\n\n**{add_ref_data[0]}**: {add_ref_data[1]}"
     #add default curse
     if default_curse != "":
         embed_string += f"**\n\n__Default curse:__** \n{default_curse}"
@@ -2073,7 +2140,9 @@ async def addItemToPlayerWithCurseFromShop(message, playerID, itemID, amount, sh
         return rolled_curses
 
 async def addItemToInventory(recipient_inventory_row_index, item_identifier, quantity, curses, additional_reference):
-
+    if int(quantity) <= 0:
+        print("Quantity must be above 0")
+        return
     #Add item to recipient inventory
     try:
         item_match = -1
@@ -2091,7 +2160,7 @@ async def addItemToInventory(recipient_inventory_row_index, item_identifier, qua
                     item_match = j
         if item_match != -1:
                 #Add +amount to the item quantity.
-            GlobalVars.inventoryData[recipient_inventory_row_index + 1][item_match] = int(GlobalVars.inventoryData[recipient_inventory_row_index + 1][item_match]) + quantity
+            GlobalVars.inventoryData[recipient_inventory_row_index + 1][item_match] = int(GlobalVars.inventoryData[recipient_inventory_row_index + 1][item_match]) + int(quantity)
         else: 
             GlobalVars.inventoryData[recipient_inventory_row_index].append(item_identifier)
             while len(GlobalVars.inventoryData) < recipient_inventory_row_index + 3:    #Enlarge the inventory sheet if the last person on it is trying to buy an item, and their additional cells arent on it yet
@@ -2217,11 +2286,11 @@ async def showInventoryAndChooseItem(message, author_row_index, embed_bottom_not
         except TypeError or ValueError:
             await message.channel.send(embed=discord.Embed(title="Selection Invalid",description="You must enter an integer", colour = embcol))
             await msg.delete()
-            return False, None
+            return -1, None
     except asyncio.TimeoutError:
         await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
         await message.delete()
-        return False, None
+        return -1, None
     return i, item_list
 
 async def getUserNamestr(message):

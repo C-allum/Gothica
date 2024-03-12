@@ -118,8 +118,10 @@ else:
     #newEconsheet
     inventorysheet = "15u6xzZsY5mZAUVmXPolRqUkPeQcGFH1_H-sNCjfNhNM"
 
-    itemsheetID = "17M2FS5iWchszIoimqNzk6lzJMOVLBWQgEZZKUPQuMR8"
-    itemsheet = gc.open_by_key("17M2FS5iWchszIoimqNzk6lzJMOVLBWQgEZZKUPQuMR8") #New for economy rewrite
+    #itemsheetID = "17M2FS5iWchszIoimqNzk6lzJMOVLBWQgEZZKUPQuMR8"
+    #itemsheet = gc.open_by_key("17M2FS5iWchszIoimqNzk6lzJMOVLBWQgEZZKUPQuMR8") #New for economy rewrite
+    itemsheetID = "1rS4yTmVtaaCZEbfyAAEkB3KnVC_jkI9e2zhSI0AA7ws"
+    itemsheet = gc.open_by_key("1rS4yTmVtaaCZEbfyAAEkB3KnVC_jkI9e2zhSI0AA7ws") #New for economy rewrite
     itemlists = itemsheet.worksheets()
 
     encountersheet = "1poNQfcqLqkiK9NaKBqNOk_DDUsTr8GuBEVQP_uQcjeg" #No change as yet

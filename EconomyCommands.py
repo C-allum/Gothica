@@ -809,7 +809,7 @@ async def dezReact(reaction):
                 else:
                     await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has " + str(newDezziePool) + dezzieemj + " in their dezzie award pool left for the week!", colour = embcol, url = mess.jump_url))
 
-                await client.get_channel(918257057428279326).send(givename + " awarded Dezzies to " + targetName)
+                await client.get_channel(918257057428279326).send(embed=discord.Embed(title = givename + " awarded Dezzies to " + targetName), colour = embcol, url = mess.jump_url)
 
             #User has less dezzies in their pool than they reacted with
             elif prevDezziePool > 0:
@@ -822,7 +822,7 @@ async def dezReact(reaction):
 
                 sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(giverow+3)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newDezziePool]])).execute()
                 await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
-                await client.get_channel(918257057428279326).send(givename + " awarded Dezzies to " + targetName)
+                await client.get_channel(918257057428279326).send(embed=discord.Embed(title = givename + " awarded Dezzies to " + targetName), colour = embcol, url = mess.jump_url)
 
             #User dezzie pool is empty:
             else:
@@ -936,7 +936,7 @@ async def rpDezReact(reaction):
                 else:
                     await client.get_channel(botchannel).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(reward) + dezzieemj + " to " + targetName + " for an RP message", description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has " + str(newDezziePool) + dezzieemj + " in their dezzie award pool left for the week! (RP Rewards award 25% more while costing the same!)", colour = embcol, url = mess.jump_url))
 
-                await client.get_channel(918257057428279326).send(givename + " awarded Dezzies to " + targetName)
+                await client.get_channel(918257057428279326).send(embed=discord.Embed(title = givename + " has awarded " + str(reward) + dezzieemj + " to " + targetName + " for an RP message", colour = embcol, url = mess.jump_url))
 
             #User has less dezzies in their pool than they reacted with
             elif prevDezziePool > 0:
@@ -949,7 +949,8 @@ async def rpDezReact(reaction):
 
                 sheet.values().update(spreadsheetId = EconSheet, range = str("A" + str(giverow+3)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[newDezziePool]])).execute()
                 await client.get_channel(botchannel).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(reward) + dezzieemj + " to " + targetName + " for an RP message", description = targetName + " now has " + str(recipNewTot) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
-                await client.get_channel(918257057428279326).send(givename + " awarded Dezzies to " + targetName)
+                await client.get_channel(918257057428279326).send(embed=discord.Embed(title = givename + " has awarded " + str(reward) + dezzieemj + " to " + targetName + " for an RP message", colour = embcol, url = mess.jump_url))
+
 
             #User dezzie pool is empty:
             else:

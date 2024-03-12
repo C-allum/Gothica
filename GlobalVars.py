@@ -12,3 +12,6 @@ inventoryData = None
 
 #Item sheet
 itemdatabase = []
+
+#Maintenance mode
+maintenance_mode = False

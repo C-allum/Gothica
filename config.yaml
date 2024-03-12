@@ -17,9 +17,11 @@ channels:
   - 1058951770870657166
   - 1008283892177965106
 economy:
-  currency_multiplier_per_rp_word: 0.001
+  currency_multiplier_per_rp_word: 0.00015
   currency_per_rp_word: 0.25
-  daily_interaction_value: 300
+  daily_interaction_value: 200
+  fixed_currecy_per_ooc_message: 2
+  fixed_currecy_per_rp_message: 10
   reactcashmoney: 100
   reactdz: 20
   reactmakeitrain: 200
