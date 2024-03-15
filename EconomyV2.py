@@ -1764,17 +1764,111 @@ async def copyEconomy(message):
             if itemname[0].isalpha() == False:
                 itemname = itemname[1:]
             if "EasterEgg:964636527432978482" in itemname:
-                itemname = itemname.split("-")[0][0:-1]
+                itemname = itemname.split("-")[0][0:-1]            
+            remappingList = [['Ring of Oras', 'ringGag001'],
+                ['Crest of Seduction', 'lustbrand016'],
+                ['Dancer’s Lingerie', 'haremRobes002'],
+                ["Dancer's Lingerie", 'haremRobes002'],
+                ['Mark of Obsession', 'lustbrand005'],
+                ['Crest of Obsession', 'lustbrand005'],
+                ['Rings of Shared Sensation', 'peircings004'],
+                ['Rod of Olympus', 'oversizedDildo002'],
+                ['Ring of Good Vibrations', 'cockRing002'],
+                ['Imperial Robes', 'robes003'],
+                ['Vampiric Clothes', 'fineClothes002'],
+                ['Living Silk Rope', 'silkRope001'],
+                ['Hell Hound Lingerie', 'lingerie012'],
+                ['Curse of Breeding', 'lustbrand010'],
+                ['Heels of Hobbling', 'shoes002'],
+                ['Naughty Cherub Lingerie', 'lingerie013'],
+                ['Shaft of Knowing', 'phallicShaft005'],
+                ['Mark of Seduction', 'lustbrand016'],
+                ['Corset of the Jorgumo', 'corset001'],
+                ['Curse of Stimulation', 'lustbrand007'],
+                ['Living Bedroll', 'bedroll001'],
+                ['Curse of Allure', 'lustbrand016'],
+                ['Plug of Untold Endurance', 'plug010'],
+                ['Silks of the Fallen Angel', 'lingerie013'],
+                ['Eager Faun Lingerie', 'lingerie011'],
+                ['Ninetale Fox Lingerie', 'lingerie010'],
+                ['Crest of Slavery', 'lustbrand014'],
+                ['Dildo of the Deep Ones', 'dildo001'],
+                ['Mask of Medical Secrets', 'mask002'],
+                ['Plug of Vacuous Attention', 'plug009'],
+                ['Armor of Bestiathropy', 'fetishArmor003'],
+                ['Genie’s Harem Robes', 'haremRobes001'],
+                ['Glass of Vacuous Desire', 'suctionGlass001'],
+                ['Ring of Oral Obsession', 'ringGag001'],
+                ['Flavormark Tattoo', 'tatoo008'],
+                ['Dwarven Manacles', 'manacles002'],
+                ['Chastity Belt of the Cuckold', 'collar010'],
+                ['Dildo of Memory (Small)', 'dildo003'],
+                ['Queen’s Futanari', 'doulbeDildo001'],
+                ['Siren’s Song (Spell Scroll)', 'spellScroll082'],
+                ['Ghostthorn Paddle', 'paddle001'],
+                ['Outsider', 'doulbeDildo001'],
+                ['Gyrobunny', 'otherItem004'],
+                ['Cultist’s Crown', 'miscCreature007'],
+                ['Confessional Robes', 'fineClothes003'],
+                ['Lubricate (Spell Scroll)', 'spellScroll051'],
+                ['Power Word Milk (spell scroll)', 'spellScroll049'],
+                ['Power Word Orgasm (spell scroll)', 'spellScroll065'],
+                ["Tali's Twinned Shaft (Spell Scroll)", 'spellScroll078'],
+                ['Moaning Mushrooms', 'miscCreature008']
+                ]
+            deleteList = [['Potion Of The Goliath', 'Potion of Vitality', 86.0, 'potion011'],
+                ['Collar Of The Good Girl', 'Collar of the Dullahan', 85.5, 'collar006'],
+                ["Callum's Heart", "Scroll of Vixen's Heat", 78.0, 'spellScroll098'],
+                ['Prestidildo', 'Bestial Armor', 55.0, 'fetishArmor003'],
+                ['Welcoming Ring Of The Inconsiderate', 'Ring of the Universal Breeder', 78.0, 'springEvent011']
+                ]
+            refundList = [['Demiplane Key', 'Dollmaker’s Key', 78.5, 'dagger005'],
+                ['Mask of the Hunt', 'Cask of Tentacles', 83.5, 'cask001'],
+                ['Tearless Lingerie', 'Chimeric Lingerie', 82.5, 'lingerie006'],
+                ['Gemstone Piercing', 'Hummingbird Piercing', 79.5, 'piercings001'],
+                ['Bingo Bango Bongos', 'Bag of Binding', 61.0, 'bag001'],
+                ['Statue of Will-I-Am D-Hoe', 'Catsuit of Displacement', 75.0, 'bodySuit001'],
+                ['Drowsilk Lingerie', 'Chimeric Lingerie', 82.5, 'lingerie006'],
+                ['Heels of Harming', 'Choker of Ruin', 80.0, 'collar003'],
+                ['Curse of Futanari', 'Cask of Time', 77.5, 'cask002'],
+                ['Xio Chrysalis', 'something', 0.0, 'something100']
+                ]
+            if itemname in str(remappingList): #These are the manual matchings because the item got renamed
+                item_identifier = remappingList[remappingList.index([x for x in remappingList if str(itemname) in x][0])][1]
+                itemname = GlobalVars.itemdatabase[0][GlobalVars.itemdatabase[0].index([x for x in GlobalVars.itemdatabase[0] if item_identifier in x][0])][0]
+            elif itemname in str(deleteList):
+                print(f"Skipped/Deleted item {itemname}")
+                continue
+            elif itemname in str(refundList):
+                #Find previous value and add to balance
+                oldEconData[i][j].split("|")[0]
+                amount = int(oldEconData[i+3][j])
+                await addDezziesToPlayer(message, amount, user_id, write_econ_sheet=False, send_message=False)
+                print(f"Skipped/Deleted item {itemname}")
+                continue
+
             new_item = await matchStringToItemBase(itemname, 1, add_item_name_in_list=True)
+
             if new_item[0][1] >= 89.0:
                 new_item_name = new_item[0][0]
             else:
                 #Manual matching goes here.
                 new_item_name = "Scroll03"
-                
+            additional_references = ""
+            if itemname.startswith("Mark of"):
+                additional_references = "lustBrand,nessaConsent"
+            if itemname.startswith("Curse"):
+                additional_references = "lustBrand"
+            if itemname.startswith("Crest of"):
+                additional_references = "lustBrand"
+
             user_inventory_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if str(user_id) in x][0])
-            item_identifier = GlobalVars.itemdatabase[0][GlobalVars.itemdatabase[0].index([x for x in GlobalVars.itemdatabase[0] if new_item_name in x][0])][11]
-            await addItemToInventory(user_inventory_index, item_identifier, amount, "", "")
+            try:
+                item_identifier = GlobalVars.itemdatabase[0][GlobalVars.itemdatabase[0].index([x for x in GlobalVars.itemdatabase[0] if new_item_name in x][0])][11]
+            except IndexError:
+                print("Oopsie!")
+                continue
+            await addItemToInventory(user_inventory_index, item_identifier, amount, "", additional_references)
             j += 1
         i+=4
     #Write PlayerInfo sheet
