@@ -18,7 +18,7 @@ import GlobalVars
 
 global startup
 startup = True
-#test
+
 @client.event
 async def on_ready():
     global startup
@@ -29,20 +29,22 @@ async def on_ready():
     await ConfigCommands.reload_config()
     print("Done.")
 
-    server = startmessage.guild
-    MVProle = discord.utils.get(server.roles, name="Staff MVP")
-    LFGrole = discord.utils.get(server.roles, name="Looking for Role Play")
-    temprole = discord.utils.get(server.roles, name="Temporary Role")
-    for a in server.members:
-        if MVProle in a.roles:
-            await a.remove_roles(MVProle)
-        if LFGrole in a.roles:
-            await a.remove_roles(LFGrole)
-        if temprole in a.roles:
-            await a.remove_roles(temprole)
+    if 1: #Set to 0 to skip startup routine
 
-    TransactionsDatabaseInterface.initTransactionsDataBase()
-    TupperDatabase.initTupperDatabase()
+        server = startmessage.guild
+        MVProle = discord.utils.get(server.roles, name="Staff MVP")
+        LFGrole = discord.utils.get(server.roles, name="Looking for Role Play")
+        temprole = discord.utils.get(server.roles, name="Temporary Role")
+        for a in server.members:
+            if MVProle in a.roles:
+                await a.remove_roles(MVProle)
+            if LFGrole in a.roles:
+                await a.remove_roles(LFGrole)
+            if temprole in a.roles:
+                await a.remove_roles(temprole)
+
+        TransactionsDatabaseInterface.initTransactionsDataBase()
+        TupperDatabase.initTupperDatabase()
 
     #Economy V2 startup
     print("Fetching item database...")
@@ -56,123 +58,123 @@ async def on_ready():
     #------------------DezzieAwardPoolReset---------------------
 
 
-    #Read old dezzie award reset date
-    economyResetDate = sheet.values().get(spreadsheetId = EconSheet, range = "D2", majorDimension='ROWS').execute().get("values")
+        #Read old dezzie award reset date
+        economyResetDate = sheet.values().get(spreadsheetId = EconSheet, range = "D2", majorDimension='ROWS').execute().get("values")
 
-    #Grab current date and time
-    today = datetime.now()
+        #Grab current date and time
+        today = datetime.now()
 
-    #Prepare dates for Dezzie Award Pool Reset
-    try:
-        oldResetDateTime = int(economyResetDate[0][0])
-    except:
-        #Happens if the date isn't initialized on the econ sheet. Initialize it then.
-        print("Initial reset date added!")
-        resetDateInitVal = [[int(datetime.timestamp(datetime(2022, 10, 22)))]]
-        sheet.values().update(spreadsheetId = EconSheet, range = "D2", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=resetDateInitVal)).execute()
-        oldResetDateTime = resetDateInitVal[0][0]
+        #Prepare dates for Dezzie Award Pool Reset
+        try:
+            oldResetDateTime = int(economyResetDate[0][0])
+        except:
+            #Happens if the date isn't initialized on the econ sheet. Initialize it then.
+            print("Initial reset date added!")
+            resetDateInitVal = [[int(datetime.timestamp(datetime(2022, 10, 22)))]]
+            sheet.values().update(spreadsheetId = EconSheet, range = "D2", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=resetDateInitVal)).execute()
+            oldResetDateTime = resetDateInitVal[0][0]
 
-    if oldResetDateTime < datetime.timestamp(today):
+        if oldResetDateTime < datetime.timestamp(today):
 
-        #Write transaction data to spreadsheets CURRENTLY BROKEN!
-        #TransactionsDatabaseInterface.automaticTransactionDump()
+            #Write transaction data to spreadsheets CURRENTLY BROKEN!
+            #TransactionsDatabaseInterface.automaticTransactionDump()
 
-        #Calculate new timestamp
-        newResetDatetime = (today - timedelta(days=today.weekday()) + timedelta(days=7)).replace(hour=0, minute=0, second=0) #Takes todays date, subtracts the passed days of the week and adds 7, resulting in the date for next monday. Then replaces time component with 0
-        newResetDateTimestamp = int(datetime.timestamp(newResetDatetime))
+            #Calculate new timestamp
+            newResetDatetime = (today - timedelta(days=today.weekday()) + timedelta(days=7)).replace(hour=0, minute=0, second=0) #Takes todays date, subtracts the passed days of the week and adds 7, resulting in the date for next monday. Then replaces time component with 0
+            newResetDateTimestamp = int(datetime.timestamp(newResetDatetime))
 
-        #Set timestamp in data
-        newResetValue = [[newResetDateTimestamp]]
-
-
-
-        print("Last reset timestamp:" + str(datetime.fromtimestamp(oldResetDateTime)))
-        print("Next reset timestamp:" + str(datetime.fromtimestamp(newResetDateTimestamp)))
+            #Set timestamp in data
+            newResetValue = [[newResetDateTimestamp]]
 
 
 
-        #On reboot refresh dezzie pool of users
-        economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:A8000", majorDimension='ROWS').execute().get("values")
+            print("Last reset timestamp:" + str(datetime.fromtimestamp(oldResetDateTime)))
+            print("Next reset timestamp:" + str(datetime.fromtimestamp(newResetDateTimestamp)))
 
-        for i in range(5, len(economydata)-1, 4):
-            #Grab the name on the member
-            try:
-                name = economydata[i][0]
-            except IndexError:
-                print("Index error at: " + str(i) + ". Probably something broke in the economy sheet, and the registration of new people.")
-            userStillOnServer = 1
 
-            #Get Roles of the member. Attribute Error if they are not in the specified Guild (server)
-            try:
-                if not "#" in name:
-                    roles = client.get_guild(828411760365142076).get_member_named(name).roles
-                elif len(name.split('#')[1]) == 4:
-                    roles = client.get_guild(828411760365142076).get_member_named(name).roles
-                else:
-                    roles = client.get_guild(828411760365142076).get_member_named(name.split('#')[0]).roles
-            except AttributeError:
+
+            #On reboot refresh dezzie pool of users
+            economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:A8000", majorDimension='ROWS').execute().get("values")
+
+            for i in range(5, len(economydata)-1, 4):
+                #Grab the name on the member
+                try:
+                    name = economydata[i][0]
+                except IndexError:
+                    print("Index error at: " + str(i) + ". Probably something broke in the economy sheet, and the registration of new people.")
+                userStillOnServer = 1
+
+                #Get Roles of the member. Attribute Error if they are not in the specified Guild (server)
                 try:
                     if not "#" in name:
                         roles = client.get_guild(828411760365142076).get_member_named(name).roles
                     elif len(name.split('#')[1]) == 4:
-                        roles = client.get_guild(847968618167795782).get_member_named(name).roles
+                        roles = client.get_guild(828411760365142076).get_member_named(name).roles
                     else:
-                        roles = client.get_guild(847968618167795782).get_member_named(name.split('#')[0]).roles
+                        roles = client.get_guild(828411760365142076).get_member_named(name.split('#')[0]).roles
                 except AttributeError:
-                    userStillOnServer = 0
+                    try:
+                        if not "#" in name:
+                            roles = client.get_guild(828411760365142076).get_member_named(name).roles
+                        elif len(name.split('#')[1]) == 4:
+                            roles = client.get_guild(847968618167795782).get_member_named(name).roles
+                        else:
+                            roles = client.get_guild(847968618167795782).get_member_named(name.split('#')[0]).roles
+                    except AttributeError:
+                        userStillOnServer = 0
 
-                
+                    
 
-            dezziePool = 0
+                dezziePool = 0
 
-            #If they aren't on the server anymore, we can just not refresh their dezzie pool.
-            if userStillOnServer == 1:
-                #Base values
-                if "+3" in str(roles).lower():
-                    dezziePool = GlobalVars.config["economy"]["weeklydezziepoolplus3"]
-                elif "+2" in str(roles).lower():
-                    dezziePool = GlobalVars.config["economy"]["weeklydezziepoolplus2"]
-                elif "+1" in str(roles).lower():
-                    dezziePool = GlobalVars.config["economy"]["weeklydezziepoolplus1"]
-                else:
-                    dezziePool = GlobalVars.config["economy"]["weeklydezziepoolverified"]
-                #Bonus
-                if "licensed fucksmith" in str(roles).lower():
-                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonusfucksmith"]
-                if "server booster" in str(roles).lower():
-                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonusboost"]
-                if "server veteran" in str(roles).lower():
-                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonusveteran"]
-                if "staff" in str(roles).lower():
-                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonusstaff"]
-                if "patron tier 1" in str(roles).lower():
-                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront1"]
-                if "patron tier 2" in str(roles).lower():
-                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront2"]
-                if "patron tier 3" in str(roles).lower():
-                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront3"]
-                if "cult of the mistress" in str(roles).lower():
-                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront4"]
+                #If they aren't on the server anymore, we can just not refresh their dezzie pool.
+                if userStillOnServer == 1:
+                    #Base values
+                    if "+3" in str(roles).lower():
+                        dezziePool = GlobalVars.config["economy"]["weeklydezziepoolplus3"]
+                    elif "+2" in str(roles).lower():
+                        dezziePool = GlobalVars.config["economy"]["weeklydezziepoolplus2"]
+                    elif "+1" in str(roles).lower():
+                        dezziePool = GlobalVars.config["economy"]["weeklydezziepoolplus1"]
+                    else:
+                        dezziePool = GlobalVars.config["economy"]["weeklydezziepoolverified"]
+                    #Bonus
+                    if "licensed fucksmith" in str(roles).lower():
+                        dezziePool += GlobalVars.config["economy"]["weeklydezziebonusfucksmith"]
+                    if "server booster" in str(roles).lower():
+                        dezziePool += GlobalVars.config["economy"]["weeklydezziebonusboost"]
+                    if "server veteran" in str(roles).lower():
+                        dezziePool += GlobalVars.config["economy"]["weeklydezziebonusveteran"]
+                    if "staff" in str(roles).lower():
+                        dezziePool += GlobalVars.config["economy"]["weeklydezziebonusstaff"]
+                    if "patron tier 1" in str(roles).lower():
+                        dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront1"]
+                    if "patron tier 2" in str(roles).lower():
+                        dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront2"]
+                    if "patron tier 3" in str(roles).lower():
+                        dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront3"]
+                    if "cult of the mistress" in str(roles).lower():
+                        dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront4"]
 
-            try:
-                economydata[i+3][0] = dezziePool
-            except IndexError:
-                #Occurs when Dezzie pool is null. Initialize dezzie pool
                 try:
-                    economydata[i+3] = [dezziePool]
+                    economydata[i+3][0] = dezziePool
                 except IndexError:
-                    #Also triggers at the last person in the spreadsheet, as the cell is not just empty, but unreachable.
-                    pass
+                    #Occurs when Dezzie pool is null. Initialize dezzie pool
+                    try:
+                        economydata[i+3] = [dezziePool]
+                    except IndexError:
+                        #Also triggers at the last person in the spreadsheet, as the cell is not just empty, but unreachable.
+                        pass
 
 
-        #update dezzie pools
-        sheet.values().update(spreadsheetId = EconSheet, range = "A1:A8000", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=economydata)).execute()
+            #update dezzie pools
+            sheet.values().update(spreadsheetId = EconSheet, range = "A1:A8000", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=economydata)).execute()
 
-        #update sheet with new refresh time
-        sheet.values().update(spreadsheetId = EconSheet, range = "D2", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=newResetValue)).execute()
-        print("Weekly Dezzie Award Pool Reset!")
-    else:
-        print("It is not dezzie award pool reset time yet!")
+            #update sheet with new refresh time
+            sheet.values().update(spreadsheetId = EconSheet, range = "D2", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=newResetValue)).execute()
+            print("Weekly Dezzie Award Pool Reset!")
+        else:
+            print("It is not dezzie award pool reset time yet!")
 
     print("\n------------------------------------------------------\n")
     startup = False
@@ -343,10 +345,12 @@ async def on_message(message):
             elif (str(message.channel) == "character-creation" or str(message.channel.name) == "NPC Creation") and message.content.lower().lstrip("*").startswith("name") and not isbot:
                 await CharRegistry.charcreate(message)
 
-            #Character Edit Subroutine - On CharRegistry, untested
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "edit ") and not isbot:
-
-                await CharRegistry.charedit(message)
+            #Character Edit Subroutine - On CharRegistry
+            # elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "edit ") and not isbot:
+            #     await CharRegistry.charedit(message)
+            
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "edit") and not isbot:
+                await CharRegistry.charedit2(message)
 
             #Character Transfer Subroutine - On CharRegistry, untested
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "transfer") and not isbot:
@@ -3543,21 +3547,29 @@ async def on_message(message):
                 else:
                     await message.add_reaction('♥️')
 
-            #Dating Game
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingjoin"):
-                await MiscellaneuosCommands.datingjoin(message)
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingsetup"):
-                await MiscellaneuosCommands.datingsetup(message)
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingfromfilerestore"):
-                await MiscellaneuosCommands.datingrestorefromfile(message)
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingrestore"):
-                await MiscellaneuosCommands.datingrestore(message)
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingend"):
-                await MiscellaneuosCommands.datingend(message)
+            # #Dating Game
+            # elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingjoin"):
+            #     await MiscellaneuosCommands.datingjoin(message)
+            # elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingsetup"):
+            #     await MiscellaneuosCommands.datingsetup(message)
+            # elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingfromfilerestore"):
+            #     await MiscellaneuosCommands.datingrestorefromfile(message)
+            # elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingrestore"):
+            #     await MiscellaneuosCommands.datingrestore(message)
+            # elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingend"):
+            #     await MiscellaneuosCommands.datingend(message)
+            # elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingmanual"):
+            #     await MiscellaneuosCommands.datingmanual(message)
+            # elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingcreatelists"):
+            #     await MiscellaneuosCommands.datingcreatelists(message)
 
+            # if str(message.channel.parent) == "blind-dates" and not "Gothica" in message.author.name:
+            #     await MiscellaneuosCommands.datingrelay(message)
 
-            if str(message.channel.parent) == "blind-dates" and not "Gothica" in message.author.name:
-                await MiscellaneuosCommands.datingrelay(message)
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "mazestart") and "staff" in str(message.author.roles).lower():
+                await MiscellaneuosCommands.mazestart(message)
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "mazerestore") and "staff" in str(message.author.roles).lower():
+                await MiscellaneuosCommands.mazerestore(message)
 
             #Timestamp Message
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "timestamp"):
@@ -3671,10 +3683,20 @@ async def on_message(message):
                         await message.channel.send(embed = discord.Embed(title = functionnames[a], description = functiondesc[a], colour = embcol))
                 await message.delete()
 
+            #elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "functionsetup"):
+            
+            # if message.channel.parent.name == "official-functions":
+            #     prevmess = [joinedMessages async for joinedMessages in message.channel.history(limit = 2, oldest_first= False)]
+            #     print(prevmess)
+                
+            if "prestittydigitation" in message.content.lower() and message.author.bot:
+                await OocFun.laundry(message)
+            
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "tarot"):
+                await MiscellaneuosCommands.tarotfunc(message)
 
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "tour"):
                 await message.channel.send(embed = discord.Embed(title = TourNames[0], description = TourDescriptions[0], colour = embcol), view = MiscellaneuosCommands.TourView1())
-
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "demo"):
                 await message.delete()
                 await message.channel.send(embed = discord.Embed(title = "Setting the scene in the Unlit Passageways!", description = "*A small door of fine oak panelling swings open to reveal a cosy bedchamber. The bed is a simple wrought iron frame with a comfortable looking mattress, flanked by small wooden bedside tables. The room is lit by a single torch in a sconce in the wall, which is spluttering low and almost out.*\n\n---------------------------------------------------------------------\n\nCasting Detect Magic in the room reveals a source of magic in the bedsheets and two in the right bedside table.\n\n---------------------------------------------------------------------\n\nItems inside the drawers on the left table:\n* One medium dildo\n* A set of red lacy lingerie\n\nItems inside the drawers on the right table:\n* A spell scroll, containing the spell 'Cure Wounds'\n* Upon a DC 14 *Investigation* Check: ||A false bottom in the drawer, revealing a Temporeal Collar of Wealth||\n\n---------------------------------------------------------------------\n\nCasting Identify on the bedsheets reveals that they are charmed to be luxuriosly comfortable Temporeal items. They are also cursed, such that anyone under them is subjected to ||Mantle of Agreability||\n\n---------------------------------------------------------------------\n\n*Temporeal items are magical temporary items, which vanish after 1d4 hours or if they are removed from the room in which they are found.*", colour = embcol))
