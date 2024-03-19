@@ -3528,6 +3528,9 @@ async def on_message(message):
                 await session.close()
                 await hook.delete()
 
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"] + "export")):
+                await MiscellaneuosCommands.export(message)
+
             #Impersonator React
             elif "gothica" in message.content.lower().replace("-","").replace(".","") or "thic goth" in message.content.lower().replace("-","").replace(".","").replace("cc","c") or "gothy" in message.content.lower().replace("-","").replace(".",""):
                 if message.author.name != "c_allum":
@@ -3541,61 +3544,20 @@ async def on_message(message):
                     await message.add_reaction('♥️')
 
             #Dating Game
-            elif (str(message.channel).startswith("Dating Game") and not isbot):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingjoin"):
+                await MiscellaneuosCommands.datingjoin(message)
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingsetup"):
+                await MiscellaneuosCommands.datingsetup(message)
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingfromfilerestore"):
+                await MiscellaneuosCommands.datingrestorefromfile(message)
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingrestore"):
+                await MiscellaneuosCommands.datingrestore(message)
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "datingend"):
+                await MiscellaneuosCommands.datingend(message)
 
-                if not message.content.startswith("TEST"):
 
-                    contestantno = str(message.channel).split("-")[1]
-
-                    if contestantno == str(message.channel).split("-")[1] == "1":
-
-                        mysterembed = discord.Embed(title = "Mystery Contestant 1", description = message.content, colour = 0x46D311)
-
-                        mysterembed.set_thumbnail(url = "https://cdn.discordapp.com/attachments/927298209183830066/989179789371928677/token_2_2.png")
-
-                    elif contestantno == str(message.channel).split("-")[1] == "2":
-
-                        mysterembed = discord.Embed(title = "Mystery Contestant 2", description = message.content, colour = 0x115AD3)
-
-                        mysterembed.set_thumbnail(url = "https://cdn.discordapp.com/attachments/927298209183830066/989179797643096144/token_3_2.png")
-
-                    elif contestantno == str(message.channel).split("-")[1] == "3":
-
-                        mysterembed = discord.Embed(title = "Mystery Contestant 3", description = message.content, colour = 0x6F11D3)
-
-                        mysterembed.set_thumbnail(url = "https://cdn.discordapp.com/attachments/927298209183830066/989179806555971594/token_4_1.png")
-
-                    elif contestantno == str(message.channel).split("-")[1] == "4":
-
-                        mysterembed = discord.Embed(title = "Mystery Contestant 4", description = message.content, colour = 0xB8B8B8)
-
-                        mysterembed.set_thumbnail(url = "https://cdn.discordapp.com/attachments/927298209183830066/989179813627568128/token_5_1.png")
-
-                    await client.get_channel(990265174126645298).send(embed = mysterembed)
-
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "pingrole"):
-                memlist = 0
-                mems = []
-                server = message.guild
-                tagrole = discord.utils.get(server.roles, name = message.content.split(" ", 1)[1])
-                if (not "mod team" in message.author.roles) and (not "looking" in str(tagrole.name).lower()):
-                    await message.channel.send("You don't have permission to tag that role like this.")
-                else:
-                    temprole = discord.utils.get(server.roles, name= "Temporary Role")
-                    tempid = temprole.id
-                    lastmember = server.members[-1]
-                    await message.channel.send("Pinging Role: " + str(tagrole) + "\n\nThis process may take several minutes, as we need to assign a temporary role to hundreds of people, ping that role, and then remove it for the next batch.")
-                    for a in server.members:
-                        if tagrole in a.roles:
-                            memlist += 1
-                            await a.add_roles(temprole)
-                            mems.append(a)
-                        if memlist == 100 or a == lastmember:
-                            await message.channel.send("<@&" + str(tempid) + ">\n\nThis ping is to allow larger roles to be pinged into forums and threads. You are being pinged here because you have the `" + str(tagrole) + "` role.")
-                            for b in mems:
-                                await b.remove_roles(temprole)
-                            memlist = 0
-                            mems = []
+            if str(message.channel.parent) == "blind-dates" and not "Gothica" in message.author.name:
+                await MiscellaneuosCommands.datingrelay(message)
 
             #Timestamp Message
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "timestamp"):

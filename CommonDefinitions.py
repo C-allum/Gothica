@@ -57,7 +57,7 @@ print(" Initialised {0.user} at ".format(client) + str(datetime.now()).split("."
 
 SERVICE_ACCOUNT_FILE = "keys.json"
 
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/documents"]
 
 creds = None
 creds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
@@ -112,6 +112,8 @@ if liveVersion: #Set to 1 to use the real spreadsheets, or 0 to use the testing 
 
     indexchannel = 898640028174016552
 
+    datingchannel = 1204872179871653898
+
 
 else:
 
@@ -154,6 +156,8 @@ else:
     communityProjectChannel = 891781900388159528
 
     indexchannel = 1031701327169998958
+
+    datingchannel = 1203838135335653416
 
 
 sheet = service.spreadsheets()
@@ -246,6 +250,17 @@ curses = ["Clinging Arousal: A thick aura of deep arousal clings to you, making 
 
 speechcursed = []
 speechcurses = []
+
+datingplayers = []
+datingchars = []
+datingsources = []
+datingdests = []
+datingcounts = []
+datingscores = []
+datingwaiting = []
+datingprivatethreads = []
+datingstate = 1
+datingmax = 24
 
 #---------------------------------------------
 
@@ -580,7 +595,7 @@ async def helplist(message):
         "To edit a character, type `" + GlobalVars.config['general']['gothy_prefix'] + "edit Name Field New-Value`, as a demonstration:\n\n`" + GlobalVars.config['general']['gothy_prefix'] + "edit Lalontra class Ranger`\n\nThis will match a character's name even if you only use part of the name.",
         "For obvious reasons, only the owner of a character can edit them, but there are occasions where you want to give a character to someone else, for example in an auction. To transfer the character, type `" + GlobalVars.config['general']['gothy_prefix'] + "transfer Name @New-Owner`, for example:\n\n`" + GlobalVars.config['general']['gothy_prefix'] + "transfer Lalontra @C_allum`",
         "To create a list of the characters owned by any particular player, type `" + GlobalVars.config['general']['gothy_prefix'] + "charlist`. Send the command without any arguments to see your own characters, or add a mention after it to see someone else's. As below:\n\n`" + GlobalVars.config['general']['gothy_prefix'] + "charlist @C_allum`",
-        "To search for a character or attribute, type `" + GlobalVars.config['general']['gothy_prefix'] + "search Search-term`. If the search term is within the name of a character, it will provide that character's full bio. As an example, to find the bio of Lalontra you might type:\n\n`" + GlobalVars.config['general']['gothy_prefix'] + "search Lal`\n\nIf the search term is not found in the name of a character, you can instead seach by a data field, done by typing`" + GlobalVars.config['general']['gothy_prefix'] + "search Field Search-Term`, such as:\n\n`" + GlobalVars.config['general']['gothy_prefix'] + "search class Ranger`\n\nIf the first argument after the command is neither in the name of a character, nor a field name, it will search the whole database, and provide details on where the word occurs. If you were to type:\n\n`" + GlobalVars.config['general']['gothy_prefix'] + "search blue`\n\nYou would see information about any characters whos eyes, hair or skin colour (or any other attribute) was blue."
+        "To search for a character or attribute, type `" + GlobalVars.config['general']['gothy_prefix'] + "search Search-term`. If the search term is within the name of a character, it will provide that character's full bio. As an example, to find the bio of Lalontra you might type:\n\n`" + GlobalVars.config['general']['gothy_prefix'] + "search Lal`\n\nIf the search term is not found in the name of a character, you can instead seach by a data field, done by typing`" + GlobalVars.config['general']['gothy_prefix'] + "search Field Search-Term`, such as:\n\n`" + GlobalVars.config['general']['gothy_prefix'] + "search class Ranger`\n\nIf the first argument after the command is neither in the name of a character, nor a field name, it will search the whole database, and provide details on where the word occurs. If you were to type:\n\n`" + GlobalVars.config['general']['gothy_prefix'] + "search blue`\n\nYou would see information about any characters whos eyes, hair or skin colour (or any other attribute) was blue.",
         "If you want to retire a character for any reason, type `" + GlobalVars.config['general']['gothy_prefix'] + "retire Name`, as per the below example ||which was rather painful to write!||:\n\n`" + GlobalVars.config['general']['gothy_prefix'] + "retire Lalontra`",
         "If you need to activate a previously unavailable character, whether because you made or recieved them as a transfer from another user without having a slot available; or `%deactivated` them temporarily, you can activate them by using`" + GlobalVars.config['general']['gothy_prefix'] + "activate Name`. Example:\n\n`" + GlobalVars.config['general']['gothy_prefix'] + "activate Lalontra`",
         "Deactivating a character means that they will have a ~~strikethough~~ on their name when your character list is called using `%charlist`. This is commonly because they are being used in another scene that you want to finish before starting a new one with them, or can simply be if you're looking for a new scene but don't want to play that specific character at the time."
