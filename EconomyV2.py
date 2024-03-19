@@ -1938,7 +1938,7 @@ async def copyEconomy(message):
             embedstring = ""
             for item in refundedItemList:
                 embedstring += f"{item[0]} for {item[1]}{dezzieemj}\n"
-            client.get_channel(918257057428279326).send(embed = discord.Embed(title = f"Refunded the follwing items for <@{user_id}> because they got changed.", description = "Make sure that the user you tagged is valid."), colour=embcol)
+            client.get_channel(918257057428279326).send(embed = discord.Embed(title = f"Refunded the follwing items for <@{user_id}> because they got changed.", description = "Make sure that the user you tagged is valid.", colour=embcol))
         i+=4
     print(removedUserList)
     #Write PlayerInfo sheet
