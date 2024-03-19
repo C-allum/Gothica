@@ -7,6 +7,7 @@ import TransactionsDatabaseInterface
 
 economy_lock = asyncio.Lock() 
 add_dezzie_lock = asyncio.Lock()
+
 #Summons the list of shops, and allows looking at one
 async def shop(message):
 
@@ -274,7 +275,6 @@ async def inventory(message):
         item_embed = discord.Embed(title=f"Item Info for {item_name}", description=embed_string, colour=embcol)
         await message.channel.send(embed = item_embed)
         return
-
 
 #Guides the user through buying an item
 async def buyitem(message):
@@ -1684,7 +1684,6 @@ async def incomeWeek(message):
 
     await message.channel.send(embed = discord.Embed(title = "Your dezzie earnings over the last week:", description = incomeString, colour = embcol))
 
-
 async def copyEconomy(message):
     GlobalVars.economyData = sheet.values().get(spreadsheetId = inventorysheet, range = "A1:E5", majorDimension='ROWS').execute().get("values")
     GlobalVars.inventoryData = sheet.values().get(spreadsheetId = inventorysheet, range = "Inventories!A1:E7", majorDimension = 'ROWS').execute().get("values")
@@ -1694,6 +1693,9 @@ async def copyEconomy(message):
     oldEconData = sheet.values().get(spreadsheetId = oldSheet, range = "A1:GZ8000", majorDimension='ROWS').execute().get("values")
 
     members = message.guild.members #Fetch the memberlist of the server we are in.
+
+    removedUserList = []
+
     i = 5
     while i < len(oldEconData):
         name = oldEconData[i][0] #Name
@@ -1737,11 +1739,13 @@ async def copyEconomy(message):
         if user != None:
             user_id = user.id
         else:
-            print(f"Couldn't find user {name} in the server.")
+            #print(f"Couldn't find user {name} in the server.")
+            removedUserList.append(name)
             i += 4
             continue
 
         if user.discriminator != "0":
+            message.channel.send(f"{name} still has their old username...")
             print(f"User {name} still has an old username. Skipping.")
             i += 4
             continue
@@ -1749,7 +1753,7 @@ async def copyEconomy(message):
         await addUserToEconomy(name, user_id, last_message_reward, dezzies, scenes_list, character_slots, weekly_dezzie_pool)
         
         #Port the items
-
+        refundedItemList = []
         j = 2
         while j < len(oldEconData[i]):
             if oldEconData[i][j] == "":
@@ -1771,7 +1775,7 @@ async def copyEconomy(message):
                 ["Dancer's Lingerie", 'haremRobes002'],
                 ['Mark of Obsession', 'lustbrand005'],
                 ['Crest of Obsession', 'lustbrand005'],
-                ['Rings of Shared Sensation', 'peircings004'],
+                ['Rings of Shared Sensation', 'piercings004'],
                 ['Rod of Olympus', 'oversizedDildo002'],
                 ['Ring of Good Vibrations', 'cockRing002'],
                 ['Imperial Robes', 'robes003'],
@@ -1814,37 +1818,97 @@ async def copyEconomy(message):
                 ['Power Word Milk (spell scroll)', 'spellScroll049'],
                 ['Power Word Orgasm (spell scroll)', 'spellScroll065'],
                 ["Tali's Twinned Shaft (Spell Scroll)", 'spellScroll078'],
-                ['Moaning Mushrooms', 'miscCreature008']
+                ['Moaning Mushrooms', 'miscCreature008'],
+                ['Runic Arm Binders', 'armBinder001'],
+                ['Runic Chastity Belt', 'chastityBelt004'],
+                ['Runic Harness', 'slaveHarness002'],
+                ['Runic Harness (RH)',  'slaveHarness002'],
+                ['Moo-Mellon Milk', 'potion014'],
+                ['Crop of Command', 'crop001'],
+                ['Portal Panties (Lesser)', 'panties001'],
+                ['Curse of Denial', 'lustbrand006'],
+                ["Housekeeper's Cube", 'otherItem005'],
+                ['Imperial Robes of Comfort', 'robes003'],
+                ['Crest of Echoes', 'lustbrand007'],
+                ['Everfull Sack', 'ballCover001'],
+                ['Rose-thorn Needle Wheel', 'needleRoller001'],
+                ['Victoria’s Secret Pocket (spell scroll)', 'spellScroll096'],
+                ["Xanabar's Sexual Theivery (Spell Scroll)", 'spellScroll081'],
+                ['Word of Safety (Spell Scroll)', 'spellScroll102'],
+                ['Crest of Denial', 'lustbrand006'],
+                ['Mark of Denial', 'lustbrand006'],
+                ['Harness of Many Heads', 'straponHarness001'],
+                ['Crest of Altruism', 'lustbrand003'],
+                ["The Widow's Shibari", 'otherItem001'],
+                ['Rune of Flavoring', 'tatoo008'],
+                ['Portal Mask (PM)', 'mask003'],
+                ['Portal Mask', 'mask003'],
+                ['Rabbithole Mask', 'mask003'],
+                ['Portal Panties', 'panties001'],
+                ['Portal Panties (PP)', 'panties001'],
+                ['Rabbithole Panties', 'panties001'],
+                ["Ruby's Mindfuck (Spell Scroll)", 'spellScroll070'],
+                ['Runar’s Instant Disrobing (Spell Scroll)', 'spellScroll071'],
+                ['Laundry Day (Spell Scroll)', 'spellScroll048'], 
+                ["Predator's Punishment (Spell Scroll)", 'spellScroll066'],
+                ["Vilga's Phallic Enchantment (Spell Scroll)", 'spellScroll097'],
+                ['Mark of the Owned', 'tatoo003']
                 ]
-            deleteList = [['Potion Of The Goliath', 'Potion of Vitality', 86.0, 'potion011'],
-                ['Collar Of The Good Girl', 'Collar of the Dullahan', 85.5, 'collar006'],
-                ["Callum's Heart", "Scroll of Vixen's Heat", 78.0, 'spellScroll098'],
-                ['Prestidildo', 'Bestial Armor', 55.0, 'fetishArmor003'],
-                ['Welcoming Ring Of The Inconsiderate', 'Ring of the Universal Breeder', 78.0, 'springEvent011']
+            deleteList = [['Potion Of The Goliath'],
+                ['Collar Of The Good Girl'],
+                ["Callum's Heart"],
+                ['Prestidildo'],
+                ['Welcoming Ring Of The Inconsiderate'],
+                ["Bunnie's Bountiful Egg of Sweetness"]
                 ]
-            refundList = [['Demiplane Key', 'Dollmaker’s Key', 78.5, 'dagger005'],
-                ['Mask of the Hunt', 'Cask of Tentacles', 83.5, 'cask001'],
-                ['Tearless Lingerie', 'Chimeric Lingerie', 82.5, 'lingerie006'],
-                ['Gemstone Piercing', 'Hummingbird Piercing', 79.5, 'piercings001'],
-                ['Bingo Bango Bongos', 'Bag of Binding', 61.0, 'bag001'],
-                ['Statue of Will-I-Am D-Hoe', 'Catsuit of Displacement', 75.0, 'bodySuit001'],
-                ['Drowsilk Lingerie', 'Chimeric Lingerie', 82.5, 'lingerie006'],
-                ['Heels of Harming', 'Choker of Ruin', 80.0, 'collar003'],
-                ['Curse of Futanari', 'Cask of Time', 77.5, 'cask002'],
-                ['Xio Chrysalis', 'something', 0.0, 'something100']
+            refundList = [['Demiplane Key'],
+                ['Mask of the Hunt'],
+                ['Tearless Lingerie'],
+                ['Gemstone Piercing'],
+                ['Bingo Bango Bongos'],
+                ['Statue of Will-I-Am D-Hoe'],
+                ['Drowsilk Lingerie'],
+                ['Heels of Harming'],
+                ['Curse of Futanari'],
+                ['Xio Chrysalis'],
+                ['Twinned Tentacles'],
+                ['Oil Of Slipperyness'],
+                ['Basic Ink'],
+                ['Pitfall Trap'],
+                ['Pitfall Trap+'],
+                ['Wyrmleather Blindfold'],
+                ['Tearless Lingerie (Uncommon)'],
+                ['Tearless Lingerie (Rare)'],
+                ['Tearless Lingerie (Very Rare)'],
+                ['Stone of Thunderous Vibration'],
+                ['Archaic Arcane Beads of Pleasure'],
+                ['Plug of Insight'],
+                ["Sexy Nurse's Uniform"],
+                ['Plug of Insight'],
+                ['Plug of Insight'],
+                ['Salamander Springs Massage Oil']
                 ]
-            if itemname in str(remappingList): #These are the manual matchings because the item got renamed
-                item_identifier = remappingList[remappingList.index([x for x in remappingList if str(itemname) in x][0])][1]
-                itemname = GlobalVars.itemdatabase[0][GlobalVars.itemdatabase[0].index([x for x in GlobalVars.itemdatabase[0] if item_identifier in x][0])][0]
-            elif itemname in str(deleteList):
+            if any(itemname in sublist for sublist in remappingList): #These are the manual matchings because the item got renamed
+                try:
+                    item_identifier = remappingList[remappingList.index([x for x in remappingList if str(itemname) in x][0])][1]
+                except IndexError:
+                    print("Yote")
+                try:
+                    itemname = GlobalVars.itemdatabase[0][GlobalVars.itemdatabase[0].index([x for x in GlobalVars.itemdatabase[0] if item_identifier in x][0])][0]
+                except IndexError:
+                    print("yeet")
+            elif any(itemname in sublist for sublist in deleteList):
                 print(f"Skipped/Deleted item {itemname}")
+                j += 1
                 continue
-            elif itemname in str(refundList):
+            elif any(itemname in sublist for sublist in refundList):
                 #Find previous value and add to balance
                 oldEconData[i][j].split("|")[0]
                 amount = int(oldEconData[i+3][j])
                 await addDezziesToPlayer(message, amount, user_id, write_econ_sheet=False, send_message=False)
-                print(f"Skipped/Deleted item {itemname}")
+                refundedItemList.append([itemname, amount])
+                print(f"Refunded item {itemname}")
+                j += 1
                 continue
 
             new_item = await matchStringToItemBase(itemname, 1, add_item_name_in_list=True)
@@ -1867,10 +1931,16 @@ async def copyEconomy(message):
                 item_identifier = GlobalVars.itemdatabase[0][GlobalVars.itemdatabase[0].index([x for x in GlobalVars.itemdatabase[0] if new_item_name in x][0])][11]
             except IndexError:
                 print("Oopsie!")
+                j = j+1
                 continue
             await addItemToInventory(user_inventory_index, item_identifier, amount, "", additional_references)
             j += 1
+            embedstring = ""
+            for item in refundedItemList:
+                embedstring += f"{item[0]} for {item[1]}{dezzieemj}\n"
+            client.get_channel(918257057428279326).send(embed = discord.Embed(title = f"Refunded the follwing items for <@{user_id}> because they got changed.", description = "Make sure that the user you tagged is valid."), colour=embcol)
         i+=4
+    print(removedUserList)
     #Write PlayerInfo sheet
     await writeEconSheet(GlobalVars.economyData)
     #Write Inventory Sheet
@@ -1925,8 +1995,6 @@ async def addUserToEconomy(name, id, last_message_time = datetime.timestamp(date
     #await writeInvetorySheet(GlobalVars.inventoryData)
     return
 
-
-    
 
 #-------------------------------Helper Functions-----------------------------------
 
@@ -2159,9 +2227,6 @@ async def showItem(item_name, item_type, price, quantity_available, curses_ident
                 potential_curse_names.append(full_curse[0])
             curseCount += 1
     return embed_string, potential_curses, potential_curses_string, potential_curse_names, curseCount
-
-
-
 
 async def addItemToPlayerWithCurseFromShop(message, playerID, itemID, amount, shop_number, additional_reference):
 

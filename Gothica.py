@@ -45,10 +45,9 @@ async def on_ready():
     TupperDatabase.initTupperDatabase()
 
     #Economy V2 startup
-    if not liveVersion:
-        print("Fetching item database...")
-        await EconomyV2.loadItemSheet()
-        print("... done\n")
+    print("Fetching item database...")
+    await EconomyV2.loadItemSheet()
+    print("... done\n")
         
     print("Loading economy data...")
     await EconomyV2.loadEconomySheet()
@@ -3730,8 +3729,8 @@ async def on_message(message):
 
                     except:
                         #New User
-                        await EconomyV2.addUserToEconomy(message.author.name, message.author.id)
-                        print(str(message.author.name) + " has been added to the economy at " + str(datetime.now()))
+                        #await EconomyV2.addUserToEconomy(message.author.name, message.author.id)
+                        #print(str(message.author.name) + " has been added to the economy at " + str(datetime.now()))
                         return
 
                     #Check if member is already registered

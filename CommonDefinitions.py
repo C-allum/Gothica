@@ -68,7 +68,7 @@ gc = gspread.service_account(filename = SERVICE_ACCOUNT_FILE)
 config_file_path = "config.yaml"
 #-----------------LIVE VERSION/BETA TOGGLE---------------
 # 0 is Test Server, 1 is Live Server
-liveVersion = 0
+liveVersion = 1
 token = ""
 
 #Sheet Locations:
@@ -78,6 +78,13 @@ if liveVersion: #Set to 1 to use the real spreadsheets, or 0 to use the testing 
     CharSheet = "1iHvP4HC8UQqyiMmC3Xiggx8-17e5SGWJMncEeoiZP1s"
 
     EconSheet = "1qTC0gn7Fe_cHDVPB8KIEjSFUwrUSEhlLy1upHIKnKF8"
+
+    #newEconsheet
+    inventorysheet = "15u6xzZsY5mZAUVmXPolRqUkPeQcGFH1_H-sNCjfNhNM"
+    
+    itemsheetID = "1rS4yTmVtaaCZEbfyAAEkB3KnVC_jkI9e2zhSI0AA7ws"
+    itemsheet = gc.open_by_key("1rS4yTmVtaaCZEbfyAAEkB3KnVC_jkI9e2zhSI0AA7ws") #New for economy rewrite
+    itemlists = itemsheet.worksheets()
 
     shopsheet = "1gxNPXIichzK9mSN8eHYVdJvaaUgUnN6VF8WshL_4Les"
 
