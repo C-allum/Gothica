@@ -54,7 +54,7 @@ async def shop(message):
     if await shop_selection_view.wait():
         await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
         return
-    i = int(shop_selection_view.button_response[0])-1 + GlobalVars.config["general"]["index_of_first_shop"]
+    i = searchresults[int(shop_selection_view.button_response[0])-1][1]
 
     try:
         shopitems.append(str(GlobalVars.itemdatabase[i][0][20]) + "\n------------------------------------------------------------\n") #Adds shop welcome message to first embed
@@ -215,7 +215,7 @@ async def item(message):
         except IndexError:
             additional_reference = ""
 
-    embed_string, potential_curses, potential_curses_string, potential_curse_names, curse_count = await showItem(item_name, item_type, price, quantity_available, curses_identifier, rarity, attunement_requirement, mechanics, flavour, default_curse, additional_reference)
+    embed_string, potential_curses, potential_curses_string, potential_curse_names, curse_count = await showItem(item_name, item_type, price, quantity_available, curses_identifier, rarity, attunement_requirement, mechanics, flavour, default_curse, additional_reference, show_quant_and_price=False)
 
     await message.channel.send(embed=discord.Embed(title=f"**{item_name}**", description=embed_string + potential_curses_string, colour = embcol))
     return
@@ -264,7 +264,7 @@ async def inventory(message):
         additional_reference = ""
 
 
-        embed_string, unused, potential_curses, potential_curse_names, curseCount = await showItem(item_name, item_type, price, quantity_available, curses_identifier, rarity, attunement_requirement, mechanics, flavour, default_curse, additional_reference)
+        embed_string, unused, potential_curses, potential_curse_names, curseCount = await showItem(item_name, item_type, price, quantity_available, curses_identifier, rarity, attunement_requirement, mechanics, flavour, default_curse, additional_reference, show_quant_and_price=False)
 
         #add additional curses
         if curses != []:
@@ -415,7 +415,7 @@ async def buyitem(message):
 
     #Ask for confirmation or quantity change
     confirm_view = Yes_No_Quantity_View(message=message)
-    await message.channel.send(embed=discord.Embed(title=f"Buy {buyquant} of this item for a total of {price * buyquant}?", description=embed_string + potential_curses_string, colour = embcol), view=confirm_view)
+    await message.channel.send(embed=discord.Embed(title=f"Buy {buyquant} of this item for a total of {price * buyquant}{dezzieemj}?", description=embed_string + potential_curses_string, colour = embcol), view=confirm_view)
 
     if await confirm_view.wait():
             await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
@@ -433,7 +433,7 @@ async def buyitem(message):
 
         #Ask if this is fine now
         confirm_view = Yes_No_View(message=message)
-        await message.channel.send(embed=discord.Embed(title=f"Buy {buyquant} of this item for a total of {price * buyquant}?", description=embed_string + potential_curses_string, colour = embcol), view = confirm_view)
+        await message.channel.send(embed=discord.Embed(title=f"Buy {buyquant} of this item for a total of {price * buyquant}{dezzieemj}?", description=embed_string + potential_curses_string, colour = embcol), view = confirm_view)
         if await confirm_view.wait():
             await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
             return
@@ -1018,6 +1018,9 @@ async def additem(message):
 async def giftAll(message):
     #Find quantity of dezzies to add to everyone's balance
     amount = message.content.split(" ")[-1]
+    if int(amount) < 0:
+        await message.channel.send(embed=discord.Embed(title="Prevented you from taking dezzies from all users", colour = embcol))
+        return
     async with economy_lock:
         #Add to each balance
         i = 5
@@ -1037,7 +1040,14 @@ async def giftAll(message):
 #Guides a player through giving money to another player
 async def giveMoney(message):
     amount = message.content.split(" ")[-1]
+    if int(amount) < 1:
+        await message.channel.send(embed=discord.Embed(title="Can't give zero or negative dezzies! The sentence for thievery in the dungeon is one hour in the public stocks!", colour = embcol))
+        return
     recipient_name, recipient_id = await getUserNamestr(message)
+    if recipient_id == message.author.id:
+        await message.channel.send(embed=discord.Embed(title="Can't give yourself dezzies!", colour = embcol))
+        return
+
     author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0])
     recipient_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(recipient_id) in x][0])
 
@@ -1047,14 +1057,18 @@ async def giveMoney(message):
         #Log give commands.
         await client.get_channel(918257057428279326).send(embed=discord.Embed(title = message.author.name + f" gave {amount} Dezzies to " + recipient_name, url=message.jump_url))
         
-        TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.Give, -amount)
-        TransactionsDatabaseInterface.addTransaction(recipient_name, TransactionsDatabaseInterface.DezzieMovingAction.Give, amount)
+        TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.Give, -int(amount))
+        TransactionsDatabaseInterface.addTransaction(recipient_name, TransactionsDatabaseInterface.DezzieMovingAction.Give, int(amount))
     else:
         await message.channel.send(embed=discord.Embed(title=f"{message.author.name} has not enough {dezzieemj} to give {amount}{dezzieemj} to {recipient_name}!", description=f"{message.author.name} has {GlobalVars.economyData[author_row_index+1][1]}{dezzieemj}"))
 
 #Guides a staff member through adding money to a players balance
 async def addMoney(message):
     amount = message.content.split(" ")[-1]
+    if int(amount) < 0:
+        await message.channel.send(embed=discord.Embed(title="You cannot add negative amounts of dezzies!",description=f"Use %removemoney instead!", colour = embcol))
+        return
+    
     recipient_name, recipient_id = await getUserNamestr(message)
     recipient_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(recipient_id) in x][0])
     await addDezziesToPlayer(message, int(amount), playerID=recipient_id, write_econ_sheet=True, send_message=True)
@@ -1070,14 +1084,14 @@ async def removeMoney(message):
         new_balance = GlobalVars.economyData[recipient_row_index+1][1]
         await message.channel.send(embed=discord.Embed(title=f"Removed {amount}{dezzieemj} from {GlobalVars.economyData[recipient_row_index][0]}'s balance!", description=f"Their new balance is {new_balance}{dezzieemj}.", colour = embcol))
         
-        TransactionsDatabaseInterface.addTransaction(recipient_name, TransactionsDatabaseInterface.DezzieMovingAction.Remove, -amount)
+        TransactionsDatabaseInterface.addTransaction(recipient_name, TransactionsDatabaseInterface.DezzieMovingAction.Remove, -int(amount))
     else:
-        await message.channel.send(embed=discord.Embed(title=f"Could not remove {amount}{dezzieemj}: from {GlobalVars.economyData[recipient_row_index][0]}'s balance!", description=f"Their balance is {new_balance}{dezzieemj}.", colour = embcol))
+        await message.channel.send(embed=discord.Embed(title=f"Could not remove {amount}{dezzieemj} from {GlobalVars.economyData[recipient_row_index][0]}'s balance! They only have {GlobalVars.economyData[recipient_row_index+1][1]}{dezzieemj}!", colour = embcol))
 
 #Allows user to use item.
 async def useitem(message):
     #Find person in the inventory sheet
-    author_row_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if message.author.id in x][0])
+    author_row_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if str(message.author.id) in x][0])
     player_inventory = GlobalVars.inventoryData[author_row_index:author_row_index+5]
 
     #Get list of all items
@@ -1153,7 +1167,7 @@ async def money(message):
     while i < len(GlobalVars.economyData):
         leaderboard_list.append([GlobalVars.economyData[i][0], int(GlobalVars.economyData[i+1][1])])
         i += 4
-    sorted(leaderboard_list,key=lambda l:l[1], reverse=True)
+    leaderboard_list = sorted(leaderboard_list,key=lambda l:l[1], reverse=True)
     user_leaderboard_rank = leaderboard_list.index([a for a in leaderboard_list if message.author.name == a[0]][0])
     await message.channel.send(embed=discord.Embed(title=f"{message.author.name} has {balance}{dezzieemj}", description=f"Leaderboard Rank: {user_leaderboard_rank + 1}", colour = embcol))
 
@@ -1164,7 +1178,7 @@ async def leaderboard(message):
     while i < len(GlobalVars.economyData):
         leaderboard_list.append([GlobalVars.economyData[i][0], int(GlobalVars.economyData[i+1][1])])
         i += 4
-    sorted(leaderboard_list,key=lambda l:l[1], reverse=True)
+    leaderboard_list= sorted(leaderboard_list,key=lambda l:l[1], reverse=True)
     leaderboard_list = leaderboard_list[0:20]
     embedstring = "The 20 people with the most dezzies in the dungeon are:\n\n"
     i = 1
@@ -1526,7 +1540,7 @@ async def dezReact(reaction):
 
                 #Update the dezzie pool of the giver
                 newDezziePool = prevDezziePool - giveamount
-                await addDezziesToPlayer(message, giveamount, targid)
+                await addDezziesToPlayer(reaction.message, giveamount, targid)
                 await writeEconSheet(GlobalVars.economyData)
                 #Add transaction
                 TransactionsDatabaseInterface.addTransaction(target.name, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
@@ -1546,7 +1560,7 @@ async def dezReact(reaction):
                 newDezziePool = 0
                 giveamount = prevDezziePool
                 GlobalVars.economyData[giverow+3][0] = newDezziePool
-                await addDezziesToPlayer(message, giveamount, targid)
+                await addDezziesToPlayer(reaction.message, giveamount, targid)
                 GlobalVars.economyData[reciprow+1][1] = int(GlobalVars.economyData[reciprow+1][1]) + int(giveamount)
                 await writeEconSheet(GlobalVars.economyData)
                 TransactionsDatabaseInterface.addTransaction(target.name, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
@@ -1642,7 +1656,7 @@ async def rpDezReact(reaction):
                 
                 reward = int(giveamount * GlobalVars.config["economy"]["rpreactmodifier"])
                 GlobalVars.economyData[int(reciprow)+1][1] = int(GlobalVars.economyData[int(reciprow)+1][1]) + reward
-                await addDezziesToPlayer(message, giveamount, targid)
+                await addDezziesToPlayer(reaction.message, giveamount, targid)
                 await writeEconSheet(GlobalVars.economyData)
                 TransactionsDatabaseInterface.addTransaction(target.name, TransactionsDatabaseInterface.DezzieMovingAction.React, int(reward))
                 
@@ -1657,7 +1671,7 @@ async def rpDezReact(reaction):
             #User has less dezzies in their pool than they reacted with
             elif prevDezziePool > 0:
                 reward = prevDezziePool * int( GlobalVars.config["economy"]["rpreactmodifier"])
-                await addDezziesToPlayer(message, giveamount, reward)                
+                await addDezziesToPlayer(reaction.message, giveamount, reward)                
                 GlobalVars.economyData[int(giverow)+3][0] = 0
                 await writeEconSheet(GlobalVars.economyData)
 
@@ -1938,7 +1952,7 @@ async def copyEconomy(message):
             embedstring = ""
             for item in refundedItemList:
                 embedstring += f"{item[0]} for {item[1]}{dezzieemj}\n"
-            client.get_channel(918257057428279326).send(embed = discord.Embed(title = f"Refunded the follwing items for <@{user_id}> because they got changed.", description = "Make sure that the user you tagged is valid.", colour=embcol))
+            #client.get_channel(918257057428279326).send(embed = discord.Embed(title = f"Refunded the follwing items for <@{user_id}> because they got changed.", description = "Make sure that the user you tagged is valid.", colour=embcol))
         i+=4
     print(removedUserList)
     #Write PlayerInfo sheet
@@ -2116,7 +2130,7 @@ async def selectItem(message, searchterm, top_n_results):
 
         #Generate selector view to choose items.
         item_selection_view = Dropdown_Select_View(message = message, timeout=30, optionamount=len(selector_options), maxselectionamount=1, namelist=[i[0] for i in selector_options]) #Only let them choose one item.
-        await message.channel.send(embed = discord.Embed(title="Didn't find a perfect match to what you are looking for.", description="Here are the top 10 closest results. Please choose which of these you want.\n\n" + top10_string + "\n\n" + "This message will time out in 30 seconds."), view = item_selection_view)
+        await message.channel.send(embed = discord.Embed(title="Didn't find a perfect match to what you are looking for.", description="Here are the top 10 closest results. Please choose which of these you want.\n\n" + top10_string + "\n\n" + "This message will time out in 30 seconds.", colour = embcol), view = item_selection_view)
         #Wait for reply
         if await item_selection_view.wait():
                 await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
@@ -2189,7 +2203,7 @@ async def showItem(item_name, item_type, price, quantity_available, curses_ident
     if (show_quant_and_price == True):
         if quantity_available == "":
             quantity_available = "Infinite"
-        embed_string += f"**Quantity Available: {quantity_available}, Price per unit: {price}** \n\n"
+        embed_string += f"**Quantity Available: {quantity_available}, Price per unit: {price}{dezzieemj}** \n\n"
 
     #add long description
     if mechanics != "":
@@ -2449,6 +2463,9 @@ async def showInventoryAndChooseItem(message, author_row_index, embed_bottom_not
     except asyncio.TimeoutError:
         await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
         await message.delete()
+        return -1, None
+    if len(player_inventory[0]):
+        await message.channel.send(embed=discord.Embed(title=f"Number must be between 1 and {len(player_inventory[0]) - 2}", colour = embcol))
         return -1, None
     return i, item_list
 
