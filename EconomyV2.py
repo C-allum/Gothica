@@ -464,7 +464,7 @@ async def buyitem(message):
                         rolled_curse_string += f"**{potential_curses[curse][0]}**: {potential_curses[curse][2]}\n\n"
                     await message.channel.send(embed=discord.Embed(title="Take a look at the item and it's rolled curses!",description=embed_string + rolled_curse_string, colour = embcol))
 
-                TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.Buy, price * buyquant)
+                TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.Buy, -price * buyquant)
 
             else:
                 await message.channel.send(embed=discord.Embed(title="Not enough funds!",description=f"Your funds are insufficient to buy this item! You have {old_balance}{dezzieemj}, and the item(s) cost {price*buyquant}{dezzieemj}", colour = embcol))
@@ -1359,11 +1359,14 @@ async def bid(message, isbot):
         for e in range(len(bidsfinal)):
             if await removeDezziesFromPlayerWithoutMessage(int(bidsfinal[e]), playerID=bidwinners[e].id):
                 bidstatement.append(str(bidwinners[e]) + ": " + str(bidsfinal[e]))
+                TransactionsDatabaseInterface.addTransaction(bidwinners[e].name, TransactionsDatabaseInterface.DezzieMovingAction.Auction, -int(bidsfinal[e]))
             else:
                 await message.channel.send(embed = discord.Embed(title = "Something went wrong in concluding the auction.", description = f"Couldn't remove dezzies from {bidwinners[e].name}. We don't know why that happened. Please ask the botgods.", colour = embcol))
                 return
 
         await writeEconSheet(GlobalVars.economyData)
+        
+
         await message.channel.send(embed = discord.Embed(title = "Bidding concluded", description = "The following dezzies have been removed:\n\n" + "\n".join(bidstatement), colour = embcol))
 
     elif "reset" == message.content.lower().split(" ")[1] and "staff" in str(message.author.roles).lower():
