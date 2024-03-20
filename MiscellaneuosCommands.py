@@ -1064,6 +1064,7 @@ class MazeView(discord.ui.View):
 class mazejoin(discord.ui.View):
     def __init__(self):
         super().__init__(timeout = 0)
+        
     @discord.ui.button(label = "Join", style = discord.ButtonStyle.green, custom_id = "mazejoin")
     async def callback(self, interaction: discord.Interaction, item):
 
@@ -1083,7 +1084,6 @@ class mazejoin(discord.ui.View):
                             mazedata.pop(a)
                             mazeencounters.pop(a)
                             await interaction.response.send_message(content = "You have been removed from the waiting list.", ephemeral = True, delete_after = 300)
-                            await lock.release()
                             return
 
                         else:
