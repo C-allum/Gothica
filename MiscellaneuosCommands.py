@@ -984,7 +984,7 @@ class MazeView(discord.ui.View):
         directs = ["north", "east", "south", "west"]
         relatdirects = [" (Forward)", " (Right)", " (Back)", " (Left)"]
         forwardindex = directs.index(prev)
-
+        self.interacted = False
         if north:
             if state == 2 and relatdirects[-forwardindex] == " (Back)":
                 nbut = discord.ui.Button(label = "North" + relatdirects[-forwardindex], style = discord.ButtonStyle.red, custom_id = "north")
@@ -1020,6 +1020,10 @@ class MazeView(discord.ui.View):
     async def callback(self, interaction: discord.Interaction):
         async with mazelocks[int(interaction.message.channel.name.split(" ")[2])]:
             if (interaction.user == mazedata[int(interaction.message.channel.name.split(" ")[2])][2]) or (interaction.user == mazedata[int(interaction.message.channel.name.split(" ")[2])][3]):
+                if self.interacted == True:
+                    await interaction.response.send_message("Button has already been used.", ephemeral=True)
+                    return                
+                self.interacted = True
                 await interaction.response.send_message("Going " + str(interaction.data["custom_id"]).title() + "!\n" + interaction.user.name + " selected this path!")
                 wallsides, enc, paths, prev, state = await mazeupdate(interaction.data["custom_id"], int(interaction.message.channel.name.split(" ")[2]), mazedata[int(interaction.message.channel.name.split(" ")[2])][6])
 
