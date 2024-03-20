@@ -1541,7 +1541,12 @@ async def dezReact(reaction):
 
                 #Update the dezzie pool of the giver
                 newDezziePool = prevDezziePool - giveamount
-                await addDezziesToPlayer(reaction.message, giveamount, targid)
+                channel_id = reaction.channel_id
+                message_id = reaction.message_id
+                guild_id = reaction.guild_id
+                channel = client.get_channel(channel_id)
+                message = await channel.fetch_message(message_id)
+                await addDezziesToPlayer(message, giveamount, targid)
                 await writeEconSheet(GlobalVars.economyData)
                 #Add transaction
                 TransactionsDatabaseInterface.addTransaction(target.name, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
@@ -1561,7 +1566,13 @@ async def dezReact(reaction):
                 newDezziePool = 0
                 giveamount = prevDezziePool
                 GlobalVars.economyData[giverow+3][0] = newDezziePool
-                await addDezziesToPlayer(reaction.message, giveamount, targid)
+                newDezziePool = prevDezziePool - giveamount
+                channel_id = reaction.channel_id
+                message_id = reaction.message_id
+                guild_id = reaction.guild_id
+                channel = client.get_channel(channel_id)
+                message = await channel.fetch_message(message_id)
+                await addDezziesToPlayer(message, giveamount, targid)
                 GlobalVars.economyData[reciprow+1][1] = int(GlobalVars.economyData[reciprow+1][1]) + int(giveamount)
                 await writeEconSheet(GlobalVars.economyData)
                 TransactionsDatabaseInterface.addTransaction(target.name, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
@@ -1657,7 +1668,13 @@ async def rpDezReact(reaction):
                 
                 reward = int(giveamount * GlobalVars.config["economy"]["rpreactmodifier"])
                 GlobalVars.economyData[int(reciprow)+1][1] = int(GlobalVars.economyData[int(reciprow)+1][1]) + reward
-                await addDezziesToPlayer(reaction.message, giveamount, targid)
+                newDezziePool = prevDezziePool - giveamount
+                channel_id = reaction.channel_id
+                message_id = reaction.message_id
+                guild_id = reaction.guild_id
+                channel = client.get_channel(channel_id)
+                message = await channel.fetch_message(message_id)
+                await addDezziesToPlayer(message, giveamount, targid)
                 await writeEconSheet(GlobalVars.economyData)
                 TransactionsDatabaseInterface.addTransaction(target.name, TransactionsDatabaseInterface.DezzieMovingAction.React, int(reward))
                 
@@ -1672,7 +1689,13 @@ async def rpDezReact(reaction):
             #User has less dezzies in their pool than they reacted with
             elif prevDezziePool > 0:
                 reward = prevDezziePool * int( GlobalVars.config["economy"]["rpreactmodifier"])
-                await addDezziesToPlayer(reaction.message, giveamount, reward)                
+                newDezziePool = prevDezziePool - giveamount
+                channel_id = reaction.channel_id
+                message_id = reaction.message_id
+                guild_id = reaction.guild_id
+                channel = client.get_channel(channel_id)
+                message = await channel.fetch_message(message_id)
+                await addDezziesToPlayer(message, giveamount, targid)                
                 GlobalVars.economyData[int(giverow)+3][0] = 0
                 await writeEconSheet(GlobalVars.economyData)
 
@@ -1769,6 +1792,8 @@ async def copyEconomy(message):
         
         #Port the items
         refundedItemList = []
+        embedstring = ""
+
         j = 2
         while j < len(oldEconData[i]):
             if oldEconData[i][j] == "":
@@ -1951,16 +1976,17 @@ async def copyEconomy(message):
                 continue
             await addItemToInventory(user_inventory_index, item_identifier, amount, "", additional_references)
             j += 1
-            embedstring = ""
-            for item in refundedItemList:
-                embedstring += f"{item[0]} for {item[1]}{dezzieemj}\n"
-            await client.get_channel(918257057428279326).send(embed = discord.Embed(title = f"Refunded the follwing items for <@{user_id}> because they got changed.", description = "Make sure that the user you tagged is valid.", colour=embcol))
+        for item in refundedItemList:
+            embedstring += f"{item[0]} for {item[1]}{dezzieemj}\n"
+        if embedstring != "":
+            await client.get_channel(1050503346374594660).send(embed = discord.Embed(title = f"Refunded the follwing items for {user.name} because they got changed.", description = embedstring + f"\n\n<@{user_id}>", colour=embcol))
         i+=4
     print(removedUserList)
     #Write PlayerInfo sheet
     await writeEconSheet(GlobalVars.economyData)
     #Write Inventory Sheet
     await writeInvetorySheet(GlobalVars.inventoryData)
+    await message.channel.send(embed=discord.Embed(title="Economy Copy to economy V2 is done!"))
 
 async def computeAllLevenshteinDistancesOldEconItems(message, oldEconData):
     item_match_list = []
@@ -2466,7 +2492,7 @@ async def showInventoryAndChooseItem(message, author_row_index, embed_bottom_not
         await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
         await message.delete()
         return -1, None
-    if len(player_inventory[0]):
+    if i > len(player_inventory[0]):
         await message.channel.send(embed=discord.Embed(title=f"Number must be between 1 and {len(player_inventory[0]) - 2}", colour = embcol))
         return -1, None
     return i, item_list

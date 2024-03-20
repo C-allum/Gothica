@@ -1957,8 +1957,11 @@ async def on_message(message):
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "maintenance") and "staff" in str(message.author.roles).lower():
                 if GlobalVars.maintenance_mode == True:
                     GlobalVars.maintenance_mode = False
+                    await message.channel.send(embed=discord.Embed(title="Maintenance mode deactivated"))
                 else:
                     GlobalVars.maintenance_mode = True
+                    await message.channel.send(embed=discord.Embed(title="Maintenance mode activated"))
+
             #New economy commands (EconomyV2)
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "~test"):
                 oldEconData = sheet.values().get(spreadsheetId = EconSheet, range = "A1:GZ8000", majorDimension='ROWS').execute().get("values")
