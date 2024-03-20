@@ -22,6 +22,7 @@ class DezzieMovingAction(Enum):
     StreakReward = 12       #Reward for working without missing a day
     OOCMessageReward = 13   #Reward for posting in non-roleplay channels
     DailyInteraction = 14   #Reward for first interaction per day
+    Auction = 15    #When buying a slave
 
 
 #Initialize the transactions database: connect and create a cursor

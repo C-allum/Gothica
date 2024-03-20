@@ -2500,7 +2500,7 @@ async def on_message(message):
                                 #calculate reward amount
                                 charcount = len(message.content)
                                 #TODO: Do some more elaborate math on the RP rewards.
-                                message_award = math.floor(charcount/20) * (1+charcount * GlobalVars.config["economy"]["currency_multiplier_per_rp_word"]) + GlobalVars.config["economy"]["fixed_currecy_per_rp_message"]
+                                message_award = int(math.floor(charcount/20) * (1+charcount * GlobalVars.config["economy"]["currency_multiplier_per_rp_word"]) + GlobalVars.config["economy"]["fixed_currecy_per_rp_message"])
 
                                 #Set and add dezzies to player
                                 await EconomyV2.addDezziesToPlayer(message, message_award, message.author.id, write_econ_sheet=True, send_message=False)
@@ -2550,7 +2550,7 @@ async def on_message(message):
                                 
                                 #calculate reward amount
                                 charcount = len(message.content)
-                                message_award = math.floor(charcount/100) + GlobalVars.config["economy"]["fixed_currecy_per_ooc_message"]
+                                message_award = int(math.floor(charcount/100) + GlobalVars.config["economy"]["fixed_currecy_per_ooc_message"])
 
                                 #Set correct timestamp and add dezzies to player
                                 author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(playerID) in x][0])

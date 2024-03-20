@@ -1,4 +1,6 @@
 from CommonDefinitions import *
+from thefuzz import fuzz
+import EconomyV2
 
 #Character Index Update
 async def updatereg(message):
@@ -858,15 +860,27 @@ async def charsearch(message, outputchannel):
     cdata = ["\n"]
 
     charreg = sheet.values().get(spreadsheetId = CharSheet, range = "A1:AB4000", majorDimension='COLUMNS').execute().get("values")
+    charreg2 = sheet.values().get(spreadsheetId = CharSheet, range = "A1:AB4000", majorDimension='ROWS').execute().get("values")
     cnames = charreg[5]
     pnames = charreg[1]
     cargs = sheet.values().get(spreadsheetId = CharSheet, range = "F1:AB4000" ).execute().get("values")
 
-    searchterm = " ".join(msgspl[1:]).lower()
-
-
     searchedName = " ".join(msgspl[1:]).lower()
-    
+
+    if searchedName != None:  #Show only relevant shops if the searchedName was provided
+        levenshtein_tuple_list = []
+        index = 0
+        for entry in charreg2:
+            #Maybe do a combination of ratio and partial ratio here to favour stuff like collars appearing when "collar" is the search word?
+            levenshtein_distance_partial = fuzz.partial_token_set_ratio(entry[5].lower(), searchedName.lower())
+            levenshtein_distance_complete = fuzz.ratio(entry[5].lower(), searchedName.lower())
+            levenshtein_distance = levenshtein_distance_complete * 0.5 + levenshtein_distance_partial * 0.5
+            levenshtein_tuple_list.append([entry[5], levenshtein_distance, entry[1], index])
+            index += 1
+
+        sorted_list = sorted(levenshtein_tuple_list,key=lambda l:l[1], reverse=True)
+        searchresults = [x[0::2] for x in sorted_list[:10]]
+
     count = 0
     multidata = []
     multindexes = []
@@ -880,131 +894,57 @@ async def charsearch(message, outputchannel):
             fieldappend += f
     
     searchedName = fieldappend
+    optionsarray = []
+    for c in range(len(searchresults)):
+        optionsarray.append(f"{sorted_list[c][2]}'s {sorted_list[c][0]}")
+    char_selection_view = EconomyV2.Dropdown_Select_View(message = message, timeout=30, optionamount=len(searchresults), maxselectionamount=1, namelist=optionsarray) #Only let them choose one item.
+    charsel = []
+    for c in range(len(searchresults)):
+        charsel.append(f"`{str(c+1)}` - {searchresults[c][1]}'s {searchresults[c][0]}")
+    emb = discord.Embed(title = "Which character would you like to see?", description = "Select the number of the one you want:\n" + "\n".join(charsel), colour = embcol)
+    emb.set_footer(text = "This message will timeout in 30 seconds")
+    await message.channel.send(embed = emb, view=char_selection_view)
 
-    count = str(cnames).lower().replace("ì", "i").count(searchedName)
-    
-    if searchedName == "dragon" or searchedName == "slime" or searchedName == "bard":
-        count = 0
-    if count >= 1: #Search by character name
-        if count > 1:
-            tit = "Multiple characters found whose names contain '" + searchedName + "':"
-            multidata.append("Type the number to bring up the bio of the one you want:\n")
-            for i in range(len(cnames)):
-                if str(searchedName).lower() in str(cnames[i]).lower():
-                    multidata.append("`" + str(len(multidata)) + "` - " + str(pnames[i]) + "'s " + str(cnames[i]))
-                    multindexes.append(i)
-            foot = "\n----------------------------------------------\n\nThis message will timeout after 30 seconds."
-            emb = discord.Embed(title = tit, description = "\n".join(multidata), colour = embcol)
-            await outputchannel.send(embed=emb)
+    #Wait for reply
+    if await char_selection_view.wait():
+        await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+        return
+    cindex = sorted_list[int(char_selection_view.button_response[0]) -1][3]
+
+    for i in range(len(cnames)):
+        if cindex > 0: #If index of character is known (from multiple selection, inputs it here)
+            i = cindex
+        elif cindex == -1: #If multiple selection failed, ends.
+            break
+        
+        cname = str(cnames[i])
+        tit = cname
+        for j in range(len(headers)-1):
             try:
-                msg = await client.wait_for('message', timeout = 30, check = check(message.author))
-                try:
-                    valu = int(msg.content)
-                    await msg.delete()
-                    try:
-                        cindex = multindexes[valu-1]
-                    except IndexError:
-                        cindex = -1
-                        await outputchannel.send(embed=discord.Embed(title="Selection Invalid",description="You must enter a number between 1 and " + str(len(multindexes)), colour = embcol))
-                except TypeError or ValueError:
-                    cindex = -1
-                    await msg.delete()
-                    await outputchannel.send(embed=discord.Embed(title="Selection Invalid",description="You must enter an integer", colour = embcol))
-            except asyncio.TimeoutError:
-                cindex = -1
-                await outputchannel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
-        for i in range(len(cnames)):
-            if cindex > 0: #If index of character is known (from multiple selection, inputs it here)
-                i = cindex
-            elif cindex == -1: #If multiple selection failed, ends.
-                break
-            if searchedName.lower() in str(cnames[i]).lower().replace("ì", "i"):
-                cname = str(cnames[i])
-                tit = cname
-                for j in range(len(headers)-1):
-                    try:
-                        carg = cargs[i][j]
-                    except IndexError:
-                        carg = ""
-                    if carg != "":
-                        if headers[j+1] == "Link":
-                            pass
-                        elif headers[j+1] == "Approved":
-                            cdata.append("Character sheet approved")
-                        elif headers[j+1] == "Players":
-                            cdata.append("Also played by:" + carg)
-                        else:
-                            cdata.append(headers[j+1] + ": " + carg)
-                    if headers[j+1] == "Image":
-                        if not "|" in carg:
-                            imgurl = carg
-                            imglen = 1
-                        else:
-                            imgurl = carg.split("|")
-                            imglen = carg.count("|") + 1
-                try:
-                    foot = "---------------------------------------------------------\n\nOwned by " + str(pnames[i] + ". Searched for by " + message.author.name)
-                except AttributeError:
-                    foot = ""
-                break
-
-    elif str(searchedName).lower() in str(headers).lower():
-
-        #Search by field
-
-        searchterm = ""
-
-        #Fix Colour argument
-
-        if "colour" in str(msgspl[2]).lower() or "color" in str(msgspl[2]).lower():
-
-            for i in range(len(msgspl)-3):
-
-                searchterm += msgspl[i + 3]
-
-        else:
-
-            for i in range(len(msgspl)-2):
-
-                searchterm += msgspl[i + 2]
-
-        #Compare results per field
-
-        for i in range(len(headers)):       
-
-            if searchedName.lower() in headers[i].lower():
-
-                tit = "Characters who's " + headers[i].lower() + " contains " + searchterm.lower()
-
-                for n in range(len(pnames)):
-
-                    if searchterm.lower() in cargs[n][i-1].lower():
-
-                        cdata.append(pnames[n] + "'s " + cargs[n][0])
-
-                if cdata == ["\n"]:
-
-                    tit = "Could not find any characters who's " + headers[i].lower() + " contains " + searchterm.lower()
-
-    elif searchedName.lower() in str(cargs).lower():
-
-        #Search by loose search term
-
-        for i in range(len(headers)):
-
-            for j in range(len(cnames)):
-
-                if searchedName.lower() in cargs[j][i-1].lower():
-
-                    tit = "Found '" + searchedName.lower() + "' in:"
-
-                    cdata.append("The " + str(headers[i]).lower() + " of " + str(pnames[j]) + "'s " + str(cnames[j]))
-
-    else:
-
-        tit = "Could not find " + searchedName + " in the character registry"
-
-        cdata.append("Maybe try a different search term?")
+                carg = cargs[i][j]
+            except IndexError:
+                carg = ""
+            if carg != "":
+                if headers[j+1] == "Link":
+                    pass
+                elif headers[j+1] == "Approved":
+                    cdata.append("Character sheet approved")
+                elif headers[j+1] == "Players":
+                    cdata.append("Also played by:" + carg)
+                else:
+                    cdata.append(headers[j+1] + ": " + carg)
+            if headers[j+1] == "Image":
+                if not "|" in carg:
+                    imgurl = carg
+                    imglen = 1
+                else:
+                    imgurl = carg.split("|")
+                    imglen = carg.count("|") + 1
+        try:
+            foot = "---------------------------------------------------------\n\nOwned by " + str(pnames[i] + ". Searched for by " + message.author.name)
+        except AttributeError:
+            foot = ""
+        break
 
     if cindex != -1:
         if cdata != None:
