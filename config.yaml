@@ -20,6 +20,7 @@ economy:
   currency_multiplier_per_rp_word: 0.00015
   currency_per_rp_word: 0.25
   daily_interaction_value: 200
+  dezziepoolpercharslot: 100
   fixed_currecy_per_ooc_message: 2
   fixed_currecy_per_rp_message: 10
   reactcashmoney: 100

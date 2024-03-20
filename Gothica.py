@@ -1,4 +1,3 @@
-import EconomyCommands
 import EconomyV2
 import OocFun
 import CharRegistry
@@ -54,22 +53,17 @@ async def on_ready():
     await EconomyV2.loadInventorySheet()
     print("Done.")
     #------------------DezzieAwardPoolReset---------------------
-
-
-    #Read old dezzie award reset date
-    economyResetDate = sheet.values().get(spreadsheetId = EconSheet, range = "D2", majorDimension='ROWS').execute().get("values")
-
     #Grab current date and time
     today = datetime.now()
 
     #Prepare dates for Dezzie Award Pool Reset
     try:
-        oldResetDateTime = int(economyResetDate[0][0])
+        oldResetDateTime = int(GlobalVars.economyData[1][3])
     except:
         #Happens if the date isn't initialized on the econ sheet. Initialize it then.
         print("Initial reset date added!")
         resetDateInitVal = [[int(datetime.timestamp(datetime(2022, 10, 22)))]]
-        sheet.values().update(spreadsheetId = EconSheet, range = "D2", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=resetDateInitVal)).execute()
+        GlobalVars.economyData[1][3] = resetDateInitVal
         oldResetDateTime = resetDateInitVal[0][0]
 
     if oldResetDateTime < datetime.timestamp(today):
@@ -81,23 +75,17 @@ async def on_ready():
         newResetDatetime = (today - timedelta(days=today.weekday()) + timedelta(days=7)).replace(hour=0, minute=0, second=0) #Takes todays date, subtracts the passed days of the week and adds 7, resulting in the date for next monday. Then replaces time component with 0
         newResetDateTimestamp = int(datetime.timestamp(newResetDatetime))
 
-        #Set timestamp in data
-        newResetValue = [[newResetDateTimestamp]]
-
-
-
         print("Last reset timestamp:" + str(datetime.fromtimestamp(oldResetDateTime)))
         print("Next reset timestamp:" + str(datetime.fromtimestamp(newResetDateTimestamp)))
 
 
 
         #On reboot refresh dezzie pool of users
-        economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:A8000", majorDimension='ROWS').execute().get("values")
 
-        for i in range(5, len(economydata)-1, 4):
+        for i in range(5, len(GlobalVars.economyData)-1, 4):
             #Grab the name on the member
             try:
-                name = economydata[i][0]
+                name = GlobalVars.economyData[i][0]
             except IndexError:
                 print("Index error at: " + str(i) + ". Probably something broke in the economy sheet, and the registration of new people.")
             userStillOnServer = 1
@@ -128,14 +116,12 @@ async def on_ready():
             #If they aren't on the server anymore, we can just not refresh their dezzie pool.
             if userStillOnServer == 1:
                 #Base values
-                if "+3" in str(roles).lower():
-                    dezziePool = GlobalVars.config["economy"]["weeklydezziepoolplus3"]
-                elif "+2" in str(roles).lower():
-                    dezziePool = GlobalVars.config["economy"]["weeklydezziepoolplus2"]
-                elif "+1" in str(roles).lower():
-                    dezziePool = GlobalVars.config["economy"]["weeklydezziepoolplus1"]
-                else:
-                    dezziePool = GlobalVars.config["economy"]["weeklydezziepoolverified"]
+                dezziePool = GlobalVars.config["economy"]["weeklydezziepoolverified"]
+                econ_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if name in x][0])
+
+                #Add char slot bonus
+                dezziePool += GlobalVars.config["economy"]["dezziepoolpercharslot"] * GlobalVars.economyData[econ_row_index + 2][1]
+                    
                 #Bonus
                 if "licensed fucksmith" in str(roles).lower():
                     dezziePool += GlobalVars.config["economy"]["weeklydezziebonusfucksmith"]
@@ -155,21 +141,19 @@ async def on_ready():
                     dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront4"]
 
             try:
-                economydata[i+3][0] = dezziePool
+                GlobalVars.economyData[i+3][0] = dezziePool
             except IndexError:
                 #Occurs when Dezzie pool is null. Initialize dezzie pool
                 try:
-                    economydata[i+3] = [dezziePool]
+                    GlobalVars.economyData[i+3] = [dezziePool]
                 except IndexError:
                     #Also triggers at the last person in the spreadsheet, as the cell is not just empty, but unreachable.
                     pass
 
-
-        #update dezzie pools
-        sheet.values().update(spreadsheetId = EconSheet, range = "A1:A8000", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=economydata)).execute()
-
         #update sheet with new refresh time
-        sheet.values().update(spreadsheetId = EconSheet, range = "D2", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=newResetValue)).execute()
+        GlobalVars.economyData[1][3] = newResetDateTimestamp
+        #update dezzie pools
+        EconomyV2.writeEconSheet(GlobalVars.economyData)
         print("Weekly Dezzie Award Pool Reset!")
     else:
         print("It is not dezzie award pool reset time yet!")
@@ -389,9 +373,7 @@ async def on_message(message):
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "manualmigrate") and not isbot and "staff" in str(message.author.roles).lower():
                 await MiscellaneuosCommands.manualMigrateAcc(message)
                 
-            #Income History
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "income") and not isbot:
-                await EconomyV2.incomeWeek(message)
+            
 
 
             #------------------------ Config Commands -------------------------------
@@ -2014,7 +1996,9 @@ async def on_message(message):
                     await EconomyV2.invest(message)
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "bid"):
                     await EconomyV2.bid(message, isbot)
-                
+            #Income History
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "income") and not isbot:
+                await EconomyV2.incomeWeek(message)
             #Runar's Inventory
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "spellrotation") and "staff" in str(message.author.roles).lower():
 

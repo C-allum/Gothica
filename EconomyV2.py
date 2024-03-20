@@ -217,7 +217,7 @@ async def item(message):
 
     embed_string, potential_curses, potential_curses_string, potential_curse_names, curse_count = await showItem(item_name, item_type, price, quantity_available, curses_identifier, rarity, attunement_requirement, mechanics, flavour, default_curse, additional_reference, show_quant_and_price=False)
 
-    await message.channel.send(embed=discord.Embed(title=f"**{item_name}**", description=embed_string + potential_curses_string, colour = embcol))
+    await message.channel.send(embed=discord.Embed(title=f"**{item_name}**", description=embed_string.replace("**"+item_name+"**\n\n", "") + potential_curses_string, colour = embcol))
     return
 
 #Summons the player's inventory
@@ -543,7 +543,8 @@ async def sellitem(message):
     itemname = GlobalVars.itemdatabase[sell_shop_index][item_index][1]
     
     confirm_view = Yes_No_Quantity_View(message=message)
-    await message.channel.send(embed=discord.Embed(title=f"Do you want to sell {sellquant}x {itemname} for {int(int(item_price) * GlobalVars.config["economy"]["sellpricemultiplier"] * sellquant)}?"), view = confirm_view)
+    
+    await message.channel.send(embed=discord.Embed(title=f"Do you want to sell {sellquant}x {itemname} for {int(int(item_price) * GlobalVars.config['economy']['sellpricemultiplier'] * sellquant)}?"), view = confirm_view)
     
     if await confirm_view.wait():
         await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
@@ -561,7 +562,7 @@ async def sellitem(message):
 
         #Ask if this is fine now
         confirm_view = Yes_No_View(message=message)
-        await message.channel.send(embed=discord.Embed(title=f"Do you want to sell {sellquant}x {itemname} for {int(int(item_price) * GlobalVars.config["economy"]["sellpricemultiplier"] * sellquant)}?"), view = confirm_view)
+        await message.channel.send(embed=discord.Embed(title=f"Do you want to sell {sellquant}x {itemname} for {int(int(item_price) * GlobalVars.config['economy']['sellpricemultiplier'] * sellquant)}?"), view = confirm_view)
         if await confirm_view.wait():
             await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
             return
@@ -578,7 +579,7 @@ async def sellitem(message):
                 new_stock = int(GlobalVars.itemdatabase[sell_shop_index][item_row_index][18]) + sellquant
 
             #Add dezzies
-            await addDezziesToPlayer(message, int(int(item_price) * GlobalVars.config["economy"]["sellpricemultiplier"]) * sellquant, playerID=message.author.id, write_econ_sheet=False)
+            await addDezziesToPlayer(message, int(int(item_price) * GlobalVars.config['economy']['sellpricemultiplier']) * sellquant, playerID=message.author.id, write_econ_sheet=False)
 
             #Update PlayerInfo sheet, and Inventory sheet.
             await writeEconSheet(GlobalVars.economyData)
@@ -593,7 +594,7 @@ async def sellitem(message):
                 except IndexError: #If we get an index error, that cell wasn't occupied anyways and was a trailing cell.
                     pass
             
-            TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.Sell, int(int(item_price) * GlobalVars.config["economy"]["sellpricemultiplier"]) * sellquant)
+            TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.Sell, int(int(item_price) * GlobalVars.config['economy']['sellpricemultiplier']) * sellquant)
 
 #Guides the user through giving an item
 async def giveitem(message):
@@ -718,7 +719,7 @@ async def additem(message):
     available_in_shops = []
     shopnumbers = []
     try:
-        for j in range(GlobalVars.config["general"]["index_of_first_shop"], GlobalVars.config["general"]["index_of_first_shop"]+GlobalVars.config["general"]["number_of_shops"]):
+        for j in range(GlobalVars.config['general']['index_of_first_shop'], GlobalVars.config['general']['index_of_first_shop']+GlobalVars.config['general']['number_of_shops']):
             for row in GlobalVars.itemdatabase[j]:
                 if selected_item[2] in row:
                     available_in_shops.append(GlobalVars.itemdatabase[j])
@@ -1775,10 +1776,11 @@ async def copyEconomy(message):
             itemname = oldEconData[i][j].split("|")[0]
             try:
                 amount = oldEconData[i][j].split("|")[1]
+                
             except IndexError:
                 amount = 1
                 print(f"Item {itemname} had no quantity attached.")
-
+            itemamount = amount
             if itemname[0].isalpha() == False:
                 itemname = itemname[1:]
             if "EasterEgg:964636527432978482" in itemname:
@@ -1920,7 +1922,7 @@ async def copyEconomy(message):
                 oldEconData[i][j].split("|")[0]
                 amount = int(oldEconData[i+3][j])
                 await addDezziesToPlayer(message, amount, user_id, write_econ_sheet=False, send_message=False)
-                refundedItemList.append([itemname, amount])
+                refundedItemList.append([itemname, int(itemamount) * int(amount)])
                 print(f"Refunded item {itemname}")
                 j += 1
                 continue
@@ -1952,7 +1954,7 @@ async def copyEconomy(message):
             embedstring = ""
             for item in refundedItemList:
                 embedstring += f"{item[0]} for {item[1]}{dezzieemj}\n"
-            #client.get_channel(918257057428279326).send(embed = discord.Embed(title = f"Refunded the follwing items for <@{user_id}> because they got changed.", description = "Make sure that the user you tagged is valid.", colour=embcol))
+            await client.get_channel(918257057428279326).send(embed = discord.Embed(title = f"Refunded the follwing items for <@{user_id}> because they got changed.", description = "Make sure that the user you tagged is valid.", colour=embcol))
         i+=4
     print(removedUserList)
     #Write PlayerInfo sheet

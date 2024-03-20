@@ -139,7 +139,8 @@ async def lookup(imgURL:str, message:discord.Message):
     elif data[0][2] != message.author.name.replace("'", ""):
         #check if tup name needs updating.
         updateTupName(data[0][0], imgURL, message.author.name.replace("'", ""))
-        print(f"Updated tupper name from {data[0][2]} to {message.author.name.replace("'", "")}")
+        newname = message.author.name.replace("'", "")
+        print(f"Updated tupper name from {data[0][2]} to {newname}")
         data[0][2] = message.author.name.replace("'", "")
     
     playerID = data[0][0]
