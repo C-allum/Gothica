@@ -248,7 +248,7 @@ async def charcreate(message):
     roles = str(message.author.roles)
 
     player_econ_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0])
-    maxchars = 5 + int(GlobalVars.economyData[player_econ_index + 2][1])
+    maxchars = startingslots + int(GlobalVars.economyData[player_econ_index + 2][1])
 
     for a in range(len(headers)):
         if headers[a] == "Status":
@@ -504,7 +504,7 @@ async def charedit2(message):
                     else:
                         author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0])
                         additionalCharSlots = GlobalVars.economyData[author_row_index+2][1]
-                        maxchars = 5 + int(additionalCharSlots)
+                        maxchars = startingslots + int(additionalCharSlots)
 
                         if len(chars) < maxchars:
                             if currentstat != "Unavailable":
@@ -673,7 +673,7 @@ async def chartransfer(message):
                     roles = str(str(message.author.roles))
 
                     player_econ_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0])
-                    maxchars = 5 + int(GlobalVars.economyData[player_econ_index + 2][1])
+                    maxchars = startingslots + int(GlobalVars.economyData[player_econ_index + 2][1])
 
                     if pcharsreg > maxchars:
                         foot ="\n\n----------------------------------\n\n" + recipname + " does not have an available slot, so this character has been marked as Unavailable"
@@ -814,7 +814,7 @@ async def charlist(message):
     roles = str(str(message.author.roles))
 
     player_econ_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0])
-    maxchars = 5 + int(GlobalVars.economyData[player_econ_index + 2][1])
+    maxchars = startingslots + int(GlobalVars.economyData[player_econ_index + 2][1])
 
 
     emb = discord.Embed(title = tit, description = desc, colour = embcol)
@@ -1163,7 +1163,7 @@ async def charactivate(message):
                     roles = str(str(message.author.roles))
 
                     player_econ_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0])
-                    maxchars = 5 + int(GlobalVars.economyData[player_econ_index + 2][1])
+                    maxchars = startingslots + int(GlobalVars.economyData[player_econ_index + 2][1])
 
                     if pcharsreg <= maxchars-1:
 

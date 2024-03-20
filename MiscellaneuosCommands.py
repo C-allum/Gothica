@@ -2,6 +2,9 @@ from CommonDefinitions import *
 import random
 import CommonDefinitions
 from TransactionsDatabaseInterface import updatePerson, printTransactions
+from discord import Webhook
+from discord import SyncWebhook
+import aiohttp
 import EconomyV2
 
 async def staffVacation(message):
@@ -561,16 +564,13 @@ async def manualDezPoolReset(message):
 
         #If they aren't on the server anymore, we can just not refresh their dezzie pool.
         if userStillOnServer == 1:
-            #Base values 
-            #TODO Fit to new growth system
-            if "+3" in str(roles).lower():
-                dezziePool = GlobalVars.config["economy"]["weeklydezziepoolplus3"]
-            elif "+2" in str(roles).lower():
-                dezziePool = GlobalVars.config["economy"]["weeklydezziepoolplus2"]
-            elif "+1" in str(roles).lower():
-                dezziePool = GlobalVars.config["economy"]["weeklydezziepoolplus1"]
-            else:
-                dezziePool = GlobalVars.config["economy"]["weeklydezziepoolverified"]
+            #Base values
+            dezziePool = GlobalVars.config["economy"]["weeklydezziepoolverified"]
+            econ_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if name in x][0])
+
+            #Add char slot bonus
+            dezziePool += GlobalVars.config["economy"]["dezziepoolpercharslot"] * GlobalVars.economyData[econ_row_index + 2][1]
+                    
             #Bonus
             if "licensed fucksmith" in str(roles).lower():
                 dezziePool += GlobalVars.config["economy"]["weeklydezziebonusfucksmith"]
@@ -631,8 +631,680 @@ async def removeZeroDiscriminators(message):
     sheet.values().update(spreadsheetId = EconSheet, range = "Sheet1!A1", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=userinvs)).execute() #save a copy
 
 
+#Dating Game
+async def datingjoin(message):
+    if not "private_thread" in str(message.channel.type):
+        await message.channel.send("This is not a private thread.")
+        return
+    for source in datingprivatethreads:
+        if str(message.channel.id) == str(source):
+            await message.channel.send("This thread is already in the game. You may make another to use another of your characters.")
+            return
+    else:
+        try:
+            if not ((str(message.author) in str(datingplayers)) and  (str(message.content.split(" ", 1)[1]) in str(datingchars))):
+                datingplayers.append(str(message.author))
+                datingchars.append(str(message.content.split(" ", 1)[1]))
+                datingprivatethreads.append(str(message.channel.id))
+                await datingmatch(message)
+            else:
+                await message.channel.send(embed = discord.Embed(title = "This character is already in the game!", description= "You may start a thread for one of your other characters, or wait for a date to start", colour= embcol))
+
+        except IndexError:
+            await message.channel.send(embed = discord.Embed(title= "You need to enter by typing `%datingjoin` followed by your character's name.", description= "For example:\n\n`%datingjoin Lalontra`", colour = embcol))
+
+async def datingrelay(message):
+
+    if message.content.startswith("%"):
+        return
+
+    if str(message.channel) in str(datingsources):
+        for a in range(len(datingsources)):
+            if datingsources[a] == message.channel: #Find last source thread.
+                b = a
+        index = b
+
+        if index % 2 == 0: #Get partner thread
+            blindthread = datingsources[index+1]
+            datcol = 0xfcb603
+            person = random.choice(["Blind dater number 1", "Person 1", "Dater number 1", "Someone wearing blindfold 1"])
+        else:
+            blindthread = datingsources[index-1]
+            datcol = 0x036bfc
+            person = random.choice(["Blind dater number 2", "Person 2", "Dater number 2", "Someone wearing blindfold 2"])
+        index = math.floor(index/2)
+        if datingcounts[index] < datingmax:
+            sendthreads = [datingdests[index], blindthread]
+
+            dattit = random.choice([person + " sent a message!", "Message from " + person + "!", person + " says:"])
+            await sendthreads[0].send(embed = discord.Embed(title = random.choice(["Your date sent a message!", "Message from your date!", "Your blind date says:"]), description= message.content + "\n\n*You have " + str(int(datingmax) - int(datingcounts[index]) - 1) + " messages left in this date.*", colour = datcol))
+            await sendthreads[1].send(embed = discord.Embed(title = dattit, description= message.content + "\n\n*You have " + str(int(datingmax) - int(datingcounts[index]) - 1) + " messages left in this date.*", colour = datcol))
+            datingcounts[index] += 1
+            if datingcounts[index] == datingmax:
+                await message.channel.send(embed = discord.Embed(title = "The date has now ended!", description= "You need to leave a rating for the date. Type an integer between 0 and 10.", colour  = embcol))
+                await blindthread.send(embed = discord.Embed(title = "The date has now ended!", description= "You need to leave a rating for the date. Type an integer between 0 and 10.", colour  = embcol))
+                await datingdests[index].send(embed = discord.Embed(title = random.choice(["Annnd... change!", "Next table, please!", "Time's up, onto the next one!", "That's all this date has time for!"]), description= "This date has now ended.", colour = embcol))
+            await datingbackup()
+
+        else:
+            if datingscores[b] == -1: #Get score
+                try:
+                    datingscores[b] += int(message.content) + 1
+                    if int(datingscores[b]) > 10 or int(datingscores[b]) < 0:
+                        await message.channel.send(embed = discord.Embed(title = "You must type an integer between 1 and 10", description= "We're pretty sure that " + str(datingscores[b]) + " is not between 1 and 10. Try again.", colour = embcol))
+                        datingscores[b] -= int(message.content) + 1
+                    else:
+                        await message.channel.send(embed = discord.Embed(title = "Thanks!", description= "These will be passed to the host, who will pair up the best matches at the end!", colour = embcol))
+                        await datingmatch(message)
+                    await datingbackup()
+                except ValueError:
+                    await message.channel.send(embed = discord.Embed(title = "You must type an integer between 1 and 10", colour = embcol))
+
+async def datingmatch(message):
+    if datingstate > 0:
+        if random.randint(1,20) == 20:
+            random.shuffle(datingwaiting)
+        hasdated = 0
+        for a in range(len(datingsources)):
+            if datingsources[a] == message.channel:
+                if a % 2 == 0 or a == 0:
+                    b = a + 1
+                else:
+                    b = a - 1
+                try:
+                    if datingwaiting[0] == datingsources[b]:
+                        hasdated = 1
+                except IndexError:
+                    pass
+        if len(datingwaiting) == 0 or hasdated:
+            await message.channel.send(embed = discord.Embed(title= "You have been added to the waiting list.", description= "We will notify you when a date becomes available.", colour = embcol))
+            datingwaiting.append(message.channel)
+            await datingbackup()
+        else:
+            datingsources.append(datingwaiting.pop(0))
+            datingsources.append(message.channel)
+            tabno = str(len(datingdests)+1)
+            await datingbackup()
+            dest = await client.get_channel(datingchannel).create_thread(name = "Date " + tabno, type = discord.ChannelType.public_thread)
+            await dest.send(embed = discord.Embed(title=random.choice(["This is table " + tabno + "! It's reserved", "You can't sit here - they're on a *date*!", "This table - number " + tabno + " is reserved for our blindfolded dates", "Here we are, table " + tabno + ", ready for your blind date. How romantic!", "Let me guide you to your seats - oh, not there, that's your date's lap!", "Blindfolded dating. Such a good idea until you have to seat people. You're on table " + tabno + ". See if you can find it. No peeking!", "Such a cute couple. Shame we're the only ones that can see them."]), description= "This thread is only to be used for blind dating. Feel free to join the thread to view the messages, but we ask that you don't message here.\n\n To our contestants, messaging in your private thread will relay the message here. After 24 messages, the date will end and you will move on to the next one.", colour = embcol))
+            datingdests.append(dest)
+            datingcounts.append(0)
+            datingscores.append(-1)
+            datingscores.append(-1)
+            for a in range(2):
+                await datingsources[-(a+1)].send(embed = discord.Embed(title= "We have set up a date for you!", description= "Your blind date awaits on table " + str(len(datingdests)) + ".\n\nHere's a link to the thread. We don't advise joining it unless many people are as that could give away who you are.\n\n" + str(dest.jump_url) + "\n\nFrom now on, anything you type into this thread will be relayed to that thread, and we will post your blind date's replies here as well for you. Don't use a tupper, *especially* if your tupper includes the name of your character! Keep your messages brief to keep the game moving, but try to give your date enough to reply to!", colour = embcol))
+            await datingbackup()
+
+async def datingsetup(message):
+    await message.channel.send(embed = discord.Embed(title = "Valentine's Day Blind Dating!", description= "Welcome to 2024's Valentine's day event: Blind dating! To join in, create a *private* thread in this channel, and type `%datingjoin` followed by your character's name. For example:\n\n`%datingjoin Lalontra`\n\nFeel free to follow any of the threads we open here, but don't message in them. At the end of the night, our host will reveal who matched best with who! Happy dating!", colour = embcol))
+    await message.delete()
+
+async def datingbackup():
+    string = "|".join(datingplayers) + "\n\n"
+    string += "|".join(datingchars) + "\n\n"
+    for a in range(len(datingsources)):
+        string += str(datingsources[a].id) + "|"
+    string = string.lstrip("|") + "\n\n"
+    for a in range(len(datingdests)):
+        string += str(datingdests[a].id) + "|"
+    string = string.lstrip("|") + "\n\n"
+    if len(datingwaiting) == 0:
+        string += "-"
+    else:
+        for a in range(len(datingwaiting)):
+            string += str(datingwaiting[a].id) + "|"
+    string = string.lstrip("|") + "\n\n"
+    for a in range(len(datingscores)):
+        string += str(datingscores[a]) + "|"
+    string = string.lstrip("|") + "\n\n"
+    for a in range(len(datingcounts)):
+        string += str(datingcounts[a]) + "|"
+    string = string.lstrip("|")     
+
+    sheet.values().update(spreadsheetId = Plotsheet, range = str("AZ1"), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[[string]])).execute()
+
+#--------------Dating Game-------------------
+
+async def datingrestorefromfile(message):
+    with open('datingrecovery.txt') as f:
+        string = f.read()
+    f.close
+
+    parts = string.split("\n\n")
+    for a in range(len(parts[0].split("|"))):
+        datingplayers.append(parts[0].split("|")[a])
+
+    for a in range(len(parts[1].split("|"))):
+        datingchars.append(parts[1].split("|")[a])
+
+    for a in range(len(parts[2].split("|"))):
+        datingsources.append(client.get_channel(datingchannel).get_thread(int(parts[2].split("|")[a])))
+
+    for a in range(len(parts[3].split("|"))):
+        datingdests.append(client.get_channel(datingchannel).get_thread(int(parts[3].split("|")[a])))
+
+    if parts[4] != "-":
+        for a in range(len(parts[4].split("|"))):
+            datingwaiting.append(client.get_channel(datingchannel).get_thread(int(parts[4].split("|")[a])))
+    else:
+        datingwaiting = []
+
+    for a in range(len(parts[5].split("|"))):
+        datingscores.append(int(parts[5].split("|")[a]))
+
+    for a in range(len(parts[6].split("|"))):
+        datingcounts.append(int(parts[6].split("|")[a]))
+
+    await message.channel.send(embed = discord.Embed(title = "Restore successful.", colour = embcol))
+
+async def datingrestore(message):
+
+    parts = message.content.split("\n\n")
+
+    for a in range(len(parts[0].split("|"))):
+        datingplayers.append(parts[0].split("|")[a])
+
+    for a in range(len(parts[1].split("|"))):
+        datingchars.append(parts[1].split("|")[a])
+
+    for a in range(len(parts[2].split("|"))):
+        datingsources.append(client.get_channel(datingchannel).get_thread(int(parts[2].split("|")[a])))
+
+    for a in range(len(parts[3].split("|"))):
+        datingdests.append(client.get_channel(datingchannel).get_thread(int(parts[3].split("|")[a])))
+
+    if parts[4] != "-":
+        for a in range(len(parts[4].split("|"))):
+            datingwaiting.append(client.get_channel(datingchannel).get_thread(int(parts[4].split("|")[a])))
+    else:
+        datingwaiting = []
+
+    for a in range(len(parts[5].split("|"))):
+        datingscores.append(int(parts[5].split("|")[a]))
+
+    for a in range(len(parts[6].split("|"))):
+        datingcounts.append(int(parts[6].split("|")[a]))
+
+    await message.channel.send(embed = discord.Embed(title = "Restore successful.", colour = embcol))
+
+async def datingend(message):
+    results = []
+    for a in range(len(datingdests)):
+        ind1 = datingsources.index(datingsources[a])
+        ind2 = datingsources.index(datingsources[a+1])
+        results.append("**" + str(datingchars[ind1]) + "** *and* **" + str(datingchars[ind2]) + "**: " + str(datingscores[ind1] + datingscores[ind2]))
+        a += 1
+    await message.channel.send(embed = discord.Embed(title = "The results are in, here are the final scores of the dating game!", description = "We advise just writing up the results and pairing off the highest scoring ones.\n\n" + "\n".join(results), colour = embcol))
+    datingstate -= 1
+
+async def datingmanual(message):
+    threads = client.get_channel(datingchannel).threads
+    threaddata = []
+    await message.channel.send("Running. This will take a while.")
+
+    ref = 0
+    for a in range(len(threads)):
+        if not "Gothica" in str(threads[a].owner):
+            mess = [joinedMessages async for joinedMessages in threads[a].history(limit = None, oldest_first= True)]
+            mess.sort(key=lambda x: x.created_at)
+            dateno = []
+
+            for b in range(len(mess)):
+                if mess[b].content.lower().startswith("%datingjoin"):
+                    try: 
+                        char = mess[b].content.split(" ", 1)[1]
+                    except IndexError:
+                        pass
+                if len(mess[b].embeds) == 1:
+                    if mess[b].embeds[0].title == "Thanks!":
+                        c = 0
+                        embtit = mess[b-c].embeds[0].title
+                        while embtit != "We have set up a date for you!":
+                            c += 1
+                            try:
+                                embtit = mess[b-c].embeds[0].title
+                            except IndexError:
+                                pass
+                        try:
+                            dateno.append(str(mess[b-c].embeds[0].description.split(".")[0].split(" ")[-1]) + ": " + str(mess[b-c].embeds[0].description.split("are.")[1].split(" ")[0].rstrip("From")).lstrip().rstrip() + ", Rated: " + str(mess[b-1].content))
+                        except IndexError:
+                            dateno.append("N/A")
+
+            threaddata.append(str(threads[a].owner) + ": **" + str(char) + "**\n\nDate Numbers:\n\n" + str("\n".join(dateno)) + "\n\nThread: " + str(threads[a].jump_url))
+            await message.channel.send(threaddata[ref])
+            ref += 1
+
+async def datingcreatelists(message):
+    await message.channel.send(embed = discord.Embed(title = "The results are in!", description = "With that, our date night has finally concluded!\nSo many of you were eager for love tonight~!\n\nSo much that we managed to hit well over 100 blind dates!\n\nBut you're all probably wondering who matched the best, right~? The following couples were all perfectly matched, each giving their partner a perfect 10/10 for the date!\n\nSamdellsmith's Alibezeh and Fenrisfirebrand's Fenrir\nRuin_enjoyer's Shatter and C_allum's Sinew of Silversilk\nWamzazz's Consumption and Eleif's Devotion\nTdarklordcluthulhu's Cherry and SpitefulChaos's Kalayo\nBunnymando's Ash and... ourselves, Gothica\nSamdellSmith's Alibezeh and Eleif's Devotion\nTasha3624's Kari and Ayucrow's Melissandra\n.Chillbroswaggins's Firras and Onetruemandalore's Victor\nTdarklordcthulhu's Cherry and Artificer_dragon's Liora\nThepandorica's Iona and... ourselves, Gothica\nAyucrow's Melissandra and Greyrandal's Mari\nLenpendragon's Morathi and Ayucrow's Sharia\nGreyrandal's Vayne and Lenpendragon's Erika\n\nCongratulations to all lovebirds~\n\nWe will also be revealing all your blind dates via direct message as well!\n\nThank you to everyone who participated. We will be sure to host another event like this in the future, though we might include ~~fewer~~ *different* bugs.", colour = embcol))
+    await message.delete()
+    datedata = gc.open_by_key("1PRfKMKcut3H-AyJYqCzKnvK0IEspqlTOhiFJ3LBpHGc").sheet1
+    dateno = datedata.col_values(1)
+    dateset = datedata.col_values(2)
+    datelinks = datedata.col_values(3)
+    dateplayers = datedata.col_values(4)
+    datechars = datedata.col_values(5)
+    daterate = datedata.col_values(6) 
+    chars = []
+    players = []
+    for a in range(len(dateno)): #Get characters
+        if a != 0:
+            if not datechars[a] in str(chars):
+                chars.append(datechars[a])
+                players.append(dateplayers[a])
+    for b in range(len(chars)):
+        ratings = []
+        dated = []
+        for c in range(len(dateno)):
+            if chars[b] == datechars[c] and players[b] == dateplayers[c]:
+                if c % 2 != 0:
+                    d = c+1
+                else:
+                    d = c-1
+                try:
+                    ratings.append(int(daterate[d]))
+                    dated.append(dateplayers[d] + "'s " + datechars[d] + ": " + datelinks[c] + ". You rated this date a " + str(daterate[c]))
+                except IndexError:
+                    print("Index Error")
+        datelist = [x for _,x in sorted(zip(ratings, dated))]
+        datelist.reverse()
+        mess = str(players[b] + ", your character, **" + chars[b] + "**'s highest rating from a date was a " + str(sorted(ratings)[-1]) + "!\n\nThe people your character met are (in order of how high they ranked you):\n" + "\n".join(datelist)).replace("rated this date a -1", "never rated this date").replace("a 8", "an 8")
+        print(mess + "\n\n")
+        user = discord.utils.get(client.get_guild(guildid).members, name = players[b])
+        if user != None:
+            await user.send(mess)
+
+#--------------Labyrinth Game-----------------
+            
+async def mazestart(message):
+
+    mazechannel[0] = message.channel.parent
+    mazechannel[1] = message.channel
+    await message.delete()
+    mazestartmessage.append(await mazechannel[0].send(embed = mazestartembed, view = mazejoin()))
+
+async def mazeupdate(direction, mazeinstance, state):
+
+    if direction == "north":
+        mazedata[mazeinstance][4][0] = int(mazedata[mazeinstance][4][0]) - 1
+    elif direction == "east":
+        mazedata[mazeinstance][4][1] = int(mazedata[mazeinstance][4][1]) + 1
+    elif direction == "south":
+        mazedata[mazeinstance][4][0] = int(mazedata[mazeinstance][4][0]) + 1
+    else:
+        mazedata[mazeinstance][4][1] = int(mazedata[mazeinstance][4][1]) - 1
+
+    walls = []
+    paths = [1, 1, 1, 1]
+    if "N" in mazearray[mazedata[mazeinstance][1]][mazedata[mazeinstance][4][0]][mazedata[mazeinstance][4][1]]:
+        walls.append("North")
+        paths[0] -= 1
+    if "E" in mazearray[mazedata[mazeinstance][1]][mazedata[mazeinstance][4][0]][mazedata[mazeinstance][4][1]]:
+        walls.append("East")
+        paths[1] -= 1
+    if "S" in mazearray[mazedata[mazeinstance][1]][mazedata[mazeinstance][4][0]][mazedata[mazeinstance][4][1]]:
+        walls.append("South")
+        paths[2] -= 1
+    if "W" in mazearray[mazedata[mazeinstance][1]][mazedata[mazeinstance][4][0]][mazedata[mazeinstance][4][1]]:
+        walls.append("West")
+        paths[3] -= 1
+
+    if len(walls) == 0:
+        wallsides = "This room doesn't seem to have walls on any sides."
+    elif len(walls) == 1:
+        wallsides = "This room has a wall to the " + walls[0]
+    elif len(walls) == 2:
+        wallsides = "This room has walls to the " + walls[0] + " and " + walls[1]
+    else:
+        wallsides = "This room has walls to the " + walls[0] + ", " + walls[1] + ", and " + walls[2] + ". It seems to be a dead end."
+
+    try:
+        if "B" in mazearray[mazedata[mazeinstance][1]][mazedata[mazeinstance][4][0]][mazedata[mazeinstance][4][1]]:
+            enc = "This is the space you started in."
+        elif "X" in mazearray[mazedata[mazeinstance][1]][mazedata[mazeinstance][4][0]][mazedata[mazeinstance][4][1]]:
+            enc = "You found the exit! Congratulations!"
+            state = 3
+        elif mazeoptions[mazeencounters[mazeinstance][mazedata[mazeinstance][4][0]][mazedata[mazeinstance][4][1]]] != "":
+            enc = "In this space, you find: " + mazeoptions[mazeencounters[mazeinstance][mazedata[mazeinstance][4][0]][mazedata[mazeinstance][4][1]]]
+            if "minotaur" in enc:
+                if state != 2:
+                    state = 1.5
+        else:
+            enc = ""
+    except TypeError:
+        enc = ""
+
+    return(wallsides, enc, paths, direction, state)
+
+#Mazebutton
+class MazeView(discord.ui.View):
+    def __init__(self, north, east, south, west, prev, state):
+        super().__init__(timeout = 0)
+        self.buttons = []
+
+        directs = ["north", "east", "south", "west"]
+        relatdirects = [" (Forward)", " (Right)", " (Back)", " (Left)"]
+        forwardindex = directs.index(prev)
+
+        if north:
+            if state == 2 and relatdirects[-forwardindex] == " (Back)":
+                nbut = discord.ui.Button(label = "North" + relatdirects[-forwardindex], style = discord.ButtonStyle.red, custom_id = "north")
+            else:
+                nbut = discord.ui.Button(label = "North" + relatdirects[-forwardindex], style = discord.ButtonStyle.green, custom_id = "north")
+            self.buttons.append(nbut)
+            self.add_item(nbut)
+        if east:
+            if state == 2 and relatdirects[-forwardindex+1] == " (Back)":
+                ebut = discord.ui.Button(label = "East" + relatdirects[-forwardindex+1], style = discord.ButtonStyle.red, custom_id = "east")
+            else:
+                ebut = discord.ui.Button(label = "East" + relatdirects[-forwardindex+1], style = discord.ButtonStyle.green, custom_id = "east")
+            self.buttons.append(ebut)
+            self.add_item(ebut)
+        if south:
+            if state == 2 and relatdirects[-forwardindex+2] == " (Back)":
+                sbut = discord.ui.Button(label = "South" + relatdirects[-forwardindex+2], style = discord.ButtonStyle.red, custom_id = "south")
+            else:
+                sbut = discord.ui.Button(label = "South" + relatdirects[-forwardindex+2], style = discord.ButtonStyle.green, custom_id = "south")
+            self.buttons.append(sbut)
+            self.add_item(sbut)
+        if west:
+            if state == 2 and relatdirects[-forwardindex+3] == " (Back)":
+                wbut = discord.ui.Button(label = "West" + relatdirects[-forwardindex+3], style = discord.ButtonStyle.red, custom_id = "west")
+            else:
+                wbut = discord.ui.Button(label = "West" + relatdirects[-forwardindex+3], style = discord.ButtonStyle.green, custom_id = "west")
+            self.buttons.append(wbut)
+            self.add_item(wbut)
+
+        for a in range(len(self.buttons)):
+            self.buttons[a].callback = self.callback
+
+    async def callback(self, interaction: discord.Interaction):
+        await mazelocks[int(interaction.message.channel.name.split(" ")[2])].acquire()
+        if (interaction.user == mazedata[int(interaction.message.channel.name.split(" ")[2])][2]) or (interaction.user == mazedata[int(interaction.message.channel.name.split(" ")[2])][3]):
+            await interaction.response.send_message("Going " + str(interaction.data["custom_id"]).title() + "!\n" + interaction.user.name + " selected this path!")
+            wallsides, enc, paths, prev, state = await mazeupdate(interaction.data["custom_id"], int(interaction.message.channel.name.split(" ")[2]), mazedata[int(interaction.message.channel.name.split(" ")[2])][6])
+
+            mazetitle = mazedata[int(interaction.message.channel.name.split(" ")[2])][2].display_name + " & " + mazedata[int(interaction.message.channel.name.split(" ")[2])][3].display_name + "'s Maze Encounter"
+
+            if state == 1: #Normal
+                mazeEmbed = discord.Embed(title = mazetitle, description = wallsides + "\n" + enc + "\n\nRoleplay here, and then use the buttons below to decide where to go next!", colour = embcol)
+                await interaction.channel.send(embed = mazeEmbed, view = MazeView(paths[0], paths[1], paths[2], paths[3], prev, state))
+            
+            elif state == 1.5: #Chase starting
+                mazeEmbed = discord.Embed(title = mazetitle, description = wallsides + "\n" + enc + "\n\nRoleplay here, and then use the buttons below to decide where to go next! " + random.choice(["Remember, the minotaur is behind you!", "The thundering of hooves reminds you not to linger here long!", "Looking over your shoulder, the fog swirls, as though the minotaur might burst through at any moment!", "You're outrunning the miontaur for now, but keep moving! The end will be around here somewhere!", "We would advise against spending too long here. There is a minotaur after you, after all...", "He's hot on your heels! He's hot in general, actually.", "Keep running!"]), colour = embcol)
+                await interaction.channel.send(embed = mazeEmbed, view = MazeView(paths[0], paths[1], paths[2], paths[3], prev, state))
+                mazedata[int(interaction.message.channel.name.split(" ")[2])][6] = 2
+                directs = ["north", "east", "south", "west"]
+                mazedata[int(interaction.message.channel.name.split(" ")[2])][8] = interaction.data["custom_id"]
+
+            elif state == 2: #Being Chased
+
+                if interaction.data["custom_id"] == mazedata[int(interaction.message.channel.name.split(" ")[2])][8]: #Caught
+                    minoname = "Gerald B. Hooves"
+                    await interaction.channel.send(embed = discord.Embed(title = "The Minotaur has caught you!", description = random.choice(["He introduces himself as " + minoname + " and spends the next " + str(random.randint(2, 5)) + " hours telling you how cool mazes are. Afterwards, he leads you to the exit", minoname + ", the maze obsessed minotaur, thanks you for joining him, and spends the next " + str(random.randint(2, 5)) + " hours excitedly explaining the history of mazes. He brought diagrams, and your characters cannot get a word in edgeways.", "Not only is it easy to get lost in a maze like this, but it is also easy to lose track of time." + minoname + ", the minotaur, demonstrates this fact to your characters upon catching up with them, as he subjects them to a" + str(random.randint(4, 7)) + " hour lecture on the mechanics of mazes and their effect on cultures around the world."]), colour = embcol))
+                    mazedata[int(interaction.message.channel.name.split(" ")[2])-1][6] = 4
+                else:
+                    mazeEmbed = discord.Embed(title = mazetitle, description = wallsides + "\n" + enc + "\n\nRoleplay here, and then use the buttons below to decide where to go next! " + random.choice(["Remember, the minotaur is behind you!", "The thundering of hooves reminds you not to linger here long!", "Looking over your shoulder, the fog swirls, as though the minotaur might burst through at any moment!", "You're outrunning the miontaur for now, but keep moving! The end will be around here somewhere!", "We would advise against spending too long here. There is a minotaur after you, after all...", "He's hot on your heels! He's hot in general, actually.", "Keep running!"]), colour = embcol)
+                    await interaction.channel.send(embed = mazeEmbed, view = MazeView(paths[0], paths[1], paths[2], paths[3], prev, state))
+                    mazedata[int(interaction.message.channel.name.split(" ")[2])][6] = 2
+                    directs = ["north", "east", "south", "west"]
+                    mazedata[int(interaction.message.channel.name.split(" ")[2])][8] = directs[directs.index(interaction.data["custom_id"])-2]
+
+            elif state == 3: #Found the end
+                await interaction.channel.send(embed = discord.Embed(title = "Congratulations! You found the exit", description= "You have found your way out of the maze. We hope you enjoyed it.", colour = embcol))
+                mazedata[int(interaction.message.channel.name.split(" ")[2])][6] = 3
+            
+            await mazetrack(int(interaction.message.channel.name.split(" ")[2]))
+            
+            self.value = True
+            self.stop()
+
+        else:
+            await interaction.user.send("Please do not interact in scenes that you are not part of. If you want to play, press the join button in the main channel.")
+        
+        mazelocks[int(interaction.message.channel.name.split(" ")[2])].release()
+
+class mazejoin(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout = 0)
+    @discord.ui.button(label = "Join", style = discord.ButtonStyle.green, custom_id = "mazejoin")
+    async def callback(self, interaction: discord.Interaction, item):
+
+        lock = asyncio.Lock()
+        await lock.acquire()
+
+        await mazestartmessage[0].edit(embed = mazestartembed, view = mazejoin())
+        
+        matchmade = 0
+        if len(mazedata) != 0:
+            for a in range(len(mazedata)):
+                try:
+                    if mazedata[a][3] != None: #Mazegame a has a player 2, so pass on this.
+                        pass
+
+                except IndexError: #Mazegame a has no player 2.
+                    if mazedata[a][2] == interaction.user: #Remove user on second click
+                        mazedata.pop(a)
+                        mazeencounters.pop(a)
+                        await interaction.response.send_message(content = "You have been removed from the waiting list.", ephemeral = True, delete_after = 300)
+                        await lock.release()
+                        return
+
+                    else:
+                        for b in range(len(mazedata)): #Test if players have mazed before
+                            try:
+                                if (interaction.user == mazedata[b][2] and mazedata[a][2] == mazedata[b][3]) or (interaction.user == mazedata[b][3] and mazedata[a][2] == mazedata[b][2]): #True if players have done a maze together already.
+                                    matchmade = 0
+                                    break #Doesn't bother checking the rest of the instances for a pair
+                                else:
+                                    matchmade = 1
+                            except IndexError:
+                                matchmade = 1
+
+                    if matchmade == 1: #If there is an open user that the new player has not matched with, start the maze
+                        print(str(interaction.user) + " is player 2 in maze " + str(a))
+                        await interaction.response.send_message("Your maze is starting!", ephemeral= True, delete_after= 300)
+                        await addp2tomaze(interaction.user, a)
+                        break
+                
+            if matchmade == 0: #If, after going through all the games, there is no match made, add to queue.
+                print(str(interaction.user) + " is player 1 in maze " + str(len(mazedata)))
+                await interaction.response.send_message("You are in the waiting list!", ephemeral= True, delete_after= 300)
+                await addp1tomaze(interaction.user, len(mazedata))
+
+        else: # First Game
+            await interaction.response.send_message("You are in the waiting list!", ephemeral= True, delete_after= 300)
+            print(interaction.user.name + " is player 1 in maze 0")
+            await addp1tomaze(interaction.user, 0)
+
+        lock.release()
+
+async def addp1tomaze(player, mazeno):
+    mazedata.append(["", random.randint(0, len(mazearray)-1), player])
+
+    encs = []
+    for a in range(len(mazearray[mazedata[mazeno][1]])):
+        encline = []
+        for b in range(len(mazearray[mazedata[mazeno][1]][a])):
+            rand = random.randint(1, 6)
+            if rand != 1:
+                enc = random.randint(0, len(mazeoptions)-1)
+                if encs.count(enc) >= 1:
+                    enc = random.randint(0, len(mazeoptions)-1)
+                encline.append(enc)
+            else:
+                encline.append("")
+        encs.append(encline)
+
+    mazeencounters.append(encs)
+
+async def addp2tomaze(player, mazeno):
+    oocthread = await mazechannel[0].create_thread(name = "Maze Adventure ooc " + str(mazeno), type = discord.ChannelType.private_thread)
+    rpthread = await mazechannel[0].create_thread(name = "Maze Adventure " + str(mazeno), type = discord.ChannelType.public_thread)
+
+    for a in range(len(mazearray[mazedata[mazeno][1]])): #Find start coords
+        for b in range(len(mazearray[mazedata[mazeno][1]][a])):
+            if "B" in mazearray[mazedata[mazeno][1]][a][b]:
+                entry = [a+1, b]
+                break
+    
+    mazedata[mazeno][0] = rpthread
+    mazedata[mazeno].append(player)
+    mazedata[mazeno].append(entry)
+    mazedata[mazeno].append(oocthread)
+    mazedata[mazeno].append(1)
+    mazelocks.append(asyncio.Lock())
+    await mazelocks[-1].acquire()
+
+    mazedata[mazeno].append(await mazechannel[1].send(embed = discord.Embed(title = "Maze Instance " + str(mazeno), description = "Thread: " + str(mazedata[mazeno][0].jump_url) + "\nPlayers: " + str(mazedata[mazeno][2].name) + " (" + str(mazedata[mazeno][2].id) + ") & " + str(mazedata[mazeno][3].name) + " (" + str(mazedata[mazeno][3].id) + ")\nCoordinates: " + str(mazedata[mazeno][4][0]) + ", " + str(mazedata[mazeno][4][1]) + "\nState: 1\n" + "Maze Map Index: " + str(mazedata[mazeno][1]) + "\nMinotaur Direction: none\n\n" + str(mazeencounters[mazeno]).replace("], [", "],\n["))))
+    mazedata[mazeno].append("none")
+
+    walls, enc, paths, prev, state = await mazeupdate("north", mazeno, 1)
+    await oocthread.send(mazedata[mazeno][2].mention + " and " + mazedata[mazeno][3].mention + ", this is your ooc thread for " + rpthread.jump_url + ". Please roleplay in that thread. This thread should be used to discuss kinks and limits, as well as agree on directions to take in game. We recommend running `%kinkcompare` and also pulling up your character entries here.")
+    await rpthread.send(embed = discord.Embed(title = mazedata[mazeno][2].display_name + " and " + mazedata[mazeno][3].display_name + "'s Maze Encounter", description = "*A mysterious obelisk has appeared in the arena. After touching it, your characters find themselves magically transported into a strange, arcane space. The space is shrouded in fog, and has walls " + random.choice(["made of polished black obsidian. They extend upwards higher than you can see through the fog", "carved from the rocky cave itself. They could almost be natural.", "Formed of large, flawless mirrors. Oddly, your clothes are not reflected in them.", "that seem grown from hedges. No matter how you try though, you cannot cut through them."]) + " The space appears to be a " + str(random.randint(1, 4)) + "0 foot square, and you surmise that you are in a maze comprised of other equally sized spaces. There is nothing in this room except for the other player's character, who your character feels a strong compulsion to not leave alone down here.*\n\n*" + walls + "*\n\nFor this event, you roleplay using your tuppers as normal, and use your ooc thread to discuss the direction that you want to take in the maze. When you have decided, use the buttons on the message below to choose the direction to move, in which case we will describe the next square of space. Some rooms have obstacles in them, which are designed to prompt roleplay. The buttons below each message here have both cardinal directions and \n\n **To everyone else, you are encouraged to watch this thread, but do not message here or use the buttons**.", colour= embcol), view= MazeView(paths[0], paths[1], paths[2], paths[3], prev, state))
+    await rpthread.send(mazedata[mazeno][2].mention + " and " + mazedata[mazeno][3].mention)
+
+async def mazetrack(instance):
+    await mazedata[instance][7].edit(embed = discord.Embed(title = "Maze Instance " + str(instance), description = "Thread: " + str(mazedata[instance][0].jump_url) + "\nPlayers: " + str(mazedata[instance][2].name) + " (" + str(mazedata[instance][2].id) + ") & " + str(mazedata[instance][3].name) + " (" + str(mazedata[instance][3].id) + ")\nCoordinates: " + str(mazedata[instance][4][0]) + ", " + str(mazedata[instance][4][1]) + "\nState: " + str(mazedata[instance][6]) + "\n" + "Maze Map Index: " + str(mazedata[instance][1]) + "\nMinotaur Direction: " + mazedata[instance][8] + "\n\n" + str(mazeencounters[instance]).replace("], [", "],\n[")))
+
+async def mazerestore(message):
+
+    mess = [joinedMessages async for joinedMessages in message.channel.history(limit = None, oldest_first= True)]
+    mess.sort(key=lambda x: x.created_at)
+
+    for a in range(len(mess)):
+        if mess[a].author == client.user:
+            try:
+
+                #Restoring Array
+                if mess[a].embeds[0].title.startswith("Maze Instance"):
+                    embeddata = mess[a].embeds[0].description.split("\n", 6)
+
+                    mazedata.append([await client.fetch_channel(embeddata[0].split("/")[-1]), int(embeddata[4].split(" ")[3]), client.get_user(int(embeddata[1].split("(")[1].split(")")[0])), client.get_user(int(embeddata[1].split("(")[2].split(")")[0])), [int(embeddata[2].split(" ", 1)[1].split(", ")[0]), int(embeddata[2].split(" ", 1)[1].split(", ")[1])], "", int(embeddata[3].split(" ")[1]), mess[a], embeddata[5].split(" ")[2]])
+
+                    #Maze Thread;                                                             Mazearray Index;                 Player 1;                                                       Player 2;                                                       Location in Maze,                                                                                       oocthread, state,                    tracking message,    minotaur direction
+
+                    embeddata[-1] = embeddata[-1].lstrip("\n")
+                    maze = []
+                    for b in range(len(embeddata[-1].split("\n"))):
+                        line = []
+                        for c in range(len(embeddata[-1].split("\n")[b].split(", "))):
+                            try:
+                                line.append(int(str(embeddata[-1].split("\n")[b].replace("[", "").replace("]", "").replace(" ", "").split(",")[c])))
+                            except ValueError:
+                                line.append("")
+                        maze.append(line)
+                    mazeencounters.append(maze)
+
+                    #Restoring Buttons
+                    if int(embeddata[3].split(" ")[1]) <= 2:
+                        rpmess = [joinedMessages async for joinedMessages in mazedata[a][0].history(limit = None, oldest_first= True)]
+                        rpmess.sort(key=lambda x: x.created_at)
+                        rpmess.reverse()
+
+                        for b in range(len(rpmess)):
+                            if rpmess[b].author == client.user:
+                                if "Maze Encounter" in rpmess[b].embeds[0].title:
+                                    prev = rpmess[b+1].content.split("!")[0].split(" ")[1]
+                                    mazeinstance = a
+
+                                    if prev == "North":
+                                        mazedata[mazeinstance][4][0] = int(mazedata[mazeinstance][4][0]) + 1
+                                        rev = "south"
+                                    elif prev == "East":
+                                        mazedata[mazeinstance][4][1] = int(mazedata[mazeinstance][4][1]) - 1
+                                        rev = "west"
+                                    elif prev == "South":
+                                        mazedata[mazeinstance][4][0] = int(mazedata[mazeinstance][4][0]) - 1
+                                        rev = "north"
+                                    else:
+                                        mazedata[mazeinstance][4][1] = int(mazedata[mazeinstance][4][1]) + 1
+                                        rev = "east"
+                                    
+                                    walls, enc, paths, prev, state = await mazeupdate(rev, mazeinstance, int(mazedata[mazeinstance][6]))
+
+                                    await rpmess[b].edit(embed=discord.Embed(title = rpmess[b].embeds[0].title, description = rpmess[b].embeds[0].description, colour = embcol), view = MazeView(paths[0], paths[1], paths[2], paths[3], prev, state))
+
+        
+            except IndexError:
+                pass
+
+    #Restore Join Message
+    mazestartmessage.append(await message.channel.parent.fetch_message(int(message.content.split(" ")[1])))
+    await mazestartmessage[0].edit(embed = mazestartembed, view = mazejoin())
+    mazechannel[0] = message.channel.parent
+    mazechannel[1] = message.channel
+
+    await message.channel.send("Restored")
 
 
+#--------------Miscellaneous Commands-----------------
+    
+async def tarotfunc(message):
+
+    found = 0
+    index = ""
+    for a in range(len(tarot)):
+        if message.author == tarot[a][0]:
+            found = 1
+            index == a
+            await tarotdrawmany(a, message)
+            break
+    if found == 0:
+        index = len(tarot)
+        tarot.append([message.author, await tarotshuffle()])
+        await message.channel.send(embed = discord.Embed(title = "A Tarot deck has been generated for you.", description= "Use the following commands to manipulate it:\n\n`%tarot`: Draws a single card.\n`%tarotresolve`: Draws cards until revealing a number\n`%tarotshuffle`: Shuffles your deck.", colour = embcol))
+
+    if message.content.startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "tarotshuffle"):
+        tarot.pop(index).append([message.author, await tarotshuffle()])
+        await message.channel.send(embed = discord.Embed(title = "Your tarot deck has been shuffled.", description= "Use the following commands to manipulate it:\n\n`%tarot`: Draws a single card.\n`%tarotresolve`: Draws cards until revealing a number\n`%tarotshuffle`: Shuffles your deck.", colour = embcol))
+    elif message.content.startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "tarotresolve"):
+        await tarotdrawmany(index, message)
+    else:
+        await tarotdraw1(index, message)            
+
+async def tarotdraw1(ind, message):
+    drawncard = tarot[ind][1][0][1:]
+    orientation = tarot[ind][1][0][0]
+
+    if orientation == "U":
+        orientation = "Upright"
+        effect = tarotupright[tarotcards.index(drawncard)]
+    else:
+        orientation = "Reverse"
+        effect = tarotreverse[tarotcards.index(drawncard)]
+    await message.channel.send(embed = discord.Embed(title = message.author.display_name + " has drawn a Tarot Card!", description = "You drew the " + str(drawncard) + " in the " + orientation + " orientation.\n\n***" + effect + "***", colour = embcol))
+    tarot[ind][1].append(random.choice(["U", "R"]) + str(tarot[ind][1].pop(0)[1:]))
+
+async def tarotdrawmany(ind, message):
+    drawnlist = []
+    for a in range(len(tarotcards)):
+        try:
+            drawncard = tarot[ind][1][0][1:]
+            orientation = tarot[ind][1][0][0]
+        
+            if orientation == "U":
+                orientation = "Upright"
+            else:
+                orientation = "Reverse"
+            drawnlist.append("**" + str(drawncard) + "**, " + orientation)
+            tarot[ind][1].append(random.choice(["U", "R"]) + str(tarot[ind][1].pop(0)[1:]))
+            try:
+                num = int(drawncard)
+                break
+            except ValueError:
+                pass
+        except TypeError:
+            pass
+    if drawnlist != []:
+        await message.channel.send(embed = discord.Embed(title = message.author.display_name + " has drawn Tarot Cards!", description = "You drew:\n" + "\n".join(drawnlist), colour = embcol))
+
+
+async def tarotshuffle():
+    unqcards = list(tarotcards)
+    random.shuffle(unqcards)
+    for a in range(len(unqcards)):
+        unqcards[a] = random.choice(["U", "R"]) + str(unqcards[a])
+    return(unqcards)
 
 #----------------View Classes----------------
 
@@ -642,7 +1314,7 @@ class ImpTomeView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=3600*2)
         self.value = None
-    #This defines the button. The button_calback function defines what happens when we click it. We save the click in the variable to make sure
+    #This defines the button. The button_calback function defines what happened when we click it. We save the click in the variable to make sure
     # that we can later see if the button was actually pressed.´
     # The interaction.response is important as otherwise the interaction (button) will be seen as failed.
     # You can also silently acknowledge the interaction with interaction.response.defer() - This makes the bot think it properly responded with "" for full invisibility.
@@ -776,3 +1448,129 @@ async def getPlayerNameList():
         b = a * 4 + 5
         playerList.append(economydata[b][0])
     return playerList
+
+async def export(message):
+
+    if message.author.bot:
+        return
+
+    dest = message.content.split(" ")[1]
+    processing = await message.channel.send(embed = discord.Embed(title="Processing", description= "This may take some time, depending on the length of the channel.", colour=embcol))
+
+    try:
+        int(dest)
+        dest = "<#" + str(dest) + ">"
+    except ValueError:
+        pass
+
+    if "doc" in dest.lower() or "sheet" in dest.lower():
+        desttype = "Spreadsheet"
+        try:
+            if "docs.google.com/spreadsheets" in dest.lower():
+                dest = gc.open_by_url(dest)
+            elif "staff" in str(message.author.roles).lower() and "@" in message.content.split(" ")[2]:
+                dest = gc.create(message.channel.name)
+                recip = message.content.split(" ")[2]
+            else:
+                await message.channel.send(embed = discord.Embed(title = "You need to provide the link to an editable document.", description= "", colour = embcol))
+                return
+        except IndexError:
+            await message.channel.send(embed = discord.Embed(title = "You need to provide an email address to add to the spreadsheet.", description= "The API doesn't support setting it to public, so we need to share the sheet with you via email.", colour = embcol))
+            return
+        
+    elif dest.lower().startswith("https://discord.com/channels") or dest.startswith("<#"):
+
+        dest = client.get_channel(int(str(message.content.split(" ")[1].split("/")[-1]).rstrip(">").lstrip("<#")))
+
+        if "thread" in str(dest.type) and ("staff" in str(message.author.roles).lower() or str(dest.owner) == str(message.author)):
+            desttype = "Thread"
+            hook = await dest.parent.create_webhook(name= "Exporthook")
+        elif "staff" in str(message.author.roles).lower():
+            desttype = "Channel"
+            hook = await dest.create_webhook(name= "Exporthook")
+        else:
+            await message.channel.send(embed = discord.Embed(title = "You cannot write to that thread.", description= "Only Staff members can write to threads that they did not create", colour= embcol))
+            return
+        
+    elif dest.lower() == "file":
+        dest = "File"
+        desttype = "File"
+
+    else:
+        await message.channel.send(embed = discord.Embed(title = "Output format not recognised.", description = "Options to output to are:\n\nGoogle Sheet; providing a link to an editable spreadsheet.\n\nDiscord Threads; providing the link, #-link or ID of the thread to write to. Unless you are staff, this must be a thread you have created.\n\nA text file, in which case you would use `%export file`.", colour = embcol))
+        return
+
+    await message.delete()
+
+    mess = [joinedMessages async for joinedMessages in message.channel.history(limit = None, oldest_first= True)]
+    mess.sort(key=lambda x: x.created_at)
+
+    sheetarray = [["Author", "Content", "Avatar Link", "Timestamp", "Character Count", "Wordcount"]]
+    textarray = []
+    charcount = []
+    wordcount = []
+
+    if desttype == "Spreadsheet" or desttype == "File":
+        for a in range(len(mess)):
+
+            if mess[a] == message or mess[a] == processing:
+                break
+
+            if len(mess[a].content) != 0:
+                #Sheet Layout:
+                sheetarray.append([str(mess[a].author).split("#")[0], str(mess[a].content), str(mess[a].author.avatar), str(mess[a].created_at).split(".")[0], str(len(mess[a].content)), str(len(mess[a].content.split(" ")))])
+                #Text file Layout:
+                textarray.append(str(mess[a].author).split("#")[0] + ": " + str(mess[a].content))
+            else:
+                if mess[a].embeds != 0:
+                    #Sheet Layout:
+                    sheetarray.append([str(mess[a].author).split("#")[0], (str(mess[a].embeds[0].title) + "\n\n" + str(mess[a].embeds[0].description)), str(mess[a].author.avatar), str(mess[a].created_at).split(".")[0], str(len(mess[a].content)), str(len(mess[a].content.split(" ")))])
+                    #Text file Layout:
+                    textarray.append(str(mess[a].author).split("#")[0] + ": " + (str(mess[a].embeds[0].title) + "\n\n" + str(mess[a].embeds[0].description)))
+            charcount.append(len(mess[a].content))
+            wordcount.append(len(mess[a].content.split(" ")))
+
+        if desttype == "Spreadsheet":
+            sheetarray.append(["Total", "", "", str(mess[-3].created_at-mess[0].created_at).split(".")[0], sum(charcount), sum(wordcount)])
+            sheetarray.append(["Average", "", "", "", sum(charcount)/(len(mess)), sum(wordcount)/(len(mess))])
+            ws = dest.get_worksheet(0)
+            ws.update("A1:F" + str(len(mess)+3), sheetarray)
+            await message.channel.send(embed = discord.Embed(title = "Channel written to Spreadsheet.", description = "The contents of this channel have been cloned to a spreadsheet, available at:\n\nhttps://docs.google.com/spreadsheets/d/" + str(dest.id), colour = embcol))
+            dest.share(recip, perm_type = "user", role = "writer")
+        else:
+            filename = str(message.channel) + ".txt"
+            with open(filename, "w") as f:
+                f.write("\n\n".join(textarray))
+            f.close()
+            await message.channel.send("We have attached a text log of this channel.", file = discord.File(r"" + filename))
+            os.remove(filename)
+
+    else:
+        lock = asyncio.Lock()
+        async with aiohttp.ClientSession() as session:
+            whook = SyncWebhook.from_url(hook.url)
+
+            for b in range(len(mess)):
+                if mess[b] == message or mess[b] == processing:
+                    break
+                else:
+                    try:
+                        whook.send(mess[b].content, username = mess[b].author.name, avatar_url = mess[b].author.avatar, thread = dest)
+                    except discord.errors.HTTPException:
+                        whook.send(mess[b].content, username = mess[b].author.name, avatar_url = mess[b].author.avatar)
+
+                    if mess[b].attachments:
+                        for c in range(len(mess[b].attachments)):
+                            try:
+                                whook.send(mess[b].attachments[c].url, username = mess[b].author.name, avatar_url = mess[b].author.avatar, thread = dest)
+                            except discord.errors.HTTPException:
+                                whook.send(mess[b].attachments[c].url, username = mess[b].author.name, avatar_url = mess[b].author.avatar)
+                                
+                    if mess[b].embeds:
+                        try:
+                            whook.send(embed= mess[b].embeds[0], username = mess[b].author.name, avatar_url = mess[b].author.avatar, thread = dest)
+                        except discord.errors.HTTPException:
+                            whook.send(embed= mess[b].embeds[0], username = mess[b].author.name, avatar_url = mess[b].author.avatar)
+
+        await hook.delete()
+    await processing.delete()

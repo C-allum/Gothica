@@ -240,3 +240,16 @@ async def emoteuncurse(message):
     emoteCursechance.pop(curseindex)
     emoteCurses.pop(curseindex)
     await message.channel.send("Curse removed. Current Cursed People are:\n\n" + "\n".join(emoteCursed))
+
+
+async def laundry(message):
+    if not "goblin" in message.content.lower():
+        roll = random.randint(1,19)
+        if roll == 1:
+            res = "Oh no! The mimic washer got a little hungry and decided to grab you instead! It might have been worth considering purchasing one of our presto scrolls instead, at a *discounted* price? But don't worry! Step-Goblin can get you out, right? Right?"
+        elif roll < 11:
+            res = "The mimic washer seems to have wanted to eat the clothes instead of clean them! Moblin Dry Cleaning apologizes for the inconvenience, and would be happy to offer you a totally legitimate (it isn't) coupon to the Widow's Boutique for their lost clothing!"
+        elif roll < 20:
+            res = "Oh what's that? Not only did the clothes come out amazing, but you also found some rather special article of clothing (1 Uncommon Clothing Item) stashed in load too! Lucky you! Wonder who that came from..."
+        res = res.replace("you ", message.author.name + " ")
+        await message.channel.send(embed = discord.Embed(title = "Washing Cycle Started!", description = random.choice(["Upon hearing the command word, the nearest mimic washer begins churning and stretching.", "A rumble of wet, sloshing sounds emanate from the nearest mimic.", "Water begins seeping onto the floor from the nearest washer, which slurps it back up."]) + "\n\nYou rolled a " + str(roll) + ".\n" + res, colour = embcol))
