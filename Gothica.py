@@ -35,8 +35,6 @@ async def on_ready():
     for a in server.members:
         if MVProle in a.roles:
             await a.remove_roles(MVProle)
-        if LFGrole in a.roles:
-            await a.remove_roles(LFGrole)
         if temprole in a.roles:
             await a.remove_roles(temprole)
 
@@ -330,7 +328,7 @@ async def on_message(message):
             #Character Edit Subroutine - On CharRegistry, untested
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "edit ") and not isbot:
 
-                await CharRegistry.charedit(message)
+                await CharRegistry.charedit2(message)
 
             #Character Transfer Subroutine - On CharRegistry, untested
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "transfer") and not isbot:
@@ -824,27 +822,26 @@ async def on_message(message):
                     await message.channel.send(embed = discord.Embed(title = random.choice(["Approved"]), description = random.choice(["You are now an adventurer"]) + charappend, colour = embcol))
 
             #Looking for RP
-            elif message.content.lower().startswith("%lfg"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) +"lfg"):
 
                 vermemb = message.author
-
+                role = discord.utils.get(vermemb.guild.roles, name="Looking for Role Play")
                 try:
 
                     time = int(message.content.split(" ")[1]) * 3600
 
-                except ValueError:
+                except (ValueError, IndexError) as e:
 
-                    await message.channel.send("Not a valid integer, toggling the role instead.")
+                    
                     if "Looking for Role Play" in message.author.roles:
                         await vermemb.add_roles(role)
+                        await message.channel.send("Not time limit submitted, toggling the role instead. Looking for Role Play role is now added")
                     else:
                         await vermemb.remove_roles(role)
+                        await message.channel.send("Not time limit submitted, toggling the role instead. Looking for Role Play role is now removed")
                     return
-                except IndexError:
 
-                    time = 3600
-
-                role = discord.utils.get(vermemb.guild.roles, name="Looking for Role Play")
+                
 
                 await vermemb.add_roles(role)
 

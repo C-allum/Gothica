@@ -1153,9 +1153,8 @@ async def useitem(message):
                 user = message.author
                 await message.channel.send(embed=discord.Embed(title=f"You used 1x {item_name}",description=use_response.replace("{user.mention}", message.author.name), colour = embcol))
                 if item_list[i] == "metaObject003":
-                    author_econ_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if message.author.id in x][0])
-                    GlobalVars.economyData[author_econ_row_index+2][1] = GlobalVars.economyData[author_econ_row_index+2][1] + 1
-                    await writeEconSheet(GlobalVars.economyData)
+                    author_econ_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0])
+                    GlobalVars.economyData[author_econ_row_index+2][1] = int(GlobalVars.economyData[author_econ_row_index+2][1]) + 1
                 await removeItemFromInventory(author_row_index, i+2, 1)
 
                 #TODO: Special treatment for stuff like character slot additions.
@@ -1197,7 +1196,7 @@ async def invest(message):
         reciprow = ""
         target = message.author
         targname = target.name
-        recipient_economy_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if message.author.id in x][0])
+        recipient_economy_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0])
         
         try:
             giveamount = int(message.content.split(" ")[1].strip("-"))
@@ -1573,7 +1572,7 @@ async def dezReact(reaction):
                 guild_id = reaction.guild_id
                 channel = client.get_channel(channel_id)
                 message = await channel.fetch_message(message_id)
-                await addDezziesToPlayer(message, giveamount, targid)
+                await addDezziesToPlayer(message, giveamount, targid, send_message=False)
                 GlobalVars.economyData[reciprow+1][1] = int(GlobalVars.economyData[reciprow+1][1]) + int(giveamount)
                 await writeEconSheet(GlobalVars.economyData)
                 TransactionsDatabaseInterface.addTransaction(target.name, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
