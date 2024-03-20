@@ -1018,50 +1018,48 @@ class MazeView(discord.ui.View):
             self.buttons[a].callback = self.callback
 
     async def callback(self, interaction: discord.Interaction):
-        await mazelocks[int(interaction.message.channel.name.split(" ")[2])].acquire()
-        if (interaction.user == mazedata[int(interaction.message.channel.name.split(" ")[2])][2]) or (interaction.user == mazedata[int(interaction.message.channel.name.split(" ")[2])][3]):
-            await interaction.response.send_message("Going " + str(interaction.data["custom_id"]).title() + "!\n" + interaction.user.name + " selected this path!")
-            wallsides, enc, paths, prev, state = await mazeupdate(interaction.data["custom_id"], int(interaction.message.channel.name.split(" ")[2]), mazedata[int(interaction.message.channel.name.split(" ")[2])][6])
+        async with mazelocks[int(interaction.message.channel.name.split(" ")[2])]:
+            if (interaction.user == mazedata[int(interaction.message.channel.name.split(" ")[2])][2]) or (interaction.user == mazedata[int(interaction.message.channel.name.split(" ")[2])][3]):
+                await interaction.response.send_message("Going " + str(interaction.data["custom_id"]).title() + "!\n" + interaction.user.name + " selected this path!")
+                wallsides, enc, paths, prev, state = await mazeupdate(interaction.data["custom_id"], int(interaction.message.channel.name.split(" ")[2]), mazedata[int(interaction.message.channel.name.split(" ")[2])][6])
 
-            mazetitle = mazedata[int(interaction.message.channel.name.split(" ")[2])][2].display_name + " & " + mazedata[int(interaction.message.channel.name.split(" ")[2])][3].display_name + "'s Maze Encounter"
+                mazetitle = mazedata[int(interaction.message.channel.name.split(" ")[2])][2].display_name + " & " + mazedata[int(interaction.message.channel.name.split(" ")[2])][3].display_name + "'s Maze Encounter"
 
-            if state == 1: #Normal
-                mazeEmbed = discord.Embed(title = mazetitle, description = wallsides + "\n" + enc + "\n\nRoleplay here, and then use the buttons below to decide where to go next!", colour = embcol)
-                await interaction.channel.send(embed = mazeEmbed, view = MazeView(paths[0], paths[1], paths[2], paths[3], prev, state))
-            
-            elif state == 1.5: #Chase starting
-                mazeEmbed = discord.Embed(title = mazetitle, description = wallsides + "\n" + enc + "\n\nRoleplay here, and then use the buttons below to decide where to go next! " + random.choice(["Remember, the minotaur is behind you!", "The thundering of hooves reminds you not to linger here long!", "Looking over your shoulder, the fog swirls, as though the minotaur might burst through at any moment!", "You're outrunning the miontaur for now, but keep moving! The end will be around here somewhere!", "We would advise against spending too long here. There is a minotaur after you, after all...", "He's hot on your heels! He's hot in general, actually.", "Keep running!"]), colour = embcol)
-                await interaction.channel.send(embed = mazeEmbed, view = MazeView(paths[0], paths[1], paths[2], paths[3], prev, state))
-                mazedata[int(interaction.message.channel.name.split(" ")[2])][6] = 2
-                directs = ["north", "east", "south", "west"]
-                mazedata[int(interaction.message.channel.name.split(" ")[2])][8] = interaction.data["custom_id"]
+                if state == 1: #Normal
+                    mazeEmbed = discord.Embed(title = mazetitle, description = wallsides + "\n" + enc + "\n\nRoleplay here, and then use the buttons below to decide where to go next!", colour = embcol)
+                    await interaction.channel.send(embed = mazeEmbed, view = MazeView(paths[0], paths[1], paths[2], paths[3], prev, state))
 
-            elif state == 2: #Being Chased
-
-                if interaction.data["custom_id"] == mazedata[int(interaction.message.channel.name.split(" ")[2])][8]: #Caught
-                    minoname = "Gerald B. Hooves"
-                    await interaction.channel.send(embed = discord.Embed(title = "The Minotaur has caught you!", description = random.choice(["He introduces himself as " + minoname + " and spends the next " + str(random.randint(2, 5)) + " hours telling you how cool mazes are. Afterwards, he leads you to the exit", minoname + ", the maze obsessed minotaur, thanks you for joining him, and spends the next " + str(random.randint(2, 5)) + " hours excitedly explaining the history of mazes. He brought diagrams, and your characters cannot get a word in edgeways.", "Not only is it easy to get lost in a maze like this, but it is also easy to lose track of time." + minoname + ", the minotaur, demonstrates this fact to your characters upon catching up with them, as he subjects them to a" + str(random.randint(4, 7)) + " hour lecture on the mechanics of mazes and their effect on cultures around the world."]), colour = embcol))
-                    mazedata[int(interaction.message.channel.name.split(" ")[2])-1][6] = 4
-                else:
+                elif state == 1.5: #Chase starting
                     mazeEmbed = discord.Embed(title = mazetitle, description = wallsides + "\n" + enc + "\n\nRoleplay here, and then use the buttons below to decide where to go next! " + random.choice(["Remember, the minotaur is behind you!", "The thundering of hooves reminds you not to linger here long!", "Looking over your shoulder, the fog swirls, as though the minotaur might burst through at any moment!", "You're outrunning the miontaur for now, but keep moving! The end will be around here somewhere!", "We would advise against spending too long here. There is a minotaur after you, after all...", "He's hot on your heels! He's hot in general, actually.", "Keep running!"]), colour = embcol)
                     await interaction.channel.send(embed = mazeEmbed, view = MazeView(paths[0], paths[1], paths[2], paths[3], prev, state))
                     mazedata[int(interaction.message.channel.name.split(" ")[2])][6] = 2
                     directs = ["north", "east", "south", "west"]
-                    mazedata[int(interaction.message.channel.name.split(" ")[2])][8] = directs[directs.index(interaction.data["custom_id"])-2]
+                    mazedata[int(interaction.message.channel.name.split(" ")[2])][8] = interaction.data["custom_id"]
 
-            elif state == 3: #Found the end
-                await interaction.channel.send(embed = discord.Embed(title = "Congratulations! You found the exit", description= "You have found your way out of the maze. We hope you enjoyed it.", colour = embcol))
-                mazedata[int(interaction.message.channel.name.split(" ")[2])][6] = 3
-            
-            await mazetrack(int(interaction.message.channel.name.split(" ")[2]))
-            
-            self.value = True
-            self.stop()
+                elif state == 2: #Being Chased
 
-        else:
-            await interaction.user.send("Please do not interact in scenes that you are not part of. If you want to play, press the join button in the main channel.")
-        
-        mazelocks[int(interaction.message.channel.name.split(" ")[2])].release()
+                    if interaction.data["custom_id"] == mazedata[int(interaction.message.channel.name.split(" ")[2])][8]: #Caught
+                        minoname = "Gerald B. Hooves"
+                        await interaction.channel.send(embed = discord.Embed(title = "The Minotaur has caught you!", description = random.choice(["He introduces himself as " + minoname + " and spends the next " + str(random.randint(2, 5)) + " hours telling you how cool mazes are. Afterwards, he leads you to the exit", minoname + ", the maze obsessed minotaur, thanks you for joining him, and spends the next " + str(random.randint(2, 5)) + " hours excitedly explaining the history of mazes. He brought diagrams, and your characters cannot get a word in edgeways.", "Not only is it easy to get lost in a maze like this, but it is also easy to lose track of time." + minoname + ", the minotaur, demonstrates this fact to your characters upon catching up with them, as he subjects them to a" + str(random.randint(4, 7)) + " hour lecture on the mechanics of mazes and their effect on cultures around the world."]), colour = embcol))
+                        mazedata[int(interaction.message.channel.name.split(" ")[2])-1][6] = 4
+                    else:
+                        mazeEmbed = discord.Embed(title = mazetitle, description = wallsides + "\n" + enc + "\n\nRoleplay here, and then use the buttons below to decide where to go next! " + random.choice(["Remember, the minotaur is behind you!", "The thundering of hooves reminds you not to linger here long!", "Looking over your shoulder, the fog swirls, as though the minotaur might burst through at any moment!", "You're outrunning the miontaur for now, but keep moving! The end will be around here somewhere!", "We would advise against spending too long here. There is a minotaur after you, after all...", "He's hot on your heels! He's hot in general, actually.", "Keep running!"]), colour = embcol)
+                        await interaction.channel.send(embed = mazeEmbed, view = MazeView(paths[0], paths[1], paths[2], paths[3], prev, state))
+                        mazedata[int(interaction.message.channel.name.split(" ")[2])][6] = 2
+                        directs = ["north", "east", "south", "west"]
+                        mazedata[int(interaction.message.channel.name.split(" ")[2])][8] = directs[directs.index(interaction.data["custom_id"])-2]
+
+                elif state == 3: #Found the end
+                    await interaction.channel.send(embed = discord.Embed(title = "Congratulations! You found the exit", description= "You have found your way out of the maze. We hope you enjoyed it.", colour = embcol))
+                    mazedata[int(interaction.message.channel.name.split(" ")[2])][6] = 3
+
+                await mazetrack(int(interaction.message.channel.name.split(" ")[2]))
+
+                self.value = True
+                self.stop()
+
+            else:
+                await interaction.user.send("Please do not interact in scenes that you are not part of. If you want to play, press the join button in the main channel.")
 
 class mazejoin(discord.ui.View):
     def __init__(self):
@@ -1070,53 +1068,51 @@ class mazejoin(discord.ui.View):
     async def callback(self, interaction: discord.Interaction, item):
 
         lock = asyncio.Lock()
-        await lock.acquire()
+        async with lock:
+            await mazestartmessage[0].edit(embed = mazestartembed, view = mazejoin())
 
-        await mazestartmessage[0].edit(embed = mazestartembed, view = mazejoin())
-        
-        matchmade = 0
-        if len(mazedata) != 0:
-            for a in range(len(mazedata)):
-                try:
-                    if mazedata[a][3] != None: #Mazegame a has a player 2, so pass on this.
-                        pass
+            matchmade = 0
+            if len(mazedata) != 0:
+                for a in range(len(mazedata)):
+                    try:
+                        if mazedata[a][3] != None: #Mazegame a has a player 2, so pass on this.
+                            pass
 
-                except IndexError: #Mazegame a has no player 2.
-                    if mazedata[a][2] == interaction.user: #Remove user on second click
-                        mazedata.pop(a)
-                        mazeencounters.pop(a)
-                        await interaction.response.send_message(content = "You have been removed from the waiting list.", ephemeral = True, delete_after = 300)
-                        await lock.release()
-                        return
+                    except IndexError: #Mazegame a has no player 2.
+                        if mazedata[a][2] == interaction.user: #Remove user on second click
+                            mazedata.pop(a)
+                            mazeencounters.pop(a)
+                            await interaction.response.send_message(content = "You have been removed from the waiting list.", ephemeral = True, delete_after = 300)
+                            await lock.release()
+                            return
 
-                    else:
-                        for b in range(len(mazedata)): #Test if players have mazed before
-                            try:
-                                if (interaction.user == mazedata[b][2] and mazedata[a][2] == mazedata[b][3]) or (interaction.user == mazedata[b][3] and mazedata[a][2] == mazedata[b][2]): #True if players have done a maze together already.
-                                    matchmade = 0
-                                    break #Doesn't bother checking the rest of the instances for a pair
-                                else:
+                        else:
+                            for b in range(len(mazedata)): #Test if players have mazed before
+                                try:
+                                    if (interaction.user == mazedata[b][2] and mazedata[a][2] == mazedata[b][3]) or (interaction.user == mazedata[b][3] and mazedata[a][2] == mazedata[b][2]): #True if players have done a maze together already.
+                                        matchmade = 0
+                                        break #Doesn't bother checking the rest of the instances for a pair
+                                    else:
+                                        matchmade = 1
+                                except IndexError:
                                     matchmade = 1
-                            except IndexError:
-                                matchmade = 1
 
-                    if matchmade == 1: #If there is an open user that the new player has not matched with, start the maze
-                        print(str(interaction.user) + " is player 2 in maze " + str(a))
-                        await interaction.response.send_message("Your maze is starting!", ephemeral= True, delete_after= 300)
-                        await addp2tomaze(interaction.user, a)
-                        break
-                
-            if matchmade == 0: #If, after going through all the games, there is no match made, add to queue.
-                print(str(interaction.user) + " is player 1 in maze " + str(len(mazedata)))
+                        if matchmade == 1: #If there is an open user that the new player has not matched with, start the maze
+                            print(str(interaction.user) + " is player 2 in maze " + str(a))
+                            await interaction.response.send_message("Your maze is starting!", ephemeral= True, delete_after= 300)
+                            await addp2tomaze(interaction.user, a)
+                            break
+                        
+                if matchmade == 0: #If, after going through all the games, there is no match made, add to queue.
+                    print(str(interaction.user) + " is player 1 in maze " + str(len(mazedata)))
+                    await interaction.response.send_message("You are in the waiting list!", ephemeral= True, delete_after= 300)
+                    await addp1tomaze(interaction.user, len(mazedata))
+
+            else: # First Game
                 await interaction.response.send_message("You are in the waiting list!", ephemeral= True, delete_after= 300)
-                await addp1tomaze(interaction.user, len(mazedata))
+                print(interaction.user.name + " is player 1 in maze 0")
+                await addp1tomaze(interaction.user, 0)
 
-        else: # First Game
-            await interaction.response.send_message("You are in the waiting list!", ephemeral= True, delete_after= 300)
-            print(interaction.user.name + " is player 1 in maze 0")
-            await addp1tomaze(interaction.user, 0)
-
-        lock.release()
 
 async def addp1tomaze(player, mazeno):
     mazedata.append(["", random.randint(0, len(mazearray)-1), player])
@@ -1152,8 +1148,8 @@ async def addp2tomaze(player, mazeno):
     mazedata[mazeno].append(entry)
     mazedata[mazeno].append(oocthread)
     mazedata[mazeno].append(1)
-    mazelocks.append(asyncio.Lock())
-    await mazelocks[-1].acquire()
+    lock = asyncio.Lock()
+    mazelocks.append(lock)
 
     mazedata[mazeno].append(await mazechannel[1].send(embed = discord.Embed(title = "Maze Instance " + str(mazeno), description = "Thread: " + str(mazedata[mazeno][0].jump_url) + "\nPlayers: " + str(mazedata[mazeno][2].name) + " (" + str(mazedata[mazeno][2].id) + ") & " + str(mazedata[mazeno][3].name) + " (" + str(mazedata[mazeno][3].id) + ")\nCoordinates: " + str(mazedata[mazeno][4][0]) + ", " + str(mazedata[mazeno][4][1]) + "\nState: 1\n" + "Maze Map Index: " + str(mazedata[mazeno][1]) + "\nMinotaur Direction: none\n\n" + str(mazeencounters[mazeno]).replace("], [", "],\n["))))
     mazedata[mazeno].append("none")
