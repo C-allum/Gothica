@@ -1546,7 +1546,7 @@ async def dezReact(reaction):
                 guild_id = reaction.guild_id
                 channel = client.get_channel(channel_id)
                 message = await channel.fetch_message(message_id)
-                await addDezziesToPlayer(message, giveamount, targid)
+                await addDezziesToPlayer(message, giveamount, targid, send_message=False)
                 await writeEconSheet(GlobalVars.economyData)
                 #Add transaction
                 TransactionsDatabaseInterface.addTransaction(target.name, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
@@ -1695,7 +1695,7 @@ async def rpDezReact(reaction):
                 guild_id = reaction.guild_id
                 channel = client.get_channel(channel_id)
                 message = await channel.fetch_message(message_id)
-                await addDezziesToPlayer(message, giveamount, targid)                
+                await addDezziesToPlayer(message, giveamount, targid, send_message=False)                
                 GlobalVars.economyData[int(giverow)+3][0] = 0
                 await writeEconSheet(GlobalVars.economyData)
 
