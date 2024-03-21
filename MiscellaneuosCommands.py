@@ -1018,6 +1018,7 @@ class MazeView(discord.ui.View):
             self.buttons[a].callback = self.callback
 
     async def callback(self, interaction: discord.Interaction):
+
         async with mazelocks[int(interaction.message.channel.name.split(" ")[2])]:
             if (interaction.user == mazedata[int(interaction.message.channel.name.split(" ")[2])][2]) or (interaction.user == mazedata[int(interaction.message.channel.name.split(" ")[2])][3]):
                 if self.interacted == True:
@@ -1194,6 +1195,8 @@ async def mazerestore(message):
                         maze.append(line)
                     mazeencounters.append(maze)
 
+                    mazelocks.append(asyncio.Lock())
+
                     #Restoring Buttons
                     if int(embeddata[3].split(" ")[1]) <= 2:
                         rpmess = [joinedMessages async for joinedMessages in mazedata[a][0].history(limit = None, oldest_first= True)]
@@ -1221,11 +1224,11 @@ async def mazerestore(message):
                                     
                                     walls, enc, paths, prev, state = await mazeupdate(rev, mazeinstance, int(mazedata[mazeinstance][6]))
 
+                                    print(walls)
+
                                     await rpmess[b].edit(embed=discord.Embed(title = rpmess[b].embeds[0].title, description = rpmess[b].embeds[0].description, colour = embcol), view = MazeView(paths[0], paths[1], paths[2], paths[3], prev, state))
-
-                    mazelocks.append(asyncio.Lock())
-
-        
+                                    break
+       
             except IndexError:
                 pass
 
