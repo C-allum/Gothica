@@ -1072,8 +1072,6 @@ class mazejoin(discord.ui.View):
         
     @discord.ui.button(label = "Join", style = discord.ButtonStyle.green, custom_id = "mazejoin")
     async def callback(self, interaction: discord.Interaction, item):
-
-        
         async with self.lock:
             await mazestartmessage[0].edit(embed = mazestartembed, view = mazejoin())
 
@@ -1224,6 +1222,8 @@ async def mazerestore(message):
                                     walls, enc, paths, prev, state = await mazeupdate(rev, mazeinstance, int(mazedata[mazeinstance][6]))
 
                                     await rpmess[b].edit(embed=discord.Embed(title = rpmess[b].embeds[0].title, description = rpmess[b].embeds[0].description, colour = embcol), view = MazeView(paths[0], paths[1], paths[2], paths[3], prev, state))
+
+                    mazelocks.append(asyncio.Lock())
 
         
             except IndexError:
