@@ -1535,13 +1535,6 @@ async def dezReact(reaction):
         else:
             #Enough dezzies left in users dezzie pool:
             if giveamount <= prevDezziePool:
-                try:
-                    #Update the dezzie balance of the recipient
-                    GlobalVars.economyData[int(reciprow)+1][1] = int(GlobalVars.economyData[int(reciprow)+1][1]) + int(giveamount)
-                except ValueError:
-                    await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " seems to not be in the economy", description = targetName + "This should not be the case. Please talk one of the @bot gods as there is most likely something wrong with your entry in our data.", colour = embcol, url = mess.jump_url))
-                    return
-
                 #Update the dezzie pool of the giver
                 newDezziePool = prevDezziePool - giveamount
                 channel_id = reaction.channel_id
@@ -1550,13 +1543,13 @@ async def dezReact(reaction):
                 channel = client.get_channel(channel_id)
                 message = await channel.fetch_message(message_id)
                 await addDezziesToPlayer(message, giveamount, targid, send_message=False)
+                GlobalVars.economyData[int(giverow)+3][0] = int(GlobalVars.economyData[int(giverow)+3][0]) - int(giveamount)
+
                 await writeEconSheet(GlobalVars.economyData)
                 #Add transaction
                 TransactionsDatabaseInterface.addTransaction(target.name, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
 
-                
-
-                if newDezziePool == 0:
+                if GlobalVars.economyData[int(giverow)+3][0] == 0:
                     await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(GlobalVars.economyData[reciprow+1][1]) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
 
                 else:
@@ -1568,7 +1561,6 @@ async def dezReact(reaction):
             elif prevDezziePool > 0:
                 newDezziePool = 0
                 giveamount = prevDezziePool
-                GlobalVars.economyData[giverow+3][0] = newDezziePool
                 newDezziePool = prevDezziePool - giveamount
                 channel_id = reaction.channel_id
                 message_id = reaction.message_id
@@ -1576,7 +1568,7 @@ async def dezReact(reaction):
                 channel = client.get_channel(channel_id)
                 message = await channel.fetch_message(message_id)
                 await addDezziesToPlayer(message, giveamount, targid, send_message=False)
-                GlobalVars.economyData[reciprow+1][1] = int(GlobalVars.economyData[reciprow+1][1]) + int(giveamount)
+                GlobalVars.economyData[giverow+3][0] = 0
                 await writeEconSheet(GlobalVars.economyData)
                 TransactionsDatabaseInterface.addTransaction(target.name, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
                 await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(GlobalVars.economyData[reciprow+1][1]) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
@@ -1670,14 +1662,15 @@ async def rpDezReact(reaction):
             if giveamount <= prevDezziePool:
                 
                 reward = int(giveamount * GlobalVars.config["economy"]["rpreactmodifier"])
-                GlobalVars.economyData[int(reciprow)+1][1] = int(GlobalVars.economyData[int(reciprow)+1][1]) + reward
+                
                 newDezziePool = prevDezziePool - giveamount
                 channel_id = reaction.channel_id
                 message_id = reaction.message_id
                 guild_id = reaction.guild_id
                 channel = client.get_channel(channel_id)
                 message = await channel.fetch_message(message_id)
-                await addDezziesToPlayer(message, giveamount, targid, send_message=False)
+                await addDezziesToPlayer(message, reward, targid, send_message=False)
+                GlobalVars.economyData[int(giverow)+3][0] = int(GlobalVars.economyData[int(giverow)+3][0]) - giveamount #Subtract dezzies from pool
                 await writeEconSheet(GlobalVars.economyData)
                 TransactionsDatabaseInterface.addTransaction(target.name, TransactionsDatabaseInterface.DezzieMovingAction.React, int(reward))
                 
@@ -1698,7 +1691,7 @@ async def rpDezReact(reaction):
                 guild_id = reaction.guild_id
                 channel = client.get_channel(channel_id)
                 message = await channel.fetch_message(message_id)
-                await addDezziesToPlayer(message, giveamount, targid, send_message=False)                
+                await addDezziesToPlayer(message, reward, targid, send_message=False)                
                 GlobalVars.economyData[int(giverow)+3][0] = 0
                 await writeEconSheet(GlobalVars.economyData)
 
