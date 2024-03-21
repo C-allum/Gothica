@@ -1717,6 +1717,7 @@ async def incomeWeek(message):
         incomeString +="\n"
 
     await message.channel.send(embed = discord.Embed(title = "Your dezzie earnings over the last week:", description = incomeString, colour = embcol))
+    await message.delete()
 
 async def copyEconomy(message):
     GlobalVars.economyData = sheet.values().get(spreadsheetId = inventorysheet, range = "A1:E5", majorDimension='ROWS').execute().get("values")
