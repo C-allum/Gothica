@@ -935,45 +935,56 @@ async def mazeupdate(direction, mazeinstance, state):
 
     walls = []
     paths = [1, 1, 1, 1]
-    if "N" in mazearray[mazedata[mazeinstance][1]][mazedata[mazeinstance][4][0]][mazedata[mazeinstance][4][1]]:
-        walls.append("North")
-        paths[0] -= 1
-    if "E" in mazearray[mazedata[mazeinstance][1]][mazedata[mazeinstance][4][0]][mazedata[mazeinstance][4][1]]:
-        walls.append("East")
-        paths[1] -= 1
-    if "S" in mazearray[mazedata[mazeinstance][1]][mazedata[mazeinstance][4][0]][mazedata[mazeinstance][4][1]]:
-        walls.append("South")
-        paths[2] -= 1
-    if "W" in mazearray[mazedata[mazeinstance][1]][mazedata[mazeinstance][4][0]][mazedata[mazeinstance][4][1]]:
-        walls.append("West")
-        paths[3] -= 1
-
-    if len(walls) == 0:
-        wallsides = "This room doesn't seem to have walls on any sides."
-    elif len(walls) == 1:
-        wallsides = "This room has a wall to the " + walls[0]
-    elif len(walls) == 2:
-        wallsides = "This room has walls to the " + walls[0] + " and " + walls[1]
-    else:
-        wallsides = "This room has walls to the " + walls[0] + ", " + walls[1] + ", and " + walls[2] + ". It seems to be a dead end."
 
     try:
-        if "B" in mazearray[mazedata[mazeinstance][1]][mazedata[mazeinstance][4][0]][mazedata[mazeinstance][4][1]]:
-            enc = "This is the space you started in."
-        elif "X" in mazearray[mazedata[mazeinstance][1]][mazedata[mazeinstance][4][0]][mazedata[mazeinstance][4][1]]:
-            enc = "You found the exit! Congratulations!"
-            state = 3
-        elif mazeoptions[mazeencounters[mazeinstance][mazedata[mazeinstance][4][0]][mazedata[mazeinstance][4][1]]] != "":
-            enc = "In this space, you find: " + mazeoptions[mazeencounters[mazeinstance][mazedata[mazeinstance][4][0]][mazedata[mazeinstance][4][1]]]
-            if "minotaur" in enc:
-                if state != 2:
-                    state = 1.5
-        else:
-            enc = ""
-    except TypeError:
-        enc = ""
+        mazearray[mazedata[mazeinstance][1]][mazedata[mazeinstance][4][0]][mazedata[mazeinstance][4][1]]
+    except IndexError:
+        mazedata[mazeinstance][4][0] = int(mazedata[mazeinstance][4][0]) - 1
+    
+    try:
 
-    return(wallsides, enc, paths, direction, state)
+        if "N" in mazearray[mazedata[mazeinstance][1]][mazedata[mazeinstance][4][0]][mazedata[mazeinstance][4][1]]:
+            walls.append("North")
+            paths[0] -= 1
+        if "E" in mazearray[mazedata[mazeinstance][1]][mazedata[mazeinstance][4][0]][mazedata[mazeinstance][4][1]]:
+            walls.append("East")
+            paths[1] -= 1
+        if "S" in mazearray[mazedata[mazeinstance][1]][mazedata[mazeinstance][4][0]][mazedata[mazeinstance][4][1]]:
+            walls.append("South")
+            paths[2] -= 1
+        if "W" in mazearray[mazedata[mazeinstance][1]][mazedata[mazeinstance][4][0]][mazedata[mazeinstance][4][1]]:
+            walls.append("West")
+            paths[3] -= 1
+
+        if len(walls) == 0:
+            wallsides = "This room doesn't seem to have walls on any sides."
+        elif len(walls) == 1:
+            wallsides = "This room has a wall to the " + walls[0]
+        elif len(walls) == 2:
+            wallsides = "This room has walls to the " + walls[0] + " and " + walls[1]
+        else:
+            wallsides = "This room has walls to the " + walls[0] + ", " + walls[1] + ", and " + walls[2] + ". It seems to be a dead end."
+
+        try:
+            if "B" in mazearray[mazedata[mazeinstance][1]][mazedata[mazeinstance][4][0]][mazedata[mazeinstance][4][1]]:
+                enc = "This is the space you started in."
+            elif "X" in mazearray[mazedata[mazeinstance][1]][mazedata[mazeinstance][4][0]][mazedata[mazeinstance][4][1]]:
+                enc = "You found the exit! Congratulations!"
+                state = 3
+            elif mazeoptions[mazeencounters[mazeinstance][mazedata[mazeinstance][4][0]][mazedata[mazeinstance][4][1]]] != "":
+                enc = "In this space, you find: " + mazeoptions[mazeencounters[mazeinstance][mazedata[mazeinstance][4][0]][mazedata[mazeinstance][4][1]]]
+                if "minotaur" in enc:
+                    if state != 2:
+                        state = 1.5
+            else:
+                enc = ""
+        except TypeError:
+            enc = ""
+
+        return(wallsides, enc, paths, direction, state)
+    
+    except IndexError:
+        return("", "", [0, 0, 0, 0], "north", 3)
 
 #Mazebutton
 class MazeView(discord.ui.View):
@@ -1173,64 +1184,80 @@ async def mazerestore(message):
 
     for a in range(len(mess)):
         if mess[a].author == client.user:
+            
             try:
-
-                #Restoring Array
-                if mess[a].embeds[0].title.startswith("Maze Instance"):
-                    embeddata = mess[a].embeds[0].description.split("\n", 6)
-
-                    mazedata.append([await client.fetch_channel(embeddata[0].split("/")[-1]), int(embeddata[4].split(" ")[3]), client.get_user(int(embeddata[1].split("(")[1].split(")")[0])), client.get_user(int(embeddata[1].split("(")[2].split(")")[0])), [int(embeddata[2].split(" ", 1)[1].split(", ")[0]), int(embeddata[2].split(" ", 1)[1].split(", ")[1])], "", int(embeddata[3].split(" ")[1]), mess[a], embeddata[5].split(" ")[2]])
-
-                    #Maze Thread;                                                             Mazearray Index;                 Player 1;                                                       Player 2;                                                       Location in Maze,                                                                                       oocthread, state,                    tracking message,    minotaur direction
-
-                    embeddata[-1] = embeddata[-1].lstrip("\n")
-                    maze = []
-                    for b in range(len(embeddata[-1].split("\n"))):
-                        line = []
-                        for c in range(len(embeddata[-1].split("\n")[b].split(", "))):
-                            try:
-                                line.append(int(str(embeddata[-1].split("\n")[b].replace("[", "").replace("]", "").replace(" ", "").split(",")[c])))
-                            except ValueError:
-                                line.append("")
-                        maze.append(line)
-                    mazeencounters.append(maze)
-
-                    mazelocks.append(asyncio.Lock())
-
-                    #Restoring Buttons
-                    if int(embeddata[3].split(" ")[1]) <= 2:
-                        rpmess = [joinedMessages async for joinedMessages in mazedata[a][0].history(limit = None, oldest_first= True)]
-                        rpmess.sort(key=lambda x: x.created_at)
-                        rpmess.reverse()
-
-                        for b in range(len(rpmess)):
-                            if rpmess[b].author == client.user:
-                                if "Maze Encounter" in rpmess[b].embeds[0].title:
-                                    prev = rpmess[b+1].content.split("!")[0].split(" ")[1]
-                                    mazeinstance = a
-
-                                    if prev == "North":
-                                        mazedata[mazeinstance][4][0] = int(mazedata[mazeinstance][4][0]) + 1
-                                        rev = "south"
-                                    elif prev == "East":
-                                        mazedata[mazeinstance][4][1] = int(mazedata[mazeinstance][4][1]) - 1
-                                        rev = "west"
-                                    elif prev == "South":
-                                        mazedata[mazeinstance][4][0] = int(mazedata[mazeinstance][4][0]) - 1
-                                        rev = "north"
-                                    else:
-                                        mazedata[mazeinstance][4][1] = int(mazedata[mazeinstance][4][1]) + 1
-                                        rev = "east"
-                                    
-                                    walls, enc, paths, prev, state = await mazeupdate(rev, mazeinstance, int(mazedata[mazeinstance][6]))
-
-                                    print(walls)
-
-                                    await rpmess[b].edit(embed=discord.Embed(title = rpmess[b].embeds[0].title, description = rpmess[b].embeds[0].description, colour = embcol), view = MazeView(paths[0], paths[1], paths[2], paths[3], prev, state))
-                                    break
-       
+                emb = mess[a].embeds[0]
             except IndexError:
-                pass
+                continue
+
+            #Restoring Array
+            if emb.title.startswith("Maze Instance"):
+                embeddata = mess[a].embeds[0].description.split("\n", 6)
+
+                mazedata.append([await client.fetch_channel(embeddata[0].split("/")[-1]), int(embeddata[4].split(" ")[3]), client.get_user(int(embeddata[1].split("(")[1].split(")")[0])), client.get_user(int(embeddata[1].split("(")[2].split(")")[0])), [int(embeddata[2].split(" ", 1)[1].split(", ")[0]), int(embeddata[2].split(" ", 1)[1].split(", ")[1])], "", int(embeddata[3].split(" ")[1]), mess[a], embeddata[5].split(" ")[2]])
+
+                #Maze Thread;                                                             Mazearray Index;                 Player 1;                                                       Player 2;                                                       Location in Maze,                                                                                       oocthread, state,                    tracking message,    minotaur direction
+
+                embeddata[-1] = embeddata[-1].lstrip("\n")
+                maze = []
+                for b in range(len(embeddata[-1].split("\n"))):
+                    line = []
+                    for c in range(len(embeddata[-1].split("\n")[b].split(", "))):
+                        try:
+                            line.append(int(str(embeddata[-1].split("\n")[b].replace("[", "").replace("]", "").replace(" ", "").split(",")[c])))
+                        except ValueError:
+                            line.append("")
+                    maze.append(line)
+                mazeencounters.append(maze)
+
+                mazelocks.append(asyncio.Lock())
+
+                #Restoring Buttons
+                if int(embeddata[3].split(" ")[1]) <= 2:
+                    rpmess = [joinedMessages async for joinedMessages in mazedata[int(mess[a].embeds[0].title.split(" ")[-1])][0].history(limit = None, oldest_first= True)]
+                    rpmess.sort(key=lambda x: x.created_at)
+                    rpmess.reverse()
+
+                    for b in range(len(rpmess)):
+                        if rpmess[b].author == client.user:
+
+                            mazeinstance = int(rpmess[b].channel.name.split(" ")[2])
+
+                            try: #Test for non embed messages
+                                rpmess[b].embeds[0]
+                            except IndexError:
+                                continue
+
+                            if "Maze Encounter" in rpmess[b].embeds[0].title:
+
+                                try:
+                                    prev = rpmess[b+1].content.split("!")[0].split(" ")[1]
+                                except IndexError:
+                                    prev = "North"
+
+                                if prev == "North":
+                                    mazedata[mazeinstance][4][0] = int(mazedata[mazeinstance][4][0]) + 1
+                                    rev = "south"
+                                elif prev == "East":
+                                    mazedata[mazeinstance][4][1] = int(mazedata[mazeinstance][4][1]) - 1
+                                    rev = "west"
+                                elif prev == "South":
+                                    mazedata[mazeinstance][4][0] = int(mazedata[mazeinstance][4][0]) - 1
+                                    rev = "north"
+                                else:
+                                    mazedata[mazeinstance][4][1] = int(mazedata[mazeinstance][4][1]) + 1
+                                    rev = "east"
+
+                                try: #Test for unmoved mazes
+                                    mazearray[mazedata[mazeinstance][1]][mazedata[mazeinstance][4][0]][mazedata[mazeinstance][4][1]]
+                                except IndexError:
+                                    mazedata[mazeinstance][4][0] = int(mazedata[mazeinstance][4][0]) - 2
+                                                               
+                                walls, enc, paths, prev, state = await mazeupdate(rev, mazeinstance, int(mazedata[mazeinstance][6]))
+
+                                await rpmess[b].edit(embed=discord.Embed(title = rpmess[b].embeds[0].title, description = rpmess[b].embeds[0].description, colour = embcol), view = MazeView(paths[0], paths[1], paths[2], paths[3], prev, state))
+                                break
+       
 
     #Restore Join Message
     mazestartmessage.append(await message.channel.parent.fetch_message(int(message.content.split(" ")[1])))
