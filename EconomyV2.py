@@ -2069,6 +2069,7 @@ async def loadItemSheet():
     #itemsheet = gc.open_by_key("17M2FS5iWchszIoimqNzk6lzJMOVLBWQgEZZKUPQuMR8") #New for economy rewrite
     itemsheet = gc.open_by_key("1rS4yTmVtaaCZEbfyAAEkB3KnVC_jkI9e2zhSI0AA7ws") #New for economy rewrite
     itemlists = itemsheet.worksheets()
+    GlobalVars.itemdatabase = []
     for a in range(len(itemlists)):
             GlobalVars.itemdatabase.append(itemlists[a].get_all_values())
 
@@ -2237,8 +2238,16 @@ async def showItem(item_name, item_type, price, quantity_available, curses_ident
         embed_string += flavour
     #add additional reference
     if additional_reference != "":
-        add_ref_data = [x for x in GlobalVars.itemdatabase[2] if additional_reference.replace("[", "").replace("]", "") in x][0]
-        embed_string += f"\n\n**{add_ref_data[0]}**: {add_ref_data[1]}"
+        split_references = additional_reference.replace(" ", "").split(",")
+        first = 0
+        for entry in split_references:
+            add_ref_data = [x for x in GlobalVars.itemdatabase[2] if entry.replace("[", "").replace("]", "") in x][0]
+            if first == 0:
+                embed_string += f"\n\n**{add_ref_data[0]}**: {add_ref_data[1]}"
+                first == 1
+            else:
+                embed_string += f"\n**{add_ref_data[0]}**: {add_ref_data[1]}"
+
     #add default curse
     if default_curse != "":
         embed_string += f"**\n\n__Default curse:__** \n{default_curse}"
