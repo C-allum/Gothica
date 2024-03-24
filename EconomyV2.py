@@ -1716,7 +1716,7 @@ async def incomeWeek(message):
             incomeString += str(row[i]) + " "
         incomeString +="\n"
 
-    await message.channel.send(embed = discord.Embed(title = "Your dezzie earnings over the last week:", description = incomeString, colour = embcol))
+    await message.channel.send(embed = discord.Embed(title = f"{message.author.name}'s dezzie earnings over the last week:", description = incomeString, colour = embcol))
     await message.delete()
 
 async def copyEconomy(message):
