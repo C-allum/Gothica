@@ -114,29 +114,29 @@ async def on_ready():
             #If they aren't on the server anymore, we can just not refresh their dezzie pool.
             if userStillOnServer == 1:
                 #Base values
-                dezziePool = GlobalVars.config["economy"]["weeklydezziepoolverified"]
+                dezziePool = int(GlobalVars.config["economy"]["weeklydezziepoolverified"])
                 econ_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if name in x][0])
 
                 #Add char slot bonus
-                dezziePool += GlobalVars.config["economy"]["dezziepoolpercharslot"] * GlobalVars.economyData[econ_row_index + 2][1]
+                dezziePool += int(GlobalVars.config["economy"]["dezziepoolpercharslot"]) * int(GlobalVars.economyData[econ_row_index + 2][1])
                     
                 #Bonus
                 if "licensed fucksmith" in str(roles).lower():
-                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonusfucksmith"]
+                    dezziePool += int(GlobalVars.config["economy"]["weeklydezziebonusfucksmith"])
                 if "server booster" in str(roles).lower():
-                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonusboost"]
+                    dezziePool += int(GlobalVars.config["economy"]["weeklydezziebonusboost"])
                 if "server veteran" in str(roles).lower():
-                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonusveteran"]
+                    dezziePool += int(GlobalVars.config["economy"]["weeklydezziebonusveteran"])
                 if "staff" in str(roles).lower():
-                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonusstaff"]
+                    dezziePool += int(GlobalVars.config["economy"]["weeklydezziebonusstaff"])
                 if "patron tier 1" in str(roles).lower():
-                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront1"]
+                    dezziePool += int(GlobalVars.config["economy"]["weeklydezziebonuspatront1"])
                 if "patron tier 2" in str(roles).lower():
-                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront2"]
+                    dezziePool += int(GlobalVars.config["economy"]["weeklydezziebonuspatront2"])
                 if "patron tier 3" in str(roles).lower():
-                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront3"]
+                    dezziePool += int(GlobalVars.config["economy"]["weeklydezziebonuspatront3"])
                 if "cult of the mistress" in str(roles).lower():
-                    dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront4"]
+                    dezziePool += int(GlobalVars.config["economy"]["weeklydezziebonuspatront4"])
 
             try:
                 GlobalVars.economyData[i+3][0] = dezziePool
@@ -152,7 +152,7 @@ async def on_ready():
         #update sheet with new refresh time
         GlobalVars.economyData[1][3] = newResetDateTimestamp
         #update dezzie pools
-        EconomyV2.writeEconSheet(GlobalVars.economyData)
+        await EconomyV2.writeEconSheet(GlobalVars.economyData)
         print("Weekly Dezzie Award Pool Reset!")
     else:
         print("It is not dezzie award pool reset time yet!")
@@ -834,12 +834,12 @@ async def on_message(message):
                 except (ValueError, IndexError) as e:
 
                     
-                    if "Looking for Role Play" in message.author.roles:
+                    if not role in message.author.roles:
                         await vermemb.add_roles(role)
-                        await message.channel.send("Not time limit submitted, toggling the role instead. Looking for Role Play role is now added")
+                        await message.channel.send("No time limit submitted, toggling the role instead. Looking for Role Play role is now added")
                     else:
                         await vermemb.remove_roles(role)
-                        await message.channel.send("Not time limit submitted, toggling the role instead. Looking for Role Play role is now removed")
+                        await message.channel.send("No time limit submitted, toggling the role instead. Looking for Role Play role is now removed")
                     return
 
                 
