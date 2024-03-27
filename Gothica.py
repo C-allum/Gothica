@@ -327,7 +327,7 @@ async def on_message(message):
                 await CharRegistry.charcreate(message)
 
             #Character Edit Subroutine - On CharRegistry, untested
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "edit") and not isbot:
+            elif message.content.lower().split(" ")[0] == (str(GlobalVars.config["general"]["gothy_prefix"]) + "edit") and not isbot:
 
                 await CharRegistry.charedit2(message)
 

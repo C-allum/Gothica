@@ -24,7 +24,7 @@ economy:
   daily_interaction_value: 200
   dezziepoolpercharslot: 100
   fixed_currecy_per_ooc_message: 2
-  fixed_currecy_per_rp_message: 10
+  fixed_currecy_per_rp_message: 5
   reactcashmoney: 100
   reactdz: 20
   reactmakeitrain: 200
