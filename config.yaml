@@ -54,7 +54,7 @@ experience:
   xp_per_message_character: 0.02
 general:
   administrative_role: admin
-  gothy_prefix: '%'
+  gothy_prefix: '%please-'
   index_of_first_shop: 3
   number_of_shops: 11
   staff_role: staff

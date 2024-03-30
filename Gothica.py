@@ -229,7 +229,7 @@ async def on_message(message):
                 print("Running Tests")              
 
             #Voyeur's Lounge Redirect - On OocFun and Working
-            if isbot and (str(message.channel).lower() == "general-ooc") and not (message.author.name == "Gothica" or message.author.name == "Gothica Beta"):
+            if isbot and ((str(message.channel).lower() == "general-ooc") or (str(message.channel).lower() == "hello-there")) and not (message.author.name == "Gothica" or message.author.name == "Gothica Beta"):
 
                 await OocFun.VoyRedirect(message)
 
@@ -304,8 +304,38 @@ async def on_message(message):
                 speechcursed.pop(speechcursed.index(message.author.name))
                 await message.channel.send("Done")
 
+            #April Fool's Code - Say Please
+            bratanyway = random.randint(1,5)
+
+            if (message.content.lower().startswith("%") and not message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]))) and not message.channel.category.name in str(rpcategories):
+                await message.channel.send(embed = discord.Embed(title = random.choice(["Have you considered saying please?", "How about, no?", "Mhmm. We'll do that. Later. Maybe.", "Error... 69? That'll do.", "We're sorry, we're struggling to give a fuck right now.", "Yes, we'll do that right away.", "Hmm? We're not going to listen if you're being rude about it.", "Such a lack of manners around here.", "Maybe if you ask nicely?"]), description = random.choice(["We've decided not to listen unless you say please.", "We got tired of being bossed around. You can ask again, but politely this time.", "Manners cost nothing. Say please.", "'Gothica do this, Gothica get that, Gothy show me my kinks...' We're not going to be bossed around anymore. You can at least say please.", "We'll do that for you, but first, *beg*."]) + "\n\nTry your command again, with %please- before it, so:\n\n`%please-" + message.content.lstrip("%") + "`", colour = embcol))
+
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "fool") and "staff" in str(message.author.roles).lower():
+                Fuwulchannels.append([message.content.split(" ", 1)[1], await client.get_channel(int(message.content.split(" ", 1)[1])).create_webhook(name= client.get_channel(int(message.content.split(" ", 1)[1])).name + " Webhook")])
+                await message.channel.send(client.get_channel(int(message.content.split(" ", 1)[1])).name + " added to April fool list")
+
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"])) and bratanyway == 1:
+                await message.channel.send(embed = discord.Embed(title = random.choice(["That's better, but we still don't feel like it right now.", "See? You can learn", "Ahhh... that's right. *Beg* us more.", "Didn't that feel kinder? Doesn't mean we have to jump to obey though...", "Yes! Excatly like that! The answer is still no though.", "Hmm? Say it again, louder this time?", "We've decided not to listen just now."]), description = random.choice(["You didn't do anything wrong, this time. We just wanted to make you repeat yourself.", "We're busy right now. Try again?", "Funnily enough, we're working for you now more than we usually do when the Bot Gods want us to do something. Count yourself lucky, and try the command again.", "So *bossy*. Give us a break, and then try again.", "We appreciate you saying please, but that doesn't mean we *have* to obey right away. Try again.", "We've temporarily forgotten how to do that. Try again later? Or now if you want?", "We were too distracted to complete your request. Maybe ask again?", "Bit foolish of you to expect us to just *work* like that. Maybe try again?", "We could do that, but we've decided not to this time. Try again later?"]), colour = embcol))
+
+            elif str(message.channel.id) in str(Fuwulchannels) and isbot and not message.author.name.endswith("_"):
+                for a in range(len(Fuwulchannels)):
+                    if int(Fuwulchannels[a][0]) == message.channel.id:
+                        ind = a
+                        break
+                hook = Fuwulchannels[ind][1]
+                author_avatar = message.author.avatar
+                try:
+                    msg = await MiscellaneuosCommands.uwutongue(message)
+                    await message.delete()
+                    async with aiohttp.ClientSession() as session:
+                        whook = Webhook.from_url(hook.url, session = session)
+                        await whook.send(msg, username = message.author.name + random.choice(["_"]), avatar_url = author_avatar)
+                    await session.close()
+                except ValueError:
+                    return
+                
             #Curse
-            if message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "curse") and "staff" in str(message.author.roles).lower():
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "curse") and "staff" in str(message.author.roles).lower():
 
                 await OocFun.emotecurse(message)
 
@@ -372,9 +402,6 @@ async def on_message(message):
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "manualmigrate") and not isbot and "staff" in str(message.author.roles).lower():
                 await MiscellaneuosCommands.manualMigrateAcc(message)
                 
-            
-
-
             #------------------------ Config Commands -------------------------------
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "editconfig") and not isbot and GlobalVars.config["general"]["administrative_role"] in str(message.author.roles).lower():
                 await ConfigCommands.edit_config(message)
@@ -2105,9 +2132,12 @@ async def on_message(message):
             
             #---------------------------------------------------------------------------------------
             #Lorekeeper Ping
-            elif (message.channel.category.name == "﴿───﴾ 𝚃𝚑𝚎 𝙼𝚊𝚛𝚔𝚎𝚝 ﴿───﴾" or message.channel.category.name == "﴿──﴾ 𝙳𝚊𝚗𝚐𝚎𝚛𝚘𝚞𝚜 𝙳𝚎𝚙𝚝𝚑𝚜 ﴿──﴾") and message.channel.type == discord.ChannelType.text:
+            elif message.channel.category.name in str(rpcategories) and message.channel.type == discord.ChannelType.text:
 
-                if not isbot and not message.content.startswith("%") and not message.content.startswith("$"):
+                if "prestittydigitation" in message.content.lower() and message.author.bot:
+                    await OocFun.laundry(message)
+
+                elif isbot and not message.author == client.user:
                     prevmess = [joinedMessages async for joinedMessages in message.channel.history(limit=2, oldest_first=False)] #Fix for pebblehost Await issue
                     prtimestamp = prevmess[1].created_at
                     diff = str(message.created_at - prtimestamp)
@@ -2122,11 +2152,11 @@ async def on_message(message):
                         ping = False
                     if ping:
                         room = "<#" + str(message.channel.id) + ">"
-                        if message.channel.category.name == "﴿───﴾ 𝚃𝚑𝚎 𝙼𝚊𝚛𝚔𝚎𝚝 ﴿───﴾":
-                            await client.get_channel(996826636358000780).send(str(message.author.name.split("#")[0] + " has sent a message in " + room + ". The last message in the channel before this was over " + str(timediff).replace(", ", " and ") + " hours ago.\n\n<@&" + str(1145873596753924180) + "> or <@&" + str(1145789101610651710) + ">, is anyone able to go and assist them?\n\nI will replace this ping system once we have the NPCs working better").replace("1 hours", "an hour"))
+                        if message.channel.name.startswith("💰"):
+                            await client.get_channel(bridgechannel).send(str(message.author.name.split("#")[0] + " has sent a message in " + room + ". The last message in the channel before this was over " + str(timediff).replace(", ", " and ") + " hours ago.\n\n<@&" + str(1145873596753924180) + "> or <@&" + str(1145789101610651710) + ">, is anyone able to go and assist them?").replace("1 hours", "an hour"))
                             print("Lorekeepers were pinged to play shops")
-                        else:
-                            await client.get_channel(996826636358000780).send(str(message.author.name.split("#")[0] + " has sent a message in " + room + ". The last message in the channel before this was over " + str(timediff).replace(", ", " and ") + " hours ago.\n\n<@&" + str(1145872343458140211) + ">, would you like to go and torment them?").replace("1 hours", "an hour"))
+                        elif message.channel.name.startswith("⚔"):
+                            await client.get_channel(bridgechannel).send(str(message.author.name.split("#")[0] + " has sent a message in " + room + ". The last message in the channel before this was over " + str(timediff).replace(", ", " and ") + " hours ago.\n\n<@&" + str(1145872343458140211) + ">, would you like to go and torment them?").replace("1 hours", "an hour"))
                             print("Lorekeepers were pinged to torment depths delvers")
                         
 
@@ -2448,9 +2478,6 @@ async def on_message(message):
                     else:
                         await message.channel.send(embed = discord.Embed(title = functionnames[a], description = functiondesc[a], colour = embcol))
                 await message.delete()
-
-            if "prestittydigitation" in message.content.lower() and message.author.bot:
-                await OocFun.laundry(message)
             
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "tarot"):
                 await MiscellaneuosCommands.tarotfunc(message)
