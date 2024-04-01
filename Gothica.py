@@ -305,34 +305,37 @@ async def on_message(message):
                 await message.channel.send("Done")
 
             #April Fool's Code - Say Please
-            bratanyway = random.randint(1,5)
+            # bratanyway = random.randint(1,5)
+                
+            if message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "please"):
+                await message.channel.send(embed= discord.Embed(title = "We appreciate your politeness, but April Fool's day is over, and the normal commands have been restored.", colour = embcol))
 
-            if (message.content.lower().startswith("%") and not message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]))) and not message.channel.category.name in str(rpcategories):
-                await message.channel.send(embed = discord.Embed(title = random.choice(["Have you considered saying please?", "How about, no?", "Mhmm. We'll do that. Later. Maybe.", "Error... 69? That'll do.", "We're sorry, we're struggling to give a fuck right now.", "Yes, we'll do that right away.", "Hmm? We're not going to listen if you're being rude about it.", "Such a lack of manners around here.", "Maybe if you ask nicely?"]), description = random.choice(["We've decided not to listen unless you say please.", "We got tired of being bossed around. You can ask again, but politely this time.", "Manners cost nothing. Say please.", "'Gothica do this, Gothica get that, Gothy show me my kinks...' We're not going to be bossed around anymore. You can at least say please.", "We'll do that for you, but first, *beg*."]) + "\n\nTry your command again, with %please- before it, so:\n\n`%please-" + message.content.lstrip("%") + "`", colour = embcol))
+            # if (message.content.lower().startswith("%") and not message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]))) and not message.channel.category.name in str(rpcategories):
+            #     await message.channel.send(embed = discord.Embed(title = random.choice(["Have you considered saying please?", "How about, no?", "Mhmm. We'll do that. Later. Maybe.", "Error... 69? That'll do.", "We're sorry, we're struggling to give a fuck right now.", "Yes, we'll do that right away.", "Hmm? We're not going to listen if you're being rude about it.", "Such a lack of manners around here.", "Maybe if you ask nicely?"]), description = random.choice(["We've decided not to listen unless you say please.", "We got tired of being bossed around. You can ask again, but politely this time.", "Manners cost nothing. Say please.", "'Gothica do this, Gothica get that, Gothy show me my kinks...' We're not going to be bossed around anymore. You can at least say please.", "We'll do that for you, but first, *beg*."]) + "\n\nTry your command again, with %please- before it, so:\n\n`%please-" + message.content.lstrip("%") + "`", colour = embcol))
 
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "fool") and "staff" in str(message.author.roles).lower():
-                Fuwulchannels.append([message.content.split(" ", 1)[1], await client.get_channel(int(message.content.split(" ", 1)[1])).create_webhook(name= client.get_channel(int(message.content.split(" ", 1)[1])).name + " Webhook")])
-                await message.channel.send(client.get_channel(int(message.content.split(" ", 1)[1])).name + " added to April fool list")
+            # elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "fool") and "staff" in str(message.author.roles).lower():
+            #     Fuwulchannels.append([message.content.split(" ", 1)[1], await client.get_channel(int(message.content.split(" ", 1)[1])).create_webhook(name= client.get_channel(int(message.content.split(" ", 1)[1])).name + " Webhook")])
+            #     await message.channel.send(client.get_channel(int(message.content.split(" ", 1)[1])).name + " added to April fool list")
 
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"])) and bratanyway == 1:
-                await message.channel.send(embed = discord.Embed(title = random.choice(["That's better, but we still don't feel like it right now.", "See? You can learn", "Ahhh... that's right. *Beg* us more.", "Didn't that feel kinder? Doesn't mean we have to jump to obey though...", "Yes! Excatly like that! The answer is still no though.", "Hmm? Say it again, louder this time?", "We've decided not to listen just now."]), description = random.choice(["You didn't do anything wrong, this time. We just wanted to make you repeat yourself.", "We're busy right now. Try again?", "Funnily enough, we're working for you now more than we usually do when the Bot Gods want us to do something. Count yourself lucky, and try the command again.", "So *bossy*. Give us a break, and then try again.", "We appreciate you saying please, but that doesn't mean we *have* to obey right away. Try again.", "We've temporarily forgotten how to do that. Try again later? Or now if you want?", "We were too distracted to complete your request. Maybe ask again?", "Bit foolish of you to expect us to just *work* like that. Maybe try again?", "We could do that, but we've decided not to this time. Try again later?"]), colour = embcol))
+            # elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"])) and bratanyway == 1:
+            #     await message.channel.send(embed = discord.Embed(title = random.choice(["That's better, but we still don't feel like it right now.", "See? You can learn", "Ahhh... that's right. *Beg* us more.", "Didn't that feel kinder? Doesn't mean we have to jump to obey though...", "Yes! Excatly like that! The answer is still no though.", "Hmm? Say it again, louder this time?", "We've decided not to listen just now."]), description = random.choice(["You didn't do anything wrong, this time. We just wanted to make you repeat yourself.", "We're busy right now. Try again?", "Funnily enough, we're working for you now more than we usually do when the Bot Gods want us to do something. Count yourself lucky, and try the command again.", "So *bossy*. Give us a break, and then try again.", "We appreciate you saying please, but that doesn't mean we *have* to obey right away. Try again.", "We've temporarily forgotten how to do that. Try again later? Or now if you want?", "We were too distracted to complete your request. Maybe ask again?", "Bit foolish of you to expect us to just *work* like that. Maybe try again?", "We could do that, but we've decided not to this time. Try again later?"]), colour = embcol))
 
-            elif str(message.channel.id) in str(Fuwulchannels) and isbot and not message.author.name.endswith("_"):
-                for a in range(len(Fuwulchannels)):
-                    if int(Fuwulchannels[a][0]) == message.channel.id:
-                        ind = a
-                        break
-                hook = Fuwulchannels[ind][1]
-                author_avatar = message.author.avatar
-                try:
-                    msg = await MiscellaneuosCommands.uwutongue(message)
-                    await message.delete()
-                    async with aiohttp.ClientSession() as session:
-                        whook = Webhook.from_url(hook.url, session = session)
-                        await whook.send(msg, username = message.author.name + random.choice(["_"]), avatar_url = author_avatar)
-                    await session.close()
-                except ValueError:
-                    return
+            # elif str(message.channel.id) in str(Fuwulchannels) and isbot and not message.author.name.endswith("_"):
+            #     for a in range(len(Fuwulchannels)):
+            #         if int(Fuwulchannels[a][0]) == message.channel.id:
+            #             ind = a
+            #             break
+            #     hook = Fuwulchannels[ind][1]
+            #     author_avatar = message.author.avatar
+            #     try:
+            #         msg = await MiscellaneuosCommands.uwutongue(message)
+            #         await message.delete()
+            #         async with aiohttp.ClientSession() as session:
+            #             whook = Webhook.from_url(hook.url, session = session)
+            #             await whook.send(msg, username = message.author.name + random.choice(["_"]), avatar_url = author_avatar)
+            #         await session.close()
+            #     except ValueError:
+            #         return
                 
             #Curse
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "curse") and "staff" in str(message.author.roles).lower():
