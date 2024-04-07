@@ -2024,6 +2024,8 @@ async def on_message(message):
                     await EconomyV2.invest(message)
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "bid"):
                     await EconomyV2.bid(message, isbot)
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "toggledailynotif"):
+                    await EconomyV2.togglenotif(message)
             #Income History
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "income") and not isbot:
                 await EconomyV2.incomeWeek(message)
@@ -2517,7 +2519,11 @@ async def on_message(message):
                             GlobalVars.economyData[author_row_index+3][1] = int(datetime.timestamp(datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)))
                             await EconomyV2.addDezziesToPlayer(message, GlobalVars.config["economy"]["daily_interaction_value"],message.author.id, write_econ_sheet=True, send_message=False)
                             TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.DailyInteraction, int(GlobalVars.config["economy"]["daily_interaction_value"]))
-
+                            try:
+                                if GlobalVars.economyData[author_row_index+2][2] == "True":
+                                    await message.author.send(embed=discord.Embed(title="You claimed your daily reward!", description=f"You got {GlobalVars.config["economy"]["daily_interaction_value"]} from the daily reward. You now have {GlobalVars.economyData[author_row_index+1][1]}.", color=embcol))
+                            except IndexError:
+                                GlobalVars.economyData[author_row_index+2].append("False")
 
                         #---------RP REWARD AND NOTIFICATIONS--------------
                         #check if we are in a channel that awards dezzies for posts
