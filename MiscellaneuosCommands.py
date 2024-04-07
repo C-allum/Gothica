@@ -1337,6 +1337,54 @@ async def tarotshuffle():
         unqcards[a] = random.choice(["U", "R"]) + str(unqcards[a])
     return(unqcards)
 
+#----------------Dungeon Map-----------------
+
+async def map(message):
+    await message.delete()
+    mapthread = await client.get_channel(botchannel).create_thread(name = "Dungeon Directions - " + message.author.display_name, type = discord.ChannelType.private_thread)
+    await mapthread.send(message.author.mention)
+    await mapthread.send(embed = discord.Embed(title = "An interactive tour of the roleplay spaces in the dungeon", description= "Hi " + message.author.display_name + "!\n\nWe are Gothica, and we do a lot of the housekeeping functions in the dungeon, both in the in-world spaces and in the discord server that you are probably using right now. This thread will be to guide your character through the varied spaces that we have available. You could use one per character to track their movements, or use one just to learn what the areas are.\n\nFor an introduction to the dungeon itself, [link to orientation maybe?].\nThe dungeon is divided into several zones, and for the most part, these zones become more dangerous the deeper you go into them. These areas are as follows:\n\n**Meta Spaces:** A place for scenes that exist within the housing areas.\n**Shallow Dungeon**: This primarily consists of the corridors that make up the upper layer of the dungeon; the boundary between what could be caves on the surface (though few lead to it) and the depths of a true dungeon.\n**Market Town Outskirts**:The main safe areas of the dungeon form a small market town, and the buildings on the outskirts comprise key community areas and utilities.\n**Market Town Centre**: The shopping district that forms the heart of the safe areas of the dungeon.\n**Verdant Caverns**: These caverns contain a vast amount of greenery and plant matter, and form the main buffer between the dangerous areas and the safer ones above.\n**Middle Dungeon**: A collection of strange places that have been built up deeper into the dungeon.\n**Stormpirate Seas and Coasts**: An entire ocean, complete with ferocious bands of pirates.\n**Frostveil**: A frozen tundra, fraught with danger.\n\nFor more information about these spaces, choose one from the dropdown below. Alternatively, Hit the button to learn about a random location in which to introduce your character.", colour= embcol), view = Map_Space_View(message))
+
+class Map_Space_View(discord.ui.View):
+    def __init__(self, message):
+        super().__init__()
+        self.button_response = []
+        self.choices = []
+        self.message = message
+
+        for i in range(1, len(rpcategories)):
+            self.choices.append(discord.SelectOption(
+                label=f"{i}: {rpcategories[i]}",
+                value = i
+                ))
+
+        self.select = discord.ui.Select(
+            placeholder = "None", # the placeholder text that will be displayed if nothing is selected
+            min_values = 1, # the minimum number of values that must be selected by the users
+            max_values = 1, # the maximum number of values that can be selected by the users
+            options = self.choices# the list of options from which users can choose, a required field)
+        )       
+        self.select.callback = self.callback
+        self.add_item(self.select)
+        self.add_item(discord.ui.Button(label = "Random Location", style = discord.ButtonStyle.green, custom_id = "rand"))
+        
+    async def callback(self, interaction: discord.Interaction):
+        print(self)
+        self.button_response = self.select.values
+        await interaction.response.defer()
+        self.stop()
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if self.message.author.id == interaction.user.id:
+            return True
+        else:
+            await interaction.response.send_message("That is not your dropdown to click!", ephemeral=True)
+            return False
+
+
+
+rpcategories = ["Meta Spaces", "Shallow Dungeon", "Market Town Outskirts", "Market Town Center", "Verdant Caverns", "Middle Dungeon", "Stormpirate Seas and Coasts", "Frostveil"]
+
 #----------------View Classes----------------
 
 #This is the view class for a simple accept button.

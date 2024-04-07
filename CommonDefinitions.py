@@ -69,7 +69,7 @@ gc = gspread.service_account(filename = SERVICE_ACCOUNT_FILE)
 config_file_path = "config.yaml"
 #-----------------LIVE VERSION/BETA TOGGLE---------------
 # 0 is Test Server, 1 is Live Server
-liveVersion = 1
+liveVersion = 0
 token = ""
 
 #Sheet Locations:
@@ -151,7 +151,7 @@ else:
 
     aliasBotChannel = 1142877836298965105
 
-    botchannel = 1031701327169998958
+    botchannel = 891781900388159528
 
     bridgechannel = 891781900388159528
 
@@ -297,6 +297,8 @@ tarotupright = ["20", "19", "18", "17", "16", "15", "14", "13", "12", "11", "Shu
 tarotreverse = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "You suffer disadvantage on this action. Reshuffle after the result is decided.", "Numbered cards drawn as part of this action are read as Inverted, regardless of what orientation they are drawn in. Reshuffle after the result is decided.", "Discard one card from your Court without activating it’s Dismissal effect, Then reshuffle.", "Discard all cards from your Court without activating their Dismissal effects, then reshuffle.", "While this card is in your court, you and allies within 30 ft of you have advantage on opportunity attacks made against enemies", "While this card is in your court, illusion spells cast within 30 ft of you are cast as if one level higher", "While this card is in your court, you and allies within 30 ft of you have advantage on deception and slight of hand checks", "While this card is active, enemies within 30 ft of you treat all terrain as difficult terrain", "While this card is in your court, enemies within 30 ft of you have disadvantage on saving throws against charm and fear effects.", "While this card is in your court, you and allies within 30 ft of you have advantage on saving throws against ongoing effects and conditions", "While this card is in your court, enemies within 30 ft of you have disadvantage on attack rolls made within 5ft of one or more of their allies", "While this card is in your court, enemies within 30 ft of you have disadvantage to hit with ranged attacks", "While this card is in your court, you and allies within 30 ft of you have advantage on deception, stealth, and slight of hand checks.", "While this card is in your court enemies within 30 ft of you have disadvantage on saving throws while not within 5ft of one of their allies", "While this card is in your court, you and allies within 30 ft of you have advantage on death saving throws", "While this card is in your court, enemies within 30 ft of you have disadvantage on saving throws made to maintain concentration", "While this card is in your court, enemies within 30 ft of you have disadvantage on strength based attack rolls and saving throws", "While this card is in your court, creatures within 30 ft of you treat d20 rolls of 19-20 as critical successes, and d20 rolls of 1-2 as critical failures", "While this card is in your court, you and allies within 30 ft of you may can spend 5 feet of movement to automatically escape from nonmagical restraints such as shackles or another creature’s grapple", "While this card is in your court, enemies within 30 ft of you have disadvantage on melee attack rolls while below half their hit point maximum", "While this card is in your court enemies within 30 ft of you treat critical successes as regular successes, and allies within 30 ft of you treat critical failures as regular failures", "While this card is in your court each time you or an ally reduces an enemy to 0 hit points, any of it’s allies within 5 ft suffer disadvantage on attack rolls and saving throws until the end of their next turn", "While this card is in your court, when an enemy makes an attack against you or an ally and misses, it gains disadvantage on attack rolls until the end of it’s next turn", "While this card is in your court, you and your allies within 30 ft of you have advantage on opportunity attacks", "While this card is in your court, enemies within 30 ft of you must succeed on a wisdom saving throw against your spellcasting DC to cast spells that require vocal component", "While this card is in your court, enemies within 30 ft of you have disadvantage on attack rolls if at least one of their allies has successfully hit the target with an attack during the same round"]
 
 rpcategories = ["Meta Spaces", "Shallow Dungeon", "Market Town Outskirts", "Market Town Center", "Verdant Caverns", "Middle Dungeon", "Stormpirate Seas and Coasts", "Frostveil"]
+
+
 
 Fuwulchannels = []
 
@@ -612,7 +614,7 @@ async def helplist(message):
         ["Character Registration", "Edit", "Transfer", "Charlist", "Search", "Retire", "Deactivate", "Activate"],
         ["LFG", "Plothook", "Plotlead", "Room", "Break", "Recent", "Wildlust", "Gobblin", "Scenes", "imptome"],
         ["Kinklist", "Kinksurvey", "Kinkfill", "KinkEdit", "Kinkplayers"],
-        ["Work", "Slut", "Money", "Inventory", "Give-Money", "Leaderboard", "Shop", "Item", "Buy", "Sell", "GiveItem", "Invest", "Bid", "Spend"],
+        ["Money", "Inventory", "GiveMoney", "Leaderboard", "Shop", "Item", "Buy", "Sell", "GiveItem", "Invest", "Bid", "Spend"],
         ["Gag", "Emote", "Adventurer", "Verify", "Kinkencounter", "oocembed", "oocmsg", "Add-money", "Remove-Money", "AddItem", "Spellrotation", "RandLoot", "clonev2", "CommunityProject", "giftall", "rewardpoolreset", "manualmigrate", "MVP", "copysheet", "removezerodiscrim", "config"]
     ]
     helpsummary = [
@@ -620,7 +622,7 @@ async def helplist(message):
         ["Registers a character to the index", "Edits a character", "Gives a character to another player", "Lists the characters owned by a player", "Provides the index entry of a character", "Retires a character", "Sets a character temporarily unactive", "Reactivates a deactivated character"],
         ["Helps you find roleplay partners", "Generates a random plothook for your character", "Checks how many plothooks you have seen", "Suggests an empty room for you to roleplay in.", "Generates a scene break", "Provides the time of the last message in each roleplay channel", "Rolls on the wildlust table", "Eats a dezzie", "Stores and recalls your list of active scenes and can DM you whenever a new message is sent in them", "Manually spawns the imptome into an RP (Only usable by the imptome wielder)."],
         ["Summons the kinks of the tagged player", "Allows you to fill out the kink survey", "Fills any holes in the kinksurvey", "Edits a kink", "Summons a list of players with the targeted kink"],
-        ["Earns daily dezzies", "Earns more dezzies, with a risk to lose some instead", "Checks your balance", "Displays your items", "Gives a number of dezzies to someone else", "Shows how rich the richest people on the server are", "Displays the listed shop", "Provides details on a shop or inventory item", "Buys an item", "Sells an item, at a loss.", "Transfers an item to another player", "Spends dezzies on a community project", "Bids on an auction in the Black Market", "Removes Dezzies from yourself"],
+        ["Checks your balance", "Displays your items", "Gives a number of dezzies to someone else", "Shows how rich the richest people on the server are", "Displays the listed shop", "Provides details on a shop or inventory item", "Buys an item", "Sells an item, at a loss.", "Transfers an item to another player", "Spends dezzies on a community project", "Bids on an auction in the Black Market", "Removes Dezzies from yourself"],
         ["Gags a user in ooc", "Reacts to a message with emote letters", "Grants a player the Adventurer Role", "Confirms that a user is over 18", "Generates a random encounter, respecting the player's kinks", "Generates an embed in ooc", "Sends a message in ooc", "Adds money", "Removes money","Adds an item from the shop to a user's inventory", "Checks Runar's stock of spells", "Generate random loot that fits a player's kinks", "Clones the contents of a channel or thread to another channel or threads, including tupper messages.", "Registers a new community project people can %invest in!", "Gives (or takes) dezzies to every person registered in the economy.","MOD ONLY: Resets the dezzie reward pool for all players if needed.", "MOD ONLY: migrates an account from old to new naming system without automatic failsaves. Read full help before using.", "Grants the user the MVP Role", "Makes a copy of the economy sheet in a seperate worksheet.", "Removes all #0 discriminators as well as making a safety copy first.", "Allows viewing, and editing of the variables exposed in the config."]
     ]
     helpfull = [
@@ -657,11 +659,9 @@ async def helplist(message):
         "If you find that your preferences for a certain thing have changed, you can run `%kinkedit` to update this. Running the command on its own will bring up a navigatable list of kinks, while specifying the name of the kink in the message will edit that one directly.",
         "If you are looking for someone who is into a particular kink, you can run `%kinkplayers` followed by the name of the kink. For example, `%kinkplayers Handholding` will bring up a long list of degenerates who have that marked as a favourite. Running this in #looking-for-new-roleplay will ping everyone associated with that kink who is also looking to start a scene."
         ],
-        ["This is the main way that dezzies are earned in the server. Each day, you are able to run `%work`, which awards a random number of dezzies. Running this command every day earns a streak, which gets extra dezzies.",
-        "If working isn't getting enough dezzies, you can also try `%slut`. This has the potential to earn more dezzies, and can be run every six hours. This does also have the risk that you will instead lose dezzies, so use carefully.",
-        "We can help you check your balance in one of two ways. First, we can simply shove you, and if you make the Strength (Athletics) or Dexterity (Acrobatics) check, you do not fall prone. If you would rather we check the balance of your dezzie account, simply use `%money`",
+        ["We can help you check your balance in one of two ways. First, we can simply shove you, and if you make the Strength (Athletics) or Dexterity (Acrobatics) check, you do not fall prone. If you would rather we check the balance of your dezzie account, simply use `%money`",
         "To display the items you have bought, earned or found in the dungeon, you can use `%inventory`. This also displays the number of each that you have and a brief summary of each.",
-        "To transfer dezzies from your account to someone else's, use the command `%give-money @name amount`. This value will be removed from your account and added to that of the targeted player.",
+        "To transfer dezzies from your account to someone else's, use the command `%givemoney @name amount`. This value will be removed from your account and added to that of the targeted player.",
         "The richest players in the dungeon can be displayed using the `%leaderboard` command.",
         "The inventories of the various shops in the market can be shown using the `%shop shopname` command, for example running `%shop widow` will pull up the listing for the Widow's Boutique.",
         "To display the details of an item, either from the shop or one that has been given to you through a quest or other reward, you can run `%item itemname`.",

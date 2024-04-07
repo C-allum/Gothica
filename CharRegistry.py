@@ -972,6 +972,9 @@ async def charsearch(message, outputchannel):
     except AttributeError:
         pass
     
+#Catalogue Subroutine
+    
+
 #Retire Command
 async def charretire(message):
 
