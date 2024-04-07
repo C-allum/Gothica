@@ -2020,6 +2020,7 @@ async def addUserToEconomy(name, id, last_message_time = datetime.timestamp(date
         #Line 3: Scene list & Additional Charslots
         GlobalVars.economyData.append([scenes_list])
         GlobalVars.economyData[-1].append(additional_charslots)
+        GlobalVars.economyData[-1].append("False")
         #Line 4: Weekly award pool and an empty field for the new dailies system.
         GlobalVars.economyData.append([weekly_award_pool])
         GlobalVars.economyData[-1].append(0)
@@ -2034,6 +2035,20 @@ async def addUserToEconomy(name, id, last_message_time = datetime.timestamp(date
     #await writeInvetorySheet(GlobalVars.inventoryData)
     return
 
+async def togglenotif(message):
+    author_economy_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0])
+
+    try:
+        if GlobalVars.economyData[author_economy_row_index + 2][2] == "True":
+            GlobalVars.economyData[author_economy_row_index + 2][2] = "False"
+            await message.channel.send(embed = discord.Embed(title="Notification for the daily interaction reward is now OFF!", color=embcol))
+        else:
+            GlobalVars.economyData[author_economy_row_index + 2][2] = "True"
+            await message.channel.send(embed = discord.Embed(title="Notification for the daily interaction reward is now ON!", color=embcol))
+
+    except IndexError:
+        GlobalVars.economyData[author_economy_row_index + 2].append("True")
+        await message.channel.send(embed = discord.Embed(title="Notification for the daily interaction reward is now ON!", color=embcol))
 
 #-------------------------------Helper Functions-----------------------------------
 
