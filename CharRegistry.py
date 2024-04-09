@@ -897,13 +897,13 @@ async def charsearch(message, outputchannel):
     optionsarray = []
     for c in range(len(searchresults)):
         optionsarray.append(f"{sorted_list[c][2]}'s {sorted_list[c][0]}")
-    selection_message = char_selection_view = EconomyV2.Dropdown_Select_View(message = message, timeout=30, optionamount=len(searchresults), maxselectionamount=1, namelist=optionsarray) #Only let them choose one item.
+    char_selection_view = EconomyV2.Dropdown_Select_View(message = message, timeout=30, optionamount=len(searchresults), maxselectionamount=1, namelist=optionsarray) #Only let them choose one item.
     charsel = []
     for c in range(len(searchresults)):
         charsel.append(f"`{str(c+1)}` - {searchresults[c][1]}'s {searchresults[c][0]}")
     emb = discord.Embed(title = "Which character would you like to see?", description = "Select the number of the one you want:\n" + "\n".join(charsel), colour = embcol)
     emb.set_footer(text = "This message will timeout in 30 seconds")
-    await message.channel.send(embed = emb, view=char_selection_view)
+    selection_message = await message.channel.send(embed = emb, view=char_selection_view)
 
     #Wait for reply
     if await char_selection_view.wait():
