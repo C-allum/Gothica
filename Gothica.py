@@ -2530,7 +2530,7 @@ async def on_message(message):
                             TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.DailyInteraction, int(GlobalVars.config["economy"]["daily_interaction_value"]))
                             try:
                                 if GlobalVars.economyData[author_row_index+2][2] == "True":
-                                    await message.author.send(embed=discord.Embed(title="You claimed your daily reward!", description=f"You got {GlobalVars.config["economy"]["daily_interaction_value"]} from the daily reward. You now have {GlobalVars.economyData[author_row_index+1][1]}.", color=embcol))
+                                    await message.author.send(embed=discord.Embed(title="You claimed your daily reward!", description=f"You got {GlobalVars.config['economy']['daily_interaction_value']} from the daily reward. You now have {GlobalVars.economyData[author_row_index+1][1]}.", color=embcol))
                             except IndexError:
                                 GlobalVars.economyData[author_row_index+2].append("False")
 

@@ -897,7 +897,7 @@ async def charsearch(message, outputchannel):
     optionsarray = []
     for c in range(len(searchresults)):
         optionsarray.append(f"{sorted_list[c][2]}'s {sorted_list[c][0]}")
-    char_selection_view = EconomyV2.Dropdown_Select_View(message = message, timeout=30, optionamount=len(searchresults), maxselectionamount=1, namelist=optionsarray) #Only let them choose one item.
+    selection_message = char_selection_view = EconomyV2.Dropdown_Select_View(message = message, timeout=30, optionamount=len(searchresults), maxselectionamount=1, namelist=optionsarray) #Only let them choose one item.
     charsel = []
     for c in range(len(searchresults)):
         charsel.append(f"`{str(c+1)}` - {searchresults[c][1]}'s {searchresults[c][0]}")
@@ -910,7 +910,7 @@ async def charsearch(message, outputchannel):
         await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
         return
     cindex = sorted_list[int(char_selection_view.button_response[0]) -1][3]
-
+    await selection_message.delete()
     for i in range(len(cnames)):
         if cindex > 0: #If index of character is known (from multiple selection, inputs it here)
             i = cindex

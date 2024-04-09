@@ -55,7 +55,7 @@ async def shop(message):
         await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
         return
     i = searchresults[int(shop_selection_view.button_response[0])-1][1]
-    selection_message.delete()
+    await selection_message.delete()
     try:
         shopitems.append(str(GlobalVars.itemdatabase[i][0][20]) + "\n------------------------------------------------------------\n") #Adds shop welcome message to first embed
     except IndexError:
@@ -166,7 +166,7 @@ async def item(message):
         #note the shop ID
         chosenShop = shopnumbers[userinput]
         item_in_shop = True
-        selection_message.delete()
+        await selection_message.delete()
     else:
         #if the item to buy is already clear, collect info.
         try:
@@ -374,7 +374,7 @@ async def buyitem(message):
         
         #note the shop ID
         chosenShop = shopnumbers[userinput]
-        selection_message.delete()
+        await selection_message.delete()
     else:
         #if the item to buy is already clear, collect info.
         try:
@@ -430,7 +430,7 @@ async def buyitem(message):
             return
         
         buyquant = int(quantity_view.button_response[0])
-        selection_message.delete()
+        await selection_message.delete()
         #Ask if this is fine now
         confirm_view = Yes_No_View(message=message)
         await message.channel.send(embed=discord.Embed(title=f"Buy {buyquant} of this item for a total of {price * buyquant}{dezzieemj}?", description=embed_string + potential_curses_string, colour = embcol), view = confirm_view)
@@ -559,7 +559,7 @@ async def sellitem(message):
             return
         
         sellquant = int(quantity_view.button_response[0])
-        selection_message.delete()
+        await selection_message.delete()
         #Ask if this is fine now
         confirm_view = Yes_No_View(message=message)
         await message.channel.send(embed=discord.Embed(title=f"Do you want to sell {sellquant}x {itemname} for {int(int(item_price) * GlobalVars.config['economy']['sellpricemultiplier'] * sellquant)}?"), view = confirm_view)
@@ -652,7 +652,7 @@ async def giveitem(message):
                 return
         #Wait for user input as to which shop to choose
         givequant = int(quantity_view.button_response[0])
-        selection_message.delete()
+        await selection_message.delete()
     #Confirmation
     confirm_view = Yes_No_View(message=message)
     await message.channel.send(embed=discord.Embed(title=f"Do you want to give {givequant}x {itemname} to {recipient_name}?", colour=embcol), view=confirm_view)
@@ -782,7 +782,7 @@ async def additem(message):
             await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
             return
         userinput = int(shop_selection_view.button_response[0])-1
-        selection_message.delete()
+        await selection_message.delete()
         #note the shop ID
         chosenShop = shopnumbers[userinput]
         item_in_shop = True
@@ -952,7 +952,7 @@ async def additem(message):
                 await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
                 return
             
-            selection_message.delete()
+            await selection_message.delete()
             
             curse_names = ""
             user_text_curse_choices = select_view.button_response
@@ -995,7 +995,7 @@ async def additem(message):
             return
         
         givequant = int(quantity_view.button_response[0])
-        selection_message.delete()
+        await selection_message.delete()
         #Ask if this is fine now
         confirm_view = Yes_No_View(message=message)
         await message.channel.send(embed=discord.Embed(title=f"Give {givequant} of this item to {recipient_name}?", description=embed_string, colour = embcol), view = confirm_view)
@@ -2180,7 +2180,7 @@ async def selectItem(message, searchterm, top_n_results):
                 return
         
         i = int(item_selection_view.button_response[0]) - 1
-        selection_message.delete()
+        await selection_message.delete()
         if i >= 0 and i < len(selector_options):
             selected_item = selector_options[i]
         else: 
