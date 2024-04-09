@@ -48,14 +48,14 @@ async def shop(message):
         shopsel.append("`" + str(c+1) + "` - " + searchresults[c][0])
     emb = discord.Embed(title = "Which shop would you like to browse?", description = "Select the number of the one you want:\n" + "\n".join(shopsel), colour = embcol)
     emb.set_footer(text = "This message will timeout in 30 seconds")
-    await message.channel.send(embed = emb, view=shop_selection_view)
+    selection_message = await message.channel.send(embed = emb, view=shop_selection_view)
 
     #Wait for reply
     if await shop_selection_view.wait():
         await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
         return
     i = searchresults[int(shop_selection_view.button_response[0])-1][1]
-
+    selection_message.delete()
     try:
         shopitems.append(str(GlobalVars.itemdatabase[i][0][20]) + "\n------------------------------------------------------------\n") #Adds shop welcome message to first embed
     except IndexError:
@@ -156,7 +156,7 @@ async def item(message):
 
         #Generate selector view to choose items.
         shop_selection_view = Dropdown_Select_View(message = message, timeout=30, optionamount=len(shopnumbers), maxselectionamount=1) #Only let them choose one item.
-        await message.channel.send(embed=discord.Embed(title=f"There are multiple versions of this item. Which do you want to look at?", description=shop_embed, colour = embcol), view = shop_selection_view)
+        selection_message = await message.channel.send(embed=discord.Embed(title=f"There are multiple versions of this item. Which do you want to look at?", description=shop_embed, colour = embcol), view = shop_selection_view)
         #Wait for reply
         if await shop_selection_view.wait():
             await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
@@ -166,7 +166,7 @@ async def item(message):
         #note the shop ID
         chosenShop = shopnumbers[userinput]
         item_in_shop = True
-                
+        selection_message.delete()
     else:
         #if the item to buy is already clear, collect info.
         try:
@@ -365,7 +365,7 @@ async def buyitem(message):
         
         #Generate selector view to choose items.
         shop_selection_view = Dropdown_Select_View(message=message, timeout=30, optionamount=len(shopnumbers), maxselectionamount=1) #Only let them choose one item.
-        await message.channel.send(embed=discord.Embed(title=f"There are multiple versions of this item. Which do you want to choose?", description=shop_embed, colour = embcol), view = shop_selection_view)
+        selection_message = await message.channel.send(embed=discord.Embed(title=f"There are multiple versions of this item. Which do you want to choose?", description=shop_embed, colour = embcol), view = shop_selection_view)
         #Wait for reply
         if await shop_selection_view.wait():
             await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
@@ -374,7 +374,7 @@ async def buyitem(message):
         
         #note the shop ID
         chosenShop = shopnumbers[userinput]
-                
+        selection_message.delete()
     else:
         #if the item to buy is already clear, collect info.
         try:
@@ -423,14 +423,14 @@ async def buyitem(message):
     
     if confirm_view.button_response == "modifyquantity":
         quantity_view = Dropdown_Select_View(message=message, optionamount=25, maxselectionamount=1, namelist=[])
-        await message.channel.send(embed=discord.Embed(title=f"How many of these items do you want to buy? __Keep in mind, all items bought in bulk will have the same random curse roll.__", colour = embcol), view=quantity_view)
+        selection_message = await message.channel.send(embed=discord.Embed(title=f"How many of these items do you want to buy? __Keep in mind, all items bought in bulk will have the same random curse roll.__", colour = embcol), view=quantity_view)
 
         if await quantity_view.wait():
             await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
             return
         
         buyquant = int(quantity_view.button_response[0])
-
+        selection_message.delete()
         #Ask if this is fine now
         confirm_view = Yes_No_View(message=message)
         await message.channel.send(embed=discord.Embed(title=f"Buy {buyquant} of this item for a total of {price * buyquant}{dezzieemj}?", description=embed_string + potential_curses_string, colour = embcol), view = confirm_view)
@@ -552,14 +552,14 @@ async def sellitem(message):
     
     if confirm_view.button_response == "modifyquantity":
         quantity_view = Dropdown_Select_View(message=message, optionamount=int(GlobalVars.inventoryData[author_inventory_row_index+1][i]), maxselectionamount=1, namelist=[])
-        await message.channel.send(embed=discord.Embed(title=f"How many of these items do you want to sell? You own {int(GlobalVars.inventoryData[author_inventory_row_index+1][i])}.", colour = embcol), view=quantity_view)
+        selection_message = await message.channel.send(embed=discord.Embed(title=f"How many of these items do you want to sell? You own {int(GlobalVars.inventoryData[author_inventory_row_index+1][i])}.", colour = embcol), view=quantity_view)
 
         if await quantity_view.wait():
             await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
             return
         
         sellquant = int(quantity_view.button_response[0])
-
+        selection_message.delete()
         #Ask if this is fine now
         confirm_view = Yes_No_View(message=message)
         await message.channel.send(embed=discord.Embed(title=f"Do you want to sell {sellquant}x {itemname} for {int(int(item_price) * GlobalVars.config['economy']['sellpricemultiplier'] * sellquant)}?"), view = confirm_view)
@@ -645,14 +645,14 @@ async def giveitem(message):
     #Ask for quantity to sell if none was provided
     if quantProvided == False:
         quantity_view = Dropdown_Select_View(message=message, optionamount=item_quantity, maxselectionamount=1, namelist=[])
-        await message.channel.send(embed=discord.Embed(title="Please select an amount you want to give away of the chosen item.", color=embcol), view=quantity_view)
+        selection_message = await message.channel.send(embed=discord.Embed(title="Please select an amount you want to give away of the chosen item.", color=embcol), view=quantity_view)
 
         if await quantity_view.wait():
                 await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
                 return
         #Wait for user input as to which shop to choose
         givequant = int(quantity_view.button_response[0])
-
+        selection_message.delete()
     #Confirmation
     confirm_view = Yes_No_View(message=message)
     await message.channel.send(embed=discord.Embed(title=f"Do you want to give {givequant}x {itemname} to {recipient_name}?", colour=embcol), view=confirm_view)
@@ -776,13 +776,13 @@ async def additem(message):
 
         #Generate selector view to choose items.
         shop_selection_view = Dropdown_Select_View(message=message, timeout=30, optionamount=len(shopnumbers), maxselectionamount=1) #Only let them choose one item.
-        await message.channel.send(embed=discord.Embed(title=f"There are multiple versions of this item. Which do you want to choose?", description=shop_embed, colour = embcol), view = shop_selection_view)
+        selection_message = await message.channel.send(embed=discord.Embed(title=f"There are multiple versions of this item. Which do you want to choose?", description=shop_embed, colour = embcol), view = shop_selection_view)
         #Wait for reply
         if await shop_selection_view.wait():
             await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
             return
         userinput = int(shop_selection_view.button_response[0])-1
-        
+        selection_message.delete()
         #note the shop ID
         chosenShop = shopnumbers[userinput]
         item_in_shop = True
@@ -946,12 +946,14 @@ async def additem(message):
         if curseCount > 0:
             #Create dropdown and wait for user to select
             select_view = Dropdown_Select_View(message=message, optionamount=curseCount - 1, maxselectionamount=25, namelist=potential_curse_names)
-            await message.channel.send(embed=discord.Embed(title="Select the numbers of the curses above that you want on the item. (Max. 25)",description="This selection will time out in 120 seconds.", colour = embcol),view=select_view)
+            selection_message = await message.channel.send(embed=discord.Embed(title="Select the numbers of the curses above that you want on the item. (Max. 25)",description="This selection will time out in 120 seconds.", colour = embcol),view=select_view)
             
             if await select_view.wait():
                 await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
                 return
-    
+            
+            selection_message.delete()
+            
             curse_names = ""
             user_text_curse_choices = select_view.button_response
             curse_choices = []
@@ -986,14 +988,14 @@ async def additem(message):
     
     if confirm_view.button_response == "modifyquantity":
         quantity_view = Dropdown_Select_View(message=message, optionamount=25, maxselectionamount=1, namelist=[])
-        await message.channel.send(embed=discord.Embed(title=f"How many of these items do you want to add to {recipient_name}'s inventory?", colour = embcol), view=quantity_view)
+        selection_message = await message.channel.send(embed=discord.Embed(title=f"How many of these items do you want to add to {recipient_name}'s inventory?", colour = embcol), view=quantity_view)
 
         if await quantity_view.wait():
             await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
             return
         
         givequant = int(quantity_view.button_response[0])
-
+        selection_message.delete()
         #Ask if this is fine now
         confirm_view = Yes_No_View(message=message)
         await message.channel.send(embed=discord.Embed(title=f"Give {givequant} of this item to {recipient_name}?", description=embed_string, colour = embcol), view = confirm_view)
@@ -2082,7 +2084,7 @@ async def writeInvetorySheet(values, range = "A1:ZZ8000"):
 
 async def loadItemSheet():
     #itemsheet = gc.open_by_key("17M2FS5iWchszIoimqNzk6lzJMOVLBWQgEZZKUPQuMR8") #New for economy rewrite
-    itemsheet = gc.open_by_key("1rS4yTmVtaaCZEbfyAAEkB3KnVC_jkI9e2zhSI0AA7ws") #New for economy rewrite
+    itemsheet = gc.open_by_key(itemsheetID) #New for economy rewrite
     itemlists = itemsheet.worksheets()
     GlobalVars.itemdatabase = []
     for a in range(len(itemlists)):
@@ -2171,13 +2173,14 @@ async def selectItem(message, searchterm, top_n_results):
 
         #Generate selector view to choose items.
         item_selection_view = Dropdown_Select_View(message = message, timeout=30, optionamount=len(selector_options), maxselectionamount=1, namelist=[i[0] for i in selector_options]) #Only let them choose one item.
-        await message.channel.send(embed = discord.Embed(title="Didn't find a perfect match to what you are looking for.", description="Here are the top 10 closest results. Please choose which of these you want.\n\n" + top10_string + "\n\n" + "This message will time out in 30 seconds.", colour = embcol), view = item_selection_view)
+        selection_message = await message.channel.send(embed = discord.Embed(title="Didn't find a perfect match to what you are looking for.", description="Here are the top 10 closest results. Please choose which of these you want.\n\n" + top10_string + "\n\n" + "This message will time out in 30 seconds.", colour = embcol), view = item_selection_view)
         #Wait for reply
         if await item_selection_view.wait():
                 await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
                 return
         
         i = int(item_selection_view.button_response[0]) - 1
+        selection_message.delete()
         if i >= 0 and i < len(selector_options):
             selected_item = selector_options[i]
         else: 
