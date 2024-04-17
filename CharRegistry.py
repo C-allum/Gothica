@@ -436,7 +436,7 @@ async def charedit2(message):
 
                 chas = list(dict.fromkeys(chas)) #Cull duplicates, ie if someone includes first and last names in command        
                 if len(chas) == 1:
-                    charregindex = charindexes[a]
+                    charregindex = chas[0]
                 else:
                     charregindex = ""
                 
