@@ -719,7 +719,7 @@ async def charlist(message):
     #Show character lists
 
     tit = None
-    desc = None
+    desc = [""]
     foot = None
     imgurl = None
 
@@ -809,9 +809,13 @@ async def charlist(message):
         tit = targname + "'s Character List"
 
         if clist == []:
-            desc = targname + " has no registered characters"
+            desc[0] = targname + " has no registered characters"
         else:
-            desc = "\n\n".join(clist).strip("[]'")
+            for elem in clist:
+                if len(desc[-1] + elem) + 4 < 4096: 
+                    desc[-1] += "\n\n" + elem.strip("[]'")
+                else:
+                    desc.append(elem.strip("[]'"))
 
     roles = str(str(message.author.roles))
 
@@ -819,27 +823,33 @@ async def charlist(message):
     maxchars = startingslots + int(GlobalVars.economyData[player_econ_index + 2][1])
 
 
-    emb = discord.Embed(title = tit, description = desc, colour = embcol)
-
-    if str(message.author.name) == targname:
-        if pcharsact == 1:
-            if pcharsun == 0:
-                emb.set_footer(text = "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active character, out of " + str(maxchars) + " slots." )
-            elif pcharsun == 1:
-                emb.set_footer(text = "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active character, and " + str(pcharsun) + " unavailable character (" + str(pcharsact + pcharsun) + " in total), out of " + str(maxchars) + " slots." )    
-            else:
-                emb.set_footer(text = "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active character, and " + str(pcharsun) + " unavailable characters (" + str(pcharsact + pcharsun) + " in total), out of " + str(maxchars) + " slots." )    
+    desc_index = 0
+    for elem in desc:
+        if desc_index == 0:
+            emb = discord.Embed(title = tit, description = desc[desc_index], colour = embcol)
         else:
-            if pcharsun == 0:        
-                emb.set_footer(text = "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active characters, out of " + str(maxchars) + " slots." )
-            elif pcharsun ==1:
-                emb.set_footer(text = "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active characters, and " + str(pcharsun) + " unavailable character (" + str(pcharsact + pcharsun) + " in total), out of " + str(maxchars) + " slots." )    
+            emb = discord.Embed(description = desc[desc_index], colour = embcol)
+        if str(message.author.name) == targname:
+            if pcharsact == 1:
+                if pcharsun == 0:
+                    emb.set_footer(text = "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active character, out of " + str(maxchars) + " slots." )
+                elif pcharsun == 1:
+                    emb.set_footer(text = "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active character, and " + str(pcharsun) + " unavailable character (" + str(pcharsact + pcharsun) + " in total), out of " + str(maxchars) + " slots." )    
+                else:
+                    emb.set_footer(text = "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active character, and " + str(pcharsun) + " unavailable characters (" + str(pcharsact + pcharsun) + " in total), out of " + str(maxchars) + " slots." )    
             else:
-                emb.set_footer(text = "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active characters, and " + str(pcharsun) + " unavailable characters (" + str(pcharsact + pcharsun) + " in total), out of " + str(maxchars) + " slots." )    
-    elif str(message.author.name) != targname:
-        emb.set_footer(text = "-------------------------------------------------------------\n\nThis search was summoned by " + str(message.author.name))
+                if pcharsun == 0:        
+                    emb.set_footer(text = "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active characters, out of " + str(maxchars) + " slots." )
+                elif pcharsun ==1:
+                    emb.set_footer(text = "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active characters, and " + str(pcharsun) + " unavailable character (" + str(pcharsact + pcharsun) + " in total), out of " + str(maxchars) + " slots." )    
+                else:
+                    emb.set_footer(text = "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active characters, and " + str(pcharsun) + " unavailable characters (" + str(pcharsact + pcharsun) + " in total), out of " + str(maxchars) + " slots." )    
+        elif str(message.author.name) != targname:
+            emb.set_footer(text = "-------------------------------------------------------------\n\nThis search was summoned by " + str(message.author.name))
+        
+        await message.channel.send(embed=emb)
+        desc_index += 1
     print(message.author.name + " summoned a charlist for " + targname)
-    await message.channel.send(embed=emb)
     await message.delete()
     await waitmess.delete()
 
