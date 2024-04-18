@@ -126,8 +126,8 @@ async def playerTransactionsInfo(person:str, timeframe:str = None):
             data = transactionsCursor.execute(f'''SELECT Person, Action, SUM(Amount) FROM Transactions WHERE Person in ('{person}') GROUP BY Person, Action ORDER BY Person, SUM(Amount)''').fetchall()
         else:
             timeframe = "-" + timeframe
-            data = transactionsCursor.execute(f'''SELECT Person, Action, SUM(Amount) FROM Transactions WHERE Person in ('{person}') AND Date > date('now', '{timeframe}') GROUP BY Person, Action ORDER BY Person, SUM(Amount)''').fetchall()
-            #data=transactionsCursor.execute(f'''SELECT * FROM Transactions WHERE Person in ('{person}') AND Date > date('now', '{timeframe}')''')
+            data = transactionsCursor.execute(f'''SELECT Person, Action, SUM(Amount) FROM Transactions WHERE Person in ('{person}') AND date(Date) > date('now', '{timeframe}') GROUP BY Person, Action ORDER BY Person, SUM(Amount)''').fetchall()
+            #data=transactionsCursor.execute(f'''SELECT * FROM Transactions WHERE Person in ('{person}') AND date(Date) > date('now', '{timeframe}')''')
 
         #Print whole database
         #data=transactionsCursor.execute('''SELECT * FROM Transactions''')
@@ -152,7 +152,7 @@ def dataToSpreadsheet(timeframe:str = None):
         else:
             sheetName = timeframe
             timeframe = "-" + timeframe
-            data = transactionsCursor.execute(f'''SELECT * FROM Transactions WHERE Date > datetime('now', '{timeframe}') ''').fetchall()
+            data = transactionsCursor.execute(f'''SELECT * FROM Transactions WHERE date(Date) > date('now', '{timeframe}') ''').fetchall()
         if liveVersion == 1:
             SheetsService.values().clear(spreadsheetId=TransactionSheet, range=sheetName).execute()
             SheetsService.values().update(spreadsheetId=TransactionSheet, range=sheetName, body=dict(majorDimension='ROWS', values=data), valueInputOption='USER_ENTERED').execute()
@@ -164,7 +164,7 @@ def dataToSpreadsheet(timeframe:str = None):
 
 #Write a selection of recent transactions to sheets
 def automaticTransactionDump():
-    dataToSpreadsheet('1 Week')
+    dataToSpreadsheet('7 Days')
     dataToSpreadsheet('1 Month')
     dataToSpreadsheet('3 Months')
     dataToSpreadsheet('6 Months')
