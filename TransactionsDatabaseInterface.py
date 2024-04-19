@@ -131,8 +131,12 @@ async def playerTransactionsInfo(person:str, timeframe:str = None):
             data = transactionsCursor.execute(f'''SELECT Person, Action, SUM(Amount) FROM Transactions WHERE Person in ('{person}') GROUP BY Person, Action ORDER BY Person, Action''').fetchall()
         else:
             timeframe = "-" + timeframe
-            data = transactionsCursor.execute(f'''SELECT Person, Action, SUM(Amount) FROM Transactions WHERE Person in ('{person}') AND Date > date('now', '{timeframe}') GROUP BY Person, Action ORDER BY Person, Action''').fetchall()
+            data = transactionsCursor.execute(f'''SELECT Person, Action, SUM(Amount) FROM Transactions WHERE Person in ('{person}') AND date(Date) > date('now', '{timeframe}') GROUP BY Person, Action ORDER BY Person, Action''').fetchall()
+            #data=transactionsCursor.execute(f'''SELECT * FROM Transactions WHERE Person in ('{person}') AND date(Date) > date('now', '{timeframe}')''')
 
+        #Print whole database
+        #data=transactionsCursor.execute('''SELECT * FROM Transactions''')
+            
         transactionsConnection.close()
 
         return data
@@ -170,7 +174,7 @@ def fetchData(timeframe:str = None, summary:bool = False):
         
         if timeframe is not None:
             timeframe = "-" + timeframe
-            sqlQuery += f" WHERE Date > datetime('now', '{timeframe}') "
+            sqlQuery += f" WHERE date(Date) > datetime('now', '{timeframe}') "
 
         if summary is True:
             sqlQuery += f" GROUP BY Person, Action ORDER BY Person, Action"
