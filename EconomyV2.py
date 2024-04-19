@@ -10,19 +10,22 @@ economy_lock = asyncio.Lock()
 add_dezzie_lock = asyncio.Lock()
 
 #Summons the list of shops, and allows looking at one
-async def shop(message):
-
+@tree.command(
+        name="shop",
+        description="Displays desired shop"
+)
+@app_commands.describe(
+    shop_name = "The name of the shop. Doesn't have to be accurate."
+)
+@app_commands.checks.has_role("Verified")
+async def shop(interaction, shop_name:str):
+    await interaction.response.defer(True)
+    message = interaction.message
     shopitems = []
     shoplist = []
     searchresults = []
-    try:
-        fullMessage = message.content.replace("  ", " ")
-        fullMessage = fullMessage.split(" ", 1)[1] #cut the %buy off
-        
-        searchterm = fullMessage
-    except IndexError:
-        searchterm = None
-    
+
+    searchterm = shop_name
     chosenshop = -1
     if searchterm != None:  #Show only relevant shops if the searchterm was provided
         levenshtein_tuple_list = []
@@ -42,18 +45,18 @@ async def shop(message):
                 searchresults.append(GlobalVars.itemdatabase[a][0][26])
         for n in range(int(GlobalVars.config["general"]["number_of_shops"])):
             searchresults[n] = [searchresults[n], n + GlobalVars.config["general"]["index_of_first_shop"]]
-    shop_selection_view = Dropdown_Select_View(message = message, timeout=30, optionamount=len(searchresults), maxselectionamount=1) #Only let them choose one item.
+    shop_selection_view = Dropdown_Select_View(message = interaction, timeout=30, optionamount=len(searchresults), maxselectionamount=1) #Only let them choose one item.
     
     shopsel = []
     for c in range(len(searchresults)):
         shopsel.append("`" + str(c+1) + "` - " + searchresults[c][0])
     emb = discord.Embed(title = "Which shop would you like to browse?", description = "Select the number of the one you want:\n" + "\n".join(shopsel), colour = embcol)
     emb.set_footer(text = "This message will timeout in 30 seconds")
-    selection_message = await message.channel.send(embed = emb, view=shop_selection_view)
+    selection_message = await interaction.channel.send(embed = emb, view=shop_selection_view)
 
     #Wait for reply
     if await shop_selection_view.wait():
-        await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+        await interaction.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
         return
     i = searchresults[int(shop_selection_view.button_response[0])-1][1]
     await selection_message.delete()
@@ -79,27 +82,28 @@ async def shop(message):
             if len("\n".join(shopitems)) + len(nextitem) <= 4096:
                 shopitems.append(nextitem)
             else:
-                await message.channel.send(embed = discord.Embed(title = shopemoji + " " + itemlists[i].title + " " + shopemoji, description = "\n".join(shopitems), colour = shopcol))
+                await interaction.channel.send(embed = discord.Embed(title = shopemoji + " " + itemlists[i].title + " " + shopemoji, description = "\n".join(shopitems), colour = shopcol))
                 shopitems = []
                 shopitems.append(nextitem)
 
-    await message.channel.send(embed = discord.Embed(title = shopemoji + " " + itemlists[i].title + " " + shopemoji, description = "\n".join(shopitems), colour = shopcol))
-    await message.delete()
+    await interaction.channel.send(embed = discord.Embed(title = shopemoji + " " + itemlists[i].title + " " + shopemoji, description = "\n".join(shopitems), colour = shopcol))
     return
     
 #Summons information about an item
-async def item(message):
-    #Check if quantity was provided and prepare the search term
-    try:
-        fullMessage = message.content.replace("  ", " ")
-        fullMessage = fullMessage.split(" ", 1)[1] #cut the %buy off 
-        searchterm = fullMessage
-    except IndexError:
-        await message.channel.send(Embed = discord.Embed(title="Please provide the name of an item you want information on with your query.", color=embcol))
-        return
+@tree.command(
+        name="item",
+        description="search for a specific item"
+)
+@app_commands.describe(
+    item_name = "The name of the item. Doesn't have to be accurate."
+)
+@app_commands.checks.has_role("Verified")
+async def item(interaction, item_name:str):
+    await interaction.response.defer(ephemeral=True, thinking=False)
+    searchterm = item_name
 
     #Find the wanted item, if not specific, spawn a selctor
-    selected_item = await selectItem(message, searchterm, 10)
+    selected_item = await selectItem(interaction, searchterm, 10)
 
     #Check if item is present in multiple shops
     available_in_shops = []
@@ -112,7 +116,7 @@ async def item(message):
                     shopnumbers.append(j)
     except IndexError: 
         print("Index error in item function: Possibly a problem with the *number_of_shops* variable in the config. Check if that matches the amount of shops")
-        await message.channel.send(embed=discord.Embed(title=f"Error in item function.", description="Index error in item function: Possibly a problem with the *number_of_shops* variable in the config. Check if that matches the amount of shops", colour = embcol))
+        await interaction.channel.send(embed=discord.Embed(title=f"Error in item function.", description="Index error in item function: Possibly a problem with the *number_of_shops* variable in the config. Check if that matches the amount of shops", colour = embcol))
     
 
     #Check if we need to show multiple shops due to having multiple versions of the item in different shops (cursed and noncursed.)
@@ -142,7 +146,7 @@ async def item(message):
                     try:
                         curse = [x for x in GlobalVars.itemdatabase[1] if curse in x][0]
                     except IndexError:
-                        await message.channel.send(embed=discord.Embed(title=f"Error in Item function.", description="Index error in item function: Possibly a problem with the curses in the item sheet. Check for spaces that shouldn't be there, and correct identifiers. Please notify the bot gods.", colour = embcol))
+                        await interaction.channel.send(embed=discord.Embed(title=f"Error in Item function.", description="Index error in item function: Possibly a problem with the curses in the item sheet. Check for spaces that shouldn't be there, and correct identifiers. Please notify the bot gods.", colour = embcol))
  
                     if n == 0:
                         curses+= f"{curse[0]}"
@@ -156,11 +160,11 @@ async def item(message):
         
 
         #Generate selector view to choose items.
-        shop_selection_view = Dropdown_Select_View(message = message, timeout=30, optionamount=len(shopnumbers), maxselectionamount=1) #Only let them choose one item.
-        selection_message = await message.channel.send(embed=discord.Embed(title=f"There are multiple versions of this item. Which do you want to look at?", description=shop_embed, colour = embcol), view = shop_selection_view)
+        shop_selection_view = Dropdown_Select_View(message = interaction, timeout=30, optionamount=len(shopnumbers), maxselectionamount=1) #Only let them choose one item.
+        selection_message = await interaction.channel.send(embed=discord.Embed(title=f"There are multiple versions of this item. Which do you want to look at?", description=shop_embed, colour = embcol), view = shop_selection_view)
         #Wait for reply
         if await shop_selection_view.wait():
-            await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+            await interaction.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
             return
         userinput = int(shop_selection_view.button_response[0])-1
         
@@ -218,7 +222,7 @@ async def item(message):
 
     embed_string, potential_curses, potential_curses_string, potential_curse_names, curse_count = await showItem(item_name, item_type, price, quantity_available, curses_identifier, rarity, attunement_requirement, mechanics, flavour, default_curse, additional_reference, show_quant_and_price=False)
 
-    await message.channel.send(embed=discord.Embed(title=f"**{item_name}**", description=embed_string.replace("**"+item_name+"**\n\n", "") + potential_curses_string, colour = embcol))
+    await interaction.channel.send(embed=discord.Embed(title=f"**{item_name}**", description=embed_string.replace("**"+item_name+"**\n\n", "") + potential_curses_string, colour = embcol))
     return
 
 #Summons the player's inventory
@@ -1722,6 +1726,23 @@ async def incomeWeek(message):
     await message.channel.send(embed = discord.Embed(title = f"{message.author.name}'s dezzie earnings over the last week:", description = incomeString, colour = embcol))
     await message.delete()
 
+@tree.command()
+@discord.app_commands.checks.has_role("Verified")
+async def togglenotif(interaction: discord.Interaction):
+    author_economy_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(interaction.user.id) in x][0])
+
+    try:
+        if GlobalVars.economyData[author_economy_row_index + 2][2] == "True":
+            GlobalVars.economyData[author_economy_row_index + 2][2] = "False"
+            await interaction.channel.send(embed = discord.Embed(title="Notification for the daily interaction reward is now OFF!", color=embcol))
+        else:
+            GlobalVars.economyData[author_economy_row_index + 2][2] = "True"
+            await interaction.channel.send(embed = discord.Embed(title="Notification for the daily interaction reward is now ON!", color=embcol))
+
+    except IndexError:
+        GlobalVars.economyData[author_economy_row_index + 2].append("True")
+        await interaction.channel.send(embed = discord.Embed(title="Notification for the daily interaction reward is now ON!", color=embcol))
+
 async def copyEconomy(message):
     GlobalVars.economyData = sheet.values().get(spreadsheetId = inventorysheet, range = "A1:E5", majorDimension='ROWS').execute().get("values")
     GlobalVars.inventoryData = sheet.values().get(spreadsheetId = inventorysheet, range = "Inventories!A1:E7", majorDimension = 'ROWS').execute().get("values")
@@ -2038,22 +2059,6 @@ async def addUserToEconomy(name, id, last_message_time = datetime.timestamp(date
     #await writeInvetorySheet(GlobalVars.inventoryData)
     return
 
-@tree.command()
-@discord.app_commands.checks.has_role("Verified")
-async def togglenotif(message):
-    author_economy_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0])
-
-    try:
-        if GlobalVars.economyData[author_economy_row_index + 2][2] == "True":
-            GlobalVars.economyData[author_economy_row_index + 2][2] = "False"
-            await message.channel.send(embed = discord.Embed(title="Notification for the daily interaction reward is now OFF!", color=embcol))
-        else:
-            GlobalVars.economyData[author_economy_row_index + 2][2] = "True"
-            await message.channel.send(embed = discord.Embed(title="Notification for the daily interaction reward is now ON!", color=embcol))
-
-    except IndexError:
-        GlobalVars.economyData[author_economy_row_index + 2].append("True")
-        await message.channel.send(embed = discord.Embed(title="Notification for the daily interaction reward is now ON!", color=embcol))
 
 #-------------------------------Helper Functions-----------------------------------
 
@@ -2731,8 +2736,16 @@ class Dropdown_Select_View(discord.ui.View):
         self.stop()
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        if self.message.author.id == interaction.user.id:
-            return True
-        else:
-            await interaction.response.send_message("That is not your dropdown to click!", ephemeral=True)
-            return False
+        try:
+            if self.message.author.id == interaction.user.id:
+                return True
+            else:
+                await interaction.response.send_message("That is not your dropdown to click!", ephemeral=True)
+                return False
+            
+        except AttributeError:
+            if self.message.user.id == interaction.user.id:
+                return True
+            else:
+                await interaction.response.send_message("That is not your dropdown to click!", ephemeral=True)
+                return False

@@ -182,10 +182,6 @@ for i in range(len(headers)):
 
 
 #Slash command groups
-@discord.app_commands.checks.has_role("Verified")
-class Verified(discord.app_commands.Group):
-    pass
-
 @discord.app_commands.checks.has_role("Staff")
 class Staff(discord.app_commands.Group):
     pass
@@ -194,7 +190,6 @@ class Staff(discord.app_commands.Group):
 class Moderator(discord.app_commands.Group):
     pass
 
-verifiedgroup = Verified( description="All users")
 staffgroup = Staff(name="staff", description="Staff Commands")
 moderatorgroup = Moderator(name="moderator", description="Moderator Commands")
 
