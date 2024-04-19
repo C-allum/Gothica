@@ -51,8 +51,9 @@ import botTokens
 intents = discord.Intents().all()
 
 client = discord.Client(intents = intents)
-
+tree = discord.app_commands.CommandTree(client)
 bot = commands.Bot(command_prefix='%', activity = discord.Game(name="Testing Stuff"), intents = intents)
+
 
 print(" Initialised {0.user} at ".format(client) + str(datetime.now()).split(".")[0])
 
@@ -178,6 +179,24 @@ for i in range(len(headers)):
     headers[i] = headers[i].lstrip(" ")
     headers[i] = headers[i].lstrip("[")
     headers[i] = headers[i].rstrip("]")
+
+
+#Slash command groups
+@discord.app_commands.checks.has_role("Verified")
+class Verified(discord.app_commands.Group):
+    pass
+
+@discord.app_commands.checks.has_role("Staff")
+class Staff(discord.app_commands.Group):
+    pass
+
+@discord.app_commands.checks.has_role("Moderator")
+class Moderator(discord.app_commands.Group):
+    pass
+
+verifiedgroup = Verified( description="All users")
+staffgroup = Staff(name="staff", description="Staff Commands")
+moderatorgroup = Moderator(name="moderator", description="Moderator Commands")
 
 #channels
 if liveVersion:

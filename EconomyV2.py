@@ -4,6 +4,7 @@ from thefuzz import fuzz
 import asyncio
 import TupperDatabase
 import TransactionsDatabaseInterface
+from discord import app_commands
 
 economy_lock = asyncio.Lock() 
 add_dezzie_lock = asyncio.Lock()
@@ -2037,6 +2038,8 @@ async def addUserToEconomy(name, id, last_message_time = datetime.timestamp(date
     #await writeInvetorySheet(GlobalVars.inventoryData)
     return
 
+@tree.command()
+@discord.app_commands.checks.has_role("Verified")
 async def togglenotif(message):
     author_economy_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0])
 

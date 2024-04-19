@@ -158,6 +158,10 @@ async def on_ready():
         print("It is not dezzie award pool reset time yet!")
 
     print("\n------------------------------------------------------\n")
+    tree.add_command(verifiedgroup)
+    my_guild = discord.Object(id=int(guildid))
+    tree.copy_global_to(guild=my_guild)
+    await tree.sync(guild=my_guild)
     startup = False
     print("Startup completed.")
     #-----------------------------------------------------------
