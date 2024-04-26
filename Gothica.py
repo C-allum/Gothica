@@ -758,7 +758,7 @@ async def on_message(message):
                 await message.channel.send(embed = discord.Embed(title = "Plothook Leaderboard", description = "\n".join(sortlist), colour = embcol))
 
             #Verify Command
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "verify") and ("mod team" in str(message.author.roles).lower() or "bouncer" in str(message.author.roles).lower()):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "verify") and ("mod team" in str(message.author.roles).lower() or "admin" in str(message.author.roles).lower() or "bouncer" in str(message.author.roles).lower()):
 
                 vertarget = message.content.split("@")[1]
 

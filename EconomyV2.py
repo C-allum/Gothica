@@ -9,6 +9,23 @@ from discord import app_commands
 economy_lock = asyncio.Lock() 
 add_dezzie_lock = asyncio.Lock()
 
+#Allows user to spend money
+@tree.command(
+        name="spend",
+        description="Spends money (money will go to the void!)"
+)
+@app_commands.describe(
+    amount = "Amount you want to spend."
+)
+@app_commands.checks.has_role("Verified")
+async def spend(interaction, amount:int):
+    await interaction.response.defer(ephemeral=True, thinking=False)
+
+    removeDezziesFromPlayerWithoutMessage(amount, interaction.user.id, interaction.user.name)
+    await message.channel.send(embed=discord.Embed(title=f"{interaction.user.name} spent {amount}{dezzieemj}!", colour = embcol))
+    await interaction.followup.send("Successfully finished the task!")
+
+    return
 #Summons the list of shops, and allows looking at one
 @tree.command(
         name="shop",
@@ -19,7 +36,7 @@ add_dezzie_lock = asyncio.Lock()
 )
 @app_commands.checks.has_role("Verified")
 async def shop(interaction, shop_name:str):
-    await interaction.response.defer(True)
+    await interaction.response.defer(ephemeral=True, thinking=False)
     message = interaction.message
     shopitems = []
     shoplist = []
@@ -57,6 +74,8 @@ async def shop(interaction, shop_name:str):
     #Wait for reply
     if await shop_selection_view.wait():
         await interaction.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+        await interaction.followup.send("Successfully finished the task!")
+
         return
     i = searchresults[int(shop_selection_view.button_response[0])-1][1]
     await selection_message.delete()
@@ -87,6 +106,8 @@ async def shop(interaction, shop_name:str):
                 shopitems.append(nextitem)
 
     await interaction.channel.send(embed = discord.Embed(title = shopemoji + " " + itemlists[i].title + " " + shopemoji, description = "\n".join(shopitems), colour = shopcol))
+    await interaction.followup.send("Successfully finished the task!")
+    
     return
     
 #Summons information about an item
@@ -223,18 +244,28 @@ async def item(interaction, item_name:str):
     embed_string, potential_curses, potential_curses_string, potential_curse_names, curse_count = await showItem(item_name, item_type, price, quantity_available, curses_identifier, rarity, attunement_requirement, mechanics, flavour, default_curse, additional_reference, show_quant_and_price=False)
 
     await interaction.channel.send(embed=discord.Embed(title=f"**{item_name}**", description=embed_string.replace("**"+item_name+"**\n\n", "") + potential_curses_string, colour = embcol))
+    await interaction.followup.send("Successfully finished the task!")
+
     return
 
-#Summons the player's inventory
-async def inventory(message):
-    #Find person in the inventory sheet
-    test = [x for x in GlobalVars.inventoryData if str(message.author.id) in x]
-    author_row_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if str(message.author.id) in x][0])
-    player_inventory = GlobalVars.inventoryData[author_row_index:author_row_index+5]
 
+
+#Summons the player's inventory
+@tree.command(
+        name="inventory",
+        description="Displays your inventory"
+)
+@app_commands.checks.has_role("Verified")
+async def inventory(interaction):
+    await interaction.response.defer(ephemeral=True, thinking=False)
+    #Find person in the inventory sheet
+    test = [x for x in GlobalVars.inventoryData if str(interaction.user.id) in x]
+    author_row_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if str(interaction.user.id) in x][0])
+    player_inventory = GlobalVars.inventoryData[author_row_index:author_row_index+5]
     #Get list of all items
-    i, item_list = await showInventoryAndChooseItem(message, author_row_index, "\n\nFor more information about an item and its curses, enter the according number. This message will time out in 30 seconds.")
+    i, item_list = await showInventoryAndChooseItem(interaction, author_row_index, "\n\nFor more information about an item and its curses, enter the according number. This message will time out in 30 seconds.")
     if i == -1:
+        await interaction.followup.send("Successfully finished the task!")
         return
     if i >= 0:
         #Provide information about the item and it's curses.
@@ -278,39 +309,27 @@ async def inventory(message):
                 embed_string += f"\n**{curse[0][0]}** (Level {curse[0][1]} curse):\n{curse[0][2]}\n"
 
         item_embed = discord.Embed(title=f"Item Info for {item_name}", description=embed_string, colour=embcol)
-        await message.channel.send(embed = item_embed)
+        await interaction.channel.send(embed = item_embed)
+        await interaction.followup.send("Successfully finished the task!")
+
         return
 
+@tree.command(
+        name="buyitem",
+        description="Buy an item from the shops"
+)
+@app_commands.describe(
+    searchterm = "The name of the item. Doesn't have to be accurate.",
+    amount = "Enter the amount you want to buy"
+)
+@app_commands.checks.has_role("Verified")
 #Guides the user through buying an item
-async def buyitem(message):
-    
-
-    #Check if quantity was provided and prepare the search term
-    buyquant = 1
-    try:
-        fullMessage = message.content.replace("  ", " ")
-        fullMessage = fullMessage.split(" ", 1)[1] #cut the %buy off
-        #Cut away trailing spaces
-        while fullMessage.rsplit(" ")[-1] == "":
-            fullMessage = fullMessage.rsplit(" ", 1)[0]
-
-        searchterm = fullMessage.rsplit(" ", 1)[0]
-        try:
-            buyquant = int(fullMessage.rsplit(" ", 1)[-1]) #Try to extract a buy quantity from the end of the string
-            
-            if buyquant < 1:
-                buyquant = 0
-        except ValueError:
-            print("Buy function Value Error. Probably didn't specify amount. Defaulting to 1")
-            buyquant = 1  
-        except TypeError:
-            print("Buy function type error. Probably didn't specify amount. Defaulting to 1")
-            buyquant = 1  
-    except IndexError:
-        searchterm = "11111111111111" #Something irrelevant cause the search was empty
+async def buyitem(interaction, searchterm:str, amount:int=1):
+    await interaction.response.defer(ephemeral=True, thinking=False)
+    buyquant = amount
     
     #Search for item in the item sheet with fuzzy matching
-    selected_item = await selectItem(message, searchterm, 10)
+    selected_item = await selectItem(interaction, searchterm, 10)
 
     #Check if item is present in multiple shops
     available_in_shops = []
@@ -323,7 +342,7 @@ async def buyitem(message):
                     shopnumbers.append(j)
     except IndexError: 
         print("Index error in buy function: Possibly a problem with the *number_of_shops* variable in the config. Check if that matches the amount of shops")
-        await message.channel.send(embed=discord.Embed(title=f"Error in Buy function.", description="Index error in buy function: Possibly a problem with the *number_of_shops* variable in the config. Check if that matches the amount of shops", colour = embcol))
+        await interaction.channel.send(embed=discord.Embed(title=f"Error in Buy function.", description="Index error in buy function: Possibly a problem with the *number_of_shops* variable in the config. Check if that matches the amount of shops", colour = embcol))
     
 
     #Check if we need to show multiple shops due to having multiple versions of the item in different shops (cursed and noncursed.)
@@ -355,7 +374,7 @@ async def buyitem(message):
                     try:
                         curse = [x for x in GlobalVars.itemdatabase[1] if curse.replace("[", "").replace("]", "") in x][0]
                     except IndexError:
-                        await message.channel.send(embed=discord.Embed(title=f"Error in Buy function.", description="Index error in buy function: Possibly a problem with the curses in the item sheet. Check for spaces that shouldn't be there, and correct identifiers. Please notify the bot gods.", colour = embcol))
+                        await interaction.channel.send(embed=discord.Embed(title=f"Error in Buy function.", description="Index error in buy function: Possibly a problem with the curses in the item sheet. Check for spaces that shouldn't be there, and correct identifiers. Please notify the bot gods.", colour = embcol))
  
                     
                     if n == 0:
@@ -369,11 +388,13 @@ async def buyitem(message):
                 shop_embed += f"`{i+1}:` **{available_in_shops[i][0][22]}{available_in_shops[i][0][26]}{available_in_shops[i][0][22]}**:\n{item_name}, Price: {price}, Stock: {quantity_available}\n\n"
         
         #Generate selector view to choose items.
-        shop_selection_view = Dropdown_Select_View(message=message, timeout=30, optionamount=len(shopnumbers), maxselectionamount=1) #Only let them choose one item.
-        selection_message = await message.channel.send(embed=discord.Embed(title=f"There are multiple versions of this item. Which do you want to choose?", description=shop_embed, colour = embcol), view = shop_selection_view)
+        shop_selection_view = Dropdown_Select_View(message=interaction, timeout=30, optionamount=len(shopnumbers), maxselectionamount=1) #Only let them choose one item.
+        selection_message = await interaction.channel.send(embed=discord.Embed(title=f"There are multiple versions of this item. Which do you want to choose?", description=shop_embed, colour = embcol), view = shop_selection_view)
         #Wait for reply
         if await shop_selection_view.wait():
-            await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+            await interaction.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+            await interaction.followup.send("Successfully finished the task!")
+
             return
         userinput = int(shop_selection_view.button_response[0])-1
         
@@ -385,7 +406,8 @@ async def buyitem(message):
         try:
             chosenShop = shopnumbers[0]
         except IndexError:
-            await message.channel.send(embed=discord.Embed(title="Sorry, that item is currently not in any shop. It may be an event item. If not, contact staff.", color=embcol))
+            await interaction.channel.send(embed=discord.Embed(title="Sorry, that item is currently not in any shop. It may be an event item. If not, contact staff.", color=embcol))
+            await interaction.followup.send("Successfully finished the task!")
             return
     
     #Collect information about the item to be bought.
@@ -416,31 +438,35 @@ async def buyitem(message):
             quantity_available = "Infinite"
     if quantity_available != "Infinite":
         if buyquant > int(quantity_available):
-            await message.channel.send(embed=discord.Embed(title=f"You requested {buyquant} of this item, but only {quantity_available} are available. Please try again and request a lower amount.", colour = embcol))
+            await interaction.channel.send(embed=discord.Embed(title=f"You requested {buyquant} of this item, but only {quantity_available} are available. Please try again and request a lower amount.", colour = embcol))
 
     #Ask for confirmation or quantity change
-    confirm_view = Yes_No_Quantity_View(message=message)
-    await message.channel.send(embed=discord.Embed(title=f"Buy {buyquant} of this item for a total of {price * buyquant}{dezzieemj}?", description=embed_string + potential_curses_string, colour = embcol), view=confirm_view)
+    confirm_view = Yes_No_Quantity_View(message=interaction)
+    await interaction.channel.send(embed=discord.Embed(title=f"Buy {buyquant} of this item for a total of {price * buyquant}{dezzieemj}?", description=embed_string + potential_curses_string, colour = embcol), view=confirm_view)
 
     if await confirm_view.wait():
-            await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+            await interaction.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+            await interaction.followup.send("Successfully finished the task!")
+
             return
     
     if confirm_view.button_response == "modifyquantity":
-        quantity_view = Dropdown_Select_View(message=message, optionamount=25, maxselectionamount=1, namelist=[])
-        selection_message = await message.channel.send(embed=discord.Embed(title=f"How many of these items do you want to buy? __Keep in mind, all items bought in bulk will have the same random curse roll.__", colour = embcol), view=quantity_view)
+        quantity_view = Dropdown_Select_View(message=interaction, optionamount=25, maxselectionamount=1, namelist=[])
+        selection_message = await interaction.channel.send(embed=discord.Embed(title=f"How many of these items do you want to buy? __Keep in mind, all items bought in bulk will have the same random curse roll.__", colour = embcol), view=quantity_view)
 
         if await quantity_view.wait():
-            await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+            await interaction.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+            await interaction.followup.send("Successfully finished the task!")
             return
         
         buyquant = int(quantity_view.button_response[0])
         await selection_message.delete()
         #Ask if this is fine now
-        confirm_view = Yes_No_View(message=message)
-        await message.channel.send(embed=discord.Embed(title=f"Buy {buyquant} of this item for a total of {price * buyquant}{dezzieemj}?", description=embed_string + potential_curses_string, colour = embcol), view = confirm_view)
+        confirm_view = Yes_No_View(message=interaction)
+        await interaction.channel.send(embed=discord.Embed(title=f"Buy {buyquant} of this item for a total of {price * buyquant}{dezzieemj}?", description=embed_string + potential_curses_string, colour = embcol), view = confirm_view)
         if await confirm_view.wait():
-            await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+            await interaction.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+            await interaction.followup.send("Successfully finished the task!")
             return
     
     #complete the transaction by taking dezzies from the person, and entering the item into their inventory (ID, quantity, additional curses.). Make sure to stack stackable items.
@@ -448,36 +474,38 @@ async def buyitem(message):
         if confirm_view.button_response == "yes":
             #Complete transaction
             #Find person in the inventory sheet
-            author_row_index_inventory = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if str(message.author.id) in x][0])
+            author_row_index_inventory = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if str(interaction.user.id) in x][0])
             playerID = GlobalVars.inventoryData[author_row_index_inventory][1]
-            author_row_index_economy = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0])
+            author_row_index_economy = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(interaction.user.id) in x][0])
             old_balance = GlobalVars.economyData[author_row_index_economy+1][1]
             success = await removeDezziesFromPlayerWithoutMessage(price * buyquant, playerID=playerID)
             if success:
-                rolled_curses = await addItemToPlayerWithCurseFromShop(message, playerID, item_identifier, buyquant, chosenShop, additional_reference)
+                rolled_curses = await addItemToPlayerWithCurseFromShop(interaction, playerID, item_identifier, buyquant, chosenShop, additional_reference)
                 new_balance = GlobalVars.economyData[author_row_index_economy+1][1]
                 if quantity_available != "Infinite":
                     #Update the Stock of the item.
                     itemindex = GlobalVars.itemdatabase[chosenShop].index(item_database_info)
                     GlobalVars.itemdatabase[chosenShop][itemindex][18] = int(quantity_available) - buyquant
                     await writeItemsheetCell(chosenShop, itemindex, 18, int(quantity_available) - buyquant)
-                await message.channel.send(embed=discord.Embed(title="Success!",description=f"Before this transaction you had {old_balance}{dezzieemj}. You paid {price}{dezzieemj} and your new balance is {new_balance}{dezzieemj}", colour = embcol))
+                await interaction.channel.send(embed=discord.Embed(title="Success!",description=f"Before this transaction you had {old_balance}{dezzieemj}. You paid {price}{dezzieemj} and your new balance is {new_balance}{dezzieemj}", colour = embcol))
                 rolled_curse_string = ""
                 if potential_curses != []:
                     rolled_curse_string += "\n\n**__Actual Curses:__**\n\n"
                     for curse in rolled_curses:
                         rolled_curse_string += f"**{potential_curses[curse][0]}**: {potential_curses[curse][2]}\n\n"
-                    await message.channel.send(embed=discord.Embed(title="Take a look at the item and it's rolled curses!",description=embed_string + rolled_curse_string, colour = embcol))
+                    await interaction.channel.send(embed=discord.Embed(title="Take a look at the item and it's rolled curses!",description=embed_string + rolled_curse_string, colour = embcol))
 
-                TransactionsDatabaseInterface.addTransaction(message.author.name, TransactionsDatabaseInterface.DezzieMovingAction.Buy, -price * buyquant)
+                TransactionsDatabaseInterface.addTransaction(interaction.user.name, TransactionsDatabaseInterface.DezzieMovingAction.Buy, -price * buyquant)
 
             else:
-                await message.channel.send(embed=discord.Embed(title="Not enough funds!",description=f"Your funds are insufficient to buy this item! You have {old_balance}{dezzieemj}, and the item(s) cost {price*buyquant}{dezzieemj}", colour = embcol))
+                await interaction.channel.send(embed=discord.Embed(title="Not enough funds!",description=f"Your funds are insufficient to buy this item! You have {old_balance}{dezzieemj}, and the item(s) cost {price*buyquant}{dezzieemj}", colour = embcol))
         else:
-            await message.channel.send(embed=discord.Embed(title="Buy process cancelled!", colour = embcol))
+            await interaction.channel.send(embed=discord.Embed(title="Buy process cancelled!", colour = embcol))
     except TypeError:
-        await message.channel.send(embed=discord.Embed(title="Selection Invalid",description="Reply must be yes or no (or y / n)", colour = embcol))
+        await interaction.channel.send(embed=discord.Embed(title="Selection Invalid",description="Reply must be yes or no (or y / n)", colour = embcol))
+        await interaction.followup.send("Successfully finished the task!")
         return
+    await interaction.followup.send("Successfully finished the task!")
     return
 
 #Guides the user through selling an item
@@ -2512,17 +2540,18 @@ async def showInventoryAndChooseItem(message, author_row_index, embed_bottom_not
     #Wait for a response to show more info about a specific item
     i = -1
     try:
-        msg = await client.wait_for('message', timeout = 30, check = check(message.author))
+        if type(message) == discord.message:
+            user = message.author
+        else:
+            user = message.user
+        msg = await client.wait_for('message', timeout = 30, check = check(user))
         try:
             i = int(msg.content) - 1
-            await msg.delete()
         except TypeError or ValueError:
             await message.channel.send(embed=discord.Embed(title="Selection Invalid",description="You must enter an integer", colour = embcol))
-            await msg.delete()
             return -1, None
     except asyncio.TimeoutError:
         await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
-        await message.delete()
         return -1, None
     if i > len(player_inventory[0]):
         await message.channel.send(embed=discord.Embed(title=f"Number must be between 1 and {len(player_inventory[0]) - 2}", colour = embcol))
@@ -2684,11 +2713,18 @@ class Yes_No_Quantity_View(discord.ui.View):
         self.stop()
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        if self.message.author.id == interaction.user.id:
-            return True
+        if type(self.message) == discord.message:
+            if self.message.author.id == interaction.user.id:
+                return True
+            else:
+                await interaction.response.send_message("That is not your button to click!", ephemeral=True)
+                return False
         else:
-            await interaction.response.send_message("That is not your button to click!", ephemeral=True)
-            return False
+            if self.message.user.id == interaction.user.id:
+                return True
+            else:
+                await interaction.response.send_message("That is not your button to click!", ephemeral=True)
+                return False
 
 class Dropdown_Select_View(discord.ui.View):
     def __init__(self, message, timeout=120, optionamount=1, maxselectionamount = 1, namelist = []):
