@@ -1,6 +1,7 @@
 from CommonDefinitions import *
 from thefuzz import fuzz
 import EconomyV2
+from discord import app_commands
 
 #Character Index Update
 async def updatereg(message):
@@ -404,83 +405,83 @@ async def charedit(message):
 
                 await message.channel.send(embed = discord.Embed(title = "Unable to edit character", description = "Format this as `%edit <charname> <field> <edited data>` The character name and field should not contain spaces and the character name can be partial rather than full, so for example to edit the eye colour of Cleasa Sithitce, I would do: `%edit clea eye blue`", colour = embcol))
 
-
-
-async def charedit2(message):
-
-    fragments = message.content.split(" ")
+@tree.command(name = "edit", description = "Edits your character", guild= discord.Object(id = guildid))
+@app_commands.describe(character = "The name of the character to edit.", attribute = "The field to edit the value of.", value = "The new data to store.")
+@app_commands.checks.has_role("Verified")
+async def charedit(interaction, character: str = None, attribute: str = None, value: str = None):
+    await interaction.response.defer(ephemeral=True, thinking=False)
 
     chardatabase = gc.open_by_key(CharSheet).get_worksheet(0) #These lines can be removed once we are no longer pulling from the sheet every time we need to update things.
     charreg = chardatabase.get_all_values()
 
+    char = character
+
     chars = []
     charindexes = []
+    chas = []
     charregindex = ""
-    field = ""
-    newval = ""
+    field = None
+    newval = None
 
     for a in range(len(charreg)):
-        if charreg[a][1] == message.author.name:
+        if charreg[a][1] == interaction.user.name:
             chars.append(charreg[a][5])
             charindexes.append(a)
     if len(chars) == 0:
-        await message.channel.send(embed = discord.Embed(title = "You don't have any characters. Register one by going to https://discord.com/channels/828411760365142076/828412055228514325 and filling out their information."))
+        await interaction.channel.send(embed = discord.Embed(title = "You don't have any characters. Register one by going to https://discord.com/channels/828411760365142076/828412055228514325 and filling out their information."))
 
     else:
-        if len(fragments) != 1: 
-            if fragments[1] in str(chars): #Need to get fuzzy searching in here.
+        if char != None: 
+            if char.lower() in str(chars).lower(): #Need to get fuzzy searching in here.
                 chas = []
                 for a in range(len(chars)):
-                    if fragments[1] in chars[a]:
+                    if char.lower() in str(chars[a]).lower():
                         chas.append(charindexes[a])
 
-                chas = list(dict.fromkeys(chas)) #Cull duplicates, ie if someone includes first and last names in command        
-                if len(chas) == 1:
-                    charregindex = chas[0]
-                else:
-                    charregindex = ""
+            if len(chas) != 1: #If finding the typed character failed, use full process.
+                char = None
+                field = None
+                value = None
+
+            else:
+
+                charregindex = int(chas[0])
                 
-                for b in range(len(fragments)):
-                    for c in range(len(charreg[0][5:-3])):
+                if attribute != None:
+                    for b in range(len(charreg[0][5:-3])):
+                        if attribute.lower() == charreg[0][b+5].lower():
+                            field = charreg[0][b+5]
+                            attind = b+5
+                            if field != "Status" and value != None:
+                                newval = value
+                            break 
 
-                        if fragments[b].lower() == charreg[0][c+5].lower():
-                            field = charreg[0][c+5]
-                            attind = c+5
-                            try:
-                                if field != "Status":
-                                    newval = message.content.split(" ", b+1)[b+1]
-                            except IndexError:
-                                newval = ""
-                            break
-            if charregindex == "": #If finding the typed character failed, use full process.
-                fragments = [""]
-
-        if len(fragments) == 1:
-            userinp = int(await getsel(message, discord.Embed(title = "Which of your characters would you like to edit?", description = "Select them from the dropdown below:", colour = embcol).set_footer(text = "Paradesium Tip: " + random.choice(loadingtips)), chars))-1
-            charregindex = charindexes[userinp]
+        if len(chas) == 0:
+            userinp = int(await getsel(interaction, discord.Embed(title = "Which of your characters would you like to edit?", description = "Select them from the dropdown below:", colour = embcol).set_footer(text = "Paradesium Tip: " + random.choice(loadingtips)), chars))-1
+            charregindex = int(charindexes[userinp])
 
         try:
 
-            if field == "":
+            if field == None:
                 chardata = []
                 for a in range(len(charreg[0][5:-3])):
                     chardata.append(charreg[0][a+5] + ": " + charreg[charregindex][a+5])
-                attind = int(await getsel(message, discord.Embed(title = "Which attribute would you like to edit?", description = "Here's our current entry for " + charreg[charregindex][5] + ":\n\n" + "\n".join(chardata), colour = embcol), charreg[0][5:-3]))+4
+                attind = int(await getsel(interaction, discord.Embed(title = "Which attribute would you like to edit?", description = "Here's our current entry for " + charreg[charregindex][5] + ":\n\n" + "\n".join(chardata), colour = embcol), charreg[0][5:-3]))+4
                 field = charreg[0][attind]
 
-            if field != "" and newval == "":
+            if field != None and newval == None:
                 try:
                     pronoun = charreg[charregindex][8].split("/")[1].lower().replace("him", "his")
                 except IndexError:
                     pronoun = "their"
                 if charreg[0][attind] != "Status":
                     if charreg[0][attind] != "Image":
-                        await message.channel.send(embed = discord.Embed(title = "What should " + charreg[charregindex][5] + "'s new " + charreg[0][attind] + " be?", description= "Please type " + pronoun + " updated " + charreg[0][attind] + " below.", colour= embcol))
+                        await interaction.channel.send(embed = discord.Embed(title = "What should " + charreg[charregindex][5] + "'s new " + charreg[0][attind] + " be?", description= "Please type " + pronoun + " updated " + charreg[0][attind] + " below.", colour= embcol))
                     else:
-                        await message.channel.send(embed = discord.Embed(title = "What should " + charreg[charregindex][5] + "'s new image(s) be?", description= "Please send " + pronoun + " updated images below, either attached to a message or as a hyperlink. If you are sending multiple images, they should all be attached to the same image, or should be links separated by pipe symbols (|).", colour= embcol))
+                        await interaction.channel.send(embed = discord.Embed(title = "What should " + charreg[charregindex][5] + "'s new image(s) be?", description= "Please send " + pronoun + " updated images below, either attached to a message or as a hyperlink. If you are sending multiple images, they should all be attached to the same image, or should be links separated by pipe symbols (|).", colour= embcol))
 
                     try:
-                        msg = await client.wait_for('message', check = checkstr(message.author))
+                        msg = await client.wait_for('message', check = checkstr(interaction.user))
                         if charreg[0][attind] != "Image":
                             newval = msg.content
                         else:
@@ -493,18 +494,17 @@ async def charedit2(message):
                                 newval = msg.content
 
                     except asyncio.TimeoutError:
-                        await message.channel.send("Selection Timed Out")
-                        await message.delete()
+                        await interaction.channel.send("Selection Timed Out")
                         return
                 else:
                     statoptions = []
                     currentstat = charreg[charregindex][attind]
 
-                    if currentstat == "Retired" and not "staff" in str(message.author.roles).lower():
-                        await message.channel.send(embed = discord.Embed(title= "You cannot edit this value.", description= "You need a member of staff to unretire a character.", colour = embcol))
+                    if currentstat == "Retired" and not "staff" in str(interaction.user.roles).lower():
+                        await interaction.channel.send(embed = discord.Embed(title= "You cannot edit this value.", description= "You need a member of staff to unretire a character.", colour = embcol))
 
                     else:
-                        author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0])
+                        author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(interaction.user.id) in x][0])
                         additionalCharSlots = GlobalVars.economyData[author_row_index+2][1]
                         maxchars = startingslots + int(additionalCharSlots)
 
@@ -519,7 +519,7 @@ async def charedit2(message):
                         if currentstat != "Retired":
                             statoptions.append("Retired")
                         
-                        if "staff" in str(message.author.roles).lower():
+                        if "staff" in str(interaction.user.roles).lower():
                             statoptions.append("DMPC")
                             statoptions.append("NPC")
 
@@ -528,22 +528,32 @@ async def charedit2(message):
                         except IndexError:
                             pronoun = "their"
 
-                        statind = int(await getsel(message, discord.Embed(title = "What should " + charreg[charregindex][5] + "'s new status be?", description= "This controls whether their availability for things like starting new scenes. " + pronoun + "'s current Status is: " + currentstat + "\n\nSelect an option below.", colour= embcol), statoptions)-1)
+                        statind = int(await getsel(interaction, discord.Embed(title = "What should " + charreg[charregindex][5] + "'s new status be?", description= "This controls whether their availability for things like starting new scenes. " + pronoun + "'s current Status is: " + currentstat + "\n\nSelect an option below.", colour= embcol), statoptions)-1)
                         newval = statoptions[statind]
         
         except AttributeError:
             newval = ""
-            
-        if newval != "":
-            charreg[charregindex][attind] = newval
-            chardatabase.update_cell(charregindex + 1, attind + 1, charreg[charregindex][attind])
-            await message.channel.send(embed = discord.Embed(title = "Your changes have been made!", description = charreg[charregindex][5] + "'s " + charreg[0][attind] + " is now " + newval, colour = embcol))
 
-async def getsel(message, emb, choices):
-    sel = SelectView(message, 120, 1, 1, choices)
-    await message.channel.send(embed = emb, view = sel)
+        try:
+            
+            if newval != "":
+
+                charreg[charregindex][attind] = newval
+                chardatabase.update_cell(charregindex + 1, attind + 1, charreg[charregindex][attind])
+                await interaction.channel.send(embed = discord.Embed(title = "Your changes have been made!", description = charreg[charregindex][5] + "'s " + charreg[0][attind] + " is now " + newval, colour = embcol))
+            else:
+                await interaction.channel.send(embed = discord.Embed(title = "Something went wrong", description = "Nothing was changed. Try again, and if that fails, contact the bot gods?", colour = embcol))
+
+        except ValueError:
+            await interaction.channel.send(embed = discord.Embed(title = "Something went wrong", description = "Nothing was changed. Try again, and if that fails, contact the bot gods?", colour = embcol))
+
+        await interaction.followup.send("Edit complete!")
+        
+async def getsel(interaction, emb, choices):
+    sel = SelectView(interaction, 120, 1, 1, choices)
+    await interaction.channel.send(embed = emb, view = sel)
     if await sel.wait():
-        await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+        await interaction.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
         return("")
     return(int(sel.button_response[0]))
 
@@ -582,12 +592,11 @@ class SelectView(discord.ui.View):
         self.stop()
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        if self.message.author.id == interaction.user.id:
+        if self.message.user.id == interaction.user.id:
             return True
         else:
             await interaction.response.send_message("That is not your dropdown to click!", ephemeral=True)
             return False
-
 
 #Character Transfer Subroutine
 async def chartransfer(message):

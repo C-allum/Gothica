@@ -1,4 +1,5 @@
 from CommonDefinitions import *
+from discord import app_commands
 
 #Voyeur's Lounge Redirect
 async def VoyRedirect(message):
@@ -106,6 +107,7 @@ async def setgag(message):
     await gagmem[0].remove_roles(role)
 
 #Emote
+
 async def emote(message):
 
     chan = message.content.split(" ")[1].split("/")[5]

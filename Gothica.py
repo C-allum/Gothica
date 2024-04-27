@@ -10,6 +10,7 @@ import TupperDatabase
 import time
 from discord import Webhook
 from discord import SyncWebhook
+from discord import app_commands
 import aiohttp
 import ConfigCommands
 import GlobalVars
@@ -363,11 +364,6 @@ async def on_message(message):
             #Character Creation Subroutine - On CharRegistry
             elif (str(message.channel) == "character-creation" or str(message.channel.name) == "NPC Creation") and message.content.lower().lstrip("*").startswith("name") and not isbot:
                 await CharRegistry.charcreate(message)
-
-            #Character Edit Subroutine - On CharRegistry, untested
-            elif message.content.lower().split(" ")[0] == (str(GlobalVars.config["general"]["gothy_prefix"]) + "edit") and not isbot:
-
-                await CharRegistry.charedit2(message)
 
             #Character Transfer Subroutine - On CharRegistry, untested
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "transfer") and not isbot:
@@ -2970,6 +2966,7 @@ async def on_raw_reaction_remove(reaction):
 # async def on_message_delete(message):
 
 #     await client.get_channel(logchannel).send(message.author.name + "'s message was deleted in " + str(message.channel) + ". The message was:\n\n" + message.content.replace("@", "\@") + "\n\nThis message was deleted at " + str(datetime.now()))
+   
 
 token = botTokens.gettoken(liveVersion)
 #So... Discord can't handle stickers that are animated but not a gif... And throws a Key error. We restart the Gothy client if that happens...
