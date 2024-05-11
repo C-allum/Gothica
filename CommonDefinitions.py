@@ -118,6 +118,10 @@ if liveVersion: #Set to 1 to use the real spreadsheets, or 0 to use the testing 
 
     guildid = 828411760365142076
 
+    oocchannel = 832435243117445131
+    welcchannel = 828411760847356005
+    servermemberlog = 841736084362362940
+
 else:
 
     CharSheet = "1Vgxa8C5j5XnEUGhaGqAANVhsWSIOra87wCE2f5C75tQ"
@@ -163,6 +167,10 @@ else:
     datingchannel = 1203838135335653416
 
     guildid = 847968618167795782
+
+    oocchannel = 1031671413607776327
+    welcchannel = 1031671413607776327
+    servermemberlog = botchannel
 
 
 sheet = service.spreadsheets()
@@ -310,9 +318,7 @@ tarotcards = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Page", "Knight
 tarotupright = ["20", "19", "18", "17", "16", "15", "14", "13", "12", "11", "Shuffle your deck, then look at the top 3 cards, and place them back in any order or orientation.", "Numbered cards drawn as part of this action are read as right side up, regardless of what orientation they are drawn in. Reshuffle after the Result is decided.", "You may choose one card within your Court and activate its Dismissal Effect without spending Karma or removing it from your Court, then reshuffle", " Search your Deck and add one Greater arcana of your choice to your Court, Then reshuffle", "While this card is in your court, you and allies within 30ft of you have advantage when rolling initiative.", "While this card is in your court, conjuration spells cast within 30 ft of you are cast as if one level higher.", "While this card is in your court, you and allies within 30 ft of you have advantage on insight and perception checks", "While this card is in you court, you and allies within 30 ft of you have advantage on nature checks, and can always find food and water when travelling through natural environments.", "While this card is in your court, you and allies within 30 ft of you have advantage on intimidation and persuasion checks.", "While this card is in your court, enemies within 30 ft of you have disadvantage on saving throws against ongoing effects and conditions.", "While this card is in your court, allies have advantage on attack rolls while at least 1 other ally is within 5ft of them.", "While this card is in your court, you and allies within 30 ft of you do not suffer disadvantage when making weapon attacks at long range.", "While this card is in your court, you are automatically aware of any lies told in your presence. You do not know the specifics of the lie or it’s corresponding truth, but are aware a lie has been told.", "While this card is in your court allies have advantage on insight checks and saving throws made to maintain concentration.", "While this card is in your court, the time it takes for you and allies within 30 ft of you to gain the full benefits of a short or long rest is reduced by half. This includes time required to sleep or similarly rest", "While this card is in your court, you and allies within 30 ft of you have advantage on attack rolls against enemies who are below half their maximum hit points", "While this card is in your court, you and allies within 30 ft of you have advantage on athletics checks and saving throws against intimidation and fear effects", "While this card is in your court, you and allies within 30 ft of you may add double their proficiency bonus when using passive abilities such as passive perception", "While this card is in your court, you and allies within 30 ft of you may treat any material goods as being worth twice their value for the purpose of trading, purchasing goods, or using as spellcasting components", "While this card is in your court, you and allies within 30 ft of you have advantage on spell attack rolls while below half their hit point maximum.", "While this card is in your court, enemies within 30 ft of you treat d20 rolls of 1-2 as critical failures.", "While this card is in your court, each time you or an ally reduces an enemy to 0 hit points or below, the triggering attacker gains advantage on their next attack roll or saving throw", "While this card is in your court, whenever you or allies within 30 ft of you regain hit points, they regain additional hit points equal to your proficiency bonus", "While this card is in your court, you and allies within 30 ft of you may re-roll any 1’s on damage dice", "While this card is in your court, enemies within 30 ft of you have disadvantage on checks and saving throws made to recognize illusions and deceptions", "While this card is in your court, you and allies within 30 ft of you have advantage on attack rolls if at least one other ally has successfully hit the target with an attack during the same round"]
 tarotreverse = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "You suffer disadvantage on this action. Reshuffle after the result is decided.", "Numbered cards drawn as part of this action are read as Inverted, regardless of what orientation they are drawn in. Reshuffle after the result is decided.", "Discard one card from your Court without activating it’s Dismissal effect, Then reshuffle.", "Discard all cards from your Court without activating their Dismissal effects, then reshuffle.", "While this card is in your court, you and allies within 30 ft of you have advantage on opportunity attacks made against enemies", "While this card is in your court, illusion spells cast within 30 ft of you are cast as if one level higher", "While this card is in your court, you and allies within 30 ft of you have advantage on deception and slight of hand checks", "While this card is active, enemies within 30 ft of you treat all terrain as difficult terrain", "While this card is in your court, enemies within 30 ft of you have disadvantage on saving throws against charm and fear effects.", "While this card is in your court, you and allies within 30 ft of you have advantage on saving throws against ongoing effects and conditions", "While this card is in your court, enemies within 30 ft of you have disadvantage on attack rolls made within 5ft of one or more of their allies", "While this card is in your court, enemies within 30 ft of you have disadvantage to hit with ranged attacks", "While this card is in your court, you and allies within 30 ft of you have advantage on deception, stealth, and slight of hand checks.", "While this card is in your court enemies within 30 ft of you have disadvantage on saving throws while not within 5ft of one of their allies", "While this card is in your court, you and allies within 30 ft of you have advantage on death saving throws", "While this card is in your court, enemies within 30 ft of you have disadvantage on saving throws made to maintain concentration", "While this card is in your court, enemies within 30 ft of you have disadvantage on strength based attack rolls and saving throws", "While this card is in your court, creatures within 30 ft of you treat d20 rolls of 19-20 as critical successes, and d20 rolls of 1-2 as critical failures", "While this card is in your court, you and allies within 30 ft of you may can spend 5 feet of movement to automatically escape from nonmagical restraints such as shackles or another creature’s grapple", "While this card is in your court, enemies within 30 ft of you have disadvantage on melee attack rolls while below half their hit point maximum", "While this card is in your court enemies within 30 ft of you treat critical successes as regular successes, and allies within 30 ft of you treat critical failures as regular failures", "While this card is in your court each time you or an ally reduces an enemy to 0 hit points, any of it’s allies within 5 ft suffer disadvantage on attack rolls and saving throws until the end of their next turn", "While this card is in your court, when an enemy makes an attack against you or an ally and misses, it gains disadvantage on attack rolls until the end of it’s next turn", "While this card is in your court, you and your allies within 30 ft of you have advantage on opportunity attacks", "While this card is in your court, enemies within 30 ft of you must succeed on a wisdom saving throw against your spellcasting DC to cast spells that require vocal component", "While this card is in your court, enemies within 30 ft of you have disadvantage on attack rolls if at least one of their allies has successfully hit the target with an attack during the same round"]
 
-rpcategories = ["Meta Spaces", "Shallow Dungeon", "Market Town Outskirts", "Market Town Center", "Verdant Caverns", "Middle Dungeon", "Stormpirate Seas and Coasts", "Frostveil"]
-
-
+rpcategories = ["Meta Spaces", "Shallow Dungeon", "Market Town Outskirts", "Market Town Center", "Verdant Caverns", "Middle Dungeon", "Stormpirate Seas and Coasts", "Frostveil", "Drachen Meadows"]
 
 Fuwulchannels = []
 
@@ -373,109 +379,58 @@ def reactletters(reacts):
     for n in range(len(reacts)):
 
         if reacts[n] == "A":
-
             emojis += "🇦"
-
         elif reacts[n] == "B":
-
             emojis += "🇧"
-
         elif reacts[n] == "C":
-
             emojis += "🇨"
-
         elif reacts[n] == "D":
-
             emojis += "🇩"
-
         elif reacts[n] == "E":
-
             emojis += "🇪"
-
         elif reacts[n] == "F":
-
             emojis += "🇫"
-
         elif reacts[n] == "G":
-
             emojis += "🇬"
-
         elif reacts[n] == "H":
-
             emojis += "🇭"
-
         elif reacts[n] == "I":
-
             emojis += "🇮"
-
         elif reacts[n] == "J":
-
             emojis += "🇯"
-
         elif reacts[n] == "K":
-
             emojis += "🇰"
-
         elif reacts[n] == "L":
-
             emojis += "🇱"
-
         elif reacts[n] == "M":
-
             emojis += "🇲"
-
         elif reacts[n] == "N":
-
             emojis += "🇳"
-
         elif reacts[n] == "O":
-
             emojis += "🇴"
-
         elif reacts[n] == "P":
-
             emojis += "🇵"
-
         elif reacts[n] == "Q":
-
             emojis += "🇶"
-
         elif reacts[n] == "R":
-
             emojis += "🇷"
-
         elif reacts[n] == "S":
-
             emojis += "🇸"
-
         elif reacts[n] == "T":
-
             emojis += "🇹"
-
         elif reacts[n] == "U":
-
             emojis += "🇺"
-
         elif reacts[n] == "V":
-
             emojis += "🇻"
-
         elif reacts[n] == "W":
-
             emojis += "🇼"
-
         elif reacts[n] == "X":
-
             emojis += "🇽"
-
         elif reacts[n] == "Y":
-
             emojis += "🇾"
-
         elif reacts[n] == "Z":
-
             emojis += "🇿"
-
+            
     return emojis
 
 #Establish deck of cards

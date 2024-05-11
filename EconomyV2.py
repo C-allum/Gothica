@@ -1758,6 +1758,7 @@ async def incomeWeek(message):
 @discord.app_commands.checks.has_role("Verified")
 async def togglenotif(interaction: discord.Interaction):
     author_economy_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(interaction.user.id) in x][0])
+    await interaction.response.defer(ephemeral=True, thinking=False)
 
     try:
         if GlobalVars.economyData[author_economy_row_index + 2][2] == "True":
@@ -1770,6 +1771,7 @@ async def togglenotif(interaction: discord.Interaction):
     except IndexError:
         GlobalVars.economyData[author_economy_row_index + 2].append("True")
         await interaction.channel.send(embed = discord.Embed(title="Notification for the daily interaction reward is now ON!", color=embcol))
+    await interaction.followup.send("Done!")
 
 async def copyEconomy(message):
     GlobalVars.economyData = sheet.values().get(spreadsheetId = inventorysheet, range = "A1:E5", majorDimension='ROWS').execute().get("values")

@@ -108,31 +108,20 @@ async def setgag(message):
 
 #Emote
 
-async def emote(message):
-
-    chan = message.content.split(" ")[1].split("/")[5]
-
-    messid = message.content.split(" ")[1].split("/")[6]
-
+@staffgroup.command(name = "emote", description = "Sends a string of letters as emotes to any message.")
+@app_commands.describe(message = "The link to the message to react to.", emotes = "The word or words to send. It works best when there are no duplicate letters.")
+async def emote(interaction, message: str, emotes: str):
+    await interaction.response.defer(ephemeral=True, thinking=False)
+    chan = message.split("/")[5]
+    messid = message.split("/")[6]
     messchan = client.get_channel(int(chan))
-    
     mess = messchan.get_partial_message(int(messid))
-
-    meslist = message.content.split(" ")[2].upper()
-
+    meslist = emotes.upper()
     reacts = reactletters(meslist)
-
     for n in range(len(reacts)):
-
         await mess.add_reaction(reacts[n])
-
-    await message.channel.send("Reactions sent")
-
-    if not "mod team" in str(message.author.roles).lower():
-
-        await client.get_channel(logchannel).send(message.author.name + " reacted to a message in " + messchan.name + " with " + meslist)
-
-    print(message.author.name + " reacted to a message in " + messchan.name + " with " + meslist)
+    await client.get_channel(logchannel).send(interaction.user.name + " reacted to a message in " + messchan.name + " with " + meslist)
+    await interaction.followup.send("Reactions sent")
 
 #Player Based Reactions
 async def playerreacts(message):

@@ -6,6 +6,8 @@ from discord import Webhook
 from discord import SyncWebhook
 import aiohttp
 import EconomyV2
+from discord import app_commands
+from typing import List
 
 async def staffVacation(message):
     #Toggle Lorekeeper chat Permissions
@@ -66,39 +68,37 @@ async def staffVacation(message):
         print(role)
         await author.add_roles(role)
 
-async def wildlust(message):
-    if message.author.bot:
-        auth = message.author.name
-    elif message.author.nick:
-        auth = message.author.nick
-    else:
-        auth = message.author.name
+@tree.command(name = "wildlust", description = "Rolls on the wildmagic table")
+@app_commands.checks.has_role("Verified")
+async def wildlust(interaction):
+    await interaction.response.defer(ephemeral=True, thinking=False)
     lewdroll = random.randint(0,99)
     lewdtext = lewdtab[lewdroll]
-    print(auth + " rolled on the lewd wild magic table")
-    await message.delete()
-    await message.channel.send(embed = discord.Embed(title= message.author.name + " rolled a " + str(lewdroll+1) + " on the Wild and Lustful Magic Table!", description= lewdtext, colour = embcol))
+    await interaction.channel.send(embed = discord.Embed(title= interaction.user.display_name + " rolled a " + str(lewdroll+1) + " on the Wild and Lustful Magic Table!", description= lewdtext, colour = embcol))
+    await interaction.followup.send("Roll completed!")
 
-async def crunch(message):
-    try:
-        numbrolls = int(message.content.split(" ")[1])
-    except IndexError:
-        numbrolls = 1
-    except TypeError:
-        numbrolls = 1
-    if numbrolls > 12:
-        numbrolls = 12
-    dezcost = numbrolls * 10
+@tree.command(name = "gobblin", description = "Eats a dezzie. It costs 10 dz to find one of a suitable size for consumption.")
+@app_commands.checks.has_role("Verified")
+@app_commands.describe(quantity = "The number of dezzies to eat, up to 12 at a time")
+async def gobblin(interaction, quantity: int = 1):
+    await interaction.response.defer(ephemeral=True, thinking=False)
+    if quantity == None:
+        quantity = 1
+    if quantity > 12:
+        quantity = 12
+    if quantity < 0:
+        quantity = 1
+    dezcost = quantity * 10
 
-    author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0])
+    author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(interaction.user.id) in x][0])
     balance = GlobalVars.economyData[author_row_index+1][1]
     
     # If dezzies cannot be removed from inventory
-    if not await EconomyV2.removeDezziesFromPlayerWithoutMessage(dezcost, playerName=message.author.name):
-        await message.channel.send(embed = discord.Embed(title= "You cannot afford this.", description= "It costs 10" + dezzieemj + " to find one of a suitable size to eat. You have only " + str(balance)))
+    if not await EconomyV2.removeDezziesFromPlayerWithoutMessage(dezcost, playerName=interaction.user.name):
+        await interaction.channel.send(embed = discord.Embed(title= "You cannot afford this.", description= "It costs 10" + dezzieemj + " to find one of a suitable size to eat. You have only " + str(balance), colour = embcol))
     else:
         dezresults = []
-        for a in range(numbrolls):
+        for a in range(quantity):
             rand = random.randint(0,9)
             if rand == 0:
                 #Wildlust
@@ -131,8 +131,8 @@ async def crunch(message):
             elif rand == 9:
                 #Damage
                 dezresults.append("You take 3d8 " + random.choice(["psychic", "bludgeoning", "poison", "piercing", "thunder"]) + random.choice([" damage.", " stimulation."]))
-        await message.channel.send(embed = discord.Embed(title="You ate some dezzies!", description= "\n\n".join(dezresults), colour = embcol))
-        await message.delete()
+        await interaction.channel.send(embed = discord.Embed(title="You ate some dezzies!", description= "\n\n".join(dezresults), colour = embcol))
+        await interaction.followup.send("Dezzies have been consumed!")
 
 async def impTomeSpawn(message):
     if imptomeWielder == -1: #If we currently don't have anyone that wants to use this function
@@ -1383,7 +1383,7 @@ class Map_Space_View(discord.ui.View):
 
 
 
-rpcategories = ["Meta Spaces", "Shallow Dungeon", "Market Town Outskirts", "Market Town Center", "Verdant Caverns", "Middle Dungeon", "Stormpirate Seas and Coasts", "Frostveil"]
+#rpcategories = ["Meta Spaces", "Shallow Dungeon", "Market Town Outskirts", "Market Town Center", "Verdant Caverns", "Middle Dungeon", "Stormpirate Seas and Coasts", "Frostveil"]
 
 #----------------View Classes----------------
 
@@ -1528,128 +1528,278 @@ async def getPlayerNameList():
         playerList.append(economydata[b][0])
     return playerList
 
-async def export(message):
+# @tree.command(name = "export", description = "Exports a copy of the channel", guild= discord.Object(id = guildid))
+# @app_commands.describe(type = "The type of export to run. The options are Channel, Google Sheet and text file.", description = "The main body of the embed", image = "A link to the main image for the embed", thumbnail = "A link to the image for the thumbnail", channel = "The channel in which to send the embed (Staff only).")
+# @app_commands.checks.has_role("Verified")
+# async def export(message):
 
-    if message.author.bot:
-        return
+#     dest = message.content.split(" ")[1]
+#     processing = await message.channel.send(embed = discord.Embed(title="Processing", description= "This may take some time, depending on the length of the channel.", colour=embcol))
 
-    dest = message.content.split(" ")[1]
-    processing = await message.channel.send(embed = discord.Embed(title="Processing", description= "This may take some time, depending on the length of the channel.", colour=embcol))
+#     try:
+#         int(dest)
+#         dest = "<#" + str(dest) + ">"
+#     except ValueError:
+#         pass
 
-    try:
-        int(dest)
-        dest = "<#" + str(dest) + ">"
-    except ValueError:
-        pass
-
-    if "doc" in dest.lower() or "sheet" in dest.lower():
-        desttype = "Spreadsheet"
-        try:
-            if "docs.google.com/spreadsheets" in dest.lower():
-                dest = gc.open_by_url(dest)
-            elif "staff" in str(message.author.roles).lower() and "@" in message.content.split(" ")[2]:
-                dest = gc.create(message.channel.name)
-                recip = message.content.split(" ")[2]
-            else:
-                await message.channel.send(embed = discord.Embed(title = "You need to provide the link to an editable document.", description= "", colour = embcol))
-                return
-        except IndexError:
-            await message.channel.send(embed = discord.Embed(title = "You need to provide an email address to add to the spreadsheet.", description= "The API doesn't support setting it to public, so we need to share the sheet with you via email.", colour = embcol))
-            return
+#     if "doc" in dest.lower() or "sheet" in dest.lower():
+#         desttype = "Spreadsheet"
+#         try:
+#             if "docs.google.com/spreadsheets" in dest.lower():
+#                 dest = gc.open_by_url(dest)
+#             elif "staff" in str(message.author.roles).lower() and "@" in message.content.split(" ")[2]:
+#                 dest = gc.create(message.channel.name)
+#                 recip = message.content.split(" ")[2]
+#             else:
+#                 await message.channel.send(embed = discord.Embed(title = "You need to provide the link to an editable document.", description= "", colour = embcol))
+#                 return
+#         except IndexError:
+#             await message.channel.send(embed = discord.Embed(title = "You need to provide an email address to add to the spreadsheet.", description= "The API doesn't support setting it to public, so we need to share the sheet with you via email.", colour = embcol))
+#             return
         
-    elif dest.lower().startswith("https://discord.com/channels") or dest.startswith("<#"):
+#     elif dest.lower().startswith("https://discord.com/channels") or dest.startswith("<#"):
 
-        dest = client.get_channel(int(str(message.content.split(" ")[1].split("/")[-1]).rstrip(">").lstrip("<#")))
+#         dest = client.get_channel(int(str(message.content.split(" ")[1].split("/")[-1]).rstrip(">").lstrip("<#")))
 
-        if "thread" in str(dest.type) and ("staff" in str(message.author.roles).lower() or str(dest.owner) == str(message.author)):
-            desttype = "Thread"
-            hook = await dest.parent.create_webhook(name= "Exporthook")
-        elif "staff" in str(message.author.roles).lower():
-            desttype = "Channel"
-            hook = await dest.create_webhook(name= "Exporthook")
-        else:
-            await message.channel.send(embed = discord.Embed(title = "You cannot write to that thread.", description= "Only Staff members can write to threads that they did not create", colour= embcol))
-            return
+#         if "thread" in str(dest.type) and ("staff" in str(message.author.roles).lower() or str(dest.owner) == str(message.author)):
+#             desttype = "Thread"
+#             hook = await dest.parent.create_webhook(name= "Exporthook")
+#         elif "staff" in str(message.author.roles).lower():
+#             desttype = "Channel"
+#             hook = await dest.create_webhook(name= "Exporthook")
+#         else:
+#             await message.channel.send(embed = discord.Embed(title = "You cannot write to that thread.", description= "Only Staff members can write to threads that they did not create", colour= embcol))
+#             return
         
-    elif dest.lower() == "file":
-        dest = "File"
-        desttype = "File"
+#     elif dest.lower() == "file":
+#         dest = "File"
+#         desttype = "File"
 
-    else:
-        await message.channel.send(embed = discord.Embed(title = "Output format not recognised.", description = "Options to output to are:\n\nGoogle Sheet; providing a link to an editable spreadsheet.\n\nDiscord Threads; providing the link, #-link or ID of the thread to write to. Unless you are staff, this must be a thread you have created.\n\nA text file, in which case you would use `%export file`.", colour = embcol))
-        return
+#     else:
+#         await message.channel.send(embed = discord.Embed(title = "Output format not recognised.", description = "Options to output to are:\n\nGoogle Sheet; providing a link to an editable spreadsheet.\n\nDiscord Threads; providing the link, #-link or ID of the thread to write to. Unless you are staff, this must be a thread you have created.\n\nA text file, in which case you would use `%export file`.", colour = embcol))
+#         return
 
-    await message.delete()
+#     await message.delete()
 
-    mess = [joinedMessages async for joinedMessages in message.channel.history(limit = None, oldest_first= True)]
-    mess.sort(key=lambda x: x.created_at)
+#     mess = [joinedMessages async for joinedMessages in message.channel.history(limit = None, oldest_first= True)]
+#     mess.sort(key=lambda x: x.created_at)
 
-    sheetarray = [["Author", "Content", "Avatar Link", "Timestamp", "Character Count", "Wordcount"]]
-    textarray = []
-    charcount = []
-    wordcount = []
+#     sheetarray = [["Author", "Content", "Avatar Link", "Timestamp", "Character Count", "Wordcount"]]
+#     textarray = []
+#     charcount = []
+#     wordcount = []
 
-    if desttype == "Spreadsheet" or desttype == "File":
-        for a in range(len(mess)):
+#     if desttype == "Spreadsheet" or desttype == "File":
+#         for a in range(len(mess)):
 
-            if mess[a] == message or mess[a] == processing:
-                break
+#             if mess[a] == message or mess[a] == processing:
+#                 break
 
-            if len(mess[a].content) != 0:
-                #Sheet Layout:
-                sheetarray.append([str(mess[a].author).split("#")[0], str(mess[a].content), str(mess[a].author.avatar), str(mess[a].created_at).split(".")[0], str(len(mess[a].content)), str(len(mess[a].content.split(" ")))])
-                #Text file Layout:
-                textarray.append(str(mess[a].author).split("#")[0] + ": " + str(mess[a].content))
-            else:
-                if mess[a].embeds != 0:
-                    #Sheet Layout:
-                    sheetarray.append([str(mess[a].author).split("#")[0], (str(mess[a].embeds[0].title) + "\n\n" + str(mess[a].embeds[0].description)), str(mess[a].author.avatar), str(mess[a].created_at).split(".")[0], str(len(mess[a].content)), str(len(mess[a].content.split(" ")))])
-                    #Text file Layout:
-                    textarray.append(str(mess[a].author).split("#")[0] + ": " + (str(mess[a].embeds[0].title) + "\n\n" + str(mess[a].embeds[0].description)))
-            charcount.append(len(mess[a].content))
-            wordcount.append(len(mess[a].content.split(" ")))
+#             if len(mess[a].content) != 0:
+#                 #Sheet Layout:
+#                 sheetarray.append([str(mess[a].author).split("#")[0], str(mess[a].content), str(mess[a].author.avatar), str(mess[a].created_at).split(".")[0], str(len(mess[a].content)), str(len(mess[a].content.split(" ")))])
+#                 #Text file Layout:
+#                 textarray.append(str(mess[a].author).split("#")[0] + ": " + str(mess[a].content))
+#             else:
+#                 if mess[a].embeds != 0:
+#                     #Sheet Layout:
+#                     sheetarray.append([str(mess[a].author).split("#")[0], (str(mess[a].embeds[0].title) + "\n\n" + str(mess[a].embeds[0].description)), str(mess[a].author.avatar), str(mess[a].created_at).split(".")[0], str(len(mess[a].content)), str(len(mess[a].content.split(" ")))])
+#                     #Text file Layout:
+#                     textarray.append(str(mess[a].author).split("#")[0] + ": " + (str(mess[a].embeds[0].title) + "\n\n" + str(mess[a].embeds[0].description)))
+#             charcount.append(len(mess[a].content))
+#             wordcount.append(len(mess[a].content.split(" ")))
 
-        if desttype == "Spreadsheet":
-            sheetarray.append(["Total", "", "", str(mess[-3].created_at-mess[0].created_at).split(".")[0], sum(charcount), sum(wordcount)])
-            sheetarray.append(["Average", "", "", "", sum(charcount)/(len(mess)), sum(wordcount)/(len(mess))])
-            ws = dest.get_worksheet(0)
-            ws.update("A1:F" + str(len(mess)+3), sheetarray)
-            await message.channel.send(embed = discord.Embed(title = "Channel written to Spreadsheet.", description = "The contents of this channel have been cloned to a spreadsheet, available at:\n\nhttps://docs.google.com/spreadsheets/d/" + str(dest.id), colour = embcol))
-            dest.share(recip, perm_type = "user", role = "writer")
-        else:
-            filename = str(message.channel) + ".txt"
-            with open(filename, "w") as f:
-                f.write("\n\n".join(textarray))
-            f.close()
-            await message.channel.send("We have attached a text log of this channel.", file = discord.File(r"" + filename))
-            os.remove(filename)
+#         if desttype == "Spreadsheet":
+#             sheetarray.append(["Total", "", "", str(mess[-3].created_at-mess[0].created_at).split(".")[0], sum(charcount), sum(wordcount)])
+#             sheetarray.append(["Average", "", "", "", sum(charcount)/(len(mess)), sum(wordcount)/(len(mess))])
+#             ws = dest.get_worksheet(0)
+#             ws.update("A1:F" + str(len(mess)+3), sheetarray)
+#             await message.channel.send(embed = discord.Embed(title = "Channel written to Spreadsheet.", description = "The contents of this channel have been cloned to a spreadsheet, available at:\n\nhttps://docs.google.com/spreadsheets/d/" + str(dest.id), colour = embcol))
+#             dest.share(recip, perm_type = "user", role = "writer")
+#         else:
+#             filename = str(message.channel) + ".txt"
+#             with open(filename, "w") as f:
+#                 f.write("\n\n".join(textarray))
+#             f.close()
+#             await message.channel.send("We have attached a text log of this channel.", file = discord.File(r"" + filename))
+#             os.remove(filename)
 
-    else:
-        lock = asyncio.Lock()
-        async with aiohttp.ClientSession() as session:
-            whook = SyncWebhook.from_url(hook.url)
+#     else:
+#         lock = asyncio.Lock()
+#         async with aiohttp.ClientSession() as session:
+#             whook = SyncWebhook.from_url(hook.url)
 
-            for b in range(len(mess)):
-                if mess[b] == message or mess[b] == processing:
-                    break
-                else:
-                    try:
-                        whook.send(mess[b].content, username = mess[b].author.name, avatar_url = mess[b].author.avatar, thread = dest)
-                    except discord.errors.HTTPException:
-                        whook.send(mess[b].content, username = mess[b].author.name, avatar_url = mess[b].author.avatar)
+#             for b in range(len(mess)):
+#                 if mess[b] == message or mess[b] == processing:
+#                     break
+#                 else:
+#                     try:
+#                         whook.send(mess[b].content, username = mess[b].author.name, avatar_url = mess[b].author.avatar, thread = dest)
+#                     except discord.errors.HTTPException:
+#                         whook.send(mess[b].content, username = mess[b].author.name, avatar_url = mess[b].author.avatar)
 
-                    if mess[b].attachments:
-                        for c in range(len(mess[b].attachments)):
-                            try:
-                                whook.send(mess[b].attachments[c].url, username = mess[b].author.name, avatar_url = mess[b].author.avatar, thread = dest)
-                            except discord.errors.HTTPException:
-                                whook.send(mess[b].attachments[c].url, username = mess[b].author.name, avatar_url = mess[b].author.avatar)
+#                     if mess[b].attachments:
+#                         for c in range(len(mess[b].attachments)):
+#                             try:
+#                                 whook.send(mess[b].attachments[c].url, username = mess[b].author.name, avatar_url = mess[b].author.avatar, thread = dest)
+#                             except discord.errors.HTTPException:
+#                                 whook.send(mess[b].attachments[c].url, username = mess[b].author.name, avatar_url = mess[b].author.avatar)
                                 
-                    if mess[b].embeds:
-                        try:
-                            whook.send(embed= mess[b].embeds[0], username = mess[b].author.name, avatar_url = mess[b].author.avatar, thread = dest)
-                        except discord.errors.HTTPException:
-                            whook.send(embed= mess[b].embeds[0], username = mess[b].author.name, avatar_url = mess[b].author.avatar)
+#                     if mess[b].embeds:
+#                         try:
+#                             whook.send(embed= mess[b].embeds[0], username = mess[b].author.name, avatar_url = mess[b].author.avatar, thread = dest)
+#                         except discord.errors.HTTPException:
+#                             whook.send(embed= mess[b].embeds[0], username = mess[b].author.name, avatar_url = mess[b].author.avatar)
 
-        await hook.delete()
-    await processing.delete()
+#         await hook.delete()
+#     await processing.delete()
+
+@tree.command(name = "embed", description = "Generates an Embed")
+@app_commands.describe(title = "The title of the embed", description = "The main body of the embed", image = "A link to the main image for the embed", thumbnail = "A link to the image for the thumbnail", channel = "The channel in which to send the embed (Staff only).")
+@app_commands.checks.has_role("Verified")
+async def embed(interaction, title: str, description: str = None, image: str = None, thumbnail: str = None, channel: str = None):
+    await interaction.response.defer(ephemeral=True, thinking=False)
+
+    if description != None:
+        description = description.replace("The Mistress", "T̴̯̳̳̠͚͓͚̂͗̽̾̈́͌̐̅͠ͅh̸̨̫͓͖͎͍͔̠͇̊̂̏͝ę̶͎͇͍̲̮̠̭̮͛̃̈́͑̓̔̚ ̸͙̺̦̮͈̹̮̑̿̊̀̂́͂̿͒̚͜M̶̬͇̤̾͐̊̽̈́̀̀̕͘͝í̸̬͎͔͍̠͓̋͜͠͝s̶̡̡̧̪̺͍̞̲̬̮͆͋̇̐͋͌̒̋͛̕t̷̤̲̠̠̄̊͌̀͂̈́̊̎̕ȓ̶̼̂̿̇͛̚e̶̹̪̣̫͎͉̫̫͗s̸̟͉̱͈̞̬̽̽̒̔́̉s̸̛̖̗̜̻̻͚̭͇̈́̀̄͒̅̎")
+
+    if "Staff" in str(interaction.user.roles) and channel != None:
+        destchannel = client.get_channel(int(channel[2:-1]))
+    else:
+        destchannel = interaction.channel
+
+    if "Staff" in str(interaction.user.roles):
+        await destchannel.send(embed = discord.Embed(title = title, description = description, colour = embcol).set_image(url = image).set_thumbnail(url = thumbnail))
+    else:
+        await destchannel.send(embed = discord.Embed(title = title, description = description, colour = embcol).set_image(url = image).set_thumbnail(url = thumbnail).set_author(name = interaction.user.name + "/" + interaction.user.display_name))
+
+    await interaction.followup.send("Embed sent!")
+
+@tree.command(name = "break", description = "Generates a line under a scene, useful for visual separation")
+@app_commands.checks.has_role("Verified")
+async def breakscene(interaction):
+    await interaction.response.defer(ephemeral=True, thinking=False)
+    await interaction.channel.send("```\u200b```")
+    await interaction.followup.send("Done!")
+
+@staffgroup.command(name = "oocmsg", description = "Sends a message from Gothica to ooc (or anywhere else)")
+@app_commands.describe(message = "The contents of the message", channel = "The channel in which to send the message (defaults to ooc).")
+async def oocmsg(interaction, message: str, channel: str = None):
+    await interaction.response.defer(ephemeral=True, thinking=False)
+    if channel != None:
+        channel = int(channel[2:-1])
+    else:
+        channel = oocchannel
+
+    dest = client.get_channel(channel)
+    msg = await dest.send(message.replace("The Mistress", "T̴̯̳̳̠͚͓͚̂͗̽̾̈́͌̐̅͠ͅh̸̨̫͓͖͎͍͔̠͇̊̂̏͝ę̶͎͇͍̲̮̠̭̮͛̃̈́͑̓̔̚ ̸͙̺̦̮͈̹̮̑̿̊̀̂́͂̿͒̚͜M̶̬͇̤̾͐̊̽̈́̀̀̕͘͝í̸̬͎͔͍̠͓̋͜͠͝s̶̡̡̧̪̺͍̞̲̬̮͆͋̇̐͋͌̒̋͛̕t̷̤̲̠̠̄̊͌̀͂̈́̊̎̕ȓ̶̼̂̿̇͛̚e̶̹̪̣̫͎͉̫̫͗s̸̟͉̱͈̞̬̽̽̒̔́̉s̸̛̖̗̜̻̻͚̭͇̈́̀̄͒̅̎"))
+    await interaction.followup.send("Message sent! " + msg.jump_url)
+
+@staffgroup.command(name = "verify", description = "Verifies a user and adds them to the economy.")
+@app_commands.describe(user = "The user to verify. This should be in the form of @username.")
+async def verify(interaction, user: str):
+    await interaction.response.defer(ephemeral=True, thinking=False)
+    veruser = (await interaction.guild.query_members(user_ids=[user[2:-1]]))[0]
+    role = discord.utils.get(interaction.user.guild.roles, name="Verified")
+    await veruser.add_roles(role)
+    await EconomyV2.addUserToEconomy(veruser.name, veruser.id)
+    print(str(veruser.name) + " has been added to the economy at " + str(datetime.now()))
+    await interaction.channel.send(embed = discord.Embed(title = "**Please read this before closing this ticket**", description = ":one: Go to role-selection to choose your roles. Make sure that you at least select the channels you want to have access to.\n(You can change your role and the channels you want to see anytime by un-clicking your reaction.)\n\n:two: Press on the :lock:-icon on the first message to close the ticket.\n\nYou are good to go now, enter the server and have fun :slight_smile:", colour = embcol))
+    await client.get_channel(servermemberlog).send(str(veruser.name) + " is now verified")
+    rand = random.randint(0,9)
+    titles = ["Say hello to " + str(veruser.display_name) + "!", "Look - we found someone new - " + str(veruser.display_name) + "!", "Can someone look after " + str(veruser.display_name) + "?", str(veruser.display_name) + " just turned up!", "We caught " + str(veruser.display_name) + " trying to sneak in!", str(veruser.display_name) + " just dropped in!", str(veruser.display_name) + " could use some help", str(veruser.display_name) + " has discovered a portal into the Dungeon!", "Helpfully discovering a hole in our ceiling, here's " + str(veruser.display_name), str(veruser.display_name) + " has swung in!"]
+    welcomes = ["Hello everyone! We were taking detailed notes about the xio colony in the lower halls and found a new visitor! Please say hello to " + str(veruser.mention) + "!\nNow if you'll excuse us, we must go back to find out precisely how quickly those broodmothers spawn.", "Pardon me. We were helping Sophie care for a sick tentacle, and it spat up a person! Would one of you please take care of " + str(veruser.mention) + " while We help Sophie clean up the excess slime?", str(veruser.mention) + ", here, got caught trying to look under Our skirts. Apparently, they have never heard what happens when you stare into the Abyss because they seem to be stunned by what was down there. We're sure a hot meal will do the trick though.", "We were mucking out the Cathedral's prison cells and found " + str(veruser.mention) + " tied to a post, promising to be good. Come say hello to the newest lewd convert!", str(veruser.mention) + " thought they could get in without us noticing. Everybody, make sure they feel welcome!", "This poor soul fell through a portal onto a pile of lightly used mattresses while We were changing, and seemed unable to handle the psychic stress of our unfiltered form. They've passed out from shock for now, would someone make sure they still remember their name when they wake up? I believe it's " + str(veruser.mention) + ".", str(veruser.mention) + " seems to have had a recent encounter with some of the dungeon slimes. Could someone get them some clothes, and see to it that they are taken care of?", "Oh Dear," + str(veruser.mention) + " appears to have been transported here from their native plane of existence! Could someone help them get settled into their new home?", "It's odd, We thought we had fixed that hole already? Could someone check if " + str(veruser.mention) + " is alright while we go see to the repairs again?", "We think " + str(veruser.mention) + " must have had a run in with one of the amnesia blooms in the garden. They dont seem to remember where they are! Could someone help them get settled back in while We do some weeding?"]
+    await client.get_channel(welcchannel).send(embed = discord.Embed(title = titles[rand], description = welcomes[rand], colour = embcol))
+    await interaction.followup.send("Verification complete!")
+
+@tree.command(name = "timestamp", description = "Generates a dynamic timestamp.")
+@app_commands.describe(time = "The time to display, in the format HH:MM", timezone = "Your timezone. This will be converted for everyone else to see")
+@app_commands.checks.has_role("Verified")
+async def embed(interaction, time: str, timezone: str = None):
+    await interaction.response.defer(ephemeral=True, thinking=False)
+    if timezone == "GMT+12":
+        timemod = 12
+    elif timezone == "GMT+11" or timezone == "SST":
+        timemod = 11
+    elif timezone == "GMT+10" or timezone == "HST" or timezone == "HDT":
+        timemod = 10
+    elif timezone == "GMT+9" or timezone == "AKST" or timezone == "AKDT":
+        timemod = 9
+    elif timezone == "GMT+8" or timezone == "PST" or timezone == "PDT":
+        timemod = 8
+    elif timezone == "GMT+7" or timezone == "MST" or timezone == "MDT":
+        timemod = 7
+    elif timezone == "GMT+6" or timezone == "CST" or timezone == "CDT":
+        timemod = 6
+    elif timezone == "GMT+5" or timezone == "EST" or timezone == "EDT":
+        timemod = 5
+    elif timezone == "GMT+4" or timezone == "AST" or timezone == "ADT":
+        timemod = 4
+    elif timezone == "GMT+3":
+        timemod = 3
+    elif timezone == "GMT+2":
+        timemod = 2
+    elif timezone == "GMT+1":
+        timemod = 1
+    elif timezone == "GMT" or timezone == "UTC" or timezone == "BST" or timezone == "WET" or timezone == None:
+        if timezone == None:
+            timezone = "GMT"
+        timemod = 0
+    elif timezone == "GMT-1" or timezone == "CET" or timezone == "CEST" or timezone == "WAT":
+        timemod = -1
+    elif timezone == "GMT-2" or timezone == "CAT" or timezone == "EET" or timezone == "SAST":
+        timemod = -2
+    elif timezone == "GMT-3" or timezone == "EAT" or timezone == "MSK":
+        timemod = -3
+    elif timezone == "GMT-4":
+        timemod = -4
+    elif timezone == "GMT-5" or timezone == "PKT":
+        timemod = -5
+    elif timezone == "GMT-6":
+        timemod = -6
+    elif timezone == "GMT-7" or timezone == "WIB":
+        timemod = -7
+    elif timezone == "GMT-8" or timezone == "CST":
+        timemod = -8
+    elif timezone == "GMT-9" or timezone == "KST" or timezone == "JST":
+        timemod = -9
+    elif timezone == "GMT-10" or timezone == "AEST":
+        timemod = -10
+    elif timezone == "GMT-11":
+        timemod = -11
+    elif timezone == "GMT-12" or timezone == "NZST":
+        timemod = -12
+    elif timezone == "GMT-13":
+        timemod = -13
+    elif timezone == "GMT-14":
+        timemod = -14
+    hour = int(time.split(":")[0]) + timemod
+    if hour >= 24:
+        hour -= 24
+    elif hour < 0:
+        hour = 24 + hour
+    if time.count(":") > 1:
+        combhour = str(hour) + ":" + ":".join(time.split(":")[1:])
+        inittime = str(time.split(":")[0]) + ":" + str(time.split(":")[1])
+    else:
+        combhour = str(hour) + ":" + str(time.split(":")[1]) + ":00"
+        inittime = str(time.split(":")[0]) + ":" + str(time.split(":")[1])
+    time = datetime.time(datetime.strptime(combhour, "%H:%M:%S"))
+    dt = datetime.combine(datetime.today(), time)
+    dtsp = str(datetime.timestamp(dt)).split(".")[0]
+
+    if int(datetime.timestamp(datetime.now())) >= int(dtsp):
+        dtsp = str(int(dtsp) + 86400)
+
+    await interaction.channel.send(embed = discord.Embed(title = "Timestamp Converter", description = str(inittime) + " in " + str(timezone) + " is <t:" + str(dtsp) + ":T>. It will next be " + str(inittime) + " in that timezone in " + "<t:" + str(dtsp) + ":R>", colour = embcol))
+    await interaction.followup.send("Timestamp Generated")
+
+@staffgroup.command(name = "helplist", description = "Lists all converted slash commands")
+async def helplist(interaction):
+    await interaction.response.defer(ephemeral=True, thinking=False)
+    coms = []
+    treeoutput = tree.get_commands()
+    for a in range(len(treeoutput)):
+        coms.append(treeoutput[a].name.title())
+    await interaction.channel.send(embed = discord.Embed(title = "Helplist", description = "This is a list of all our slash commands:\n" + "\n".join(coms), colour = embcol))
+    await interaction.followup.send("Completed")
