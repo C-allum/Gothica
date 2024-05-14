@@ -2096,7 +2096,7 @@ async def addUserToEconomy(name, id, last_message_time = datetime.timestamp(date
 async def loadEconomySheet():
     async with economy_lock:
         GlobalVars.economyData = sheet.values().get(spreadsheetId = inventorysheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
-    GlobalVars.inventoryData = await loadInventorySheet()
+    await loadInventorySheet()
 
     return
 #Writes to the economy sheet. Optional argument "range" used for instances where we only want to write a few or a single cell of the sheet instead of all cells.
@@ -2559,24 +2559,6 @@ async def showInventoryAndChooseItem(message, author_row_index, embed_bottom_not
         await message.channel.send(embed=discord.Embed(title=f"Number must be between 1 and {len(player_inventory[0]) - 2}", colour = embcol))
         return -1, None
     return i, item_list
-
-async def getUserNamestr(message):
-    if "@" in message.content:
-        try:
-            targid = int(str(message.content.split("@")[1]).split(" ")[0].replace("!","").replace("&","").replace(">","").split(" ")[0])
-        except ValueError:
-            await message.channel.send(embed = discord.Embed(title = "Error!", description = "Make sure that the user you tagged is valid."))
-            return
-        targname = await client.fetch_user(targid)
-    else:
-
-        targname = message.author
-
-    namestr = str(targname.name)
-
-    return namestr, targid
-
-
 
 #----------------------------------Views---------------------------------
 class AddItem_Curse_View(discord.ui.View):
