@@ -15,14 +15,19 @@ add_dezzie_lock = asyncio.Lock()
         description="Spends money (money will go to the void!)"
 )
 @app_commands.describe(
-    amount = "Amount you want to spend."
+    amount = "Amount you want to spend.",
+    reason = "The reason for spending these dezzies, for audit purposes"
 )
 @app_commands.checks.has_role("Verified")
-async def spend(interaction, amount:int):
+async def spend(interaction, amount:int, reason:str = None):
     await interaction.response.defer(ephemeral=True, thinking=False)
 
     removeDezziesFromPlayerWithoutMessage(amount, interaction.user.id, interaction.user.name)
-    await message.channel.send(embed=discord.Embed(title=f"{interaction.user.name} spent {amount}{dezzieemj}!", colour = embcol))
+    if reason != None:
+        reason = "These dezzies were for:\n\n*" + reason + "*01"
+    else:
+        reason = ""
+    await interaction.channel.send(embed=discord.Embed(title=f"{interaction.user.name} spent {amount}{dezzieemj}!", description = reason, colour = embcol))
     await interaction.followup.send("Successfully finished the task!")
 
     return

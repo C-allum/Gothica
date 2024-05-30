@@ -1,5 +1,6 @@
 #import readline
 from CommonDefinitions import *
+from discord import app_commands
 
 kinkOptions = ["Fave", "Kink", "Like", "It depends", "Willing to try", "No Strong Emotions", "Never heard of it", "Not my thing", "Soft Limit", "Hard Limit"]
 participationOptions = ["Submissive", "Dominant", "Voyeur", "Switch", "Submissive and Voyeur", "Dominant and Voyeur", "Enthusiast (Role doesn't matter to me)", "None"]
@@ -7,49 +8,35 @@ categoriesWithoutAverage = ['General Preferences', 'Categories', 'Body Parts', '
 
 #Displays the kinklist of the author, or another user if they are tagged.
 #NOTE: IF WE EVER APPEND NEW KINKS TO THE KINKLIST, DON'T ADD THEM AT THE END OF A CATEGORY! THAT BREAKS LIST LENGTHS
-async def kinklist(message, outputchannel, trigger):
+@tree.command(name = "kinklist", description = "Checks the kinks of a user")
+@app_commands.describe(user = "The owner of the kinklist to be checked")
+@app_commands.checks.has_role("Verified")
+async def kinklist(interaction, user: str = None):
 
-    if trigger == "Command":
+#async def kinklist(message, outputchannel, trigger):
 
-        kinkdata, namestr, targname = await getKinkData(message)
 
-        categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
+    kinkdata, targ = await getKinkData(message)
+    categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
 
-        namestr = str(targname.name)# + "#" + targname.discriminator)
+    # else: #Triggered by reaction.
+    #     kinkdata, namestr, targname = await getKinkDataReact(message)
+    #     categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
+    #     namestr = str(targname.name)
 
-    else: #Triggered by reaction.
-
-        kinkdata, namestr, targname = await getKinkDataReact(message)
-
-        categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
-
-        namestr = str(targname.name)# + "#" + targname.discriminator)
-
-    if not str(namestr) in str(kinkdata):
-
-        if targname.bot:
-
-            if "Gothica" in targname.name:
-
-                await outputchannel.send(embed = discord.Embed(title = "You have attempted to check our kinks?", description = "Your mind is overwhelmed with possibilities you can scarcely comprehend. Take " + str(random.randint(8, 42)) + " psychic damage.\n\n" + str(random.choice(["You have a sudden craving for waffles.", "You passed out for a moment. We have cleared your internet search history for you.", "You have the sudden urge to search the Gallery of Sin for kobold porn", "You're a furry now.", "You are incapacitated for " + str(random.randint(1,4)*6) + " seconds.", "You appear to have been drooling uncontrollably."])), colour = embcol))
-
-            elif "Avrae" in targname.name:
-
-                await outputchannel.send(embed = discord.Embed(title = "From what we know of Avrae", description = "They're into sadism and torture. Ask Fish in the River about it, he knows.", colour = embcol))
-
+    if not targ.name in str(kinkdata):
+        if targ.bot:
+            if "Gothica" in targ.name:
+                await interaction.channel.send(embed = discord.Embed(title = "You have attempted to check our kinks?", description = "Your mind is overwhelmed with possibilities you can scarcely comprehend. Take " + str(random.randint(8, 42)) + " psychic damage.\n\n" + str(random.choice(["You have a sudden craving for waffles.", "You passed out for a moment. We have cleared your internet search history for you.", "You have the sudden urge to search the Gallery of Sin for kobold porn", "You're a furry now.", "You are incapacitated for " + str(random.randint(1,4)*6) + " seconds.", "You appear to have been drooling uncontrollably."])), colour = embcol))
+            elif "Avrae" in targ.name:
+                await interaction.channel.send(embed = discord.Embed(title = "From what we know of Avrae", description = "They're into sadism and torture. Ask Fish in the River about it, he knows.", colour = embcol))
             else:
-
-                await outputchannel.send(embed = discord.Embed(title = "You may not view the kinklist of the server bots.", description = "If the bot you were checking was a tupper, try the tupper's author instead.", colour = embcol))
-
+                await interaction.channel.send(embed = discord.Embed(title = "You may not view the kinklist of the server bots.", description = "If the bot you were checking was a tupper, try the tupper's author instead.", colour = embcol))
         else:
-        
-            await outputchannel.send(embed = discord.Embed(title = "Could not find " + namestr + "'s kink list", description = "Make sure that <@" + str(targname.id) + "> has completed the kink survey.", colour = embcol))
+            await interaction.channel.send(embed = discord.Embed(title = "Could not find " + targ.name + "'s kink list", description = "Make sure that " + str(targ.mention) + " has completed the kink survey.", colour = embcol))
         
     else:
-        try:
-            playerindex = [row[1] for row in kinkdata].index(namestr)
-        except ValueError:
-            playerindex = [row[1] for row in kinkdata].index(namestr + "#" + targname.discriminator)
+        playerindex = [row[1] for row in kinkdata].index(targ.name)
         generalPrefs = [] #Contains the general preferences
         categoryAverages = [] #Contains category ratings
         currentKinkIndex = playerInformationEntries #Begin at the first actual kink after the Player Info
@@ -108,19 +95,20 @@ async def kinklist(message, outputchannel, trigger):
             else:
                  categoryEmbedString[entryIndex] = f"`{entryIndex + 1}`: {categoryEmbedString[entryIndex]}"
 
+        return generalPrefString, 
+
         #Send the embed. Discern between the sources of the request. If requested by command, send the embed to the channel where the command was called and only send the general preferences first with a selector.
         
         if trigger == "Command":
 
-            kinkemb = discord.Embed(title = namestr + "'s kink list:", description = "**General Preferences:**" +\
+            kinkemb = discord.Embed(title = targ.name + "'s kink list:", description = "**General Preferences:**" +\
                 generalPrefString +\
                 "\n\n**Kink Overview:**\n" +\
-                namestr +\
+                targ.name +\
                 "'s general thoughts on each category of kink are shown below. We have then taken their average response in each category, and included that information in brackets.\n*As always, you should check with your rp partners regarding hard and soft limits for any particular scene.*\n\n*To see more detail on any of the below categories, type the corresponding number*\n\n" +\
-                "\n".join(categoryEmbedString), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name} / {message.author.display_name}")
+                "\n".join(categoryEmbedString), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {interaction.user.name} / {interaction.user.display_name}")
 
-            await message.delete()
-            await outputchannel.send(embed = kinkemb)
+            await interaction.channel.send(embed = kinkemb)
 
             try:
                 msg = await client.wait_for('message', timeout = 30, check = check(message.author))
@@ -1572,22 +1560,18 @@ async def randloot(message):
 #---------------------------Helper Functions---------------------------------
 
 #Fetches name and ID of author, and loads the kinkdata from the sheet.
-async def getKinkData(message):
+async def getKinkData(target, interaction):
     kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
-    if "@" in message.content:
+    if target != None:
         try:
-            targid = int(str(message.content.split("@")[1]).split(" ")[0].replace("!","").replace("&","").replace(">",""))
+            targid = int(target[2:-1])
         except ValueError:
-            await message.channel.send(embed = discord.Embed(title = "Error!", description = "Make sure that the user you tagged is valid."))
+            await interaction.channel.send(embed = discord.Embed(title = "Error!", description = "Make sure that the user you tagged is valid.", colour = embcol))
             return
         targname = await client.fetch_user(targid)
     else:
-        targname = message.author
-    if message.author.discriminator == "0" or message.author.discriminator == None:
-        namestr = str(targname.name)
-    else:
-        namestr = str(targname.name + "#" + targname.discriminator)
-    return kinkdata, namestr, targname
+        targname = interaction.user
+    return kinkdata, targname
 
 #Fetches name and ID of author, and loads the kinkdata from the sheet.
 async def getKinkDataReact(message):

@@ -332,6 +332,81 @@ async def regCommunityProject(message):
     sheet.values().update(spreadsheetId = Plotsheet, range = "AS1:AX200", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=projdata)).execute()
     await message.channel.send(embed = discord.Embed(title = f"Success!", description = f"New community project generated", colour = embcol))
 
+async def spellrotate():
+
+    pins = await client.get_channel(menageriechannel).pins()
+    for a in range(len(pins)):
+        try:
+            if pins[a].embed[0].title == "Spells" and pins[a].author == client.user:
+                await pins[a].unpin()
+                break
+        except IndexError:
+            pass
+
+    cantrips = ["Acid Splash (Conjuration)","Chill Touch (Necromancy)","Dancing Lights (Evocation)","Druidcraft (Transmutation)","Eldritch Blast (Evocation)","Fire Bolt (Evocation)","Guidance (Divination)","Light (Evocation)","Mage Hand (Conjuration)","Mending (Transmutation)","Message (Transmutation)","Minor Illusion (Illusion)","Poison Spray (Conjuration)","Prestidigitation (Transmutation)","Produce Flame (Conjuration)","Ray of Frost (Evocation)","Resistance (Abjuration)","Sacred Flame (Evocation)","Shillelagh (Transmutation)","Shocking Grasp (Evocation)","Spare the Dying (Necromancy)","Thaumaturgy (Transmutation)","True Strike (Divination)","Vicious Mockery (Enchantment)"]
+    spell1s = ["Alarm (Abjuration (Ritual))","Animal Friendship (Enchantment)","Bane (Enchantment)","Bless (Enchantment)","Burning Hands (Evocation)","Charm Person (Enchantment)","Color Spray (Illusion)","Command (Enchantment)","Comprehend Languages (Divination (Ritual))","Create or Destroy Water (Transmutation)","Cure Wounds (Evocation)","Detect Evil and Good (Divination)","Detect Magic (Divination (Ritual))","Detect Poison and Disease (Divination (Ritual))","Disguise Self (Illusion)","Divine Favor (Evocation)","Entangle (Conjuration)","Expeditious Retreat (Transmutation)","Faerie Fire (Evocation)","False Life (Necromancy)","Feather Fall (Transmutation)","Find Familiar (Conjuration (Ritual))","Floating Disk (Conjuration (Ritual))","Fog Cloud (Conjuration)","Goodberry (Transmutation)","Grease (Conjuration)","Guiding Bolt (Evocation)","Healing Word (Evocation)","Hellish Rebuke (Evocation)","Heroism (Enchantment)","Hideous Laughter (Enchantment)","Hunter’s Mark (Divination)","Identify (Divination (Ritual))","Illusory Script (Illusion (Ritual))","Inflict Wounds (Necromancy)","Jump (Transmutation)","Longstrider (Transmutation)","Mage Armor (Abjuration)","Magic Missile (Evocation)","Protection from Evil and Good (Abjuration)","Purify Food and Drink (Transmutation (Ritual))","Sanctuary (Abjuration)","Shield (Abjuration)","Shield of Faith (Abjuration)","Silent Image (Illusion)","Sleep (Enchantment)","Speak with Animals (Divination (Ritual))","Thunderwave (Evocation)","Unseen Servant (Conjuration (Ritual))"]
+    spell2s = ["Acid Arrow (Evocation)","Aid (Abjuration)","Alter Self (Transmutation)","Animal Messenger (Enchantment (Ritual))","Arcane Lock (Abjuration)","Arcanist’s Magic Aura (Illusion)","Augury (Divination (Ritual))","Barkskin (Transmutation)","Blindness/Deafness (Necromancy)","Blur (Illusion)","Branding Smite (Evocation)","Calm Emotions (Enchantment)","Continual Flame (Evocation)","Darkness (Evocation)","Darkvision (Transmutation)","Detect Thoughts (Divination)","Enhance Ability (Transmutation)","Enlarge/Reduce (Transmutation)","Enthrall (Enchantment)","Find Steed (Conjuration)","Find Traps (Divination)","Flame Blade (Evocation)","Flaming Sphere (Conjuration)","Gentle Repose (Necromancy (Ritual))","Gust of Wind (Evocation)","Heat Metal (Transmutation)","Hold Person (Enchantment)","Invisibility (Illusion)","Knock (Transmutation)","Lesser Restoration (Abjuration)","Levitate (Transmutation)","Locate Animals or Plants (Divination (Ritual))","Locate Object (Divination)","Magic Mouth (Illusion (Ritual))","Magic Weapon (Transmutation)","Mirror Image (Illusion)","Misty Step (Conjuration)","Moonbeam (Evocation)","Pass without Trace (Abjuration)","Prayer of Healing (Evocation)","Protection from Poison (Abjuration)","Ray of Enfeeblement (Necromancy)","Rope Trick (Transmutation)","Scorching Ray (Evocation)","See Invisibility (Divination)","Shatter (Evocation)","Silence (Illusion)","Spider Climb (Transmutation)","Spike Growth (Transmutation)","Spiritual Weapon (Evocation (Ritual))","Suggestion (Enchantment)","Warding Bond (Abjuration)","Web (Conjuration)","Zone of Truth (Enchantment)"]
+    spell3s = ["Animate Dead (Necromancy)","Beacon of Hope (Abjuration)","Bestow Curse (Necromancy)","Blink (Transmutation)","Call Lightning (Conjuration)","Clairvoyance (Divination)","Conjure Animals (Conjuration)","Counterspell (Abjuration)","Create Food and Water (Conjuration)","Daylight (Evocation)","Dispel Magic (Abjuration)","Fear (Illusion)","Fireball (Evocation)","Fly (Transmutation)","Gaseous Form (Transmutation)","Glyph of Warding (Abjuration)","Haste (Transmutation)","Hypnotic Pattern (Illusion)","Lightning Bolt (Evocation)","Magic Circle (Abjuration)","Major Image (Illusion)","Mass Healing Word (Evocation)","Meld into Stone (Transmutation (Ritual))","Nondetection (Abjuration)","Phantom Steed (Illusion (Ritual))","Plant Growth (Transmutation)","Protection from Energy (Abjuration)","Remove Curse (Abjuration)","Revivify (Necromancy)","Sending (Evocation)","Sleet Storm (Conjuration)","Slow (Transmutation)","Speak with Dead (Necromancy)","Speak with Plants (Transmutation)","Spirit Guardians (Conjuration)","Stinking Cloud (Conjuration)","Tiny Hut (Evocation (Ritual))","Tongues (Divination)","Vampiric Touch (Necromancy)","Water Breathing (Transmutation (Ritual))","Water Walk (Transmutation (Ritual))","Wind Wall (Evocation)"]
+    spell4s = ["Arcane Eye (Divination)","Banishment (Abjuration)","Black Tentacles (Conjuration)","Blight (Necromancy)","Compulsion (Enchantment)","Confusion (Enchantment)","Conjure Minor Elementals (Conjuration)","Conjure Woodland Beings (Conjuration)","Control Water (Transmutation)","Death Ward (Abjuration)","Dimension Door (Conjuration)","Divination (Divination (Ritual))","Dominate Beast (Enchantment)","Fabricate (Transmutation)","Faithful Hound (Conjuration)","Fire Shield (Evocation)","Freedom of Movement (Abjuration)","Giant Insect (Transmutation)","Greater Invisibility (Illusion)","Guardian of Faith (Conjuration)","Hallucinatory Terrain (Illusion)","Ice Storm (Evocation)","Locate Creature (Divination)","Phantasmal Killer (Illusion)","Polymorph (Transmutation)","Private Sanctum (Abjuration)","Resilient Sphere (Evocation)","Secret Chest (Conjuration)","Stone Shape (Transmutation)","Stoneskin (Abjuration)","Wall of Fire (Evocation)"]
+    spell5s = ["Animate Objects (Transmutation)","Antilife Shell (Abjuration)","Arcane Hand (Evocation)","Awaken (Transmutation)","Cloudkill (Conjuration)","Commune (Divination (Ritual))","Commune with Nature (Divination (Ritual))","Cone of Cold (Evocation)","Conjure Elemental (Conjuration)","Contact Other Plane (Divination (Ritual))","Contagion (Necromancy)","Creation (Illusion)","Dispel Evil and Good (Abjuration)","Dominate Person (Enchantment)","Dream (Illusion)","Flame Strike (Evocation)","Geas (Enchantment)","Greater Restoration (Abjuration)","Hallow (Evocation)","Hold Monster (Enchantment)","Insect Plague (Conjuration)","Legend Lore (Divination)","Mass Cure Wounds (Evocation)","Mislead (Illusion)","Modify Memory (Enchantment)","Passwall (Transmutation)","Planar Binding (Abjuration)","Raise Dead (Necromancy)","Reincarnate (Transmutation)","Scrying (Divination)","Seeming (Illusion)","Telekinesis (Transmutation)","Telepathic Bond (Divination (Ritual))","Teleportation Circle (Conjuration)","Tree Stride (Conjuration)","Wall of Force (Evocation)","Wall of Stone (Evocation)"]
+    spell6s = ["Blade Barrier (Evocation)","Chain Lightning (Evocation)","Circle of Death (Necromancy)","Conjure Fey (Conjuration)","Contingency (Evocation)","Create Undead (Necromancy)","Disintegrate (Transmutation)","Eyebite (Necromancy)","Find the Path (Divination)","Flesh to Stone (Transmutation)","Forbiddance (Abjuration (Ritual))","Freezing Sphere (Evocation)","Globe of Invulnerability (Abjuration)","Guards and Wards (Abjuration)","Harm (Necromancy)","Heal (Evocation)","Heroes’ Feast (Conjuration)","Instant Summons (Conjuration (Ritual))","Irresistible Dance (Enchantment)","Magic Jar (Necromancy)","Mass Suggestion (Enchantment)","Move Earth (Transmutation)","Planar Ally (Conjuration)","Programmed Illusion (Illusion)","Sunbeam (Evocation)","Transport via Plants (Conjuration)","True Seeing (Divination)","Wall of Ice (Evocation)","Wall of Thorns (Conjuration)","Wind Walk (Transmutation)","Word of Recall (Conjuration)"]
+    spell7s = ["Arcane Sword (Evocation)","Conjure Celestial (Conjuration)","Delayed Blast Fireball (Evocation)","Divine Word (Evocation)","Etherealness (Transmutation)","Finger of Death (Necromancy)","Fire Storm (Evocation)","Forcecage (Evocation)","Magnificent Mansion (Conjuration)","Mirage Arcane (Illusion)","Prismatic Spray (Evocation)","Project Image (Illusion)","Regenerate (Transmutation)","Resurrection (Necromancy)","Reverse Gravity (Transmutation)","Sequester (Transmutation)","Simulacrum (Illusion)","Symbol (Abjuration)","Teleport (Conjuration)"]
+
+    cantsin = random.randint(2,8)
+    spell1sin = random.randint(2,8)
+    spell2sin = random.randint(1,8)
+    spell3sin = random.randint(1,10)
+    spell4sin = random.randint(2,8)
+    spell5sin = random.randint(0,7)
+    spell6sin = random.randint(0,5)
+    spell7sin = random.randint(0,3)
+
+    spellsin = ["**Cantrips**"]
+    cantrips = sample(cantrips, cantsin)
+    spell1s = sample(spell1s, spell1sin)
+    spell2s = sample(spell2s, spell2sin)
+    spell3s = sample(spell3s, spell3sin)
+    spell4s = sample(spell4s, spell4sin)
+    spell5s = sample(spell5s, spell5sin)
+    spell6s = sample(spell6s, spell6sin)
+    spell7s = sample(spell7s, spell7sin)
+
+    for a in range(len(cantrips)):
+        spellsin.append(str(cantrips[a]) + str(" " + str(int(random.randint(2,7)/2 + random.randint(11,21))) + dezzieemj))
+    spellsin.append("\n**First Level Spells**")
+
+    for a in range(len(spell1s)):
+        spellsin.append(str(spell1s[a]) + str(" " + str(int(random.randint(1,6)*5 + random.randint(21,121))) + dezzieemj))
+    spellsin.append("\n**Second Level Spells**")
+
+    for a in range(len(spell2s)):
+        spellsin.append(str(spell2s[a]) + str(" " + str(int(random.randint(2,20)*50 + random.randint(21,121))) + dezzieemj))
+    spellsin.append("\n**Third Level Spells**")
+
+    for a in range(len(spell3s)):
+        spellsin.append(str(spell3s[a]) + str(" " + str(int(random.randint(1,6)*50 + random.randint(201,301))) + dezzieemj))
+    spellsin.append("\n**Fouth Level Spells**")
+
+    for a in range(len(spell4s)):
+        spellsin.append(str(spell4s[a]) + str(" " + str(int(random.randint(1,6)*50 + random.randint(201,301))) + dezzieemj))
+    spellsin.append("\n**Fifth Level Spells**")
+
+    for a in range(len(spell5s)):
+        spellsin.append(str(spell5s[a]) + str(" " + str(int(random.randint(1,6)*50 + random.randint(201,301))) + dezzieemj))
+    spellsin.append("\n**Sixth Level Spells**")
+
+    for a in range(len(spell6s)):
+        spellsin.append(str(spell6s[a]) + str(" " + str(int(random.randint(2,5)*500 + random.randint(2001,2101))) + dezzieemj))
+    spellsin.append("\n**Seventh Level Spells**")
+
+    for a in range(len(spell7s)):
+        spellsin.append(str(spell7s[a]) + str(" " + str(int(random.randint(2,5)*500 + random.randint(2001,2101))) + dezzieemj))
+    spelllist = "Runar has the following spellscrolls available right now:\n\n" + "\n".join(spellsin) + "\n\nCustom scribed scrolls can also be requested, at the following prices:\n\nCantrips: 24 " + dezzieemj + ", 1 day to make\n1st Levels: 423" + dezzieemj + ", 1 day to make\n2nd Levels: 445" + dezzieemj + ", 3 days to make\n3rd Levels: 1350" + dezzieemj + ", 1 week to make\n4th Levels: 1550" + dezzieemj + ", 2 weeks to make\n5th Levels: 1800"  + dezzieemj + ", 4 weeks to make\n6th Levels: 6100" + dezzieemj + ", 8 weeks to make\n7th Levels: 7100" + dezzieemj + ", 16 weeks to make.\n\nSpeak to a member of the Lore or Face teams to purchase one of these scrolls."
+
+    msg = await client.get_channel(menageriechannel).send(embed = discord.Embed(title = "Spells", description = spelllist, colour = embcol))
+
+    await msg.pin()
+
 #TODO: Complete rewrite eventually
 async def scenes(message):
     await message.delete()

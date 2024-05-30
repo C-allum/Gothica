@@ -121,6 +121,7 @@ if liveVersion: #Set to 1 to use the real spreadsheets, or 0 to use the testing 
     oocchannel = 832435243117445131
     welcchannel = 828411760847356005
     servermemberlog = 841736084362362940
+    menageriechannel = 917239168969621515
 
 else:
 
@@ -171,6 +172,7 @@ else:
     oocchannel = 1031671413607776327
     welcchannel = 1031671413607776327
     servermemberlog = botchannel
+    menageriechannel = botchannel
 
 
 sheet = service.spreadsheets()
