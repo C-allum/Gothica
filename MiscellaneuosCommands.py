@@ -337,7 +337,7 @@ async def spellrotate():
     pins = await client.get_channel(menageriechannel).pins()
     for a in range(len(pins)):
         try:
-            if pins[a].embed[0].title == "Spells" and pins[a].author == client.user:
+            if pins[a].embeds[0].title == "Spells" and pins[a].author == client.user:
                 await pins[a].unpin()
                 break
         except IndexError:
