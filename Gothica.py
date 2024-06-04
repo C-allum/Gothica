@@ -1703,12 +1703,9 @@ async def on_raw_reaction_add(reaction):
         #         pass
 
     if reaction.emoji.name =="kinklist":
-
         dmchannel = await client.fetch_user(int(reaction.member.id))
-
-        mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
-
-        await KinklistCommands.kinklist(mess, dmchannel, "Reaction")
+        msg = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
+        await KinklistCommands.kinklistA(msg.author, dmchannel, "Reaction", None)
 
     elif reaction.emoji.name == "❓":
         mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
