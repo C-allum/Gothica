@@ -723,7 +723,15 @@ async def chartransfer(message):
     await message.delete()       
 
 #Character List Subroutine
-async def charlist(message):
+@tree.command(
+        name="charlist",
+        description="Allows you to look at your own, or others charlists."
+)
+@app_commands.describe(
+    player = "The name of the recipient. Use @username."
+)
+@app_commands.checks.has_role("Verified")
+async def charlist(interaction, player:str=""):
 
     #Show character lists
 
@@ -740,95 +748,90 @@ async def charlist(message):
     pcharsact = 0
     pcharsun = 0
 
-    waitmess = await message.channel.send("We are processing your request now.")
-
-    if not " " in message.content:
-        message.content += " " + message.author.name
-
-    if "help" in message.content.lower():
-        message.content = "%help charlist"
-        await helplist(message)
-        return
-
+    waitmess = await interaction.channel.send("We are processing your request now.")
+    content = "%charlist"
+    if player == "":
+        content += " " + f"<@{interaction.user.id}>"
     else:
+        content += " " + player
 
-        #Show other user's Characters
+    #Show other user's Characters
 
-        pnames = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B4000").execute().get("values")
+    pnames = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B4000").execute().get("values")
 
-        if "@" in message.content:
+    if "@" in content:
 
-            targidpar = message.content.split("@")[1]
+        targidpar = content.split("@")[1]
 
-            targid = targidpar.replace("!","")
-            targid = targid.replace("&","")
-            targid = int(targid.replace(">",""))
+        targid = targidpar.replace("!","")
+        targid = targid.replace("&","")
+        targid = int(targid.replace(">",""))
 
-            targname = await client.fetch_user(targid)
+        targname = await client.fetch_user(targid)
 
-            targname = str(targname).split("#")[0]
+        targname = str(targname).split("#")[0]
 
-        else: 
+    else: 
 
-            targname = message.content.split(" ")[1]
+        targname = content.split(" ")[1]
 
-        pindex = []
+    pindex = []
 
-        for i in range(len(pnames)):
-            if pnames[i][0].lower() == targname.lower():
-                pindex.append(i)
+    for i in range(len(pnames)):
+        if pnames[i][0].lower() == targname.lower():
+            pindex.append(i)
 
-        if pindex != []:
-            charreg = sheet.values().get(spreadsheetId = CharSheet, range = "A1:AB" + str(pindex[-1]+1)).execute().get("values")
-            for j in range(len(pindex)):
+    if pindex != []:
+        charreg = sheet.values().get(spreadsheetId = CharSheet, range = "A1:AB" + str(pindex[-1]+1)).execute().get("values")
+        for j in range(len(pindex)):
 
-                #Get Char data
-                cname = str(charreg[pindex[j]][5])
-                cstat = str(charreg[pindex[j]][23])
-                try:
-                    cshort = str(charreg[pindex[j]][22])
-                except IndexError:
-                    cshort = None
-                try:
-                    npcplayers = str(charreg[pindex[j]][27])
-                except IndexError:
-                    npcplayers = None
+            #Get Char data
+            cname = str(charreg[pindex[j]][5])
+            cstat = str(charreg[pindex[j]][23])
+            try:
+                cshort = str(charreg[pindex[j]][22])
+            except IndexError:
+                cshort = None
+            try:
+                npcplayers = str(charreg[pindex[j]][27])
+            except IndexError:
+                npcplayers = None
 
-                if cstat == "Active":
-                    if cshort != None and cshort != "":
-                        clist.append("**" + cname + "** - " + cshort)
-                    else:
-                        clist.append("**" + cname + "**")
-                    pcharsact += 1
-                elif cstat == "DMPC":
-                    if npcplayers != None:
-                        npclist.append("**" + cname + "** - " + cshort + " - DMPC\n   Also played by: " + npcplayers)
-                    else:
-                        npclist.append("**" + cname + "** - " + cshort + " - DMPC")
+            if cstat == "Active":
+                if cshort != None and cshort != "":
+                    clist.append("**" + cname + "** - " + cshort)
                 else:
-                    clist.append("~~" + cname + " (" + cstat + ")~~")
-                    if cstat == "Unavailable":
-                        pcharsun +=1
-
-        if len(npclist) != 0:
-            clist.append("-------------------------------------------------------------")
-            for k in range(len(npclist)):
-                clist.append(npclist[k])
-        
-        tit = targname + "'s Character List"
-
-        if clist == []:
-            desc[0] = targname + " has no registered characters"
-        else:
-            for elem in clist:
-                if len(desc[-1] + elem) + 4 < 4096: 
-                    desc[-1] += "\n\n" + elem.strip("[]'")
+                    clist.append("**" + cname + "**")
+                pcharsact += 1
+            elif cstat == "DMPC":
+                if npcplayers != None:
+                    npclist.append("**" + cname + "** - " + cshort + " - DMPC\n   Also played by: " + npcplayers)
                 else:
-                    desc.append(elem.strip("[]'"))
+                    npclist.append("**" + cname + "** - " + cshort + " - DMPC")
+            else:
+                clist.append("~~" + cname + " (" + cstat + ")~~")
+                if cstat == "Unavailable":
+                    pcharsun +=1
 
-    roles = str(str(message.author.roles))
+    if len(npclist) != 0:
+        clist.append("-------------------------------------------------------------")
+        for k in range(len(npclist)):
+            clist.append(npclist[k])
+    
+    tit = targname + "'s Character List"
 
-    player_econ_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0])
+    if clist == []:
+        desc[0] = targname + " has no registered characters"
+    else:
+        for elem in clist:
+            if len(desc[-1] + elem) + 4 < 4096: 
+                desc[-1] += "\n\n" + elem.strip("[]'")
+            else:
+                desc.append(elem.strip("[]'"))
+
+    roles = str(str(interaction.user.roles))
+
+    player_econ_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(interaction.user.id) in x][0])
     maxchars = startingslots + int(GlobalVars.economyData[player_econ_index + 2][1])
 
 
@@ -838,7 +841,7 @@ async def charlist(message):
             emb = discord.Embed(title = tit, description = desc[desc_index], colour = embcol)
         else:
             emb = discord.Embed(description = desc[desc_index], colour = embcol)
-        if str(message.author.name) == targname:
+        if str(interaction.user.name) == targname:
             if pcharsact == 1:
                 if pcharsun == 0:
                     emb.set_footer(text = "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active character, out of " + str(maxchars) + " slots." )
@@ -853,13 +856,12 @@ async def charlist(message):
                     emb.set_footer(text = "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active characters, and " + str(pcharsun) + " unavailable character (" + str(pcharsact + pcharsun) + " in total), out of " + str(maxchars) + " slots." )    
                 else:
                     emb.set_footer(text = "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active characters, and " + str(pcharsun) + " unavailable characters (" + str(pcharsact + pcharsun) + " in total), out of " + str(maxchars) + " slots." )    
-        elif str(message.author.name) != targname:
-            emb.set_footer(text = "-------------------------------------------------------------\n\nThis search was summoned by " + str(message.author.name))
+        elif str(interaction.user.name) != targname:
+            emb.set_footer(text = "-------------------------------------------------------------\n\nThis search was summoned by " + str(interaction.user.name))
         
-        await message.channel.send(embed=emb)
+        await interaction.channel.send(embed=emb)
         desc_index += 1
-    print(message.author.name + " summoned a charlist for " + targname)
-    await message.delete()
+    print(interaction.user.name + " summoned a charlist for " + targname)
     await waitmess.delete()
 
 #Search Subroutine
