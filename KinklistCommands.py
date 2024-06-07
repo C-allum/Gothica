@@ -18,7 +18,7 @@ async def kinklist(interaction, user: str = None):
 
 async def kinklistA(user, outputchannel, trigger, interaction):
     if trigger == "Command":
-        kinkdata, targ = await getKinkData(user, interaction)
+        kinkdata, targ = await getKinkDataNew(user, interaction)
         categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
     else:
         kinkdata = await getKinkDataReact()
@@ -1649,7 +1649,7 @@ async def randloot(message):
 #---------------------------Helper Functions---------------------------------
 
 #Fetches name and ID of author, and loads the kinkdata from the sheet.
-async def getKinkData(target, interaction):
+async def getKinkDataNew(target, interaction):
     kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
     if target != None:
         try:
@@ -1661,6 +1661,23 @@ async def getKinkData(target, interaction):
     else:
         targname = interaction.user
     return kinkdata, targname
+
+async def getKinkData(message):
+    kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
+    if "@" in message.content:
+        try:
+            targid = int(str(message.content.split("@")[1]).split(" ")[0].replace("!","").replace("&","").replace(">",""))
+        except ValueError:
+            await message.channel.send(embed = discord.Embed(title = "Error!", description = "Make sure that the user you tagged is valid.", colour = embcol))
+            return
+        targname = await client.fetch_user(targid)
+    else:
+        targname = message.author
+    if message.author.discriminator == "0" or message.author.discriminator == None:
+        namestr = str(targname.name)
+    else:
+        namestr = str(targname.name + "#" + targname.discriminator)
+    return kinkdata, namestr, targname
 
 #Fetches name and ID of author, and loads the kinkdata from the sheet.
 async def getKinkDataReact():
