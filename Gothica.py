@@ -164,7 +164,7 @@ async def on_ready():
 
     print("\n------------------------------------------------------\n")
     tree.add_command(staffgroup)
-    tree.add_command(moderatorgroup)
+    tree.add_command(admingroup)
     my_guild = discord.Object(id=int(guildid))
     tree.copy_global_to(guild=my_guild)
     await tree.sync(guild=my_guild)

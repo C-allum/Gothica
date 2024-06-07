@@ -721,6 +721,8 @@ async def giveitem(interaction, recipient:str, amount:int=0):
     searchterm = "The name of the item. Doesn't have to be accurate.",
     amount = "Enter the amount you want to buy"
 )
+@app_commands.default_permissions(manage_messages=True)
+@app_commands.checks.has_role("Staff")
 #Guides a staff member through adding an item to a players inventory
 async def additem(interaction, recipient:str, searchterm:str, amount:int=1):
     await interaction.response.defer(ephemeral=True, thinking=False)
@@ -1053,6 +1055,8 @@ async def additem(interaction, recipient:str, searchterm:str, amount:int=1):
 @app_commands.describe(
     amount = "Enter the amount of dezzies you want to gift to everyone"
 )
+@app_commands.default_permissions(manage_messages=True)
+@app_commands.checks.has_role("Staff")
 #Allows a staff member to gift dezzies to everyone
 async def giftAll(interaction, amount:int):
     await interaction.response.defer(ephemeral=True, thinking=False)
@@ -1125,6 +1129,8 @@ async def giveMoney(interaction, recipient:str, amount:int):
     recipient = "The name of the recipient. Use @username.",
     amount = "Enter the amount of dezzies you want to gift to the recipient"
 )
+@app_commands.default_permissions(manage_messages=True)
+@app_commands.checks.has_role("Staff")
 #Guides a staff member through adding money to a players balance
 async def addMoney(interaction, recipient:str, amount:int):
     await interaction.response.defer(ephemeral=True, thinking=False)
@@ -1149,6 +1155,8 @@ async def addMoney(interaction, recipient:str, amount:int):
     recipient = "The name of the recipient. Use @username.",
     amount = "Enter the amount of dezzies you want to take away from the recipient"
 )
+@app_commands.default_permissions(manage_messages=True)
+@app_commands.checks.has_role("Staff")
 #Guides staff member through removing money from a players balance
 async def removeMoney(interaction, recipient:str, amount:int):
     amount = message.content.split(" ")[-1]
@@ -1473,20 +1481,24 @@ async def togglenotif(interaction: discord.Interaction):
     await interaction.followup.send("Done!")
 
 
-@moderatorgroup.command(
+@admingroup.command(
         name="reloadeconomy",
         description="Reload economy+inventory from the sheets into Gothys memory. Use /maintenance before and after."
 )
+@app_commands.checks.has_role("Admin")
+@app_commands.default_permissions(manage_messages=True)
 async def reloadecon(interaction):
     await interaction.response.defer(ephemeral=True, thinking=False)
     await loadEconomySheet()
     await interaction.followup.send("Successfully finished the task!")
 
 
-@moderatorgroup.command(
+@admingroup.command(
         name="maintenance",
         description="Puts gothica in maintenance mode. That means that every user is ignored, except staff."
 )
+@app_commands.checks.has_role("Admin")
+@app_commands.default_permissions(manage_messages=True)
 async def maintenance(interaction):
     await interaction.response.defer(ephemeral=True, thinking=False)
     if GlobalVars.maintenance_mode == True:
@@ -1498,10 +1510,12 @@ async def maintenance(interaction):
     await interaction.followup.send("Successfully finished the task!")
 
 
-@moderatorgroup.command(
+@admingroup.command(
     name="reloadshops",
     description="Reloads item sheets from the google sheet."
 )
+@app_commands.checks.has_role("Admin")
+@app_commands.default_permissions(manage_messages=True)
 async def reloadshops(interaction):
     await interaction.response.defer(ephemeral=True, thinking=False)
     await loadItemSheet()
@@ -1556,6 +1570,8 @@ async def bid(interaction, character:str, amount:int):
 @app_commands.describe(
     characters = "Characters to be auctioned off. Separate them with | (name1|name2|name3...)"
 )
+@app_commands.default_permissions(manage_messages=True)
+@app_commands.checks.has_role("Staff")
 async def auctionsetup(interaction, characters:str):
     await interaction.response.defer(ephemeral=True, thinking=False)
     for a in range(len(characters.split("|"))):
@@ -1590,6 +1606,8 @@ async def bidresults(interaction):
         name="auctionend",
         description="Ends an auction."
 )
+@app_commands.default_permissions(manage_messages=True)
+@app_commands.checks.has_role("Staff")
 async def endauction(interaction): 
     await interaction.response.defer(ephemeral=True, thinking=False)
 
@@ -1645,6 +1663,8 @@ async def endauction(interaction):
 @app_commands.describe(
     character = "Slave to reset the bids on."
 )
+@app_commands.default_permissions(manage_messages=True)
+@app_commands.checks.has_role("Staff")
 async def bidreset(interaction, character:str):
     await interaction.response.defer(ephemeral=True, thinking=False)
     bidtarget = character
@@ -1679,6 +1699,8 @@ async def bidreset(interaction, character:str):
     player="Player that owns the bid. Use @user",
     amount="Amount of the bid."
 )
+@app_commands.default_permissions(manage_messages=True)
+@app_commands.checks.has_role("Staff")
 async def bidset(interaction, character:str, player:str, amount:int):
     await interaction.response.defer(ephemeral=True, thinking=False)
 
@@ -1703,6 +1725,8 @@ async def bidset(interaction, character:str, player:str, amount:int):
         name="auctionthread",
         description="sets the bid thread to the thread the command is called in."
 )  
+@app_commands.default_permissions(manage_messages=True)
+@app_commands.checks.has_role("Staff")
 async def auctionthread(interaction):
     await interaction.response.defer(ephemeral=True, thinking=False)
     bidthread = interaction.channel

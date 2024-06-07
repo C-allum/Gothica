@@ -70,7 +70,7 @@ gc = gspread.service_account(filename = SERVICE_ACCOUNT_FILE)
 config_file_path = "config.yaml"
 #-----------------LIVE VERSION/BETA TOGGLE---------------
 # 0 is Test Server, 1 is Live Server
-liveVersion = 1
+liveVersion = 0
 token = ""
 
 #Sheet Locations:
@@ -192,16 +192,27 @@ for i in range(len(headers)):
 
 
 #Slash command groups
-@discord.app_commands.checks.has_role("Staff")
-class Staff(discord.app_commands.Group):
-    pass
+class RoleCheckedGroup(discord.app_commands.Group):
+    def __init__(self, name, description, role_name, *args, **kwargs):
+        super().__init__(name=name, description=description, *args, **kwargs)
+        self.required_role = role_name
 
-@discord.app_commands.checks.has_role("Moderator")
-class Moderator(discord.app_commands.Group):
-    pass
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if self.required_role in [role.name for role in interaction.user.roles]:
+            return True
+        await interaction.response.send_message(f"You do not have the required role to use this command: {self.required_role}", ephemeral=True)
+        return False
 
-staffgroup = Staff(name="staff", description="Staff Commands")
-moderatorgroup = Moderator(name="moderator", description="Moderator Commands")
+#@discord.app_commands.checks.has_role("Staff")
+#class Staff(discord.app_commands.Group):
+#    pass
+#
+#@discord.app_commands.checks.has_role("Admin")
+#class Moderator(discord.app_commands.Group):
+#    pass
+
+staffgroup = RoleCheckedGroup(name="staff", description="Staff Commands", role_name="Staff")
+admingroup = RoleCheckedGroup(name="admin", description="Moderator Commands", role_name="Admin")
 
 #channels
 if liveVersion:

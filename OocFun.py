@@ -110,6 +110,8 @@ async def setgag(message):
 
 @staffgroup.command(name = "emote", description = "Sends a string of letters as emotes to any message.")
 @app_commands.describe(message = "The link to the message to react to.", emotes = "The word or words to send. It works best when there are no duplicate letters.")
+@app_commands.checks.has_role("Staff")
+@app_commands.default_permissions(manage_messages=True)
 async def emote(interaction, message: str, emotes: str):
     await interaction.response.defer(ephemeral=True, thinking=False)
     chan = message.split("/")[5]

@@ -1759,6 +1759,8 @@ async def breakscene(interaction):
 
 @staffgroup.command(name = "oocmsg", description = "Sends a message from Gothica to ooc (or anywhere else)")
 @app_commands.describe(message = "The contents of the message", channel = "The channel in which to send the message (defaults to ooc).")
+@app_commands.checks.has_role("Staff")
+@app_commands.default_permissions(manage_messages=True)
 async def oocmsg(interaction, message: str, channel: str = None):
     await interaction.response.defer(ephemeral=True, thinking=False)
     if channel != None:
@@ -1772,6 +1774,8 @@ async def oocmsg(interaction, message: str, channel: str = None):
 
 @staffgroup.command(name = "verify", description = "Verifies a user and adds them to the economy.")
 @app_commands.describe(user = "The user to verify. This should be in the form of @username.")
+@app_commands.checks.has_role("Staff")
+@app_commands.default_permissions(manage_messages=True)
 async def verify(interaction, user: str):
     await interaction.response.defer(ephemeral=True, thinking=False)
     veruser = (await interaction.guild.query_members(user_ids=[user[2:-1]]))[0]
@@ -1870,6 +1874,8 @@ async def embed(interaction, time: str, timezone: str = None):
     await interaction.followup.send("Timestamp Generated")
 
 @staffgroup.command(name = "helplist", description = "Lists all converted slash commands")
+@app_commands.checks.has_role("Staff")
+@app_commands.default_permissions(manage_messages=True)
 async def helplist(interaction):
     await interaction.response.defer(ephemeral=True, thinking=False)
     coms = []
