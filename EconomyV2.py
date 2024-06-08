@@ -1159,16 +1159,16 @@ async def addMoney(interaction, recipient:str, amount:int):
 @app_commands.checks.has_role("Staff")
 #Guides staff member through removing money from a players balance
 async def removeMoney(interaction, recipient:str, amount:int):
-    amount = message.content.split(" ")[-1]
+    await interaction.response.defer(ephemeral=True, thinking=False)
     recipient_name, recipient_id = await getUserNamestrInteraction(interaction, recipient)
     recipient_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(recipient_id) in x][0])
     if await removeDezziesFromPlayerWithoutMessage(int(amount), recipient_id):
         new_balance = GlobalVars.economyData[recipient_row_index+1][1]
-        await message.channel.send(embed=discord.Embed(title=f"Removed {amount}{dezzieemj} from {GlobalVars.economyData[recipient_row_index][0]}'s balance!", description=f"Their new balance is {new_balance}{dezzieemj}.", colour = embcol))
+        await interaction.channel.send(embed=discord.Embed(title=f"Removed {amount}{dezzieemj} from {GlobalVars.economyData[recipient_row_index][0]}'s balance!", description=f"Their new balance is {new_balance}{dezzieemj}.", colour = embcol))
         
         TransactionsDatabaseInterface.addTransaction(recipient_name, TransactionsDatabaseInterface.DezzieMovingAction.Remove, -int(amount))
     else:
-        await message.channel.send(embed=discord.Embed(title=f"Could not remove {amount}{dezzieemj} from {GlobalVars.economyData[recipient_row_index][0]}'s balance! They only have {GlobalVars.economyData[recipient_row_index+1][1]}{dezzieemj}!", colour = embcol))
+        await interaction.channel.send(embed=discord.Embed(title=f"Could not remove {amount}{dezzieemj} from {GlobalVars.economyData[recipient_row_index][0]}'s balance! They only have {GlobalVars.economyData[recipient_row_index+1][1]}{dezzieemj}!", colour = embcol))
     await interaction.followup.send("Successfully finished the task!")
 
 #Allows user to use item.
