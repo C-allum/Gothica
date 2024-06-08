@@ -382,18 +382,6 @@ async def on_message(message):
 
                 await CharRegistry.chartransfer(message)
 
-            #Character List Subroutine - On CharRegistry, untested
-            elif (message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "charlist") or message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "list")) and not isbot:
-                await CharRegistry.charlist(message)
-
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "catalogue"):
-                  await CharRegistry.catalogue(message)
-
-            #Search Subroutine - On CharRegistry, untested
-            elif (message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "search") or message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "char")or message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "show")) and not isbot:
-
-                await CharRegistry.charsearch(message, message.channel)
-
             #Retire Command - On CharRegistry, untested
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "retire") and not isbot:
 
