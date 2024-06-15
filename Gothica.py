@@ -753,10 +753,6 @@ async def on_message(message):
 
                 await message.channel.send(embed = discord.Embed(title = "Plothook Leaderboard", description = "\n".join(sortlist), colour = embcol))
 
-            #Staff Vacation Command
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "vacation") and ("staff" in str(message.author.roles).lower()):
-                await MiscellaneuosCommands.staffVacation(message)
-
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "mvp") and ("mod team" in str(message.author.roles).lower()):
                 print("Running")
                 MVProle = discord.utils.get(message.guild.roles, name="Staff MVP")
