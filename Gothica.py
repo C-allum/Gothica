@@ -1691,11 +1691,11 @@ async def on_raw_reaction_add(reaction):
         msg = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
         await KinklistCommands.kinklistA(msg.author, dmchannel, "Reaction", None)
 
-    elif reaction.emoji.name == "❓":
-        mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
-        dmchannel = await client.fetch_user(int(reaction.member.id))
-        await client.get_channel(logchannel).send(str(reaction.member.name) + " queried the tupper of " + str(mess.author.name))
-        await CharRegistry.charsearch("%search " + mess.author.name, dmchannel)
+    # elif reaction.emoji.name == "❓":
+    #     mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
+    #     dmchannel = await client.fetch_user(int(reaction.member.id))
+    #     await client.get_channel(logchannel).send(str(reaction.member.name) + " queried the tupper of " + str(mess.author.name))
+    #     await CharRegistry.charsearch("%search " + mess.author.name, dmchannel)
 
     #Black market react
     elif mess.id == 1089020124025061406 and reaction.emoji.name == "cuffs":
@@ -1713,8 +1713,26 @@ async def on_raw_reaction_add(reaction):
 
     elif reaction.emoji.name == "smiling_imp":
         await MiscellaneuosCommands.impTomeSpawn(mess)
-    #if liveVersion == 0:
-        #print(reaction)
+
+    elif reaction.emoji.name == "🔴":
+        if mess.author.bot:
+            try:
+                playerID, imgURL, charName = await TupperDatabase.lookup(mess.author.display_avatar, mess)
+                try:
+                    player = await client.fetch_user(playerID)
+                    player = " The player who sent the message was " + player.name + "/ " + player.display_name + ", and their tupper has the name of " + mess.author.name
+                except discord.errors.NotFound:
+                    player = " The player who sent the message could not be found, but the bot post uses the name of " + mess.author.display_name + ", and if it is a tupper, you should be able to identify it by reacting to it with ❓."
+            except IndexError:
+                player = " The player who sent the message could not be found, but the bot post uses the name of " + mess.author.display_name + ", and if it is a tupper, you should be able to identify it by reacting to it with ❓."
+        else:
+            playerID = mess.author.id
+            player = await client.fetch_user(playerID)
+            player = " The player who sent the message was " + mess.author.name + "/ " + mess.author.display_name
+        await client.get_channel(arbchannel).send("<@&1145870554503585872>, " + reaction.member.name + "/ " + reaction.member.display_name + " has reacted to a message with a red circle. Could somebody check in to ensure everything is ok?\n\nHere's the relevant information:\nThe message (" + mess.jump_url + ") was sent in " + mess.channel.name + " at " + str(mess.created_at).split(".")[0] + ".\n" + reaction.member.name + " reacted to it with a red circle at " + str(datetime.now()).split(".")[0]  + "\n" + player)
+
+    if liveVersion == 0:
+        print(reaction)
 
 @client.event
 async def on_raw_reaction_remove(reaction):

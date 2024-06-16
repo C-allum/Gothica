@@ -70,7 +70,7 @@ gc = gspread.service_account(filename = SERVICE_ACCOUNT_FILE)
 config_file_path = "config.yaml"
 #-----------------LIVE VERSION/BETA TOGGLE---------------
 # 0 is Test Server, 1 is Live Server
-liveVersion = 1
+liveVersion = 0
 token = ""
 
 #Sheet Locations:
@@ -123,6 +123,7 @@ if liveVersion: #Set to 1 to use the real spreadsheets, or 0 to use the testing 
     servermemberlog = 841736084362362940
     menageriechannel = 917239168969621515
     vacationthread = 1251657363425853500
+    arbchannel = 1145240920296538162
 
 else:
 
@@ -176,6 +177,7 @@ else:
     welcchannel = 1031671413607776327
     servermemberlog = botchannel
     menageriechannel = botchannel
+    arbchannel = botchannel
 
 
 sheet = service.spreadsheets()
