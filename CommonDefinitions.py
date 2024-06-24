@@ -122,6 +122,8 @@ if liveVersion: #Set to 1 to use the real spreadsheets, or 0 to use the testing 
     welcchannel = 828411760847356005
     servermemberlog = 841736084362362940
     menageriechannel = 917239168969621515
+    vacationthread = 1251657363425853500
+    arbchannel = 1145240920296538162
 
 else:
 
@@ -169,10 +171,13 @@ else:
 
     guildid = 847968618167795782
 
+    vacationthread = 1251656171291676723
+
     oocchannel = 1031671413607776327
     welcchannel = 1031671413607776327
     servermemberlog = botchannel
     menageriechannel = botchannel
+    arbchannel = botchannel
 
 
 sheet = service.spreadsheets()

@@ -733,6 +733,8 @@ async def chartransfer(message):
 @app_commands.checks.has_role("Verified")
 async def charlist(interaction, player:str=""):
 
+    await interaction.response.defer(ephemeral=True, thinking=False)
+
     #Show character lists
 
     tit = None
@@ -748,7 +750,6 @@ async def charlist(interaction, player:str=""):
     pcharsact = 0
     pcharsun = 0
 
-    waitmess = await interaction.channel.send("We are processing your request now.")
     content = "%charlist"
     if player == "":
         content += " " + f"<@{interaction.user.id}>"
@@ -861,140 +862,153 @@ async def charlist(interaction, player:str=""):
         
         await interaction.channel.send(embed=emb)
         desc_index += 1
-    print(interaction.user.name + " summoned a charlist for " + targname)
-    await waitmess.delete()
+    
+    await interaction.followup.send("Search complete!")
 
 #Search Subroutine
-async def charsearch(message, outputchannel):
+@tree.command(
+        name="search",
+        description="Pulls up the bio for a character in the dungeon."
+)
+@app_commands.describe(
+    name = "The name of the character to search for. Partial matches work."
+)
+@app_commands.checks.has_role("Verified")
+async def charlist(interaction, name:str):
 
-    tit = None
-    desc = None
-    try:
-        foot = "Searched for by " + message.author.name
-        msgspl = message.content.split(" ")
-    except AttributeError:
-        foot = ""
-        msgspl = message.split(" ")
-    imgurl = ""
-    imglen = 0
+    await interaction.response.defer(ephemeral=True, thinking=False)
 
-    cdata = ["\n"]
+    csheet = gc.open_by_key(CharSheet).get_worksheet(0)
+    cnames = csheet.col_values(6)
+    pnames = csheet.col_values(2)
 
-    charreg = sheet.values().get(spreadsheetId = CharSheet, range = "A1:AB4000", majorDimension='COLUMNS').execute().get("values")
-    charreg2 = sheet.values().get(spreadsheetId = CharSheet, range = "A1:AB4000", majorDimension='ROWS').execute().get("values")
-    cnames = charreg[5]
-    pnames = charreg[1]
-    cargs = sheet.values().get(spreadsheetId = CharSheet, range = "F1:AB4000" ).execute().get("values")
+    levenshtein_tuple_list = []
+    index = 0
+    for entry in cnames:
+        levenshtein_distance_partial = fuzz.partial_token_set_ratio(entry.lower(), name.lower())
+        levenshtein_distance_complete = fuzz.ratio(entry.lower(), name.lower())
+        levenshtein_distance = levenshtein_distance_complete * 0.5 + levenshtein_distance_partial * 0.5
+        levenshtein_tuple_list.append([entry, levenshtein_distance, pnames[cnames.index(entry)], index])
+        index += 1
 
-    searchedName = " ".join(msgspl[1:]).lower()
+    sorted_list = sorted(levenshtein_tuple_list,key=lambda l:l[1], reverse=True)
+    searchresults = [x[0::2] for x in sorted_list[:10]]
 
-    if searchedName != None:  #Show only relevant shops if the searchedName was provided
-        levenshtein_tuple_list = []
-        index = 0
-        for entry in charreg2:
-            #Maybe do a combination of ratio and partial ratio here to favour stuff like collars appearing when "collar" is the search word?
-            levenshtein_distance_partial = fuzz.partial_token_set_ratio(entry[5].lower(), searchedName.lower())
-            levenshtein_distance_complete = fuzz.ratio(entry[5].lower(), searchedName.lower())
-            levenshtein_distance = levenshtein_distance_complete * 0.5 + levenshtein_distance_partial * 0.5
-            levenshtein_tuple_list.append([entry[5], levenshtein_distance, entry[1], index])
-            index += 1
-
-        sorted_list = sorted(levenshtein_tuple_list,key=lambda l:l[1], reverse=True)
-        searchresults = [x[0::2] for x in sorted_list[:10]]
-
-    count = 0
-    multidata = []
-    multindexes = []
     cindex = 0
     fieldappend = ""
 
-    for f in str(searchedName.lower()):
-
+    for f in str(name.lower()):
         if ord(f) >= 97 and ord(f) <= 122 or f == " ":
-
             fieldappend += f
     
-    searchedName = fieldappend
+    name = fieldappend
     optionsarray = []
     for c in range(len(searchresults)):
         optionsarray.append(f"{sorted_list[c][2]}'s {sorted_list[c][0]}")
-    char_selection_view = EconomyV2.Dropdown_Select_View(message = message, timeout=30, optionamount=len(searchresults), maxselectionamount=1, namelist=optionsarray) #Only let them choose one item.
+    char_selection_view = Dropdown_Select_View(inter = interaction, timeout=30, optionamount=len(searchresults), maxselectionamount=1, namelist=optionsarray) #Only let them choose one item.
     charsel = []
     for c in range(len(searchresults)):
         charsel.append(f"`{str(c+1)}` - {searchresults[c][1]}'s {searchresults[c][0]}")
     emb = discord.Embed(title = "Which character would you like to see?", description = "Select the number of the one you want:\n" + "\n".join(charsel), colour = embcol)
     emb.set_footer(text = "This message will timeout in 30 seconds")
-    selection_message = await message.channel.send(embed = emb, view=char_selection_view)
+    selection_message = await interaction.channel.send(embed = emb, view=char_selection_view)
 
     #Wait for reply
     if await char_selection_view.wait():
-        await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+        await interaction.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
         return
     cindex = sorted_list[int(char_selection_view.button_response[0]) -1][3]
     await selection_message.delete()
-    for i in range(len(cnames)):
-        if cindex > 0: #If index of character is known (from multiple selection, inputs it here)
-            i = cindex
-        elif cindex == -1: #If multiple selection failed, ends.
-            break
-        
-        cname = str(cnames[i])
-        tit = cname
-        for j in range(len(headers)-1):
-            try:
-                carg = cargs[i][j]
-            except IndexError:
-                carg = ""
-            if carg != "":
-                if headers[j+1] == "Link":
-                    pass
-                elif headers[j+1] == "Approved":
-                    cdata.append("Character sheet approved")
-                elif headers[j+1] == "Players":
-                    cdata.append("Also played by:" + carg)
-                else:
-                    cdata.append(headers[j+1] + ": " + carg)
-            if headers[j+1] == "Image":
-                if not "|" in carg:
-                    imgurl = carg
-                    imglen = 1
-                else:
-                    imgurl = carg.split("|")
-                    imglen = carg.count("|") + 1
-        try:
-            foot = "---------------------------------------------------------\n\nOwned by " + str(pnames[i] + ". Searched for by " + message.author.name)
-        except AttributeError:
-            foot = ""
-        break
+    await displaychar(cindex, interaction, csheet)
 
-    if cindex != -1:
-        if cdata != None:
-            desc = "\n".join(cdata)
-        emb = discord.Embed(title = tit, description = desc, colour = embcol)
-        if imgurl != "":
-            if imglen == 1:
-                emb.set_image(url=imgurl)
-            else:
-                emb.set_image(url=imgurl[0])
-        if foot != None:
-            emb.set_footer(text=foot)
+    await interaction.followup.send("Character search complete!")
+
+async def displaychar(cindex, interaction, csheet):
+    cdata = ["\n"]
+           
+    tit = str(csheet.col_values(6)[cindex])
+    cargs = csheet.get_all_values()
+
+    for j in range(len(csheet.row_values(1))):
         try:
-            await outputchannel.send(embed=emb)
-        except discord.errors.HTTPException:
-            await outputchannel.send(embed=discord.Embed(title="Character couldn't be embedded",description="We refuse to write a whole library each time you search this character! (The character as a whole exceeds 4096 characters)\n\nIf this is not the case, it is likely that the image link has broken. Try editing the image, and if that doesn't work, contact the @bot gods.", colour = embcol))
-            return
-        if len(imgurl) > 1:
-            for d in range(imglen-1):
-                emb = discord.Embed(title = tit, description = "", colour = embcol)
-                emb.set_image(url = imgurl[d+1])
-                await outputchannel.send(embed=emb)
+            carg = cargs[cindex][j]
+        except IndexError:
+            carg = ""
+        if carg != "":
+            if j < 5:
+                pass
+            elif cargs[0][j] == "Link":
+                pass
+            elif cargs[0][j] == "Approved":
+                cdata.append("Character sheet approved")
+            elif cargs[0][j] == "Players":
+                cdata.append("Also played by:" + carg)
+            else:
+                cdata.append(cargs[0][j] + ": " + carg)
+        if cargs[0][j] == "Image":
+            if not "|" in carg:
+                imgurl = carg
+                imglen = 1
+            else:
+                imgurl = carg.split("|")
+                imglen = carg.count("|") + 1
     try:
-        await message.delete()
+        foot = "---------------------------------------------------------\n\nOwned by " + str(csheet.col_values(1)[cindex] + ". Searched for by " + interaction.user.name + "/ " + interaction.user.display_name)
     except AttributeError:
-        pass
-    
+        foot = ""
+
+    if cdata != None:
+        desc = "\n".join(cdata)
+    emb = discord.Embed(title = tit, description = desc, colour = embcol)
+    if imgurl != "":
+        if imglen == 1:
+            emb.set_image(url=imgurl)
+        else:
+            emb.set_image(url=imgurl[0])
+    if foot != None:
+        emb.set_footer(text=foot)
+    try:
+        await interaction.channel.send(embed=emb)
+    except discord.errors.HTTPException:
+        await interaction.channel.send(embed=discord.Embed(title="Character couldn't be embedded",description="We refuse to write a whole library each time you search this character! (The character as a whole exceeds 4096 characters)\n\nIf this is not the case, it is likely that the image link has broken. Try editing the image, and if that doesn't work, contact the @bot gods.", colour = embcol))
+        return
+    if len(imgurl) > 1:
+        emb = []
+        for d in range(imglen-1):
+            emb.append(discord.Embed(title = tit, description = "", colour = embcol).set_image(url = imgurl[d+1]))
+            if len(emb) == 10 or d == imglen-2:
+                await interaction.channel.send(embeds=emb)
+                emb = []
+
 #Catalogue Subroutine
-    
+@tree.command(
+        name="catalogue",
+        description="Shows a player's entire list of characters in full."
+)
+@app_commands.describe(
+    player = "The name of the recipient. Use @username."
+)
+@app_commands.checks.has_role("Verified")
+async def charlist(interaction, player:str=None):
+    await interaction.response.defer(ephemeral=True, thinking=False)
+
+    csheet = gc.open_by_key(CharSheet).get_worksheet(0)
+    pnames = csheet.col_values(2)
+
+    if player == None:
+        user = interaction.user
+    else:
+        user = client.get_user(int(player[2:-1]))
+    scan = csheet.findall(user.name)
+    count = 0
+
+    for a in range(len(scan)):
+        if scan[a].col == 2 and user.name == pnames[scan[a].row-1]:
+            await displaychar(scan[a].row-1, interaction, csheet)
+            count += 1   
+
+    await interaction.channel.send(embed = discord.Embed(title = "Done sending " + str(user.name) + "'s characters", description= "The above embeds show " + user.mention + "'s " + str(count) + " characters.", colour = embcol))
+    await interaction.followup.send("Character search complete!")
 
 #Retire Command
 async def charretire(message):
@@ -1239,3 +1253,63 @@ async def chardeactivate(message):
     await message.channel.send(embed=emb)
 
     await message.delete()
+
+class Dropdown_Select_View(discord.ui.View):
+    def __init__(self, inter, timeout=120, optionamount=1, maxselectionamount = 1, namelist = []):
+        super().__init__(timeout=timeout)
+        self.button_response = []
+        self.choices = []
+        self.namelist = namelist
+        self.user = inter.user
+        #Make sure we can only choose between 1 and 25 as per specification.
+        if maxselectionamount > 0 and maxselectionamount < 26:
+            self.selection_amount = maxselectionamount
+        elif maxselectionamount > 26:
+            self.selection_amount = 25
+        elif maxselectionamount < 1:
+            self.selection_amount = 1
+
+        #Make sure we can't choose more than we ahve options
+        if self.selection_amount > max(optionamount, len(self.namelist)):
+            self.selection_amount = max(optionamount, len(self.namelist))
+
+        if self.namelist != []:
+            for i in range(1, len(self.namelist) + 1):
+                self.choices.append(discord.SelectOption(
+                    label=f"{i}: {self.namelist[i-1]}",
+                    value = i
+                ))
+        else:
+            for i in range(1, optionamount + 1):
+                self.choices.append(discord.SelectOption(
+                    label=f"{i}",
+                    value = i
+                ))
+        self.select = discord.ui.Select(
+            placeholder = "None", # the placeholder text that will be displayed if nothing is selected
+            min_values = 1, # the minimum number of values that must be selected by the users
+            max_values = max([1, self.selection_amount]), # the maximum number of values that can be selected by the users
+            options = self.choices# the list of options from which users can choose, a required field)
+        )       
+        self.select.callback = self.callback
+        self.add_item(self.select)
+        
+    async def callback(self, interaction: discord.Interaction):
+        self.button_response = self.select.values
+        await interaction.response.defer()
+        self.stop()
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        try:
+            if self.user.id == interaction.user.id:
+                return True
+            else:
+                await interaction.response.send_message("That is not your dropdown to click!", ephemeral=True)
+                return False
+            
+        except AttributeError:
+            if self.user.id == interaction.user.id:
+                return True
+            else:
+                await interaction.response.send_message("That is not your dropdown to click!", ephemeral=True)
+                return False

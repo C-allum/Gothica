@@ -9,64 +9,41 @@ import EconomyV2
 from discord import app_commands
 from typing import List
 
-async def staffVacation(message):
-    #Toggle Lorekeeper chat Permissions
-    perms = client.get_channel(GlobalVars.config["channels"]["staff_vacation_channels"][0]).overwrites_for(message.author)
-    readMessages = perms.read_messages
-    sendMessages = perms.send_messages
-    author = message.author
-    if "vacation" in str(message.author.roles).lower() and "staff" in str(message.author.roles).lower():
-        if sendMessages == False and readMessages == False:
-            perms.send_messages = True
-            perms.read_messages = True
-            perms.view_channel = True
-            #await client.get_channel(LKChannel).category.set_permissions(message.author, overwrite=perms)
-            #await client.get_channel(LKChannel).category.set_permissions(message.author, overwrite=None)
-            for channel in GlobalVars.config["channels"]["staff_vacation_channels"]:
-                await client.get_channel(channel).set_permissions(message.author, overwrite=None)
+@tree.command(name = "vacation", description = "Toggles the user's staff vacation state")
+@app_commands.checks.has_any_role("Staff", "Staff Vacation")
+async def vacation(interaction):
 
-        perms = client.get_channel(GlobalVars.config["channels"]["mod_vacation_channels"][0]).overwrites_for(message.author)
-        readMessages = perms.read_messages
-        sendMessages = perms.send_messages
-        if sendMessages == False and readMessages == False and "mod team" in str(message.author.roles).lower():
-            perms.send_messages = True
-            perms.read_messages = True
-            perms.view_channel = True
-            for channel in GlobalVars.config["channels"]["mod_vacation_channels"]:
-                await client.get_channel(channel).set_permissions(message.author, overwrite=None)
-        role = discord.utils.get(author.guild.roles,name="Staff Vacation")
-        await message.author.remove_roles(role)
-        
+    await interaction.response.defer(ephemeral=True, thinking=False)
 
-    elif not("vacation" in str(message.author.roles).lower()) and "staff" in str(message.author.roles).lower():
-        if sendMessages != True and readMessages != True:
-            perms.send_messages = False
-            perms.read_messages = False
-            perms.view_channel = False
+    staffroles = ["Admin", "bot gods", "Arbitrator", "Peacekeeper", "Intern", "Mod Team", "Lore Team", "Archivist", "LoreMaster", "BattleMaster", "QuestMaster", "Face", "Smithing Team", "Bouncer", "Licensed Fucksmtih", "Monster Maker", "Guild Licenser", "Fungeoneer", "Staff", "Mentor"]
+    playerroles = []
 
-            #perms.send_messages = True
-            #perms.read_messages = True
-            #perms.view_channel = True
-            for channel in GlobalVars.config["channels"]["staff_vacation_channels"]:
-                await client.get_channel(channel).set_permissions(message.author, overwrite=perms)
+    if not "Vacation" in str(interaction.user.roles):
 
-        perms = client.get_channel(GlobalVars.config["channels"]["mod_vacation_channels"][0]).category.overwrites_for(message.author)
-        readMessages = perms.read_messages
-        sendMessages = perms.send_messages
+        for a in range(len(staffroles)):
+            for b in range(len(interaction.user.roles)):
+                if staffroles[a] == interaction.user.roles[b].name:
+                    playerroles.append(staffroles[a])
+                    await interaction.user.remove_roles(discord.utils.get(interaction.guild.roles, name = staffroles[a]))
+        await interaction.user.add_roles(discord.utils.get(interaction.guild.roles, name = "Staff Vacation"))
+        await client.get_channel(vacationthread).send(embed=discord.Embed(title = interaction.user.name + "'s Roles before Vacation", description = "\n".join(playerroles), colour = embcol))
+        await interaction.channel.send(interaction.user.display_name + " is now on vacation.")
 
-        if sendMessages != False and readMessages != False and "mod team" in str(message.author.roles).lower():
-            perms.send_messages = False
-            perms.read_messages = False
-            perms.view_channel = False
-            for channel in GlobalVars.config["channels"]["mod_vacation_channels"]:
-                await client.get_channel(channel).set_permissions(message.author, overwrite=perms)
+    else:
+        vacmessages = [joinedMessages async for joinedMessages in client.get_channel(vacationthread).history(oldest_first=True)]
+        for a in range(len(vacmessages)):
+            try:
+                if vacmessages[a].embeds[0].title == str(interaction.user.name + "'s Roles before Vacation"):
+                    for b in range(len(vacmessages[a].embeds[0].description.split("\n"))):
+                        await interaction.user.add_roles(discord.utils.get(interaction.guild.roles, name = vacmessages[a].embeds[0].description.split("\n")[b]))
+                    await interaction.user.remove_roles(discord.utils.get(interaction.guild.roles, name = "Staff Vacation"))
+                    await vacmessages[a].delete()
+                    await interaction.channel.send(interaction.user.display_name + " back from vacation.")
+                    break
+            except IndexError:
+                pass
 
-
-
-        
-        role = discord.utils.get(author.guild.roles, name="Staff Vacation")
-        print(role)
-        await author.add_roles(role)
+    await interaction.followup.send("Vacation state toggled")
 
 @tree.command(name = "wildlust", description = "Rolls on the wildmagic table")
 @app_commands.checks.has_role("Verified")
