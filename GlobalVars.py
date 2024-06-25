@@ -13,5 +13,8 @@ inventoryData = None
 #Item sheet
 itemdatabase = []
 
+#Kink sheet
+kinkdatabase = []
+
 #Maintenance mode
 maintenance_mode = False

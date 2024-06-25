@@ -162,6 +162,9 @@ async def on_ready():
     else:
         print("It is not dezzie award pool reset time yet!")
 
+    print("\nFetching Kink Data")
+    GlobalVars.kinkdatabase = gc.open_by_key(kinksheet).sheet1.get_all_values()
+
     print("\n------------------------------------------------------\n")
     tree.add_command(staffgroup)
     tree.add_command(admingroup)
