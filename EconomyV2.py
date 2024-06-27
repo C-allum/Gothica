@@ -24,7 +24,7 @@ add_dezzie_lock = asyncio.Lock()
 async def spend(interaction, amount:int, reason:str = None):
     await interaction.response.defer(ephemeral=True, thinking=False)
 
-    removeDezziesFromPlayerWithoutMessage(amount, interaction.user.id, interaction.user.name)
+    await removeDezziesFromPlayerWithoutMessage(amount, interaction.user.id, interaction.user.name)
     if reason != None:
         reason = "These dezzies were for:\n\n*" + reason + "*01"
     else:
