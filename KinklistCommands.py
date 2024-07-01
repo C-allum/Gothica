@@ -24,10 +24,10 @@ async def kinklist(interaction, user: str = None):
 async def kinklistA(user, outputchannel, trigger, interaction):
     if trigger == "Command":
         targ = await getKinkTarget(user, interaction)
-        categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(GlobalVars.kinkdatabase)
+        categories, kinksPerCategory, categoryIndex = await getCategoryData()
     else:
         targ = user
-        categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(GlobalVars.kinkdatabase)
+        categories, kinksPerCategory, categoryIndex = await getCategoryData()
 
     a = GlobalVars.kinkdatabase.index([x for x in GlobalVars.kinkdatabase if str(targ.name) in x][0])
     if not GlobalVars.kinkdatabase.index([x for x in GlobalVars.kinkdatabase if str(targ.name) in x][0]):
@@ -47,7 +47,7 @@ async def kinklistA(user, outputchannel, trigger, interaction):
             playerindex = [row[1] for row in GlobalVars.kinkdatabase].index(targ.name + "#" + targ.discriminator)
         generalPrefs = [] #Contains the general preferences
         categoryAverages = [] #Contains category ratings
-        currentKinkIndex = playerInformationEntries #Begin at the first actual kink after the Player Info
+        currentKinkIndex = 4 #Begin at the first actual kink after the Player Info
 
         #Fill the category averages array
         for x in range (0, len(categories)): #Go over all categories
@@ -58,6 +58,9 @@ async def kinklistA(user, outputchannel, trigger, interaction):
             for y in range(0, categoryKinkCount): #Go over each kink in a category
 
                 try:
+                    print(playerindex)
+                    print(currentKinkIndex)
+                    print(int(kinkOptions.index(GlobalVars.kinkdatabase[playerindex][currentKinkIndex])))
                     categorySum += len(kinkOptions) - int(kinkOptions.index(GlobalVars.kinkdatabase[playerindex][currentKinkIndex]))     #Invert scale so fave = 10 and hardlimit = 1
                 except ValueError:
                     categorySum += 5
@@ -69,7 +72,7 @@ async def kinklistA(user, outputchannel, trigger, interaction):
                 categoryAverages.append(kinkOptions[5])
             
         #Fill in general preferences array
-        currentKinkIndex = playerInformationEntries - 1 #Begin at the Pronouns
+        currentKinkIndex = 3 #Begin at the Pronouns
         for f in range(0, kinksPerCategory[categories.index("General Preferences")] + 1):
             currentRating = GlobalVars.kinkdatabase[playerindex][currentKinkIndex].replace("Fave", "**Fave**").replace("Kink", "**Kink**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__")
             generalPrefs.append(f"{GlobalVars.kinkdatabase[1][currentKinkIndex]}: {currentRating}")
@@ -168,56 +171,7 @@ async def kinkedit(interaction, kink: str = None, user: str = None):
     except IndexError:
         await interaction.channel.send(embed = discord.Embed(title = "Could not find " + targ.name + "'s kink list", description = "Make sure that <@" + str(targ.id) + "> has completed the kink survey."))
         return    
-
-    playerKinkData = GlobalVars.kinkdatabase[index]
-    kinkindex = None
-
-    if kink != None: #Fuzz match typed kink
-        kinksel = await CommonDefinitions.selectItem(interaction, kink, 10, GlobalVars.kinkdatabase[1])
-        try:
-            kinkindex = GlobalVars.kinkdatabase[1].index(kinksel[0])
-        except TypeError:
-            return
-    else: #Search by category
-        categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(GlobalVars.kinkdatabase)
-        catlis = []
-        for a in range(len(categories)):
-            catlis.append("`" + str(a) + "`: " + categories[a])
-        dropsel = CommonDefinitions.Dropdown_Select_View(interaction = interaction, timeout=30, optionamount=len(categories), maxselectionamount=1, namelist=categories)
-        msg = await interaction.channel.send(embed = discord.Embed(title = "Choose the category of kink that you would like to edit", description = "\n".join(catlis), colour= embcol), view = dropsel)
-        #Wait for reply
-        if await dropsel.wait():
-            await interaction.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
-            return
-        catindex = int(dropsel.button_response[0]) - 1
-        await msg.delete()
-        
-        kinklis = []
-        kinkarr = []
-        kinkrange = [categoryIndex[catindex], categoryIndex[catindex + 1] - 1]
-        for a in range(len(GlobalVars.kinkdatabase[1])):
-            print(a, kinkrange, str(GlobalVars.kinkdatabase[1][a]))
-            if a < 4 or a < kinkrange[0] or a > kinkrange[1]:
-                pass
-            else:
-                try:
-                    kinklis.append("`" + str(len(kinklis)+1) + "`: " + str(GlobalVars.kinkdatabase[1][a]))
-                except TypeError:
-                    kinklis.append("`1`: " + str(GlobalVars.kinkdatabase[1][a]))
-                kinkarr.append(GlobalVars.kinkdatabase[1][a])
-        dropsel2 = CommonDefinitions.Dropdown_Select_View(interaction = interaction, timeout=30, optionamount=len(kinkarr), maxselectionamount=1, namelist=kinkarr)
-        msg = await interaction.channel.send(embed = discord.Embed(title = "Choose the kink that you would like to edit", description = "\n".join(kinklis), colour= embcol), view = dropsel2)
-        #Wait for reply
-        if await dropsel2.wait():
-            await interaction.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
-            return
-        kinkindex = GlobalVars.kinkdatabase[1].index(kinkarr[int(dropsel2.button_response[0])-1])
-
-    try:
-        kinktoedit = GlobalVars.kinkdatabase[1][kinkindex]
-    except IndexError:
-        await interaction.channel.send(content = "@<&1055536891606351983>", embed = discord.Embed(title = "Your kink could not be found", description = "We're not actually sure how you managed this. The bot gods have been alerted to your location. ~~Run~~.", colour= embcol))
-        return
+    kinktoedit, kinkindex = await selkink(kink, interaction)
 
     if "role" in GlobalVars.kinkdatabase[1][kinkindex]:
         kinkOpts = participationOptions
@@ -226,8 +180,11 @@ async def kinkedit(interaction, kink: str = None, user: str = None):
     else:
         kinkOpts = kinkOptions
     embedstring = f"{interaction.user.name}, you currently have {kinktoedit} as: {GlobalVars.kinkdatabase[index][kinkindex]}. What would you like to change this to?\n\n"
-    for z in range(0, len(kinkOpts)): #Add the answer options to the embed
-        embedstring = embedstring + f"`{z+1}`: {kinkOpts[z]}\n"
+    try:
+        for z in range(0, len(kinkOpts)): #Add the answer options to the embed
+            embedstring = embedstring + f"`{z+1}`: {kinkOpts[z]}\n"
+    except TypeError:
+        pass
     embedstring = embedstring + "\n\nThis message will timeout in 30 seconds."
     if kinkOpts == None: #Get text input
         await interaction.channel.send(embed = discord.Embed(title = "Editing " + kinktoedit, description = embedstring, colour = embcol))
@@ -262,90 +219,52 @@ async def kinkedit(interaction, kink: str = None, user: str = None):
 @app_commands.checks.has_role("Verified")
 async def kinkplayers(interaction, kink: str = None):
     await interaction.response.defer(ephemeral=True, thinking=False)
-
-    if kink != None: #Fuzz match typed kink
-        kinksel = await CommonDefinitions.selectItem(interaction, kink, 10, GlobalVars.kinkdatabase[1])
-        try:
-            kinkindex = GlobalVars.kinkdatabase[1].index(kinksel[0])
-        except TypeError:
-            return
-    else: #Search by category
-        categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(GlobalVars.kinkdatabase)
-        categories = categories[1:-2]
-        catlis = []
-        for a in range(len(categories)):
-            catlis.append("`" + str(a) + "`: " + categories[a])
-        dropsel = CommonDefinitions.Dropdown_Select_View(interaction = interaction, timeout=30, optionamount=len(categories), maxselectionamount=1, namelist=categories)
-        msg = await interaction.channel.send(embed = discord.Embed(title = "Choose the category of kink that you would like to select", description = "\n".join(catlis), colour= embcol), view = dropsel)
-        #Wait for reply
-        if await dropsel.wait():
-            await interaction.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
-            return
-        catindex = int(dropsel.button_response[0]) - 1
-        await msg.delete()
-        
-        kinklis = []
-        kinkarr = []
-        kinkrange = [categoryIndex[catindex], categoryIndex[catindex + 1] - 1]
-        for a in range(len(GlobalVars.kinkdatabase[1])):
-            if a < 5 or a < kinkrange[0] or a > kinkrange[1]:
-                pass
-            else:
-                try:
-                    kinklis.append("`" + str(len(kinklis)+1) + "`: " + str(GlobalVars.kinkdatabase[1][a]))
-                except TypeError:
-                    kinklis.append("`1`: " + str(GlobalVars.kinkdatabase[1][a]))
-                kinkarr.append(GlobalVars.kinkdatabase[1][a])
-        dropsel2 = CommonDefinitions.Dropdown_Select_View(interaction = interaction, timeout=30, optionamount=len(kinkarr), maxselectionamount=1, namelist=kinkarr)
-        msg = await interaction.channel.send(embed = discord.Embed(title = "Choose the kink that you would like.", description = "\n".join(kinklis), colour= embcol), view = dropsel2)
-        #Wait for reply
-        if await dropsel2.wait():
-            await interaction.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
-            return
-        kinkindex = GlobalVars.kinkdatabase[1].index(kinkarr[int(dropsel2.button_response[0])-1])
-
-    print(GlobalVars.kinkdatabase[1][kinkindex])
+    kinksel, kinkindex = await selkink(kink, interaction)
 
     if interaction.channel.id != 1009522511844749342:
         charlimit = 4096
     else:
         charlimit = 2000
 
-    haskink = "The people with " + str(GlobalVars.kinkdatabase[1][kinkindex]) + " listed as a kink are:\n"
+    haskink = "The people with " + str(kinksel) + " listed as a kink are:\n"
     hasfave = "Additonally, those with this listed as a favourite are:\n"
-    haslike = "Finally, the people with " + str(GlobalVars.kinkdatabase[1][kinkindex]) + " listed as something they like are:\n"
+    haslike = "Finally, the people with " + str(kinksel) + " listed as something they like are:\n"
     kinkmsgs = []
     favemsgs = []
     likemsgs = []
     for a in range(len(GlobalVars.kinkdatabase)):
         if GlobalVars.kinkdatabase[a][kinkindex] == "Kink":
-            if len(str(haskink + "@<" + GlobalVars.kinkdatabase[a][1] + ">, ")) > charlimit:
+            if len(str(haskink + "<@" + GlobalVars.kinkdatabase[a][2] + ">, ")) > charlimit:
                 kinkmsgs.append(haskink)
                 haskink = ""
-            haskink += "@<" + GlobalVars.kinkdatabase[a][1] + ">, "
+            haskink += "<@" + GlobalVars.kinkdatabase[a][2] + ">, "
         elif GlobalVars.kinkdatabase[a][kinkindex] == "Fave":
-            if len(str(hasfave + "@<" + GlobalVars.kinkdatabase[a][1] + ">, ")) > charlimit:
+            if len(str(hasfave + "<@" + GlobalVars.kinkdatabase[a][2] + ">, ")) > charlimit:
                 favemsgs.append(hasfave)
                 hasfave = ""
-            hasfave += "@<" + GlobalVars.kinkdatabase[a][1] + ">, "
+            hasfave += "<@" + GlobalVars.kinkdatabase[a][2] + ">, "
         elif GlobalVars.kinkdatabase[a][kinkindex] == "Like":
-            if len(str(haslike + "@<" + GlobalVars.kinkdatabase[a][1] + ">, ")) > charlimit:
+            if len(str(haslike + "<@" + GlobalVars.kinkdatabase[a][2] + ">, ")) > charlimit:
                 likemsgs.append(haslike)
                 haslike = ""
-            haslike += "@<" + GlobalVars.kinkdatabase[a][1] + ">, "
+            haslike += "<@" + GlobalVars.kinkdatabase[a][2] + ">, "
+    kinkmsgs.append(haskink)
+    favemsgs.append(hasfave)
+    likemsgs.append(haslike)
+
     for b in range(len(kinkmsgs)):
         if interaction.channel.id != 1009522511844749342:
-            await interaction.channel.send(embed = discord.Embed(title = "People with " + GlobalVars.kinkdatabase[a][1] + " as a kink:", description = kinkmsgs[b], colour = embcol).set_author(interaction.user))
+            await interaction.channel.send(embed = discord.Embed(title = "People with " + kinksel + " as a kink:", description = kinkmsgs[b], colour = embcol).set_author(name = interaction.user.name + "/ " + interaction.user.display_name))
         else:
             await interaction.channel.send(kinkmsgs[b])
     for b in range(len(favemsgs)):
         if interaction.channel.id != 1009522511844749342:
-            await interaction.channel.send(embed = discord.Embed(title = "People with " + GlobalVars.kinkdatabase[a][1] + " as a favourite:", description = favemsgs[b], colour = embcol).set_author(interaction.user))
+            await interaction.channel.send(embed = discord.Embed(title = "People with " + kinksel + " as a favourite:", description = favemsgs[b], colour = embcol).set_author(name = interaction.user.name + "/ " + interaction.user.display_name))
         else:
             await interaction.channel.send(favemsgs[b])
     for b in range(len(likemsgs)):
         if interaction.channel.id != 1009522511844749342:
-            await interaction.channel.send(embed = discord.Embed(title = "People with " + GlobalVars.kinkdatabase[a][1] + " as something they like:", description = likemsgs[b], colour = embcol).set_author(interaction.user))
+            await interaction.channel.send(embed = discord.Embed(title = "People with " + kinksel + " as something they like:", description = likemsgs[b], colour = embcol).set_author(name = interaction.user.name + "/ " + interaction.user.display_name))
         else:
             await interaction.channel.send(likemsgs[b])
     if interaction.channel.id != 1009522511844749342:
@@ -445,14 +364,17 @@ async def kinkencounter(message):
                 await message.channel.send("Room not found")
 
 #Assist the author in generating their kinklist if they don't already have one.
-async def kinksurvey(message):
+@tree.command(name = "kinksurvey", description = "Runs a survey to establish what your kinks and limits are.")
+@app_commands.checks.has_role("Verified")
+async def kinksurvey(interaction):
+    await interaction.response.defer(ephemeral=True, thinking=False)
     retakeSurvey = 0    #Flag to mark that the user is taking the survey a second time, overwriting his last results
     playerIndex = -1 #Contains the line number in the google sheet, in case they are retaking the survey - We need to overwrite the previous result
-    kinkdata, namestr, targname = await getKinkData(message)
-    if str(message.channel.id) != kinkcreatechannel:
-        await message.channel.send(embed = discord.Embed(title = "This is not the place to talk about that.", description = f"We will gladly talk about your deepest desires, <@{targname.id}>. We prefer a bit of privacy for that however. Please use the <#{kinkcreatechannel}> channel to call this command.", colour = embcol))
+    targ = await getKinkTarget(interaction.user, interaction)
+    if interaction.channel.id != int(kinkcreatechannel):
+        await interaction.channel.send(embed = discord.Embed(title = "This is not the place to talk about that.", description = f"We will gladly talk about your deepest desires, <@{targ.id}>. We prefer a bit of privacy for that however. Please use the <#{kinkcreatechannel}> channel to call this command.", colour = embcol))
         return
-    if str(namestr) in str(kinkdata):
+    if targ.name in str(kinkdata):
 
         await message.channel.send(embed = discord.Embed(title = "We already know your deepest desires", description = f"Your kinklist is already registered with us, <@{targname.id}>. If you want to take the whole survey again reply `1`, otherwise reply `0`.\n If you want to edit it a single kink, use %kinkedit.", colour = embcol))
         #See if the user wants to retake the survey
@@ -485,7 +407,7 @@ async def kinksurvey(message):
     #--------------Prepare variables---------------
     newKinklist = [str(datetime.now()), f"{targname.name}", f"{targname.id}"] #Contains kink data, will be written into the sheet.
     
-    categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
+    categories, kinksPerCategory, categoryIndex= await getCategoryData()
 
     #--------------Collect information from the user-------------
     #Request user's pronouns.
@@ -1265,40 +1187,23 @@ async def Kinklistdetail(categoryIndex, categories, printCategories, sel, player
         pass
 
 #Returns valuable information about the kinklist itself like categories, kinks per category, the index of each category in the overall kinks and the amount of player information entries.
-async def getCategoryData(kinkdata):
+async def getCategoryData():
 
-    categories = GlobalVars.kinkdatabase[0] #Categories for embed titles. Contains a lot of empty entries at this point.
-    kinksPerCategory = [] #Counts the kinks per category.
-    categoryIndex = [4] #Contains the index of the first element of the category. 4 is the index of the first kink after the user data
-    playerInformationEntries = 1
-
-    while ("" == categories[playerInformationEntries]):
-        playerInformationEntries += 1
-    
-    #Count the amount of kinks per category and write index of the category index.
-    i = 0
-    for x in range(playerInformationEntries + 1, len(GlobalVars.kinkdatabase[0])):
-        i += 1
-        if (GlobalVars.kinkdatabase[0][x] != ""):
-        
-            kinksPerCategory.append(i)
-            categoryIndex.append(categoryIndex[-1] + i)
-            i = 0
-            if (GlobalVars.kinkdatabase[0][x] == "Additional Kinks and Limits"):
-                break
-
-    kinksPerCategory.append(len(GlobalVars.kinkdatabase[1]) - len(GlobalVars.kinkdatabase[0]) + 1) #Length of last category has to be figured out this way because of index bounds.
-    categoryIndex.append(categoryIndex[-1] + len(GlobalVars.kinkdatabase[1]) - len(GlobalVars.kinkdatabase[0]) + 1)
-
-    while ("" in categories): #Removes the empty entries from the category row so we can use the category list length properly
-        categories.remove("")
+    categories = list(filter(None, GlobalVars.kinkdatabase[0])) #Categories for embed titles. Contains a lot of empty entries at this point.
+    kinksPerCategory = []
+    categoryIndex = []
+    for a in range(len(categories)):
+        categoryIndex.append(GlobalVars.kinkdatabase[0].index(categories[a]))
+        try:
+            kinksPerCategory.append(GlobalVars.kinkdatabase[0].index(categories[a+1]) - GlobalVars.kinkdatabase[0].index(categories[a]))
+        except IndexError:
+            kinksPerCategory.append(2)
     try:
         categories.remove("Player Information")
     except ValueError:
         pass
-
  
-    return categories, kinksPerCategory, categoryIndex, playerInformationEntries
+    return categories, kinksPerCategory, categoryIndex
 
 #Returns the column letter
 async def getColumnLetter(columnindex):
@@ -1322,3 +1227,71 @@ async def getLimits(player):
             limits.append(kinkdata[1][a])
     return limits
 
+#Returns a user selected kink:
+async def selkink(kink, interaction):
+
+    kinkindex = None
+    if kink != None: #Fuzz match typed kink
+        kinksel = await CommonDefinitions.selectItem(interaction, kink, 10, GlobalVars.kinkdatabase[1])
+        try:
+            kinkindex = GlobalVars.kinkdatabase[1].index(kinksel[0])
+        except TypeError:
+            return
+    else: #Search by category
+        categories, kinksPerCategory, categoryIndex = await getCategoryData()
+        catlis = []
+        for a in range(len(categories)):
+            catlis.append("`" + str(a+1) + "`: " + categories[a])
+        dropsel = CommonDefinitions.Dropdown_Select_View(interaction = interaction, timeout=30, optionamount=len(categories), maxselectionamount=1, namelist=categories)
+        msg = await interaction.channel.send(embed = discord.Embed(title = "Choose the category of kink from this list", description = "\n".join(catlis), colour= embcol), view = dropsel)
+        #Wait for reply
+        if await dropsel.wait():
+            await interaction.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+            return
+        catindex = int(dropsel.button_response[0])
+        await msg.delete()
+        
+        kinklis = []   
+        kinkarr = []
+        try:
+            kinkrange = [categoryIndex[catindex], categoryIndex[catindex + 1] - 1]
+        except IndexError:
+            kinkrange = [categoryIndex[catindex], categoryIndex[catindex] + 2]
+        for a in range(len(GlobalVars.kinkdatabase[1])):
+            if a < 4 or a < kinkrange[0] or a > kinkrange[1]:
+                pass
+            else:
+                try:
+                    kinklis.append("`" + str(len(kinklis)+1) + "`: " + str(GlobalVars.kinkdatabase[1][a]))
+                except TypeError:
+                    kinklis.append("`1`: " + str(GlobalVars.kinkdatabase[1][a]))
+                kinkarr.append(GlobalVars.kinkdatabase[1][a])
+
+        indexoffset = 0
+        kinkcopy = list.copy(kinkarr)
+        while 1:
+            if len(kinkcopy) > 25:
+                kinkreduced = list.copy(kinkcopy)
+                kinkreduced = kinkreduced[:24]
+                kinkreduced.append("See more")
+                kinkcopy = kinkcopy[25:]
+            else:
+                kinkreduced = kinkcopy
+            dropsel2 = CommonDefinitions.Dropdown_Select_View(interaction = interaction, timeout=30, optionamount=len(kinkreduced), maxselectionamount=1, namelist=kinkreduced)
+            msg = await interaction.channel.send(embed = discord.Embed(title = "Choose the kink from this list", description = "\n".join(kinklis), colour= embcol), view = dropsel2)
+            #Wait for reply
+            if await dropsel2.wait():
+                await interaction.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+                return
+            
+            if kinkreduced[int(dropsel2.button_response[0])-1] == "See more":
+                indexoffset += 25
+            else:
+                kinkindex = GlobalVars.kinkdatabase[1].index(kinkarr[int(dropsel2.button_response[0]) - 1 + indexoffset])
+                break
+    try:
+        kinkname = GlobalVars.kinkdatabase[1][kinkindex]
+    except IndexError:
+        await interaction.channel.send(content = "@<&1055536891606351983>", embed = discord.Embed(title = "Your kink could not be found", description = "We're not actually sure how you managed this. The bot gods have been alerted to your location. ~~Run~~.", colour= embcol))
+        return
+    return kinkname, kinkindex
