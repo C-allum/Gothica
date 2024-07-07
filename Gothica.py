@@ -50,7 +50,7 @@ async def on_ready():
     print("Loading economy data...")
     await EconomyV2.loadEconomySheet()
     await EconomyV2.loadInventorySheet()
-    print("Done.")
+    print("... done")
     #------------------DezzieAwardPoolReset---------------------
     #Grab current date and time
     today = datetime.now()
@@ -164,6 +164,7 @@ async def on_ready():
 
     print("\nFetching Kink Data")
     GlobalVars.kinkdatabase = gc.open_by_key(kinksheet).sheet1.get_all_values()
+    print("... done")
 
     print("\n------------------------------------------------------\n")
     tree.add_command(staffgroup)

@@ -1450,10 +1450,13 @@ async def incomeWeek(interaction, player:str=""):
     income = await TransactionsDatabaseInterface.playerTransactionsInfo(name, "7 Days")
     
     incomeString = ""
+    tot = 0
     for row in income:
         for i in range(1, len(row)):
             incomeString += str(row[i]) + " "
+        tot += int(row[-1])
         incomeString +="\n"
+    incomeString += "\n**Total**: " + str(tot) 
 
     await interaction.channel.send(embed = discord.Embed(title = f"{name}'s dezzie earnings over the last week:", description = incomeString, colour = embcol))
     await interaction.followup.send("Successfully finished the task!")

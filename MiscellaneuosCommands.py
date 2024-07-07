@@ -1,4 +1,5 @@
 from CommonDefinitions import *
+import KinklistCommands
 import random
 import CommonDefinitions
 from TransactionsDatabaseInterface import updatePerson, printTransactions
