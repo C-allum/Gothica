@@ -635,91 +635,80 @@ async def kinksurvey(interaction):
     if retakeSurvey == 0:
         kinksheet.append_row(values = newKinklist)
     else:
-        kinksheet.range = "A" + str(playerIndex) + ":GZ" + str(playerIndex)
+        range = kinksheet.range = "A" + str(playerIndex) + ":GZ" + str(playerIndex)
+        kinksheet.update_cells(cell_list= range, value_input_option=newKinklist)
     await interaction.followup.send("Command complete.")
     return
 
 
 #Compares the kinklist of tagged persons
-async def kinkcompare(message):
+@tree.command(name = "kinkcompare", description = "Compares the kinks and limits of tagged users")
+@app_commands.describe(players = "The players to compare. Tag them using @name and leave a space between each.")
+@app_commands.checks.has_role("Verified")
+async def kinkcompare(interaction, players: str):
+
+    await interaction.response.defer(ephemeral=True, thinking=False)
+    await comparekinks(players, interaction.channel, interaction.user.name + "/ " + interaction.user.display_name)
+    await interaction.followup.send("Command complete.")
+
+async def comparekinks(players, destinationchannel, user):
+
     #Fetch relevant data
-    kinkdata, namestr, targname = await getKinkData(message)
-    categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
+    categories, kinksPerCategory, categoryIndex = await getCategoryData()
     playerIDsToCompare = [] #Contains the ID of the players whose kinklist should be compared
     commonKinks = []        #Contains common Like/Kink/Faves
     limits = []             #Contains common Limits
     maybeAvoid = []         #Contains kinks that should maybe be avoided
-
-
-    if not "@" in message.content:
-        await message.channel.send(embed = discord.Embed(title = "Kinklist Compare", description = f"Please tag everyone whose kinklist you want to compare, even yourself if you want to compare yours to someone elses!"))
-        return
-    else:   #If people were tagged, fetch the ID's of the players that need to be compared
-        kinkcompareMessage = message.content
-        while "@" in kinkcompareMessage:
-            playerIDsToCompare.append(kinkcompareMessage.rsplit("@", 1)[1].replace("<", "").replace(">", "").replace(" ", ""))
-            kinkcompareMessage = kinkcompareMessage.rsplit("@", 1)[0]
-
-    #Check if all players have their survey filled out
-    for player in playerIDsToCompare:
-        if not str(player) in str(kinkdata):
-
-            await message.channel.send(embed = discord.Embed(title = "Could not find <@" + player + "> 's kink list", description = "Make sure that <@" + player + "> has completed the kink survey. Try again when they have."))
-            return
-
-    if len(playerIDsToCompare) < 2:
-        await message.channel.send(embed = discord.Embed(title = "Too few players to compare!", description = "Make sure that you tagged at least 2 users to compare their kinklists"))
-        return
-
-    
-    #Fetch the row numbers for the specific people
+    KinkIDCol = gc.open_by_key(kinksheet).worksheet("Form Responses").col_values(3)
     playerIndices = []  #Contains player row indices in kinkdata
     playerNames = []    #Contains player names
-    
-    for player in playerIDsToCompare:
-        playerIndex = [row[2] for row in kinkdata].index(player)
-        playerIndices.append(playerIndex)
+    localGuild = client.get_guild(828411760365142076)
 
-        #find out display name of player
-        localGuild = client.get_guild(828411760365142076)
-        if localGuild != None:
-            currMember = localGuild.get_member(int(player))
-        else: 
-            currMember = client.get_guild(847968618167795782).get_member(int(player))
-        playerNames.append(currMember.display_name)
-
+    if not "@" in players or not " " in players:
+        await destinationchannel.send(embed = discord.Embed(title = "Kinklist Compare", description = f"Please tag everyone whose kinklist you want to compare, even yourself if you want to compare yours to someone elses!", colour = embcol))
+        return
+    else:   #If people were tagged, fetch the ID's of the players that need to be compared
+        for a in range(len(players.split(" "))):
+            playerIDsToCompare.append(int(players.split(" ")[a][2:-1]))
+            try:
+                playerIndices.append(KinkIDCol.index(str(playerIDsToCompare[a])))
+                if localGuild != None:
+                    currMember = localGuild.get_member(int(playerIDsToCompare[a]))
+                else: 
+                    currMember = client.get_guild(847968618167795782).get_member(int(playerIDsToCompare[a]))
+                playerNames.append(currMember.name + currMember.display_name)
+            except ValueError:
+                await destinationchannel.send(embed = discord.Embed(title = "Could not find <@" + str(playerIDsToCompare[a]) + "> 's kink list", description = "Make sure that <@" + str(playerIDsToCompare[a]) + "> has completed the kink survey. Try again when they have.", colour = embcol))
+                return
 
     #begin comparing... Mark out all common kinks that are at least a like, and every single soft or hard limit. Extra list for "Not my thing"
-    for i in range(categoryIndex[categories.index("Body Parts")], len(kinkdata[1])):
+    for i in range(categoryIndex[categories.index("Body Parts")], len(GlobalVars.kinkdatabase[1])):
         likeOrMoreForAll = True #Stays true if this is a like or better for all people tagged
         softOrHardLimit = False
         uncertainElement = False
-        for player in playerIndices:
-            if kinkdata[player][i] != kinkOptions[0] and kinkdata[player][i] != kinkOptions[1] and kinkdata[player][i] != kinkOptions[2]: #If entry is not Fave, Kink or Like, it is not among the common kinks
+        for playern in playerIndices:
+            if GlobalVars.kinkdatabase[playern][i] != kinkOptions[0] and GlobalVars.kinkdatabase[playern][i] != kinkOptions[1] and GlobalVars.kinkdatabase[playern][i] != kinkOptions[2]: #If entry is not Fave, Kink or Like, it is not among the common kinks
                 likeOrMoreForAll = False
 
-            if kinkdata[player][i] == kinkOptions[8] or kinkdata[player][i] == kinkOptions[9]:
+            if GlobalVars.kinkdatabase[playern][i] == kinkOptions[8] or GlobalVars.kinkdatabase[playern][i] == kinkOptions[9]:
                 softOrHardLimit = True
 
-            if kinkdata[player][i] == kinkOptions[7] or kinkdata[player][i] == kinkOptions[6]:
+            if GlobalVars.kinkdatabase[playern][i] == kinkOptions[7] or GlobalVars.kinkdatabase[playern][i] == kinkOptions[6]:
                 uncertainElement = True
 
         #add the kink to the correct category
         if likeOrMoreForAll == True:
-            commonKinks.append(kinkdata[1][i])
+            commonKinks.append(GlobalVars.kinkdatabase[1][i])
         if softOrHardLimit == True:
-            limits.append(kinkdata[1][i])
+            limits.append(GlobalVars.kinkdatabase[1][i])
         if uncertainElement == True:
-            maybeAvoid.append(kinkdata[1][i])
+            maybeAvoid.append(GlobalVars.kinkdatabase[1][i])
     
     #Send embeds
-    await message.channel.send(embed = discord.Embed(title = f"Common Faves/Kinks/Likes of " + ", ".join(playerNames), description = "\n".join(commonKinks), colour = embcol))
+    await destinationchannel.send(embed = discord.Embed(title = f"Common Faves/Kinks/Likes of " + ", ".join(playerNames), description = "\n".join(commonKinks), colour = embcol))
     #await message.channel.send(embed = discord.Embed(title = f"Uncertain Elements shared by " + ", ".join(playerNames), description = "\n".join(maybeAvoid), colour = embcol))
-    await message.channel.send(embed = discord.Embed(title = f"Accumulated Soft and Hard Limits of  " + ", ".join(playerNames), description = "\n".join(limits), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis comparison was summoned by {message.author.name} / {message.author.display_name}"))
-    await message.channel.send(embed = discord.Embed(title = f"Reminder!", description = "*Please remember that the kinklist is not a perfect guide. Just because someone has marked something positively or negatively, doesn't mean they have the same understanding of what that thing is as you do. It's important to discuss any element you plan to bring into a scene with your partner.*", colour = embcol))
-
-    await message.delete()
-
+    await destinationchannel.send(embed = discord.Embed(title = f"Accumulated Soft and Hard Limits of  " + ", ".join(playerNames), description = "\n".join(limits), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis comparison was summoned by " + user))
+    await destinationchannel.send(embed = discord.Embed(title = f"Reminder!", description = "*Please remember that the kinklist is not a perfect guide. Just because someone has marked something positively or negatively, doesn't mean they have the same understanding of what that thing is as you do. It's important to discuss any element you plan to bring into a scene with your partner.*", colour = embcol))
     return
 
 #Posts an embed with help on the commands.
