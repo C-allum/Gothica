@@ -9,6 +9,7 @@ import aiohttp
 import EconomyV2
 from discord import app_commands
 from typing import List
+import CharRegistry
 
 @tree.command(name = "vacation", description = "Toggles the user's staff vacation state")
 @app_commands.checks.has_any_role("Staff", "Staff Vacation")
@@ -1850,6 +1851,76 @@ async def embed(interaction, time: str, timezone: str = None):
 
     await interaction.channel.send(embed = discord.Embed(title = "Timestamp Converter", description = str(inittime) + " in " + str(timezone) + " is <t:" + str(dtsp) + ":T>. It will next be " + str(inittime) + " in that timezone in " + "<t:" + str(dtsp) + ":R>", colour = embcol))
     await interaction.followup.send("Timestamp Generated")
+
+@tree.command(name = "oocsetup", description = "Sets up an ooc thread and summons useful information in it.")
+@app_commands.describe(players = "The players to include. Tag them using @name and leave a space between each.")
+@app_commands.describe(private = "Whether the thread should be private.")
+@app_commands.describe(name = "The name of the OOC thread or quest.")
+@app_commands.checks.has_role("Verified")
+async def oocsetup(interaction, players: str, name: str, private: bool = False):
+    await interaction.response.defer(ephemeral=True, thinking=False)
+    if private == True:
+        dest = await client.get_channel(oocchannel).create_thread(name = name, type = discord.ChannelType.public_thread)
+    else:
+        dest = await client.get_channel(oocchannel).create_thread(name = name, type = discord.ChannelType.private_thread)
+    comps = await KinklistCommands.comparekinks(players, dest, interaction.user.name + "/ " + interaction.user.display_name)
+    for a in range(len(comps)):
+        if "staff" in str(interaction.user.roles).lower():
+            await comps[a].pin()
+    charowners = gc.open_by_key(CharSheet).get_worksheet(0).col_values(2)
+    charnames = gc.open_by_key(CharSheet).get_worksheet(0).col_values(6)
+    users = []
+    indices = []
+    await dest.send("Hello!" + interaction.user.mention + " has invited you to this ooc thread. They will now select your chosen characters from the dropdown below.")
+    for a in range(len(players.split(" "))):
+        names= []
+        options = []
+        try:
+            users.append(await client.fetch_user(players.split(" ")[a][2:-1]))   
+            temp = []
+            for b in range(len(charowners)):
+                if users[a].name == charowners[b]:
+                    temp.append(b)
+                    names.append(charnames[b])
+                    options.append(discord.SelectOption(label = charnames[b], value = b+1))
+            indices.append(temp)
+        except discord.errors.HTTPException:
+            pass
+        chardrop = CommonDefinitions.Dropdown_Select_View(interaction = interaction, namelist= options, default = users[a].name + "'s characters")
+        try:
+            selection_message = await dest.send("Select a character for " + users[a].mention, view= chardrop)
+        
+            if await chardrop.wait():
+                    await dest.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+                    return
+            
+            i = int(chardrop.button_response[0]) - 1
+            await selection_message.delete()
+            if i >= 0 and i < len(indices[a]):
+                selected_item = indices[a][i]
+            else: 
+                await interaction.channel.send(embed=discord.Embed(title=f"Number has to be between 1 and {len(indices[a])}", colour = embcol))
+                return
+            
+            charsheet = gc.open_by_key(CharSheet).get_worksheet(0)
+            inter = fakeinteraction(channel = dest, user = interaction.user)
+            charentry = await CharRegistry.displaychar(cindex = selected_item, interaction = inter, csheet= charsheet)
+            if "staff" in str(interaction.user.roles).lower():
+                await charentry.pin()
+
+        except discord.errors.HTTPException:
+            dest.send(users[a].mention + " has more than 25 characters, and their character will need to be searched for manually.")
+
+    await dest.send("OOC Thread Created!\n\nEnjoy your scene/quest!")
+    await interaction.followup.send("OOC Thread Generated")
+
+class fakeinteraction:
+    channel = None
+    user = None
+    
+    def __init__(self,channel,user): 
+          self.channel = channel
+          self.user = user
 
 @staffgroup.command(name = "helplist", description = "Lists all converted slash commands")
 @app_commands.checks.has_role("Staff")

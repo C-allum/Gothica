@@ -849,20 +849,13 @@ async def on_message(message):
                 await vermemb.remove_roles(role)
 
             #-------------------------Kink Functions--------------------------------
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "kinklist"):
-                await KinklistCommands.kinklist(message, message.channel, "Command")
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "kinkedit"):
-                await KinklistCommands.kinkedit(message)
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "kinkplayers"):
-                await KinklistCommands.kinkplayers(message)
+
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "kinkencounter"):
                 await KinklistCommands.kinkencounter(message)
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "kinksurvey"):
-                await KinklistCommands.kinksurvey(message)
+
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "kinkhelp"):
                 await KinklistCommands.kinkhelp(message)
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "kinkcompare"):
-                await KinklistCommands.kinkcompare(message)
+
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "kinkfill"):
                 await KinklistCommands.kinkfill(message)
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "randloot") and "staff" in str(message.author.roles).lower():

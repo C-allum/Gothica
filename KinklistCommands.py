@@ -676,7 +676,7 @@ async def comparekinks(players, destinationchannel, user):
                     currMember = localGuild.get_member(int(playerIDsToCompare[a]))
                 else: 
                     currMember = client.get_guild(847968618167795782).get_member(int(playerIDsToCompare[a]))
-                playerNames.append(currMember.name + currMember.display_name)
+                playerNames.append(currMember.name + "/" + currMember.display_name)
             except ValueError:
                 await destinationchannel.send(embed = discord.Embed(title = "Could not find <@" + str(playerIDsToCompare[a]) + "> 's kink list", description = "Make sure that <@" + str(playerIDsToCompare[a]) + "> has completed the kink survey. Try again when they have.", colour = embcol))
                 return
@@ -705,11 +705,12 @@ async def comparekinks(players, destinationchannel, user):
             maybeAvoid.append(GlobalVars.kinkdatabase[1][i])
     
     #Send embeds
-    await destinationchannel.send(embed = discord.Embed(title = f"Common Faves/Kinks/Likes of " + ", ".join(playerNames), description = "\n".join(commonKinks), colour = embcol))
+    output = []
+    output.append(await destinationchannel.send(embed = discord.Embed(title = f"Common Faves/Kinks/Likes of " + ", ".join(playerNames), description = "\n".join(commonKinks), colour = embcol)))
     #await message.channel.send(embed = discord.Embed(title = f"Uncertain Elements shared by " + ", ".join(playerNames), description = "\n".join(maybeAvoid), colour = embcol))
-    await destinationchannel.send(embed = discord.Embed(title = f"Accumulated Soft and Hard Limits of  " + ", ".join(playerNames), description = "\n".join(limits), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis comparison was summoned by " + user))
-    await destinationchannel.send(embed = discord.Embed(title = f"Reminder!", description = "*Please remember that the kinklist is not a perfect guide. Just because someone has marked something positively or negatively, doesn't mean they have the same understanding of what that thing is as you do. It's important to discuss any element you plan to bring into a scene with your partner.*", colour = embcol))
-    return
+    output.append(await destinationchannel.send(embed = discord.Embed(title = f"Accumulated Soft and Hard Limits of  " + ", ".join(playerNames), description = "\n".join(limits), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis comparison was summoned by " + user)))
+    output.append(await destinationchannel.send(embed = discord.Embed(title = f"Reminder!", description = "*Please remember that the kinklist is not a perfect guide. Just because someone has marked something positively or negatively, doesn't mean they have the same understanding of what that thing is as you do. It's important to discuss any element you plan to bring into a scene with your partner.*", colour = embcol)))
+    return output
 
 #Posts an embed with help on the commands.
 async def kinkhelp(message):

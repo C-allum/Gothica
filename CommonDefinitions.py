@@ -71,7 +71,7 @@ gc = gspread.service_account(filename = SERVICE_ACCOUNT_FILE)
 config_file_path = "config.yaml"
 #-----------------LIVE VERSION/BETA TOGGLE---------------
 # 0 is Test Server, 1 is Live Server
-liveVersion = 0
+liveVersion = 1
 token = ""
 
 #Sheet Locations:
@@ -841,7 +841,7 @@ async def selectItem(interaction, searchterm, top_n_results, searchlist):
     return selected_item
 
 class Dropdown_Select_View(discord.ui.View):
-    def __init__(self, interaction, timeout=120, optionamount=1, maxselectionamount = 1, namelist = []):
+    def __init__(self, interaction, timeout=120, optionamount=1, maxselectionamount = 1, namelist = [], default = "None"):
         super().__init__(timeout=timeout)
         self.button_response = []
         self.choices = []
@@ -855,7 +855,7 @@ class Dropdown_Select_View(discord.ui.View):
         elif maxselectionamount < 1:
             self.selection_amount = 1
 
-        #Make sure we can't choose more than we ahve options
+        #Make sure we can't choose more than we have options
         if self.selection_amount > max(optionamount, len(self.namelist)):
             self.selection_amount = max(optionamount, len(self.namelist))
 
@@ -872,7 +872,7 @@ class Dropdown_Select_View(discord.ui.View):
                     value = i
                 ))
         self.select = discord.ui.Select(
-            placeholder = "None", # the placeholder text that will be displayed if nothing is selected
+            placeholder = default, # the placeholder text that will be displayed if nothing is selected
             min_values = 1, # the minimum number of values that must be selected by the users
             max_values = max([1, self.selection_amount]), # the maximum number of values that can be selected by the users
             options = self.choices# the list of options from which users can choose, a required field)
