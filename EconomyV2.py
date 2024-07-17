@@ -1109,10 +1109,10 @@ async def giveMoney(interaction, recipient:str, amount:int):
 
     if await removeDezziesFromPlayerWithoutMessage(amount, interaction.user.id):
         await addDezziesToPlayer(interaction, int(amount), playerID=recipient_id, write_econ_sheet=True, send_message=False)
-        await interaction.channel.send(embed=discord.Embed(title=f"{interaction.user.name} has given {amount}{dezzieemj} to {recipient_name}!", description=f"{interaction.user.name} now has {GlobalVars.economyData[author_row_index+1][1]}{dezzieemj}\n\n{recipient_name} now has {GlobalVars.economyData[recipient_row_index+1][1]}{dezzieemj}"))
+        replymessage = await interaction.channel.send(embed=discord.Embed(title=f"{interaction.user.name} has given {amount}{dezzieemj} to {recipient_name}!", description=f"{interaction.user.name} now has {GlobalVars.economyData[author_row_index+1][1]}{dezzieemj}\n\n{recipient_name} now has {GlobalVars.economyData[recipient_row_index+1][1]}{dezzieemj}"))
         #Log give commands.
         if liveVersion == 1:
-            await client.get_channel(918257057428279326).send(embed=discord.Embed(title = interaction.user.name + f" gave {amount} Dezzies to " + recipient_name, url=interaction.jump_url))
+            await client.get_channel(918257057428279326).send(embed=discord.Embed(title = interaction.user.name + f" gave {amount} Dezzies to " + recipient_name, url=replymessage.jump_url))
         
         TransactionsDatabaseInterface.addTransaction(interaction.user.name, TransactionsDatabaseInterface.DezzieMovingAction.Give, -int(amount))
         TransactionsDatabaseInterface.addTransaction(recipient_name, TransactionsDatabaseInterface.DezzieMovingAction.Give, int(amount))
