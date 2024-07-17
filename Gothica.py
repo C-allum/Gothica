@@ -50,7 +50,7 @@ async def on_ready():
     print("Loading economy data...")
     await EconomyV2.loadEconomySheet()
     await EconomyV2.loadInventorySheet()
-    print("Done.")
+    print("... done")
     #------------------DezzieAwardPoolReset---------------------
     #Grab current date and time
     today = datetime.now()
@@ -161,6 +161,10 @@ async def on_ready():
 
     else:
         print("It is not dezzie award pool reset time yet!")
+
+    print("\nFetching Kink Data")
+    GlobalVars.kinkdatabase = gc.open_by_key(kinksheet).sheet1.get_all_values()
+    print("... done")
 
     print("\n------------------------------------------------------\n")
     tree.add_command(staffgroup)
@@ -845,20 +849,13 @@ async def on_message(message):
                 await vermemb.remove_roles(role)
 
             #-------------------------Kink Functions--------------------------------
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "kinklist"):
-                await KinklistCommands.kinklist(message, message.channel, "Command")
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "kinkedit"):
-                await KinklistCommands.kinkedit(message)
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "kinkplayers"):
-                await KinklistCommands.kinkplayers(message)
+
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "kinkencounter"):
                 await KinklistCommands.kinkencounter(message)
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "kinksurvey"):
-                await KinklistCommands.kinksurvey(message)
+
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "kinkhelp"):
                 await KinklistCommands.kinkhelp(message)
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "kinkcompare"):
-                await KinklistCommands.kinkcompare(message)
+
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "kinkfill"):
                 await KinklistCommands.kinkfill(message)
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "randloot") and "staff" in str(message.author.roles).lower():

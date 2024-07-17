@@ -953,7 +953,7 @@ async def displaychar(cindex, interaction, csheet):
                 imgurl = carg.split("|")
                 imglen = carg.count("|") + 1
     try:
-        foot = "---------------------------------------------------------\n\nOwned by " + str(csheet.col_values(1)[cindex] + ". Searched for by " + interaction.user.name + "/ " + interaction.user.display_name)
+        foot = "---------------------------------------------------------\n\nOwned by " + str(csheet.col_values(2)[cindex] + ". Searched for by " + interaction.user.name + "/ " + interaction.user.display_name)
     except AttributeError:
         foot = ""
 
@@ -968,7 +968,7 @@ async def displaychar(cindex, interaction, csheet):
     if foot != None:
         emb.set_footer(text=foot)
     try:
-        await interaction.channel.send(embed=emb)
+        main = await interaction.channel.send(embed=emb)
     except discord.errors.HTTPException:
         await interaction.channel.send(embed=discord.Embed(title="Character couldn't be embedded",description="We refuse to write a whole library each time you search this character! (The character as a whole exceeds 4096 characters)\n\nIf this is not the case, it is likely that the image link has broken. Try editing the image, and if that doesn't work, contact the @bot gods.", colour = embcol))
         return
@@ -979,6 +979,7 @@ async def displaychar(cindex, interaction, csheet):
             if len(emb) == 10 or d == imglen-2:
                 await interaction.channel.send(embeds=emb)
                 emb = []
+    return main
 
 #Catalogue Subroutine
 @tree.command(
@@ -1255,12 +1256,13 @@ async def chardeactivate(message):
     await message.delete()
 
 class Dropdown_Select_View(discord.ui.View):
-    def __init__(self, inter, timeout=120, optionamount=1, maxselectionamount = 1, namelist = []):
+    def __init__(self, inter, timeout=120, optionamount=1, maxselectionamount = 1, namelist = [], altuser = None):
         super().__init__(timeout=timeout)
         self.button_response = []
         self.choices = []
         self.namelist = namelist
         self.user = inter.user
+        self.altuser = altuser
         #Make sure we can only choose between 1 and 25 as per specification.
         if maxselectionamount > 0 and maxselectionamount < 26:
             self.selection_amount = maxselectionamount
@@ -1301,14 +1303,14 @@ class Dropdown_Select_View(discord.ui.View):
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         try:
-            if self.user.id == interaction.user.id:
+            if self.user.id == interaction.user.id or self.altuser.id == interaction.user.id:
                 return True
             else:
                 await interaction.response.send_message("That is not your dropdown to click!", ephemeral=True)
                 return False
             
         except AttributeError:
-            if self.user.id == interaction.user.id:
+            if self.user.id == interaction.user.id or self.altuser.id == interaction.user.id:
                 return True
             else:
                 await interaction.response.send_message("That is not your dropdown to click!", ephemeral=True)

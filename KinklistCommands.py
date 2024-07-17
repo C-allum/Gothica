@@ -1,6 +1,11 @@
 #import readline
+import CommonDefinitions
 from CommonDefinitions import *
+import discord
 from discord import app_commands
+from discord.app_commands import Choice
+from typing import List
+from thefuzz import fuzz
 
 kinkOptions = ["Fave", "Kink", "Like", "It depends", "Willing to try", "No Strong Emotions", "Never heard of it", "Not my thing", "Soft Limit", "Hard Limit"]
 participationOptions = ["Submissive", "Dominant", "Voyeur", "Switch", "Submissive and Voyeur", "Dominant and Voyeur", "Enthusiast (Role doesn't matter to me)", "None"]
@@ -18,15 +23,15 @@ async def kinklist(interaction, user: str = None):
 
 async def kinklistA(user, outputchannel, trigger, interaction):
     if trigger == "Command":
-        kinkdata, targ = await getKinkDataNew(user, interaction)
-        categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
+        targ = await getKinkTarget(user, interaction)
+        categories, kinksPerCategory, categoryIndex = await getCategoryData()
     else:
-        kinkdata = await getKinkDataReact()
         targ = user
-        categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
+        categories, kinksPerCategory, categoryIndex = await getCategoryData()
 
-    a = kinkdata.index([x for x in kinkdata if str(targ.name) in x][0])
-    if not kinkdata.index([x for x in kinkdata if str(targ.name) in x][0]):
+    try:
+        GlobalVars.kinkdatabase.index([x for x in GlobalVars.kinkdatabase if str(targ.name) in x][0])
+    except IndexError:
         if targ.bot:
             if "Gothica" in targ.name:
                 await outputchannel.send(embed = discord.Embed(title = "You have attempted to check our kinks?", description = "Your mind is overwhelmed with possibilities you can scarcely comprehend. Take " + str(random.randint(8, 42)) + " psychic damage.\n\n" + str(random.choice(["You have a sudden craving for waffles.", "You passed out for a moment. We have cleared your internet search history for you.", "You have the sudden to search the Gallery of Sin for kobold porn", "You're a furry now.", "You are incapacitated for " + str(random.randint(1,4)*6) + " seconds.", "You appear to have been drooling uncontrollably."])), colour = embcol))
@@ -36,770 +41,239 @@ async def kinklistA(user, outputchannel, trigger, interaction):
                 await outputchannel.send(embed = discord.Embed(title = "You may not view the kinklist of the server bots.", description = "If the bot you were checking was a tupper, try the tupper's author instead.", colour = embcol))
         else:
             await outputchannel.send(embed = discord.Embed(title = "Could not find " + targ.display_name + "'s kink list", description = "Make sure that <@" + str(targ.id) + "> has completed the kink survey.", colour = embcol))
-    else:
-        try:
-            playerindex = [row[1] for row in kinkdata].index(targ.name)
-        except ValueError:
-            playerindex = [row[1] for row in kinkdata].index(targ.name + "#" + targ.discriminator)
-        generalPrefs = [] #Contains the general preferences
-        categoryAverages = [] #Contains category ratings
-        currentKinkIndex = playerInformationEntries #Begin at the first actual kink after the Player Info
+        return
+    
+    try:
+        playerindex = [row[1] for row in GlobalVars.kinkdatabase].index(targ.name)
+    except ValueError:
+        playerindex = [row[1] for row in GlobalVars.kinkdatabase].index(targ.name + "#" + targ.discriminator)
+    generalPrefs = [] #Contains the general preferences
+    categoryAverages = [] #Contains category ratings
+    currentKinkIndex = 4 #Begin at the first actual kink after the Player Info
 
-        #Fill the category averages array
-        for x in range (0, len(categories)): #Go over all categories
+    #Fill the category averages array
+    for x in range (len(categories)): #Go over all categories
 
-            categoryName = categories[x]
-            categoryKinkCount = kinksPerCategory[x]
-            categorySum = 0
-            for y in range(0, categoryKinkCount): #Go over each kink in a category
+        categoryName = categories[x]
+        categoryKinkCount = kinksPerCategory[x]
+        categorySum = 0
+        for y in range(0, categoryKinkCount): #Go over each kink in a category
 
-                try:
-                    categorySum += len(kinkOptions) - int(kinkOptions.index(kinkdata[playerindex][currentKinkIndex]))     #Invert scale so fave = 10 and hardlimit = 1
-                except ValueError:
-                    categorySum += 5
-                currentKinkIndex += 1
             try:
-                categoryAverages.append(kinkOptions[len(kinkOptions) - round(categorySum/categoryKinkCount)].replace("Fave", "**Fave**").replace("Kink", "**Kink**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__").replace("Never heard of it", "No Strong Emotions"))
-            
-            except ZeroDivisionError:
-                categoryAverages.append(kinkOptions[5])
-            
-        #Fill in general preferences array
-        currentKinkIndex = playerInformationEntries - 1 #Begin at the Pronouns
-        for f in range(0, kinksPerCategory[categories.index("General Preferences")] + 1):
-            currentRating = kinkdata[playerindex][currentKinkIndex].replace("Fave", "**Fave**").replace("Kink", "**Kink**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__")
-            generalPrefs.append(f"{kinkdata[1][currentKinkIndex]}: {currentRating}")
+                try:
+                    categorySum += len(kinkOptions) - int(kinkOptions.index(GlobalVars.kinkdatabase[playerindex][currentKinkIndex]))     #Invert scale so fave = 10 and hardlimit = 1
+                except IndexError:
+                    pass
+            except ValueError:
+                categorySum += 5
             currentKinkIndex += 1
+        try:
+            categoryAverages.append(kinkOptions[len(kinkOptions) - round(categorySum/categoryKinkCount)].replace("Fave", "**Fave**").replace("Kink", "**Kink**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__").replace("Never heard of it", "No Strong Emotions"))
+        
+        except ZeroDivisionError:
+            categoryAverages.append(kinkOptions[5])
+        
+    #Fill in general preferences array
+    currentKinkIndex = 3 #Begin at the Pronouns
+    for f in range(0, kinksPerCategory[categories.index("General Preferences")] + 1):
+        currentRating = GlobalVars.kinkdatabase[playerindex][currentKinkIndex].replace("Fave", "**Fave**").replace("Kink", "**Kink**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__")
+        generalPrefs.append(f"{GlobalVars.kinkdatabase[1][currentKinkIndex]}: {currentRating}")
+        currentKinkIndex += 1
 
-        #Prepare general preferences for printing
-        generalPrefString = ""
-        for entry in generalPrefs:
-            generalPrefString +=f"\n{entry}"
+    #Prepare general preferences for printing
+    generalPrefString = ""
+    for entry in generalPrefs:
+        generalPrefString +=f"\n{entry}"
 
-        #Remove Categories that shouldn't have an average in category arrays
-        printCategoriesWithAvg = categories.copy()  #PrintCategoriesWithAvg contains those categories that possess an average.
-        for entry in categoriesWithoutAverage:
+    #Remove Categories that shouldn't have an average in category arrays
+    printCategoriesWithAvg = categories.copy()  #PrintCategoriesWithAvg contains those categories that possess an average.
+    for entry in categoriesWithoutAverage:
+        try:
             categoryAverages.pop(printCategoriesWithAvg.index(entry))
             printCategoriesWithAvg.pop(printCategoriesWithAvg.index(entry))
-            
-        #Prepare the category array for printing, containing all categories that need to be listed. Needed later for the category selection
-        printCategories = categories.copy() #PrintCategories contains !ALL! categories that need to be printed, average or not
+        except IndexError:
+            pass
+        
+    #Prepare the category array for printing, containing all categories that need to be listed. Needed later for the category selection
+    printCategories = categories.copy() #PrintCategories contains !ALL! categories that need to be printed, average or not
 
-        printCategories.remove("General Preferences")
-        printCategories.remove("Categories")
-    
-        #This constructs the string containing the categories, the user rating for them, and the averages where they apply.
-        categoryEmbedString = printCategories.copy()
-        categoryAvgIndex = 0    #This is the index for the printCategoriesWithAvg and printCategoriesWithAvg arrays. printCategoriesWithAvg and printCategoriesWithAvg are shorter than categoryEmbedString, hence it needs a different index
+    printCategories.remove("General Preferences")
+    printCategories.remove("Categories")
+
+    #This constructs the string containing the categories, the user rating for them, and the averages where they apply.
+    categoryEmbedString = printCategories.copy()
+    categoryAvgIndex = 0    #This is the index for the printCategoriesWithAvg and printCategoriesWithAvg arrays. printCategoriesWithAvg and printCategoriesWithAvg are shorter than categoryEmbedString, hence it needs a different index
+    try:
         for entryIndex in range(0, len(categoryEmbedString)):
             if categoryEmbedString[entryIndex] in printCategoriesWithAvg:
                 tmp = categories.index("Categories")
-                categoryEmbedString[entryIndex] = f"`{entryIndex + 1}`: {categoryEmbedString[entryIndex]} - " + kinkdata[playerindex][categoryIndex[tmp] + categoryAvgIndex].replace("Fave", "**Fave**").replace("Kink", "**Kink**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__")  + f" ({categoryAverages[categoryAvgIndex]})"
+                categoryEmbedString[entryIndex] = f"`{entryIndex + 1}`: {categoryEmbedString[entryIndex]} - " + GlobalVars.kinkdatabase[playerindex][categoryIndex[tmp] + categoryAvgIndex].replace("Fave", "**Fave**").replace("Kink", "**Kink**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__")  + f" ({categoryAverages[categoryAvgIndex]})"
                 categoryAvgIndex += 1
             else:
-                 categoryEmbedString[entryIndex] = f"`{entryIndex + 1}`: {categoryEmbedString[entryIndex]}"
+                categoryEmbedString[entryIndex] = f"`{entryIndex + 1}`: {categoryEmbedString[entryIndex]}"
+    except IndexError:
+        pass
 
-        #Send the embed. Discern between the sources of the request. If requested by command, send the embed to the channel where the command was called and only send the general preferences first with a selector.
-        
-        if trigger == "Command":
-
-            kinkemb = discord.Embed(title = targ.display_name + "'s kink list:", description = "**General Preferences:**" +\
-                generalPrefString +\
-                "\n\n**Kink Overview:**\n" +\
-                targ.name + "/ " + targ.display_name +\
-                "'s general thoughts on each category of kink are shown below. We have then taken their average response in each category, and included that information in brackets.\n*As always, you should check with your rp partners regarding hard and soft limits for any particular scene.*\n\n*To see more detail on any of the below categories, type the corresponding number*\n\n" +\
-                "\n".join(categoryEmbedString), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {interaction.user.name} / {interaction.user.display_name}")
-
-            await outputchannel.send(embed = kinkemb)
-
-            try:
-                msg = await client.wait_for('message', timeout = 30, check = check(interaction.user))
-            except asyncio.exceptions.TimeoutError:
-                await interaction.channel.send("Message Timed Out")
-                return
-
-            try:
-                sel = int(msg.content)
-                await msg.delete()
-            except TimeoutError:
-                sel = 0
-            except UnboundLocalError:
-                sel = 0
-
-            foot = f"-------------------------------------------------------------\n\nThis search was summoned by {interaction.user.name} / {interaction.user.display_name}"
-            #If the user answered with a number, display the subcategory of the kinksheet.
-            await Kinklistdetail(categoryIndex, categories, printCategories, sel, kinkdata, playerindex, printCategoriesWithAvg, categoryAverages, tmp, targ.name, outputchannel, foot)
-
-        #If the kinklist was summoned by react, we want to send all categories to their DMs
-        else:
-
-            kinkemb = discord.Embed(title = targ.name + "'s kink list:", description = "**General Preferences:**" +\
-                generalPrefString +\
-                "\n\n**Kink Overview:**\n" +\
-                targ.name + "/ " + targ.display_name +\
-                "'s general thoughts on each category of kink are shown below. We have then taken their average response in each category, and included that information in brackets.\n*As always, you should check with your rp partners regarding hard and soft limits for any particular scene.*\n\n" +\
-                "\n".join(categoryEmbedString), colour = embcol)
-
-            await outputchannel.send(embed = kinkemb)
-
-            for cat in range(len(categories)):
-                await Kinklistdetail(categoryIndex, categories, printCategories, int(cat)+1, kinkdata, playerindex, printCategoriesWithAvg, categoryAverages, tmp, targ.name, outputchannel, "")
-        
-# async def kinklisA(message, outputchannel, trigger):
-
-
-#     if not str(namestr) in str(kinkdata):
-
-#         if targname.bot:
-
-#             if "Gothica" in targname.name:
-
-#                 await outputchannel.send(embed = discord.Embed(title = "You have attempted to check our kinks?", description = "Your mind is overwhelmed with possibilities you can scarcely comprehend. Take " + str(random.randint(8, 42)) + " psychic damage.\n\n" + str(random.choice(["You have a sudden craving for waffles.", "You passed out for a moment. We have cleared your internet search history for you.", "You have the sudden to search the Gallery of Sin for kobold porn", "You're a furry now.", "You are incapacitated for " + str(random.randint(1,4)*6) + " seconds.", "You appear to have been drooling uncontrollably."])), colour = embcol))
-
-#             elif "Avrae" in targname.name:
-
-#                 await outputchannel.send(embed = discord.Embed(title = "From what we know of Avrae", description = "They're into sadism and torture. Ask Fish in the River about it, he knows.", colour = embcol))
-
-#             else:
-
-#                 await outputchannel.send(embed = discord.Embed(title = "You may not view the kinklist of the server bots.", description = "If the bot you were checking was a tupper, try the tupper's author instead.", colour = embcol))
-
-#         else:
-        
-#             await outputchannel.send(embed = discord.Embed(title = "Could not find " + namestr + "'s kink list", description = "Make sure that <@" + str(targname.id) + "> has completed the kink survey.", colour = embcol))
-        
-#     else:
-#         try:
-#             playerindex = [row[1] for row in kinkdata].index(namestr)
-#         except ValueError:
-#             playerindex = [row[1] for row in kinkdata].index(namestr + "#" + targname.discriminator)
-#         generalPrefs = [] #Contains the general preferences
-#         categoryAverages = [] #Contains category ratings
-#         currentKinkIndex = playerInformationEntries #Begin at the first actual kink after the Player Info
-
-#         #Fill the category averages array
-#         for x in range (0, len(categories)): #Go over all categories
-
-#             categoryName = categories[x]
-#             categoryKinkCount = kinksPerCategory[x]
-#             categorySum = 0
-#             for y in range(0, categoryKinkCount): #Go over each kink in a category
-
-#                 try:
-#                     categorySum += len(kinkOptions) - int(kinkOptions.index(kinkdata[playerindex][currentKinkIndex]))     #Invert scale so fave = 10 and hardlimit = 1
-#                 except ValueError:
-#                     categorySum += 5
-#                 currentKinkIndex += 1
-#             try:
-#                 categoryAverages.append(kinkOptions[len(kinkOptions) - round(categorySum/categoryKinkCount)].replace("Fave", "**Fave**").replace("Kink", "**Kink**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__").replace("Never heard of it", "No Strong Emotions"))
-            
-#             except ZeroDivisionError:
-#                 categoryAverages.append(kinkOptions[5])
-            
-#         #Fill in general preferences array
-#         currentKinkIndex = playerInformationEntries - 1 #Begin at the Pronouns
-#         for f in range(0, kinksPerCategory[categories.index("General Preferences")] + 1):
-#             currentRating = kinkdata[playerindex][currentKinkIndex].replace("Fave", "**Fave**").replace("Kink", "**Kink**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__")
-#             generalPrefs.append(f"{kinkdata[1][currentKinkIndex]}: {currentRating}")
-#             currentKinkIndex += 1
-
-#         #Prepare general preferences for printing
-#         generalPrefString = ""
-#         for entry in generalPrefs:
-#             generalPrefString +=f"\n{entry}"
-
-#         #Remove Categories that shouldn't have an average in category arrays
-#         printCategoriesWithAvg = categories.copy()  #PrintCategoriesWithAvg contains those categories that possess an average.
-#         for entry in categoriesWithoutAverage:
-#             categoryAverages.pop(printCategoriesWithAvg.index(entry))
-#             printCategoriesWithAvg.pop(printCategoriesWithAvg.index(entry))
-            
-#         #Prepare the category array for printing, containing all categories that need to be listed. Needed later for the category selection
-#         printCategories = categories.copy() #PrintCategories contains !ALL! categories that need to be printed, average or not
-
-#         printCategories.remove("General Preferences")
-#         printCategories.remove("Categories")
+    #Send the embed. Discern between the sources of the request. If requested by command, send the embed to the channel where the command was called and only send the general preferences first with a selector.
     
-#         #This constructs the string containing the categories, the user rating for them, and the averages where they apply.
-#         categoryEmbedString = printCategories.copy()
-#         categoryAvgIndex = 0    #This is the index for the printCategoriesWithAvg and printCategoriesWithAvg arrays. printCategoriesWithAvg and printCategoriesWithAvg are shorter than categoryEmbedString, hence it needs a different index
-#         for entryIndex in range(0, len(categoryEmbedString)):
-#             if categoryEmbedString[entryIndex] in printCategoriesWithAvg:
-#                 tmp = categories.index("Categories")
-#                 categoryEmbedString[entryIndex] = f"`{entryIndex + 1}`: {categoryEmbedString[entryIndex]} - " + kinkdata[playerindex][categoryIndex[tmp] + categoryAvgIndex].replace("Fave", "**Fave**").replace("Kink", "**Kink**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__")  + f" ({categoryAverages[categoryAvgIndex]})"
-#                 categoryAvgIndex += 1
-#             else:
-#                  categoryEmbedString[entryIndex] = f"`{entryIndex + 1}`: {categoryEmbedString[entryIndex]}"
+    if trigger == "Command":
 
+        kinkemb = discord.Embed(title = targ.display_name + "'s kink list:", description = "**General Preferences:**" +\
+            generalPrefString +\
+            "\n\n**Kink Overview:**\n" +\
+            targ.name + "/ " + targ.display_name +\
+            "'s general thoughts on each category of kink are shown below. We have then taken their average response in each category, and included that information in brackets.\n*As always, you should check with your rp partners regarding hard and soft limits for any particular scene.*\n\n*To see more detail on any of the below categories, type the corresponding number*\n\n" +\
+            "\n".join(categoryEmbedString), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {interaction.user.name} / {interaction.user.display_name}")
+
+        catAnswDrop = CommonDefinitions.Dropdown_Select_View(interaction = interaction, namelist = categoryEmbedString)
+        msg = await interaction.channel.send(embed = kinkemb, view = catAnswDrop)
+
+        if await catAnswDrop.wait():
+            await interaction.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+            return
+        sel = int(catAnswDrop.button_response[0])
+        await msg.delete()
+        foot = f"-------------------------------------------------------------\n\nThis search was summoned by {interaction.user.name} / {interaction.user.display_name}"
+        try:
+            #If the user answered with a number, display the subcategory of the kinksheet.
+            await Kinklistdetail(categoryIndex, categories, printCategories, sel, playerindex, printCategoriesWithAvg, categoryAverages, tmp, targ.name, outputchannel, foot)
+        except UnboundLocalError:
+            return
+
+    #If the kinklist was summoned by react, we want to send all categories to their DMs
+    else:
+
+        kinkemb = discord.Embed(title = targ.name + "'s kink list:", description = "**General Preferences:**" +\
+            generalPrefString +\
+            "\n\n**Kink Overview:**\n" +\
+            targ.name + "/ " + targ.display_name +\
+            "'s general thoughts on each category of kink are shown below. We have then taken their average response in each category, and included that information in brackets.\n*As always, you should check with your rp partners regarding hard and soft limits for any particular scene.*\n\n" +\
+            "\n".join(categoryEmbedString), colour = embcol)
+
+        await outputchannel.send(embed = kinkemb)
+
+        for cat in range(len(categories)):
+            await Kinklistdetail(categoryIndex, categories, printCategories, int(cat)+1, playerindex, printCategoriesWithAvg, categoryAverages, tmp, targ.name, outputchannel, "")
 
 #Allows to edit the kinklist. Moderators can tag someone and edit someone elses kinks.
-async def kinkedit(message):
+@tree.command(name = "kinkedit", description = "Edits one of your kinks")
+@app_commands.describe(kink = "The kink to edit. Leave this blank to choose by category.")
+@app_commands.describe(user = "The owner of the kinklist to modify (staff only)")
+@app_commands.checks.has_role("Verified")
+async def kinkedit(interaction, kink: str = None, user: str = None):
+    await interaction.response.defer(ephemeral=True, thinking=False)
 
-    kinkdata, namestr, targname = await getKinkData(message)
-
-    if not str(namestr) in str(kinkdata):
-
-        await message.channel.send(embed = discord.Embed(title = "Could not find " + namestr.split("#")[0] + "'s kink list", description = "Make sure that <@" + str(targname.id) + "> has completed the kink survey."))
-
-    else:
-        #Get player info
-        playerIndex = [row[1] for row in kinkdata].index(namestr)
-        playerKinkData = kinkdata[playerIndex]
-
-        if targname != message.author and not "mod team" in str(message.author.roles).lower():
-
-            await message.channel.send(embed = discord.Embed(title = "You can't edit someone else's kinks.", description = "", colour = embcol))
-
+    targ = interaction.user
+    if user != None:
+        if not "Staff" in str(interaction.user.roles):
+            await interaction.channel.send(embed = discord.Embed(title = "You can't do that", description = "Only Staff members can edit the kinks of another player. Editing your kink instead.", colour = embcol))
         else:
-
-            try:
-
-                if "@" in message.content:
-
-                    searchterm = message.content.lower().split(" ", 2)[2].replace("zation", "sation")
-
-                else:
-
-                    searchterm = message.content.lower().split(" ", 1)[1].replace("zation", "sation")
-
-            except IndexError:
-
-                searchterm = "Search term not found"
-
-            if searchterm != "Search term not found" and searchterm in str(kinkdata[1]).lower():
-
-                kinkssearched = []
-
-                kinkindexes = []
-
-                for c in range(len(kinkdata[1])):
-
-                    if searchterm in kinkdata[1][c].lower():
-
-                        kinkssearched.append("`" + str(len(kinkindexes) + 1) + "`: " + kinkdata[1][c]) 
-
-                        kinkindexes.append(c)
-
-                if len(kinkindexes) > 1:
-
-                    await message.channel.send(embed = discord.Embed(title = "Multiple kinks found matching that search:", description = "Choose the number of the one you want:\n\n" + "\n".join(kinkssearched) + "\n\nThis message will timeout after 30 seconds.", colour = embcol))
-
-                    try:
-                        
-                        msg = await client.wait_for('message', timeout = 30, check = check(message.author))
-
-                        try:
-
-                            kinksel = kinkssearched[int(msg.content) - 1].split(": ")[1]
-
-                            kinkindex = kinkindexes[int(msg.content) - 1]
-
-                        except IndexError:
-
-                            kinksel = "Fail"
-
-                        await msg.delete()
-
-                    except asyncio.TimeoutError:
-
-                        await message.channel.send("Message timed out")
-
-                        kinksel = "Fail"
-
-                    except ValueError:
-
-                        await message.channel.send("That isn't a valid integer")
-
-                        kinksel = "Fail"
-
-                        await msg.delete()
-
-                else:
-
-                    kinksel = kinkssearched[0].split(": ")[1]
-
-                    kinkindex = kinkindexes[0]
-
-                if kinksel != "Fail":
-
-                    pref = "Fail"
-
-                    if kinkindex > 3 and not "Role" in kinksel and not "Additional " in kinksel:
-                        
-                        embedstring = f"{message.author.name}, you currently have {kinksel} as: {kinkdata[a][kinkindex]}. What would you like to change this to?\n\n"
-                        for z in range(0, len(kinkOptions)): #Add the answer options to the embed
-                            embedstring = embedstring + f"`{z+1}`: {kinkOptions[z]}\n"
-                        embedstring = embedstring + "\n\nThis message will timeout in 30 seconds."
-                        await message.channel.send(embed = discord.Embed(title = "Editing " + kinksel, description = embedstring, colour = embcol))
-
-                        try:
-
-                            msg2 = await client.wait_for('message', timeout = 30, check = check(message.author))
-
-                            msg = int(msg2.content)
-
-                            try:
-
-                                #options = ["Kink", "Likes", "Unsure or Exploring", "No Strong Emotions", "Soft Limit", "Hard Limit", "Absolute Limit"]
-
-                                pref = kinkOptions[msg - 1]
-
-                                await msg2.delete()
-
-                            except IndexError:
-
-                                await message.channel.send("That isn't a valid option.")
-
-                        except asyncio.TimeoutError:
-
-                            await message.channel.send("Message timed out")
-
-                        except ValueError:
-
-                            await message.channel.send("That isn't a valid integer")
-
-                            await msg2.delete()
-
-                    elif "Role" in kinksel:
-                        embedstring = f"{message.author.name}, {kinksel}\n\nCurrently, this is set as: {kinkdata[a][kinkindex]}. What would you like to change this to?\n\n"
-                        for z in range(0, len(participationOptions)): #Add the answer options to the embed
-                            embedstring = embedstring + f"`{z+1}`: {participationOptions[z]}\n"
-                        embedstring = embedstring + "\n\nThis message will timeout in 30 seconds."
-                        await message.channel.send(embed = discord.Embed(title = "Editing role in " + kinksel.rsplit(" ", 1)[0], description = embedstring, colour = embcol))
-
-                        try:
-
-                            msg2 = await client.wait_for('message', timeout = 30, check = check(message.author))
-
-                            msg = int(msg2.content)
-
-                            try:
-
-                                #options = ["For my characters (Submissive)", "For other people's characters (Dominant)", "To watch between other characters (Voyeur)", "All of the above (Switch)"]
-
-                                pref = participationOptions[msg - 1]
-
-                                await msg2.delete()
-
-                            except IndexError:
-
-                                await message.channel.send("That isn't a valid option.")
-
-                        except asyncio.TimeoutError:
-
-                            await message.channel.send("Message timed out")
-
-                        except ValueError:
-
-                            await message.channel.send("That isn't a valid integer")
-
-                            await msg2.delete()
-
-                    elif kinksel == "Pronouns":
-
-                        await message.channel.send(embed = discord.Embed(title = "Editing your pronouns", description = message.author.name + ", your pronouns are currently " + kinkdata[playerIndex][kinkindex] + ". What would you like to change them to?\n\nThe format should ideally be the same as He/Him, so Personal Subject Pronoun/ Personal Object Pronoun.\n\nThis message will timeout in 30 seconds.", colour = embcol))
-
-                        try:
-
-                            msg2 = await client.wait_for('message', timeout = 30, check = checkAuthor(message.author))
-
-                            pref = msg2.content
-
-
-                        except asyncio.TimeoutError:
-
-                            await message.channel.send("Message timed out")
-
-                    elif "Additional " in kinksel:
-                        await message.channel.send(embed = discord.Embed(title = "Editing your Additional Kinks and Limits", description = message.author.name + f", your {kinksel} are currently " + kinkdata[playerIndex][kinkindex] + ". What would you like to change them to?\n\nThis message will timeout in 30 seconds.", colour = embcol))
-
-                        try:
-
-                            msg2 = await client.wait_for('message', timeout = 30, check = checkAuthor(message.author))
-
-                            pref = msg2.content
-
-                        except asyncio.TimeoutError:
-
-                            await message.channel.send("Message timed out")
-
-                    else:
-
-                        await message.channel.send("That isn't a kink you can edit")
-
-                    if pref != "Fail":
-
-                        playerKinkData[kinkindex] = pref
-                        await message.channel.send(embed = discord.Embed(title = "Edited " + kinkdata[1][kinkindex], description = "You have set it to: " + pref, colour = embcol))
-                        sheet.values().update(spreadsheetId = kinksheet, range = str(f"A{playerIndex + 1}"), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[playerKinkData])).execute()
-
-                        await message.delete()
-
-                else:
-
-                    await message.channel.send("Something went wrong")
-
-            #Edit by menu
-
-            elif searchterm == "Search term not found":
-                               
-                categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
-                categoryIndex[0] = categoryIndex[0] -1  #To include Pronouns in General Preferences
-                embedstring = "Choose one of the following categories:\n\n"
-                optionCounter = 1
-                for kink in categories:
-                    embedstring = embedstring + f"`{optionCounter}`: {kink}\n"
-                    optionCounter += 1
-                embedstring = embedstring + "\nThis message will timeout after 30 seconds."
-                await message.channel.send(embed = discord.Embed(title = "Which kink would you like to edit?", description = embedstring, colour = embcol))
-
-                try:
-                        
-                    msg = await client.wait_for('message', timeout = 30, check = check(message.author))
-
-                    try:
-
-                        #kinkcat = ["General Preferences", "Body Parts", "Relationships", "Physical Domination", "Mental Domination", "Clothing and Toys", "Kinkyplay", "Transformation", "Mind Control", "Monster Fucking", "Extreme Kinkplay", "Additional Kinks and Limits"]
-
-                        kinksel = categories[int(msg.content) - 1]
-
-                    except IndexError:
-
-                        kinksel = "Fail"
-
-                    await msg.delete()
-
-                except asyncio.TimeoutError:
-
-                    await message.channel.send("Message timed out")
-
-                    kinksel = "Fail"
-
-                except ValueError:
-
-                    await message.channel.send("That isn't a valid integer")
-
-                    kinksel = "Fail"
-
-                    await msg.delete()
-
-                if kinksel != "Fail":
-
-                    
-                    kinkselector = int(msg.content)
-                    kinkrange = [categoryIndex[categories.index(kinksel)], categoryIndex[categories.index(kinksel) + 1] - 1]
-
-                    kinktitles = []
-
-                    kinkindex = []
-
-                    for c in range(len(kinkdata[1])):
-
-                        if kinkrange[0] <= c and kinkrange[1] >= c:
-
-                            kinktitles.append("`" + str(len(kinkindex) + 1) + "`: " + kinkdata[1][c])
-
-                            kinkindex.append(c)
-
-                    await message.channel.send(embed = discord.Embed(title = "Editing " + kinksel, description = "Choose the data you wish to edit:\n\n" + "\n".join(kinktitles) + "\n\nThis message will timeout in 30 seconds.", colour = embcol))
-
-                    kinktoedit = "Fail"
-
-                    kinkindex0 = -1
-
-                    try:
-
-                        msg2 = await client.wait_for('message', timeout = 30, check = check(message.author))
-
-                        msg = int(msg2.content)
-
-                        try:
-
-                            kinktoedit = kinktitles[msg - 1].split(": ")[1]
-
-                            kinkindex0 = int(kinkindex[msg - 1])
-
-                            await msg2.delete()
-
-                        except IndexError:
-
-                            await message.channel.send("That isn't a valid option.")
-
-                    except asyncio.TimeoutError:
-
-                        await message.channel.send("Message timed out")
-
-                    pref = "Fail"
-
-                    if kinkindex0 > 3 and not "Role" in kinktoedit and not "Additional " in kinktoedit:
-
-                        embedstring = f"{message.author.name}, you currently have {kinktoedit} as: {playerKinkData[kinkindex0]}. What would you like to change this to?\n\n"
-                        for z in range(0, len(kinkOptions)): #Add the answer options to the embed
-                            embedstring = embedstring + f"`{z+1}`: {kinkOptions[z]}\n"
-                        embedstring = embedstring + "\n\nThis message will timeout in 30 seconds."
-
-                        await message.channel.send(embed = discord.Embed(title = "Editing " + kinktoedit, description = embedstring, colour = embcol))
-
-                        try:
-
-                            msg2 = await client.wait_for('message', timeout = 30, check = check(message.author))
-
-                            msg = int(msg2.content)
-
-                            try:
-
-                                #options = ["Kink", "Likes", "Unsure or Exploring", "No Strong Emotions", "Soft Limit", "Hard Limit", "Absolute Limit"]
-
-                                pref = kinkOptions[msg - 1]
-
-                                await msg2.delete()
-
-                            except IndexError:
-
-                                await message.channel.send("That isn't a valid option.")
-
-                        except asyncio.TimeoutError:
-
-                            await message.channel.send("Message timed out")
-
-                        except ValueError:
-
-                            await message.channel.send("That isn't a valid integer")
-
-                            await msg2.delete()
-
-                    elif "Role" in kinktoedit:
-                        
-                        embedstring = f"{message.author.name}, {kinksel}\n\nCurrently, this is set as: {playerKinkData[kinkindex0]}. What would you like to change this to?\n\n"
-                        for z in range(0, len(participationOptions)): #Add the answer options to the embed
-                            embedstring = embedstring + f"`{z+1}`: {participationOptions[z]}\n"
-                        embedstring = embedstring + "\n\nThis message will timeout in 30 seconds."
-                        await message.channel.send(embed = discord.Embed(title = "Editing role in " + kinktoedit.rsplit(" ", 1)[0], description = embedstring, colour = embcol))
-
-                        try:
-
-                            msg2 = await client.wait_for('message', timeout = 30, check = check(message.author))
-
-                            msg = int(msg2.content)
-
-                            try:
-
-                                #options = ["For my characters (Submissive)", "For other people's characters (Dominant)", "To watch between other characters (Voyeur)", "All of the above (Switch)"]
-
-                                pref = participationOptions[msg - 1]
-
-                                await msg2.delete()
-
-                            except IndexError:
-
-                                await message.channel.send("That isn't a valid option.")
-
-                        except asyncio.TimeoutError:
-
-                            await message.channel.send("Message timed out")
-
-                        except ValueError:
-
-                            await message.channel.send("That isn't a valid integer")
-
-                            await msg2.delete()
-
-                    elif kinktoedit == "Pronouns":
-
-                        await message.channel.send(embed = discord.Embed(title = "Editing your pronouns", description = message.author.name + ", your pronouns are currently " + kinkdata[playerIndex][kinkindex0] + ". What would you like to change them to?\n\nThe format should ideally be the same as He/Him, so Personal Subject Pronoun/ Personal Object Pronoun.\n\nThis message will timeout in 30 seconds.", colour = embcol))
-
-                        try:
-
-                            msg2 = await client.wait_for('message', timeout = 30, check = checkAuthor(message.author))
-
-                            pref = msg2.content
-
-                        except asyncio.TimeoutError:
-
-                            await message.channel.send("Message timed out")
-
-                    elif "Additional " in kinktoedit:
-                        await message.channel.send(embed = discord.Embed(title = "Editing your Additional Kinks and Limits", description = message.author.name + f", your {kinktoedit} are currently " + kinkdata[playerIndex][kinkindex0] + ". What would you like to change them to?\n\nThis message will timeout in 30 seconds.", colour = embcol))
-
-                        try:
-
-                            msg2 = await client.wait_for('message', timeout = 30, check = checkAuthor(message.author))
-
-                            pref = msg2.content
-
-                        except asyncio.TimeoutError:
-
-                            await message.channel.send("Message timed out")
-
-                    if pref != "Fail":
-
-                        playerKinkData[kinkindex0] = pref
-                        await message.channel.send(embed = discord.Embed(title = "Edited " + kinkdata[1][kinkindex0], description = "You have set it to: " + pref, colour = embcol))
-                        sheet.values().update(spreadsheetId = kinksheet, range = str(f"A{playerIndex + 1}"), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[playerKinkData])).execute()
-
-                        await message.delete()
+            targ = await getKinkTarget(user, interaction)
+    try:
+        index = GlobalVars.kinkdatabase.index([x for x in GlobalVars.kinkdatabase if str(targ.name) in x][0])
+    except IndexError:
+        await interaction.channel.send(embed = discord.Embed(title = "Could not find " + targ.name + "'s kink list", description = "Make sure that <@" + str(targ.id) + "> has completed the kink survey."))
+        return    
+    kinktoedit, kinkindex = await selkink(kink, interaction)
+
+    if "role" in GlobalVars.kinkdatabase[1][kinkindex]:
+        kinkOpts = participationOptions
+    elif GlobalVars.kinkdatabase[1][kinkindex] == "Pronouns" or GlobalVars.kinkdatabase[1][kinkindex] == "Additional Kinks" or GlobalVars.kinkdatabase[1][kinkindex] == "Additional Limits":
+        kinkOpts = None
+    else:
+        kinkOpts = kinkOptions
+    embedstring = f"{interaction.user.name}, you currently have {kinktoedit} as: {GlobalVars.kinkdatabase[index][kinkindex]}. What would you like to change this to?\n\n"
+    try:
+        for z in range(0, len(kinkOpts)): #Add the answer options to the embed
+            embedstring = embedstring + f"`{z+1}`: {kinkOpts[z]}\n"
+    except TypeError:
+        pass
+    embedstring = embedstring + "\n\nThis message will timeout in 30 seconds."
+    if kinkOpts == None: #Get text input
+        await interaction.channel.send(embed = discord.Embed(title = "Editing " + kinktoedit, description = embedstring, colour = embcol))
+        try:
+            msg = await client.wait_for('message', timeout = 30, check = checkAuthor(interaction.user))
+            newdata = msg.content
+        except asyncio.TimeoutError:
+            await interaction.channel.send("Message timed out")
+            return
+    else:
+        kinkAnswDrop = CommonDefinitions.Dropdown_Select_View(interaction = interaction, namelist = kinkOpts)
+        await interaction.channel.send(embed = discord.Embed(title = "Editing " + kinktoedit, description = embedstring, colour = embcol), view = kinkAnswDrop)
+        if await kinkAnswDrop.wait():
+                await interaction.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+                return
+        
+        i = int(kinkAnswDrop.button_response[0]) - 1
+        if i >= 0 and i < len(kinkOpts):
+            newdata = kinkOpts[i]
+        else: 
+            await interaction.channel.send(embed=discord.Embed(title=f"Number has to be between 1 and {len(kinkOpts)}", colour = embcol))
+            return
+        
+    GlobalVars.kinkdatabase[index][kinkindex] = newdata
+    gc.open_by_key(kinksheet).sheet1.update_cell(index+1, kinkindex+1, str(newdata))
+    await interaction.channel.send(embed = discord.Embed(title = "Your changes have been made!", colour = embcol))
+    await interaction.followup.send("Kinklist updated")
 
 #Takes a kink as a second input and outputs people who like that kink.
-async def kinkplayers(message):
-    kinkdata, namestr, targname = await getKinkData(message)
+@tree.command(name = "kinkplayers", description = "Displays the list of people with a certain kink. Use in #looking-for-new-roleplay to ping instead.")
+@app_commands.describe(kink = "The kink to view. Leave this blank to choose by category.")
+@app_commands.checks.has_role("Verified")
+async def kinkplayers(interaction, kink: str = None):
+    await interaction.response.defer(ephemeral=True, thinking=False)
+    kinksel, kinkindex = await selkink(kink, interaction)
 
-    if not str(namestr) in str(kinkdata):
-
-        await message.channel.send(embed = discord.Embed(title = "Could not find " + namestr.split("#")[0] + "'s kink list", description = "Make sure that <@" + str(targname.id) + "> has completed the kink survey."))
-
+    if interaction.channel.id != 1009522511844749342:
+        charlimit = 4096
     else:
+        charlimit = 2000
 
-        kinkcolumnindex = []
+    haskink = "The people with " + str(kinksel) + " listed as a kink are:\n"
+    hasfave = "Additonally, those with this listed as a favourite are:\n"
+    haslike = "Finally, the people with " + str(kinksel) + " listed as something they like are:\n"
+    kinkmsgs = []
+    favemsgs = []
+    likemsgs = []
+    for a in range(len(GlobalVars.kinkdatabase)):
+        if GlobalVars.kinkdatabase[a][kinkindex] == "Kink":
+            if len(str(haskink + "<@" + GlobalVars.kinkdatabase[a][2] + ">, ")) > charlimit:
+                kinkmsgs.append(haskink)
+                haskink = ""
+            haskink += "<@" + GlobalVars.kinkdatabase[a][2] + ">, "
+        elif GlobalVars.kinkdatabase[a][kinkindex] == "Fave":
+            if len(str(hasfave + "<@" + GlobalVars.kinkdatabase[a][2] + ">, ")) > charlimit:
+                favemsgs.append(hasfave)
+                hasfave = ""
+            hasfave += "<@" + GlobalVars.kinkdatabase[a][2] + ">, "
+        elif GlobalVars.kinkdatabase[a][kinkindex] == "Like":
+            if len(str(haslike + "<@" + GlobalVars.kinkdatabase[a][2] + ">, ")) > charlimit:
+                likemsgs.append(haslike)
+                haslike = ""
+            haslike += "<@" + GlobalVars.kinkdatabase[a][2] + ">, "
+    kinkmsgs.append(haskink)
+    favemsgs.append(hasfave)
+    likemsgs.append(haslike)
 
-        for c in range(len(kinkdata[1])):
-
-            if message.content.split(" ", 1)[1].lower() in kinkdata[1][c].lower():
-
-                kinkcolumnindex.append(c)
-
-        if len(kinkcolumnindex) == 0:
-
-            await message.channel.send(embed = discord.Embed(title = "We couldn't find a kink matching that search term.", description = "You could try looking through your own `%kinklist` to check which are available?", colour = embcol))
-
+    for b in range(len(kinkmsgs)):
+        if interaction.channel.id != 1009522511844749342:
+            await interaction.channel.send(embed = discord.Embed(title = "People with " + kinksel + " as a kink:", description = kinkmsgs[b], colour = embcol).set_author(name = interaction.user.name + "/ " + interaction.user.display_name))
         else:
-
-            if len(kinkcolumnindex) > 1:
-
-                kinktitle = []
-
-                for d in range(len(kinkcolumnindex)):
-
-                    kinktitle.append("`" + str(d + 1) + "`: " + kinkdata[1][kinkcolumnindex[d]])
-
-                await message.channel.send(embed = discord.Embed(title = "We found multiple kinks matching that search term.", description = "Which are you looking for?\n\n" + "\n".join(kinktitle) + "\n\nThis message will timeout in 30 seconds.", colour = embcol))
-
-                msg = await client.wait_for('message', timeout = 30, check = check(message.author))
-
-                try:
-
-                    sel = int(msg.content) - 1
-
-                except ValueError:
-
-                    sel = 0
-
-                await msg.delete()
-
-            else:
-
-                sel = 0
-
-            kinkhavers = []
-
-            if message.channel.id == 1009522511844749342:
-
-                for e in range(len(kinkdata)):
-
-                    if kinkdata[e][kinkcolumnindex[sel]] == "Fave":
-
-                        if len(", ".join(kinkhavers)) > 3800:
-
-                            await message.channel.send("People who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a fave:\n\n" + ", ".join(kinkhavers))
-
-                            kinkhavers = []
-
-                        kinkhavers.append("<@" + str(kinkdata[e][2]) + ">")
-
-                await message.channel.send("People who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a fave:\n\n" + ", ".join(kinkhavers))
-
-                await message.delete()
-
-            else:
-
-                for e in range(len(kinkdata)):
-
-                    if kinkdata[e][kinkcolumnindex[sel]] == "Fave":
-
-                        if len(", ".join(kinkhavers)) > 3800:
-
-                            await message.channel.send(embed = discord.Embed(title = "People who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a fave:", description = ", ".join(kinkhavers), colour = embcol))
-
-                            kinkhavers = []
-
-                        kinkhavers.append(kinkdata[e][1])
-
-                await message.channel.send(embed = discord.Embed(title = "People who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a fave:", description = ", ".join(kinkhavers), colour = embcol))
-
-                await message.delete()
-
-            kinkhavers = []
-
-            if message.channel.id == 1009522511844749342:
-
-                for e in range(len(kinkdata)):
-
-                    if kinkdata[e][kinkcolumnindex[sel]] == "Kink":
-
-                        if len(", ".join(kinkhavers)) > 3800:
-
-                            await message.channel.send("Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a kink:\n\n" + ", ".join(kinkhavers))
-
-                            kinkhavers = []
-
-                        kinkhavers.append("<@" + str(kinkdata[e][2]) + ">")
-
-                        
-
-                await message.channel.send("Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a kink:\n\n" + ", ".join(kinkhavers))
-
-            else:
-
-                for e in range(len(kinkdata)):
-
-                    if kinkdata[e][kinkcolumnindex[sel]] == "Kink":
-
-                        if len(", ".join(kinkhavers)) > 3800:
-
-                            await message.channel.send(embed = discord.Embed(title = "Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a kink:", description = ", ".join(kinkhavers), colour = embcol))
-
-                            kinkhavers = []
-
-                        kinkhavers.append(kinkdata[e][1])
-
-                await message.channel.send(embed = discord.Embed(title = "Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as a kink:", description = ", ".join(kinkhavers), colour = embcol))
-
-            kinkhavers = []
-
-            if message.channel.id == 1009522511844749342:
-
-                for e in range(len(kinkdata)):
-
-                    if kinkdata[e][kinkcolumnindex[sel]] == "Like":
-
-                        if len(", ".join(kinkhavers)) > 3800:
-
-                            await message.channel.send("Finally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as something they like:\n\n" + ", ".join(kinkhavers))
-
-                            kinkhavers = []
-
-                        kinkhavers.append("<@" + str(kinkdata[e][2]) + ">")
-
-                        
-
-                await message.channel.send("Finally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as something they like:\n\n" + ", ".join(kinkhavers))
-                                           
-                await message.channel.send(f"This search was summoned by {message.author.name}/ {message.author.display_name}")
-
-            else:
-
-                for e in range(len(kinkdata)):
-
-                    if kinkdata[e][kinkcolumnindex[sel]] == "Like":
-
-                        if len(", ".join(kinkhavers)) > 3800:
-
-                            await message.channel.send(embed = discord.Embed(title = "Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as something they like:", description = ", ".join(kinkhavers), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name} / {message.author.display_name}"))
-
-                            kinkhavers = []
-
-                        kinkhavers.append(kinkdata[e][1])
-
-                await message.channel.send(embed = discord.Embed(title = "Additionally, people who have " + kinkdata[1][kinkcolumnindex[sel]] + " listed as something they like:", description = ", ".join(kinkhavers), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name} / {message.author.display_name}"))
+            await interaction.channel.send(kinkmsgs[b])
+    for b in range(len(favemsgs)):
+        if interaction.channel.id != 1009522511844749342:
+            await interaction.channel.send(embed = discord.Embed(title = "People with " + kinksel + " as a favourite:", description = favemsgs[b], colour = embcol).set_author(name = interaction.user.name + "/ " + interaction.user.display_name))
+        else:
+            await interaction.channel.send(favemsgs[b])
+    for b in range(len(likemsgs)):
+        if interaction.channel.id != 1009522511844749342:
+            await interaction.channel.send(embed = discord.Embed(title = "People with " + kinksel + " as something they like:", description = likemsgs[b], colour = embcol).set_author(name = interaction.user.name + "/ " + interaction.user.display_name))
+        else:
+            await interaction.channel.send(likemsgs[b])
+    if interaction.channel.id != 1009522511844749342:
+        await interaction.channel.send("This search was summoned by " + interaction.user.name + "/ " + interaction.user.display_name)
+
+    await interaction.followup.send("Command complete.")
 
 #Finds a room and an encounter for the specified person.
 async def kinkencounter(message):
@@ -893,21 +367,24 @@ async def kinkencounter(message):
                 await message.channel.send("Room not found")
 
 #Assist the author in generating their kinklist if they don't already have one.
-async def kinksurvey(message):
+@tree.command(name = "kinksurvey", description = "Runs a survey to establish what your kinks and limits are.")
+@app_commands.checks.has_role("Verified")
+async def kinksurvey(interaction):
+    await interaction.response.defer(ephemeral=True, thinking=False)
     retakeSurvey = 0    #Flag to mark that the user is taking the survey a second time, overwriting his last results
     playerIndex = -1 #Contains the line number in the google sheet, in case they are retaking the survey - We need to overwrite the previous result
-    kinkdata, namestr, targname = await getKinkData(message)
-    if str(message.channel.id) != kinkcreatechannel:
-        await message.channel.send(embed = discord.Embed(title = "This is not the place to talk about that.", description = f"We will gladly talk about your deepest desires, <@{targname.id}>. We prefer a bit of privacy for that however. Please use the <#{kinkcreatechannel}> channel to call this command.", colour = embcol))
+    targ = await getKinkTarget(interaction.user, interaction)
+    if interaction.channel.id != int(kinkcreatechannel):
+        await interaction.channel.send(embed = discord.Embed(title = "This is not the place to talk about that.", description = f"We will gladly talk about your deepest desires, <@{targ.id}>. We prefer a bit of privacy for that however. Please use the <#{kinkcreatechannel}> channel to call this command.", colour = embcol))
         return
-    if str(namestr) in str(kinkdata):
+    if targ.name in str(GlobalVars.kinkdatabase):
 
-        await message.channel.send(embed = discord.Embed(title = "We already know your deepest desires", description = f"Your kinklist is already registered with us, <@{targname.id}>. If you want to take the whole survey again reply `1`, otherwise reply `0`.\n If you want to edit it a single kink, use %kinkedit.", colour = embcol))
+        await interaction.channel.send(embed = discord.Embed(title = "We already know your deepest desires", description = f"Your kinklist is already registered with us, <@{targ.id}>. If you want to take the whole survey again reply `1`, otherwise reply `0`.\n If you want to edit it a single kink, use %kinkedit.", colour = embcol))
         #See if the user wants to retake the survey
         try:
-            msg = await client.wait_for('message',  check = check(message.author), timeout=30)
+            msg = await client.wait_for('message',  check = check(interaction.user), timeout=30)
         except asyncio.TimeoutError:
-            await message.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+            await interaction.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
             return
 
         await msg.delete() 
@@ -915,13 +392,13 @@ async def kinksurvey(message):
         #Set the flag to retake the survey, otherwise return
         if(msg.content == "1"):
             retakeSurvey = 1
-            playerIndex = [row[1] for row in kinkdata].index(namestr)
+            playerIndex = [row[1] for row in GlobalVars.kinkdatabase].index(targ.name)
         elif msg.content == "0":
             return
         else:
             return
 
-    threadid = await message.create_thread(name= "Kinklist Survey: " + namestr.split("#", 1)[0])
+    threadid = await interaction.create_thread(name= "Kinklist Survey: " + targ.name)
     
     if retakeSurvey == 1 and playerIndex == -1:
             await threadid.send(embed = discord.Embed(title = "Kink Survey", description = f"Something went wrong. We couldn't locate your entry in the kinklist. Contact the Bot Gods."))
@@ -931,9 +408,9 @@ async def kinksurvey(message):
     
 
     #--------------Prepare variables---------------
-    newKinklist = [str(datetime.now()), f"{targname.name}", f"{targname.id}"] #Contains kink data, will be written into the sheet.
+    newKinklist = [str(datetime.now()), f"{targ.name}", f"{targ.id}"] #Contains kink data, will be written into the sheet.
     
-    categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
+    categories, kinksPerCategory, categoryIndex = await getCategoryData()
 
     #--------------Collect information from the user-------------
     #Request user's pronouns.
@@ -941,7 +418,7 @@ async def kinksurvey(message):
         await threadid.send(embed = discord.Embed(title = "Pronouns", description = "First of all: What are your preferred pronouns?"))
         messagefound = False
         while messagefound == False:
-            msg = await client.wait_for('message',  check = checkAuthor(message.author))
+            msg = await client.wait_for('message',  check = checkAuthor(interaction.user))
             if msg.channel == threadid:
                 messagefound = True
         newKinklist.append(msg.content)
@@ -964,7 +441,7 @@ async def kinksurvey(message):
     await threadid.send(embed = discord.Embed(title = "Pronouns", description = f"Pronouns set as: {msg.content}"))
     
     #Now ask for the remaining things.
-    kinkindex = playerInformationEntries #Start at the first kink, not the player info.
+    kinkindex = 4 #Start at the first kink, not the player info.
     for x in range (0, len(categories)): #Go over all categories
 
         categoryName = categories[x]
@@ -974,7 +451,7 @@ async def kinksurvey(message):
             categorySection = True
 
         for y in range(0, categoryKinkCount): #Go over each kink in a category
-            kinkname = kinkdata[1][kinkindex]
+            kinkname = GlobalVars.kinkdatabase[1][kinkindex]
 
             #Ask the player about the kink
             if not "Role" in kinkname and not "Additional" in kinkname:   #Everything but the "If you are Role" questions
@@ -990,7 +467,7 @@ async def kinksurvey(message):
                     embedstring = f"What are your feelings about {kinkname}? \nThis includes things such as:\n"
 
                     for z in range(1, kinksPerCategory[categoryID]):    #Add the kinks of the category to the list in the embed.
-                        embedstring = embedstring + f"- {kinkdata[1][categoryIndex[categoryID] + z]}\n"
+                        embedstring = embedstring + f"- {GlobalVars.kinkdatabase[1][categoryIndex[categoryID] + z]}\n"
 
                     embedstring = embedstring + "You will be able to rate each kink individually later.\n\n"
 
@@ -1005,7 +482,7 @@ async def kinksurvey(message):
                     try:
                         messagefound = False
                         while messagefound == False:
-                            msg2 = await client.wait_for('message', check = check(message.author))
+                            msg2 = await client.wait_for('message', check = check(interaction.user))
                             if msg2.channel == threadid:
                                 messagefound = True
 
@@ -1059,7 +536,7 @@ async def kinksurvey(message):
             elif "Role" in kinkname:
 
                 splitName = kinkname.rsplit(" ", 1)[0]
-                embedstring = f"{message.author.name}, what is your preferred role in {splitName}\n\n"
+                embedstring = f"{interaction.user.name}, what is your preferred role in {splitName}\n\n"
                 for z in range(0, len(participationOptions)): #Add the answer options to the embed
                             embedstring = embedstring + f"`{z+1}`: {participationOptions[z]}\n"
                 await threadid.send(embed = discord.Embed(title = f"{categoryName} ({x+1}/{len(categories)}) \nKink {y+1}/{categoryKinkCount}: {kinkname}", description = embedstring, colour = embcol))
@@ -1071,7 +548,7 @@ async def kinksurvey(message):
                     try:
                         messagefound = False
                         while messagefound == False:
-                            msg2 = await client.wait_for('message',  check = check(message.author))
+                            msg2 = await client.wait_for('message',  check = check(interaction.user))
                             if msg2.channel == threadid:
                                 messagefound = True
 
@@ -1119,7 +596,7 @@ async def kinksurvey(message):
                     await threadid.send(embed = discord.Embed(title = f"{categoryName} ({x+1}/{len(categories)}): \nQuestion {y+1}/{categoryKinkCount}: {kinkname}", description = f"Do you have any {kinkname} you want to add? List them here! If there aren't any, put \"none\"."))
                     messagefound = False
                     while messagefound == False:
-                        msg2 = await client.wait_for('message',  check = checkAuthor(message.author))
+                        msg2 = await client.wait_for('message',  check = checkAuthor(interaction.user))
                         if msg2.channel == threadid:
                             messagefound = True
                     pref = str(msg2.content)
@@ -1154,96 +631,86 @@ async def kinksurvey(message):
 
     await threadid.send(embed = discord.Embed(title = "Kink Survey", description = "That concludes the kink survey! Thank you for your time. If you change your mind on anything I just asked you about, you can request us to change it with %kinkedit."))
 
-    kinkdata, namestr, targname = await getKinkData(message)
+    kinksheet = gc.open_by_key(kinksheet).sheet1
     if retakeSurvey == 0:
-        sheet.values().update(spreadsheetId = kinksheet, range = f"A{len(kinkdata)+1}", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[newKinklist])).execute()
+        kinksheet.append_row(values = newKinklist)
     else:
-        sheet.values().update(spreadsheetId = kinksheet, range = f"A{playerIndex+1}", valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[newKinklist])).execute()
-   
-
+        range = kinksheet.range = "A" + str(playerIndex) + ":GZ" + str(playerIndex)
+        kinksheet.update_cells(cell_list= range, value_input_option=newKinklist)
+    await interaction.followup.send("Command complete.")
     return
 
+
 #Compares the kinklist of tagged persons
-async def kinkcompare(message):
+@tree.command(name = "kinkcompare", description = "Compares the kinks and limits of tagged users")
+@app_commands.describe(players = "The players to compare. Tag them using @name and leave a space between each.")
+@app_commands.checks.has_role("Verified")
+async def kinkcompare(interaction, players: str):
+
+    await interaction.response.defer(ephemeral=True, thinking=False)
+    await comparekinks(players, interaction.channel, interaction.user.name + "/ " + interaction.user.display_name)
+    await interaction.followup.send("Command complete.")
+
+async def comparekinks(players, destinationchannel, user):
+
     #Fetch relevant data
-    kinkdata, namestr, targname = await getKinkData(message)
-    categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
+    categories, kinksPerCategory, categoryIndex = await getCategoryData()
     playerIDsToCompare = [] #Contains the ID of the players whose kinklist should be compared
     commonKinks = []        #Contains common Like/Kink/Faves
     limits = []             #Contains common Limits
     maybeAvoid = []         #Contains kinks that should maybe be avoided
-
-
-    if not "@" in message.content:
-        await message.channel.send(embed = discord.Embed(title = "Kinklist Compare", description = f"Please tag everyone whose kinklist you want to compare, even yourself if you want to compare yours to someone elses!"))
-        return
-    else:   #If people were tagged, fetch the ID's of the players that need to be compared
-        kinkcompareMessage = message.content
-        while "@" in kinkcompareMessage:
-            playerIDsToCompare.append(kinkcompareMessage.rsplit("@", 1)[1].replace("<", "").replace(">", "").replace(" ", ""))
-            kinkcompareMessage = kinkcompareMessage.rsplit("@", 1)[0]
-
-    #Check if all players have their survey filled out
-    for player in playerIDsToCompare:
-        if not str(player) in str(kinkdata):
-
-            await message.channel.send(embed = discord.Embed(title = "Could not find <@" + player + "> 's kink list", description = "Make sure that <@" + player + "> has completed the kink survey. Try again when they have."))
-            return
-
-    if len(playerIDsToCompare) < 2:
-        await message.channel.send(embed = discord.Embed(title = "Too few players to compare!", description = "Make sure that you tagged at least 2 users to compare their kinklists"))
-        return
-
-    
-    #Fetch the row numbers for the specific people
+    KinkIDCol = gc.open_by_key(kinksheet).worksheet("Form Responses").col_values(3)
     playerIndices = []  #Contains player row indices in kinkdata
     playerNames = []    #Contains player names
-    
-    for player in playerIDsToCompare:
-        playerIndex = [row[2] for row in kinkdata].index(player)
-        playerIndices.append(playerIndex)
+    localGuild = client.get_guild(828411760365142076)
 
-        #find out display name of player
-        localGuild = client.get_guild(828411760365142076)
-        if localGuild != None:
-            currMember = localGuild.get_member(int(player))
-        else: 
-            currMember = client.get_guild(847968618167795782).get_member(int(player))
-        playerNames.append(currMember.display_name)
-
+    if not "@" in players or not " " in players:
+        await destinationchannel.send(embed = discord.Embed(title = "Kinklist Compare", description = f"Please tag everyone whose kinklist you want to compare, even yourself if you want to compare yours to someone elses!", colour = embcol))
+        return
+    else:   #If people were tagged, fetch the ID's of the players that need to be compared
+        for a in range(len(players.split(" "))):
+            playerIDsToCompare.append(int(players.split(" ")[a][2:-1]))
+            try:
+                playerIndices.append(KinkIDCol.index(str(playerIDsToCompare[a])))
+                if localGuild != None:
+                    currMember = localGuild.get_member(int(playerIDsToCompare[a]))
+                else: 
+                    currMember = client.get_guild(847968618167795782).get_member(int(playerIDsToCompare[a]))
+                playerNames.append(currMember.name + "/" + currMember.display_name)
+            except ValueError:
+                await destinationchannel.send(embed = discord.Embed(title = "Could not find <@" + str(playerIDsToCompare[a]) + "> 's kink list", description = "Make sure that <@" + str(playerIDsToCompare[a]) + "> has completed the kink survey. Try again when they have.", colour = embcol))
+                return
 
     #begin comparing... Mark out all common kinks that are at least a like, and every single soft or hard limit. Extra list for "Not my thing"
-    for i in range(categoryIndex[categories.index("Body Parts")], len(kinkdata[1])):
+    for i in range(categoryIndex[categories.index("Body Parts")], len(GlobalVars.kinkdatabase[1])):
         likeOrMoreForAll = True #Stays true if this is a like or better for all people tagged
         softOrHardLimit = False
         uncertainElement = False
-        for player in playerIndices:
-            if kinkdata[player][i] != kinkOptions[0] and kinkdata[player][i] != kinkOptions[1] and kinkdata[player][i] != kinkOptions[2]: #If entry is not Fave, Kink or Like, it is not among the common kinks
+        for playern in playerIndices:
+            if GlobalVars.kinkdatabase[playern][i] != kinkOptions[0] and GlobalVars.kinkdatabase[playern][i] != kinkOptions[1] and GlobalVars.kinkdatabase[playern][i] != kinkOptions[2]: #If entry is not Fave, Kink or Like, it is not among the common kinks
                 likeOrMoreForAll = False
 
-            if kinkdata[player][i] == kinkOptions[8] or kinkdata[player][i] == kinkOptions[9]:
+            if GlobalVars.kinkdatabase[playern][i] == kinkOptions[8] or GlobalVars.kinkdatabase[playern][i] == kinkOptions[9]:
                 softOrHardLimit = True
 
-            if kinkdata[player][i] == kinkOptions[7] or kinkdata[player][i] == kinkOptions[6]:
+            if GlobalVars.kinkdatabase[playern][i] == kinkOptions[7] or GlobalVars.kinkdatabase[playern][i] == kinkOptions[6]:
                 uncertainElement = True
 
         #add the kink to the correct category
         if likeOrMoreForAll == True:
-            commonKinks.append(kinkdata[1][i])
+            commonKinks.append(GlobalVars.kinkdatabase[1][i])
         if softOrHardLimit == True:
-            limits.append(kinkdata[1][i])
+            limits.append(GlobalVars.kinkdatabase[1][i])
         if uncertainElement == True:
-            maybeAvoid.append(kinkdata[1][i])
+            maybeAvoid.append(GlobalVars.kinkdatabase[1][i])
     
     #Send embeds
-    await message.channel.send(embed = discord.Embed(title = f"Common Faves/Kinks/Likes of " + ", ".join(playerNames), description = "\n".join(commonKinks), colour = embcol))
+    output = []
+    output.append(await destinationchannel.send(embed = discord.Embed(title = f"Common Faves/Kinks/Likes of " + ", ".join(playerNames), description = "\n".join(commonKinks), colour = embcol)))
     #await message.channel.send(embed = discord.Embed(title = f"Uncertain Elements shared by " + ", ".join(playerNames), description = "\n".join(maybeAvoid), colour = embcol))
-    await message.channel.send(embed = discord.Embed(title = f"Accumulated Soft and Hard Limits of  " + ", ".join(playerNames), description = "\n".join(limits), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis comparison was summoned by {message.author.name} / {message.author.display_name}"))
-    await message.channel.send(embed = discord.Embed(title = f"Reminder!", description = "*Please remember that the kinklist is not a perfect guide. Just because someone has marked something positively or negatively, doesn't mean they have the same understanding of what that thing is as you do. It's important to discuss any element you plan to bring into a scene with your partner.*", colour = embcol))
-
-    await message.delete()
-
-    return
+    output.append(await destinationchannel.send(embed = discord.Embed(title = f"Accumulated Soft and Hard Limits of  " + ", ".join(playerNames), description = "\n".join(limits), colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis comparison was summoned by " + user)))
+    output.append(await destinationchannel.send(embed = discord.Embed(title = f"Reminder!", description = "*Please remember that the kinklist is not a perfect guide. Just because someone has marked something positively or negatively, doesn't mean they have the same understanding of what that thing is as you do. It's important to discuss any element you plan to bring into a scene with your partner.*", colour = embcol)))
+    return output
 
 #Posts an embed with help on the commands.
 async def kinkhelp(message):
@@ -1649,8 +1116,7 @@ async def randloot(message):
 #---------------------------Helper Functions---------------------------------
 
 #Fetches name and ID of author, and loads the kinkdata from the sheet.
-async def getKinkDataNew(target, interaction):
-    kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
+async def getKinkTarget(target, interaction):
     if target != None:
         try:
             targid = int(target[2:-1])
@@ -1660,7 +1126,7 @@ async def getKinkDataNew(target, interaction):
         targname = await client.fetch_user(targid)
     else:
         targname = interaction.user
-    return kinkdata, targname
+    return targname
 
 async def getKinkData(message):
     kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
@@ -1679,30 +1145,27 @@ async def getKinkData(message):
         namestr = str(targname.name + "#" + targname.discriminator)
     return kinkdata, namestr, targname
 
-#Fetches name and ID of author, and loads the kinkdata from the sheet.
-async def getKinkDataReact():
-    kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
-    return kinkdata
-
 #Returns the secondary embed of Kinklist
-async def Kinklistdetail(categoryIndex, categories, printCategories, sel, kinkdata, playerindex, printCategoriesWithAvg, categoryAverages, tmp, namestr, outputchannel, foot):
+async def Kinklistdetail(categoryIndex, categories, printCategories, sel, playerindex, printCategoriesWithAvg, categoryAverages, tmp, namestr, outputchannel, foot):
 
     #Prepare the string containing the kinks and their ratings
     try:
-    
-        kinkrange = [categoryIndex[categories.index(printCategories[sel-1])], categoryIndex[categories.index(printCategories[sel-1]) + 1]]
+        try:
+            kinkrange = [categoryIndex[categories.index(printCategories[sel])], categoryIndex[categories.index(printCategories[sel]) + 1]]
+        except IndexError:
+            kinkrange = [categoryIndex[-1], categoryIndex[-1] + 2]
         kinkratingString = ""
         for index in range(kinkrange[0], kinkrange[1]):
-            rating = kinkdata[playerindex][index].replace("Fave", "**Fave**").replace("Kink", "**Kink**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__")
-            kinkratingString += f"\n{kinkdata[1][index]}: {rating}"
+            rating = GlobalVars.kinkdatabase[playerindex][index].replace("Fave", "**Fave**").replace("Kink", "**Kink**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__")
+            kinkratingString += f"\n{GlobalVars.kinkdatabase[1][index]}: {rating}"
 
         try:
-            
+
             #Perpare the index for the part of the string with the averages.
             if printCategories[sel-1] in printCategoriesWithAvg:
                 #Fetch the average and user set rating for this category.
                 avgRating = categoryAverages[printCategoriesWithAvg.index(printCategories[sel-1])]
-                userRating = kinkdata[playerindex][categoryIndex[tmp] + (sel-1) - 2]    #-2 is a magic number and symbolises the amount of categories that (except for Gen Pref and Categories) do not have an average before the first that does. 
+                userRating = GlobalVars.kinkdatabase[playerindex][categoryIndex[tmp] + (sel) - 1]    #-2 is a magic number and symbolises the amount of categories that (except for Gen Pref and Categories) do not have an average before the first that does. 
                 #At the time of wrinting this, categories are "General Preferences"[0], "Categories"[1], "Bodyparts"[2], "Relationships"[3], "Physical Dominance"[4]. Gen Pref and Categories are not in our array, so "Bodyparts" and "Relationships" are the 2 categories that need to be skipped.
 
                 kinkemb2 = discord.Embed(title = namestr.split("#")[0] + "'s kink list:", description = f"**{printCategories[sel-1]}:**\n\n {kinkratingString} \n\nOverall, " + namestr.split("#")[0] + str(" rates this category as " + str(userRating.replace("Fave", "**Fave**").replace("Kink", "**Kink**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__").replace("as Likes", "as something they generally like"))), colour = embcol).set_footer(text = foot)
@@ -1711,54 +1174,29 @@ async def Kinklistdetail(categoryIndex, categories, printCategories, sel, kinkda
                 kinkemb2 = discord.Embed(title = namestr.split("#")[0] + "'s kink list:", description = f"**{printCategories[sel-1]}:**\n\n {kinkratingString}", colour = embcol).set_footer(text = foot)
 
         except IndexError:
-
-            if sel == 0:
-
-                pass
-            
-            else:
-
-                kinkemb2 = discord.Embed(title = "That is not a number of a category to view.", description = "The categories range from 1 to 11.", colour = embcol).set_footer(text = f"-------------------------------------------------------------\n\nThis search was summoned by {message.author.name} / {message.author.display_name}")
-
+            return
         await outputchannel.send(embed = kinkemb2)
-
     except IndexError:
-
         pass
 
 #Returns valuable information about the kinklist itself like categories, kinks per category, the index of each category in the overall kinks and the amount of player information entries.
-async def getCategoryData(kinkdata):
+async def getCategoryData():
 
-    categories = kinkdata[0] #Categories for embed titles. Contains a lot of empty entries at this point.
-    kinksPerCategory = [] #Counts the kinks per category.
-    categoryIndex = [4] #Contains the index of the first element of the category. 4 is the index of the first kink after the user data
-    playerInformationEntries = 1
-
-    
-    while ("" == categories[playerInformationEntries]):
-        playerInformationEntries += 1
-    
-    #Count the amount of kinks per category and write index of the category index.
-    i = 0
-    for x in range(playerInformationEntries + 1, len(kinkdata[0])):
-        i += 1
-        if (kinkdata[0][x] != ""):
-        
-            kinksPerCategory.append(i)
-            categoryIndex.append(categoryIndex[-1] + i)
-            i = 0
-            if (kinkdata[0][x] == "Additional Kinks and Limits"):
-                break
-
-    kinksPerCategory.append(len(kinkdata[1]) - len(kinkdata[0]) + 1) #Length of last category has to be figured out this way because of index bounds.
-    categoryIndex.append(categoryIndex[-1] + len(kinkdata[1]) - len(kinkdata[0]) + 1)
-
-    while ("" in categories): #Removes the empty entries from the category row so we can use the category list length properly
-        categories.remove("")
-    categories.remove("Player Information")
-
+    categories = list(filter(None, GlobalVars.kinkdatabase[0])) #Categories for embed titles. The filter removes blank entries
+    kinksPerCategory = []
+    categoryIndex = []
+    for a in range(len(categories)):
+        categoryIndex.append(GlobalVars.kinkdatabase[0].index(categories[a]))
+        try:
+            kinksPerCategory.append(GlobalVars.kinkdatabase[0].index(categories[a+1]) - GlobalVars.kinkdatabase[0].index(categories[a]))
+        except IndexError:
+            kinksPerCategory.append(2)
+    try:
+        categories.remove("Player Information")
+    except ValueError:
+        pass
  
-    return categories, kinksPerCategory, categoryIndex, playerInformationEntries
+    return categories, kinksPerCategory, categoryIndex
 
 #Returns the column letter
 async def getColumnLetter(columnindex):
@@ -1772,6 +1210,7 @@ async def getColumnLetter(columnindex):
 
 #Returns the limits of the member as a string
 async def getLimits(player):
+
     kinkdata = sheet.values().get(spreadsheetId = kinksheet, range = "A1:GZ2000", majorDimension='ROWS').execute().get("values")
     playerIndex = [row[1] for row in kinkdata].index(player)
     limits = []
@@ -1780,3 +1219,72 @@ async def getLimits(player):
         if "limit" in kinkdata[playerIndex][a].lower() or "not my thing" in kinkdata[playerIndex][a].lower():
             limits.append(kinkdata[1][a])
     return limits
+
+#Returns a user selected kink:
+async def selkink(kink, interaction):
+
+    kinkindex = None
+    if kink != None: #Fuzz match typed kink
+        kinksel = await CommonDefinitions.selectItem(interaction, kink, 10, GlobalVars.kinkdatabase[1])
+        try:
+            kinkindex = GlobalVars.kinkdatabase[1].index(kinksel[0])
+        except TypeError:
+            return
+    else: #Search by category
+        categories, kinksPerCategory, categoryIndex = await getCategoryData()
+        catlis = []
+        for a in range(len(categories)):
+            catlis.append("`" + str(a+1) + "`: " + categories[a])
+        dropsel = CommonDefinitions.Dropdown_Select_View(interaction = interaction, timeout=30, optionamount=len(categories), maxselectionamount=1, namelist=categories)
+        msg = await interaction.channel.send(embed = discord.Embed(title = "Choose the category of kink from this list", description = "\n".join(catlis), colour= embcol), view = dropsel)
+        #Wait for reply
+        if await dropsel.wait():
+            await interaction.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+            return
+        catindex = int(dropsel.button_response[0])
+        await msg.delete()
+        
+        kinklis = []   
+        kinkarr = []
+        try:
+            kinkrange = [categoryIndex[catindex], categoryIndex[catindex + 1] - 1]
+        except IndexError:
+            kinkrange = [categoryIndex[catindex], categoryIndex[catindex] + 2]
+        for a in range(len(GlobalVars.kinkdatabase[1])):
+            if a < 4 or a < kinkrange[0] or a > kinkrange[1]:
+                pass
+            else:
+                try:
+                    kinklis.append("`" + str(len(kinklis)+1) + "`: " + str(GlobalVars.kinkdatabase[1][a]))
+                except TypeError:
+                    kinklis.append("`1`: " + str(GlobalVars.kinkdatabase[1][a]))
+                kinkarr.append(GlobalVars.kinkdatabase[1][a])
+
+        indexoffset = 0
+        kinkcopy = list.copy(kinkarr)
+        while 1:
+            if len(kinkcopy) > 25:
+                kinkreduced = list.copy(kinkcopy)
+                kinkreduced = kinkreduced[:24]
+                kinkreduced.append("See more")
+                kinkcopy = kinkcopy[25:]
+            else:
+                kinkreduced = kinkcopy
+            dropsel2 = CommonDefinitions.Dropdown_Select_View(interaction = interaction, timeout=30, optionamount=len(kinkreduced), maxselectionamount=1, namelist=kinkreduced)
+            msg = await interaction.channel.send(embed = discord.Embed(title = "Choose the kink from this list", description = "\n".join(kinklis), colour= embcol), view = dropsel2)
+            #Wait for reply
+            if await dropsel2.wait():
+                await interaction.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+                return
+            
+            if kinkreduced[int(dropsel2.button_response[0])-1] == "See more":
+                indexoffset += 25
+            else:
+                kinkindex = GlobalVars.kinkdatabase[1].index(kinkarr[int(dropsel2.button_response[0]) - 1 + indexoffset])
+                break
+    try:
+        kinkname = GlobalVars.kinkdatabase[1][kinkindex]
+    except IndexError:
+        await interaction.channel.send(content = "@<&1055536891606351983>", embed = discord.Embed(title = "Your kink could not be found", description = "We're not actually sure how you managed this. The bot gods have been alerted to your location. ~~Run~~.", colour= embcol))
+        return
+    return kinkname, kinkindex

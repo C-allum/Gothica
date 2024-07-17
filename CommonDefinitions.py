@@ -32,6 +32,7 @@ from discord.enums import NotificationLevel
 from discord.ext import commands
 from datetime import date, datetime, timedelta
 from discord.ext.commands.errors import NoPrivateMessage
+from thefuzz import fuzz
 
 from discord.gateway import DiscordClientWebSocketResponse
 from discord.guild import Guild
@@ -70,7 +71,7 @@ gc = gspread.service_account(filename = SERVICE_ACCOUNT_FILE)
 config_file_path = "config.yaml"
 #-----------------LIVE VERSION/BETA TOGGLE---------------
 # 0 is Test Server, 1 is Live Server
-liveVersion = 0
+liveVersion = 1
 token = ""
 
 #Sheet Locations:
@@ -391,64 +392,37 @@ def colnum_string(n):
     return string
 
 def reactletters(reacts):
+  
+    reacts = reacts.replace(" ", "")
+    reactions = []
+    a = 0
+    while a < len(reacts):
+        try:
+            if reacts[a] == "<":
+                emoji = ""
+                while reacts[a] != ">":
+                    emoji += reacts[a]
+                    a += 1
+                    if a > len(reacts):
+                        break
+                emoji += ">"
+                reactions.append(emoji)
+            else:
+                reactions.append(reacts[a])
+        except IndexError:
+            break
+        a += 1
 
-    emojis = ""
+    emojis = []
+    vals = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
+    emojilist = ["🇦", "🇧", "🇨", "🇩", "🇪", "🇫", "🇬", "🇭", "🇮", "🇯", "🇰", "🇱", "🇲", "🇳", "🇴", "🇵", "🇶", "🇷", "🇸", "🇹", "🇺", "🇻", "🇼", "🇽", "🇾", "🇿"]
 
-    for n in range(len(reacts)):
+    for n in range(len(reactions)):
+        try:
+            emojis.append(emojilist[vals.index(reactions[n])])
+        except ValueError:
+            emojis.append(reactions[n])
 
-        if reacts[n] == "A":
-            emojis += "🇦"
-        elif reacts[n] == "B":
-            emojis += "🇧"
-        elif reacts[n] == "C":
-            emojis += "🇨"
-        elif reacts[n] == "D":
-            emojis += "🇩"
-        elif reacts[n] == "E":
-            emojis += "🇪"
-        elif reacts[n] == "F":
-            emojis += "🇫"
-        elif reacts[n] == "G":
-            emojis += "🇬"
-        elif reacts[n] == "H":
-            emojis += "🇭"
-        elif reacts[n] == "I":
-            emojis += "🇮"
-        elif reacts[n] == "J":
-            emojis += "🇯"
-        elif reacts[n] == "K":
-            emojis += "🇰"
-        elif reacts[n] == "L":
-            emojis += "🇱"
-        elif reacts[n] == "M":
-            emojis += "🇲"
-        elif reacts[n] == "N":
-            emojis += "🇳"
-        elif reacts[n] == "O":
-            emojis += "🇴"
-        elif reacts[n] == "P":
-            emojis += "🇵"
-        elif reacts[n] == "Q":
-            emojis += "🇶"
-        elif reacts[n] == "R":
-            emojis += "🇷"
-        elif reacts[n] == "S":
-            emojis += "🇸"
-        elif reacts[n] == "T":
-            emojis += "🇹"
-        elif reacts[n] == "U":
-            emojis += "🇺"
-        elif reacts[n] == "V":
-            emojis += "🇻"
-        elif reacts[n] == "W":
-            emojis += "🇼"
-        elif reacts[n] == "X":
-            emojis += "🇽"
-        elif reacts[n] == "Y":
-            emojis += "🇾"
-        elif reacts[n] == "Z":
-            emojis += "🇿"
-            
     return emojis
 
 #Establish deck of cards
@@ -804,3 +778,124 @@ def cursefromref(ref):
         except ValueError:
             pass
     return str(ref)
+
+#Receives a string that represents an item name, and an integer that represents the amount of results desired. Returns a list of lists. Each entry
+#shows one potential item candidate in the form of [name, levenshtein distance score, unique id]
+async def matchStringToItemBase(item_name, top_n_results, searchlist, add_item_name_in_list = True):
+    levenshtein_tuple_list = []
+    for entry in searchlist:
+        #Maybe do a combination of ratio and partial ratio here to favour stuff like collars appearing when "collar" is the search word?
+        
+        levenshtein_distance_partial = fuzz.partial_token_set_ratio(entry.lower(), item_name.lower())
+        levenshtein_distance_complete = fuzz.ratio(entry.lower(), item_name.lower())
+        levenshtein_distance = levenshtein_distance_complete * 0.5 + levenshtein_distance_partial * 0.5
+        if add_item_name_in_list == True:
+            levenshtein_tuple_list.append([entry, levenshtein_distance, item_name])
+        else:
+            levenshtein_tuple_list.append([entry, levenshtein_distance])
+
+    sorted_list = sorted(levenshtein_tuple_list,key=lambda l:l[1], reverse=True)
+    return sorted_list[:top_n_results]
+
+async def selectItem(interaction, searchterm, top_n_results, searchlist):
+    #Search for item in the item sheet with fuzzy matching
+    item_matches = await matchStringToItemBase(searchterm, top_n_results, searchlist)
+    selector_options = []
+    #See if we have an almost perfect match
+    if item_matches[0][1] > 93:
+        #If we have multiple, display *all* almost perfect matches for choice and wait for the choice
+        if item_matches[1][1] > 93:
+
+            for i in range(0, len(item_matches)):
+                if item_matches[i][1] > 93:
+                    selector_options.append(item_matches[i])
+        #if we only have one with score 93 or higher, suggest that one for buying
+        else: selector_options.append(item_matches[0])
+    #if we have none, display the top 10 matches and wait for a choice
+    else:
+        selector_options = item_matches #Omit the Levenshtein Score
+
+    #Generate a message to show the top list
+    selected_item = None
+    if len(selector_options) > 1:
+        top10_string = ""
+        for i in range(0, len(selector_options)):
+            top10_string += f"`{i+1}:` {selector_options[i][0]}\n"
+
+        #Generate selector view to choose items.
+        item_selection_view = Dropdown_Select_View(interaction = interaction, timeout=30, optionamount=len(selector_options), maxselectionamount=1, namelist=[i[0] for i in selector_options]) #Only let them choose one item.
+        selection_message = await interaction.channel.send(embed = discord.Embed(title="Didn't find a perfect match to what you are looking for.", description="Here are the top 10 closest results. Please choose which of these you want.\n\n" + top10_string + "\n\n" + "This message will time out in 30 seconds.", colour = embcol), view = item_selection_view)
+        #Wait for reply
+        if await item_selection_view.wait():
+                await interaction.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+                return
+        
+        i = int(item_selection_view.button_response[0]) - 1
+        await selection_message.delete()
+        if i >= 0 and i < len(selector_options):
+            selected_item = selector_options[i]
+        else: 
+            await interaction.channel.send(embed=discord.Embed(title=f"Number has to be between 1 and {len(selector_options)}", colour = embcol))
+            return
+    else: selected_item = selector_options[0]
+    return selected_item
+
+class Dropdown_Select_View(discord.ui.View):
+    def __init__(self, interaction, timeout=120, optionamount=1, maxselectionamount = 1, namelist = [], default = "None"):
+        super().__init__(timeout=timeout)
+        self.button_response = []
+        self.choices = []
+        self.namelist = namelist
+        self.interact = interaction
+        #Make sure we can only choose between 1 and 25 as per specification.
+        if maxselectionamount > 0 and maxselectionamount < 26:
+            self.selection_amount = maxselectionamount
+        elif maxselectionamount > 26:
+            self.selection_amount = 25
+        elif maxselectionamount < 1:
+            self.selection_amount = 1
+
+        #Make sure we can't choose more than we have options
+        if self.selection_amount > max(optionamount, len(self.namelist)):
+            self.selection_amount = max(optionamount, len(self.namelist))
+
+        if self.namelist != []:
+            for i in range(1, len(self.namelist) + 1):
+                self.choices.append(discord.SelectOption(
+                    label=f"{i}: {self.namelist[i-1]}",
+                    value = i
+                ))
+        else:
+            for i in range(1, optionamount + 1):
+                self.choices.append(discord.SelectOption(
+                    label=f"{i}",
+                    value = i
+                ))
+        self.select = discord.ui.Select(
+            placeholder = default, # the placeholder text that will be displayed if nothing is selected
+            min_values = 1, # the minimum number of values that must be selected by the users
+            max_values = max([1, self.selection_amount]), # the maximum number of values that can be selected by the users
+            options = self.choices# the list of options from which users can choose, a required field)
+        )       
+        self.select.callback = self.callback
+        self.add_item(self.select)
+        
+    async def callback(self, interaction: discord.Interaction):
+        self.button_response = self.select.values
+        await interaction.response.defer()
+        self.stop()
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        try:
+            if self.interact.user.id == interaction.user.id:
+                return True
+            else:
+                await interaction.response.send_message("That is not your dropdown to click!", ephemeral=True)
+                return False
+            
+        except AttributeError:
+            if self.interact.user.id == interaction.user.id:
+                return True
+            else:
+                await interaction.response.send_message("That is not your dropdown to click!", ephemeral=True)
+                return False

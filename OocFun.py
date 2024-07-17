@@ -109,20 +109,26 @@ async def setgag(message):
 #Emote
 
 @staffgroup.command(name = "emote", description = "Sends a string of letters as emotes to any message.")
-@app_commands.describe(message = "The link to the message to react to.", emotes = "The word or words to send. It works best when there are no duplicate letters.")
+@app_commands.describe(emotes = "The word or words to send. It works best when there are no duplicate letters.", message = "The link to the message to react to. Uses the last message in this channel if not specified.")
 @app_commands.checks.has_role("Staff")
 @app_commands.default_permissions(manage_messages=True)
-async def emote(interaction, message: str, emotes: str):
+async def emote(interaction, emotes: str, message: str = None):
     await interaction.response.defer(ephemeral=True, thinking=False)
-    chan = message.split("/")[5]
-    messid = message.split("/")[6]
-    messchan = client.get_channel(int(chan))
-    mess = messchan.get_partial_message(int(messid))
+    if message != None:
+        chan = message.split("/")[5]
+        messid = message.split("/")[6]
+        messchan = client.get_channel(int(chan))
+        mess = messchan.get_partial_message(int(messid))
+    else:
+        mess = [joinedMessages async for joinedMessages in interaction.channel.history(oldest_first=False, limit = 1)][0]
     meslist = emotes.upper()
     reacts = reactletters(meslist)
     for n in range(len(reacts)):
-        await mess.add_reaction(reacts[n])
-    await client.get_channel(logchannel).send(interaction.user.name + " reacted to a message in " + messchan.name + " with " + meslist)
+        try:
+            await mess.add_reaction(reacts[n])
+        except discord.errors.HTTPException:
+            pass
+    await client.get_channel(logchannel).send(interaction.user.name + " reacted to a message in " + mess.channel.name + " with " + meslist + " - " + mess.jump_url)
     await interaction.followup.send("Reactions sent")
 
 #Player Based Reactions
