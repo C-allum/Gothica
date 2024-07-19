@@ -1459,7 +1459,26 @@ async def incomeWeek(interaction, player:str=""):
     incomeString += "\n**Total**: " + str(tot) 
 
     await interaction.channel.send(embed = discord.Embed(title = f"{name}'s dezzie earnings over the last week:", description = incomeString, colour = embcol))
-    await interaction.followup.send("Successfully finished the task!")
+    await interaction.followup.send("Done!")
+
+    
+@staffgroup.command(
+        name="economysummary",
+        description="Calculates the economy changes of the server over a set timeframe."
+)
+# @app_commands.describe(
+#     timeframe = "Time window to average over. Defaults to one month."
+# )
+@app_commands.default_permissions(manage_messages=True)
+@app_commands.checks.has_role("Staff")
+async def dezzieMovements(interaction):
+    timeframe = "1 Month"
+    await interaction.response.defer(ephemeral=True, thinking=False)
+    averagesString = await TransactionsDatabaseInterface.fetchAverageIncome(timeframe)
+    
+    await interaction.channel.send(embed = discord.Embed(title = f"Economy changes over the last {timeframe}:", description = averagesString, colour = embcol))
+    await interaction.followup.send("Done!")
+
 
 @tree.command(
         name="togglenotif",

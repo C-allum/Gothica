@@ -186,6 +186,26 @@ def fetchData(timeframe:str = None, summary:bool = False):
     except sqlite3.Error as error:
         print('Error occured fetching transaction data - ', error)
 
+#Calculates the average server income over the given timeframe
+async def fetchAverageIncome(timeframe:str = "1 Month"):
+    transactionsConnection = sqlite3.connect('CLDTransactions.db')
+    transactionsCursor = transactionsConnection.cursor()
+    
+    data = transactionsCursor.execute(f'''SELECT Action, SUM(Amount) FROM Transactions WHERE Date > date('now', '-{timeframe}') GROUP BY Action ORDER BY Action''').fetchall()
+    numActivePeople = transactionsCursor.execute(f'''SELECT COUNT(DISTINCT Person) FROM Transactions WHERE Date > date('now', '-{timeframe}')''').fetchall()[0][0]
+    
+    transactionsConnection.close()
+    
+    results = f"Active People during the last {timeframe}: {numActivePeople}\n\nTotal Values\n"
+    
+    for item in data:
+        results += str(item[0]) + ": " + str(round((item[1]))) + "\n"
+    results += "\nAverage Values\n"
+    
+    for item in data:
+        results += str(item[0]) + ": " + str(round((item[1]) / (numActivePeople), 3)) + "\n"
+
+    return results
 
 #Write data into spreadsheet
 #Throws an error if there is no Sheet in the Spreadsheet with the timeframe as name
@@ -316,3 +336,4 @@ if __name__ == "__main__":
         print(row)
 
     printTransactions("TransactionDump.txt")
+
