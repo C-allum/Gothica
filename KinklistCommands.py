@@ -398,7 +398,7 @@ async def kinksurvey(interaction):
         else:
             return
 
-    threadid = await interaction.create_thread(name= "Kinklist Survey: " + targ.name)
+    threadid = await interaction.channel.create_thread(name= "Kinklist Survey: " + targ.name)
     
     if retakeSurvey == 1 and playerIndex == -1:
             await threadid.send(embed = discord.Embed(title = "Kink Survey", description = f"Something went wrong. We couldn't locate your entry in the kinklist. Contact the Bot Gods."))
@@ -719,7 +719,7 @@ async def kinkhelp(message):
 
 async def kinkfill(message):
     kinkdata, namestr, targname = await getKinkData(message)
-    categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
+    categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData()
     
     if not str(namestr) in str(kinkdata):
 
