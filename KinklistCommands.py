@@ -373,7 +373,7 @@ async def kinksurvey(interaction):
     await interaction.response.defer(ephemeral=True, thinking=False)
     retakeSurvey = 0    #Flag to mark that the user is taking the survey a second time, overwriting his last results
     playerIndex = -1 #Contains the line number in the google sheet, in case they are retaking the survey - We need to overwrite the previous result
-    targ = await getKinkTarget(interaction.user, interaction)
+    targ = await getKinkTarget("<@" + str(interaction.user.id) + ">", interaction)
     if interaction.channel.id != int(kinkcreatechannel):
         await interaction.channel.send(embed = discord.Embed(title = "This is not the place to talk about that.", description = f"We will gladly talk about your deepest desires, <@{targ.id}>. We prefer a bit of privacy for that however. Please use the <#{kinkcreatechannel}> channel to call this command.", colour = embcol))
         return
