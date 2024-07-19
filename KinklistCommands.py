@@ -373,7 +373,7 @@ async def kinksurvey(interaction):
     await interaction.response.defer(ephemeral=True, thinking=False)
     retakeSurvey = 0    #Flag to mark that the user is taking the survey a second time, overwriting his last results
     playerIndex = -1 #Contains the line number in the google sheet, in case they are retaking the survey - We need to overwrite the previous result
-    targ = await getKinkTarget(interaction.user, interaction)
+    targ = await getKinkTarget("<@" + str(interaction.user.id) + ">", interaction)
     if interaction.channel.id != int(kinkcreatechannel):
         await interaction.channel.send(embed = discord.Embed(title = "This is not the place to talk about that.", description = f"We will gladly talk about your deepest desires, <@{targ.id}>. We prefer a bit of privacy for that however. Please use the <#{kinkcreatechannel}> channel to call this command.", colour = embcol))
         return
@@ -398,7 +398,7 @@ async def kinksurvey(interaction):
         else:
             return
 
-    threadid = await interaction.create_thread(name= "Kinklist Survey: " + targ.name)
+    threadid = await interaction.channel.create_thread(name= "Kinklist Survey: " + targ.name)
     
     if retakeSurvey == 1 and playerIndex == -1:
             await threadid.send(embed = discord.Embed(title = "Kink Survey", description = f"Something went wrong. We couldn't locate your entry in the kinklist. Contact the Bot Gods."))
@@ -719,7 +719,7 @@ async def kinkhelp(message):
 
 async def kinkfill(message):
     kinkdata, namestr, targname = await getKinkData(message)
-    categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData(kinkdata)
+    categories, kinksPerCategory, categoryIndex, playerInformationEntries = await getCategoryData()
     
     if not str(namestr) in str(kinkdata):
 
