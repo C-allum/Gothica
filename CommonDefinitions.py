@@ -827,8 +827,8 @@ async def selectItem(interaction, searchterm, top_n_results, searchlist):
         selection_message = await interaction.channel.send(embed = discord.Embed(title="Didn't find a perfect match to what you are looking for.", description="Here are the top 10 closest results. Please choose which of these you want.\n\n" + top10_string + "\n\n" + "This message will time out in 30 seconds.", colour = embcol), view = item_selection_view)
         #Wait for reply
         if await item_selection_view.wait():
-                await interaction.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
-                return
+            await interaction.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+            return
         
         i = int(item_selection_view.button_response[0]) - 1
         await selection_message.delete()
@@ -839,6 +839,17 @@ async def selectItem(interaction, searchterm, top_n_results, searchlist):
             return
     else: selected_item = selector_options[0]
     return selected_item
+
+async def quicksel(interaction, options, title, description, dest = None):
+    Drop = Dropdown_Select_View(interaction = interaction, namelist = options, timeout = 480)
+    if dest == None:
+        dest = interaction.channel
+    await dest.send(embed = discord.Embed(title = title, description = description, colour = embcol), view = Drop)
+    if await Drop.wait():
+        await dest.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+        return
+    i = int(Drop.button_response[0]) - 1
+    return options[i], i
 
 class Dropdown_Select_View(discord.ui.View):
     def __init__(self, interaction, timeout=120, optionamount=1, maxselectionamount = 1, namelist = [], default = "None"):

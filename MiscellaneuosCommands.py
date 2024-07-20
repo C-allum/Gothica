@@ -1721,6 +1721,11 @@ async def embed(interaction, title: str, description: str = None, image: str = N
         destchannel = client.get_channel(int(channel[2:-1]))
     else:
         destchannel = interaction.channel
+    if destchannel.name == "Vacation Log":
+        temp = await interaction.channel.send("You cannot send embeds to that thread.")
+        await time.sleep(200)
+        await temp.delete()
+        return
 
     if "Staff" in str(interaction.user.roles):
         await destchannel.send(embed = discord.Embed(title = title, description = description, colour = embcol).set_image(url = image).set_thumbnail(url = thumbnail))
@@ -1755,9 +1760,9 @@ async def oocmsg(interaction, message: str, channel: str = None):
 @app_commands.describe(user = "The user to verify. This should be in the form of @username.")
 @app_commands.checks.has_role("Staff")
 @app_commands.default_permissions(manage_messages=True)
-async def verify(interaction, user: str):
+async def verify(interaction, user: discord.Member):
     await interaction.response.defer(ephemeral=True, thinking=False)
-    veruser = (await interaction.guild.query_members(user_ids=[user[2:-1]]))[0]
+    veruser = (await interaction.guild.query_members(user_ids=[user.id]))[0]
     role = discord.utils.get(interaction.user.guild.roles, name="Verified")
     await veruser.add_roles(role)
     await EconomyV2.addUserToEconomy(veruser.name, veruser.id)
