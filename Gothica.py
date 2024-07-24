@@ -1112,8 +1112,6 @@ async def on_message(message):
                     await EconomyV2.leaderboard(message)
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "invest"):
                     await EconomyV2.invest(message)
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "bid"):
-                    await EconomyV2.bid(message, isbot)
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "toggledailynotif"):
                     await EconomyV2.togglenotif(message)
             #Income History
