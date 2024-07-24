@@ -267,7 +267,7 @@ async def charcreate(message):
 
     if not auth in str(pnames):
         #First Character
-        emb2.set_footer(text="\n\n----------------------------------\n\nCongratulations! You've registered your first character! Create a tupper for " + determiner + " in #Tupper Setup")
+        emb2.set_footer(text="\n\n----------------------------------\n\nCongratulations! You've registered your first character! Create a tupper for " + determiner + " in <#1050503346374594660> or via the website: https://tupperbox.app/dashboard/list.")
 
     elif pcharsreg > maxchars-1:
         #Above maximum

@@ -1927,6 +1927,16 @@ class fakeinteraction:
           self.channel = channel
           self.user = user
 
+@tree.command(name = "viewpins", description = "Displays the list of pinned messages - helpful in a thread on mobile.")
+@app_commands.checks.has_role("Verified")
+async def viewpins(interaction):
+    await interaction.response.defer(ephemeral=True, thinking=False)
+    pins = await interaction.channel.pins()
+    pinmsg = "Here's a list of all the pinned messages in this thread:\n"
+    for a in range(len(pins)):
+        pinmsg += "\n" + pins[a].author.name + ": " + pins[a].jump_url
+    await interaction.followup.send(pinmsg)
+
 @staffgroup.command(name = "helplist", description = "Lists all converted slash commands")
 @app_commands.checks.has_role("Staff")
 @app_commands.default_permissions(manage_messages=True)

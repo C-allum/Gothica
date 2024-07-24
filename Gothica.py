@@ -1306,7 +1306,7 @@ async def on_message(message):
 
                         #---------RP REWARD AND NOTIFICATIONS--------------
                         #check if we are in a channel that awards dezzies for posts
-                        if message.channel.category_id in GlobalVars.config["channels"]["roleplay_categories_id"]:
+                        if message.channel.category_id in GlobalVars.config["channels"]["roleplay_categories_id"] and not "ooc" in message.channel.name.lower():
                             #ignore edit calls
                             if not "?edit" in message.content:
                                 #calculate reward amount

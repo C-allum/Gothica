@@ -71,7 +71,7 @@ gc = gspread.service_account(filename = SERVICE_ACCOUNT_FILE)
 config_file_path = "config.yaml"
 #-----------------LIVE VERSION/BETA TOGGLE---------------
 # 0 is Test Server, 1 is Live Server
-liveVersion = 1
+liveVersion = 0
 token = ""
 
 #Sheet Locations:
@@ -261,12 +261,10 @@ startingslots = 5
 
 #----------------EconomyValues----------------
 
-global bidstock
-global bidders
-global bidprice
-bidstock = []
-bidders = []
-bidprice = []
+auctionvars = [] # Char Name, Player Name, Character Data (excluding last line), Image URL, Embed Post, Current Bid, Current Bidder
+auctionthreads = [] #Master Thread, Public Thread
+bidstock = [] # Options for choosing who to bid for.
+minincrease = 200
 
 #----------------Fiendtome Wielder---------------
 imptomeWielder = -1

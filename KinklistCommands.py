@@ -387,7 +387,7 @@ async def kinksurvey(interaction):
         playerindex = 0
 
     threadid = await interaction.channel.create_thread(name= "Kinklist Survey: " + targ.name)   
-    await threadid.send(interaction.user.mention, embed = discord.Embed(title = "Kink Survey", description = f"Welcome to the kink survey! We will ask you to give us a rating on all sorts of kinks in just a moment. We will go through a couple of categories with plenty of kinks, and when we are done you can look at your kinklist with the /kinklist command, or edit it with the /kinkedit command. Furthermore you can search for users with a certain kink using the /kinkplayers [kink] command, or look at someone else's list with /kinklist [@username]. \n\n **Please note that we go to sleep around <t:1670025600:T> on the night from Tuesday to Wednesday every week. If you don't finish before that, your progress will be lost!** \n\n**Questions will timeout after 10 minutes. If one of the dropdown options doesn't respond or shows an error, try it again. ~~If the survey times out, you will be able to resume it with the /kinkresume command.~~** \n\n Okay, with the formalities out of the way, let us begin...", colour=embcol))
+    await threadid.send(interaction.user.mention, embed = discord.Embed(title = "Kink Survey", description = f"Welcome to the kink survey! We will ask you to give us a rating on all sorts of kinks in just a moment. We will go through a couple of categories with plenty of kinks, and when we are done you can look at your kinklist with the /kinklist command, or edit it with the /kinkedit command. Furthermore you can search for users with a certain kink using the /kinkplayers [kink] command, or look at someone else's list with /kinklist [@username]. \n\n **Please note that we go to sleep around <t:1670025600:T> on the night from Tuesday to Wednesday every week.** \n\n**Questions will timeout after 10 minutes. If one of the dropdown options doesn't respond or shows an error, try it again. If the survey times out, you will be able to resume it with the /kinkresume command.** \n\n Okay, with the formalities out of the way, let us begin...", colour=embcol))
 
     #--------------Prepare variables---------------
     newKinklist = [str(datetime.now()), f"{targ.name}", f"{targ.id}"] #Contains kink data, will be written into the sheet.
@@ -528,9 +528,9 @@ async def kinkresume(interaction):
     oldpref = []
     for a in range(len(mess)):
         try:
-            if (mess[a].embeds[0].description.startswith("Registered ") or mess[a].embeds[0].description.startswith("Pronouns ")) and mess[a].author == client.user:
-                kinktitle.append(mess[a].embeds[0].description.replace(" as:", " as").split(" as ")[0].split(" ", 1)[1])
-                oldpref.append(mess[a].embeds[0].description.replace(" as:", " as").split(" as ")[1].rstrip("."))
+            if (str(mess[a].embeds[0].description).startswith("Registered ") or str(mess[a].embeds[0].description).startswith("Pronouns ")) and mess[a].author == client.user:
+                kinktitle.append(str(mess[a].embeds[0].description).replace(" as:", " as").split(" as ")[0].split(" ", 1)[1])
+                oldpref.append(str(mess[a].embeds[0].description).replace(" as:", " as").split(" as ")[1].rstrip("."))
         except IndexError:
             pass
     

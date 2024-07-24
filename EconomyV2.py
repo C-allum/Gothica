@@ -1,4 +1,5 @@
 from CommonDefinitions import *
+import CommonDefinitions
 import GlobalVars
 from thefuzz import fuzz
 import asyncio
@@ -1543,217 +1544,464 @@ async def reloadshops(interaction):
     await loadItemSheet()
     await interaction.followup.send("Successfully finished the task!")
 
-@tree.command(
-    name="bid",
-    description="Allows you to bid on characters in an auction."
-)
-@app_commands.describe(
-    character = "character you want to bid on.",
-    amount = "Amount you want to bid."
-)
-@app_commands.checks.has_role("Verified")
-async def bid(interaction, character:str, amount:int):
-    await interaction.response.defer(ephemeral=True, thinking=False)
-    bidtarget = character
-    try:
-        bidamount = amount
-        bidattempt = bidamount
-        author_econ_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(interaction.user.id) in x][0])
-        if interaction.user.name in str(bidders):
-            for e in range(len(bidstock)):
-                if bidders[e] == interaction.user:
-                    bidattempt += bidprice[e]
-        if bidtarget.lower() in str(bidstock).lower():
-            for b in range(len(bidstock)):
-                if bidtarget.lower() in bidstock[b].lower():
-                    slaveindex = b
-                    break
-            if bidamount <= bidprice[slaveindex]:
-                await interaction.channel.send(embed = discord.Embed(title = "You need to bid more than that!", description = "The current bid for " + bidstock[slaveindex] + " is " + str(bidprice[slaveindex]) + dezzieemj + ", bid by " + bidders[slaveindex].name, colour = embcol))
-            elif bidattempt > int(GlobalVars.economyData[author_econ_index+1][1]):
-                await interaction.channel.send(embed = discord.Embed(title = "You can't bid that much.", description = "You only have " + GlobalVars.economyData[author_econ_index+1][1] + dezzieemj + ".", colour = embcol))
-            elif bidamount < 1000:
-                await interaction.channel.send(embed = discord.Embed(title = "The minimum bid is 1000" + dezzieemj, description = "Please increase your bid.", colour = embcol))
-            else:
-                await interaction.channel.send(embed = discord.Embed(title = "Bid successful!", description = "You have bid " + str(bidamount) + dezzieemj + " for " + bidstock[slaveindex], colour = embcol))
-                bidders[slaveindex] = interaction.user
-                bidprice[slaveindex] = bidamount
-                await bidthread.send(interaction.user.name + " has bid " + str(bidamount) + dezzieemj + " on " + bidstock[slaveindex])
-        else:
-            await interaction.channel.send(embed = discord.Embed(title = "Could not find a slave of that name.", description = "Current slaves for sale are:\n\n" + "\n".join(bidstock), colour = embcol))
-    except ValueError:
-        await interaction.channel.send(embed = discord.Embed(title = "The price you bid needs to be an integer  ", description = "", colour = embcol))
-    await interaction.followup.send("Successfully finished the task!")
-
-@staffgroup.command(
-        name="auctionsetup",
-        description="Setups an auction."
-)
-@app_commands.describe(
-    characters = "Characters to be auctioned off. Separate them with | (name1|name2|name3...)"
-)
+@staffgroup.command(name="auctionsetup", description="Run in a thread with a checked msg per char from their player. 1st line = name & include the image")
 @app_commands.default_permissions(manage_messages=True)
+@app_commands.describe(name = "Name of the auction event")
+@app_commands.describe(announce = "Announcement Message")
+@app_commands.describe(endtime = "Epoch time of the end of the auction.")
 @app_commands.checks.has_role("Staff")
-async def auctionsetup(interaction, characters:str):
+async def auctionsetup(interaction, name:str, announce:str = None, endtime:int = None):
     await interaction.response.defer(ephemeral=True, thinking=False)
-    for a in range(len(characters.split("|"))):
-        bidstock.append(characters.split("|")[a])
-        bidprice.append(0)
-        bidders.append("")
-    global bidthread
-    bidthreadseed = await interaction.channel.send(embed = discord.Embed(title = "Bidding is open!", description = "This weekend's ~~slaves~~ *wares* are:\n" + "\n".join(bidstock), colour = embcol))
-    bidthread = await bidthreadseed.create_thread(name = "Bids")
-    await interaction.followup.send("Successfully finished the task!")
-
-@tree.command(
-        name="bidresults",
-        description="Allows you to see the bid results."
-)
-@app_commands.checks.has_role("Verified")
-async def bidresults(interaction):
-    await interaction.response.defer(ephemeral=True, thinking=False)
-
-    bidsummary = []
-    auctiontot = 0
-    for c in range(len(bidstock)):
-        if bidders[c] != "":
-            bidsummary.append(bidstock[c] + ": " + str(bidprice[c]) + dezzieemj + ", " + bidders[c].name)
-            auctiontot += bidprice[c]
-        else:
-            bidsummary.append(bidstock[c] + ": No bids yet")
-    await interaction.channel.send(embed = discord.Embed(title = "Current bids for this weekend's auctions", description = "\n".join(bidsummary) + "\n\nIn total, " + str(auctiontot) + " is being spent at this auction.",  colour = embcol))
-    await interaction.followup.send("Successfully finished the task!")
-
-@staffgroup.command(
-        name="auctionend",
-        description="Ends an auction."
-)
-@app_commands.default_permissions(manage_messages=True)
-@app_commands.checks.has_role("Staff")
-async def endauction(interaction): 
-    await interaction.response.defer(ephemeral=True, thinking=False)
-
-    bidtotal = sum(bidprice)
-    bidsfinal = []
-    bidwinners = []
-    for d in range(len(bidstock)):
-        if str(bidders[d]) in str(bidwinners):
-            try:
-                bidsfinal[bidwinners.index(bidders[d])] += bidprice[d]
-            except ValueError:
-                pass
-        else:
-            bidwinners.append(bidders[d])
-            bidsfinal.append(bidprice[d]) 
-    bidstatement = []
-
-    indexes = []
-    newbal = []
-    balances = []
-    #Save the economy once in case something happens, ex google disagrees with us wanting something from them.
-    try:
-        await writeEconSheet(GlobalVars.economyData)
-    except ssl.SSLEOFError:
-        await interaction.channel.send(embed = discord.Embed(title = "Archive error...", description = "Please just try again until it works. Blame google.", colour = embcol))
-        await interaction.followup.send("Failed!")
+    if len(auctionvars) != 0:
+        await interaction.followup.send("There is already an auction running! Running this will break things!")
         return
-    #now try to properly do the transaction.
-    try:
-        for e in range(len(bidsfinal)):
-            if await removeDezziesFromPlayerWithoutMessage(int(bidsfinal[e]), playerID=bidwinners[e].id):
-                bidstatement.append(str(bidwinners[e]) + ": " + str(bidsfinal[e]))
-                TransactionsDatabaseInterface.addTransaction(bidwinners[e].name, TransactionsDatabaseInterface.DezzieMovingAction.Auction, -int(bidsfinal[e]))
-            else:
-                await interaction.channel.send(embed = discord.Embed(title = "Something went wrong in concluding the auction.", description = f"Couldn't remove dezzies from {bidwinners[e].name}. We don't know why that happened. Please ask the botgods.", colour = embcol))
-                return
+    mess = [joinedMessages async for joinedMessages in interaction.channel.history(limit = None, oldest_first= True)]
+    auctionthreads.append(await interaction.channel.parent.create_thread(name = "Bid Thread - " + name, type = discord.ChannelType.public_thread))
+    bidres = []
+    wareplayers = []
+    for a in range(len(mess)):
+        for b in range(len(mess[a].reactions)):
+            if mess[a].reactions[b].emoji == "✅":
+                async for user in mess[a].reactions[b].users():
+                    if user == interaction.user:
+                        if mess[a].content.lower().startswith("name"):
+                            player = mess[a].author
+                            auctionvars.append([mess[a].content.split("\n")[0].split(" ", 1)[1], player, "\n".join(mess[a].content.split("\n")[0:]), mess[a].attachments[0].url])
+                            #auctionvars:       Char Name,                                        Player Name, Character Data, Image URL
+                            auctionvars[-1].append(await auctionthreads[0].send(embed = discord.Embed(title = auctionvars[-1][0], description = auctionvars[-1][2], colour = embcol).set_image(url = auctionvars[-1][3]).set_author(name = player.name + "/ " + player.display_name, icon_url=player.display_avatar.url).add_field(name = "Bid History", value = "No Bids Yet")))
+                            auctionvars[-1].append(1000-minincrease)
+                            auctionvars[-1].append("No Bids Yet")
+                            await auctionvars[-1][4].pin()
+                            bidstock.append(auctionvars[-1][0])
+                            bidres.append(auctionvars[-1][0] + ": 0")
+                            wareplayers.append(player.mention) 
+    auctionthreads.append(await auctionthreads[0].send(embed = discord.Embed(title = "Bid Results", description = "\n".join(bidres) + "\n\n**Total:** 0" + dezzieemj, colour = embcol)))
+    await auctionthreads[1].pin()
+    if announce != None:
+        await auctionthreads[0].send(announce)
+    if endtime != None:
+        time = await auctionthreads[0].send(embed = discord.Embed(title = "Auction end information", description= "This auction is scheduled to end at <t:" + str(endtime) + ":f>.\n\nThat's <t:" + str(endtime) + ":R> from now!", colour = embcol))
+        await time.pin()
+    wareooc = await interaction.channel.parent.create_thread(name = "OOC - Auction Wares: " + name, type = discord.ChannelType.public_thread)
+    await wareooc.send("Hello, " + ", ".join(wareplayers[:-1]) + " and " + wareplayers[-1] + "\n\nWelcome to the behind the scenes section of this auction! Use this thread as a ooc, and especially to discuss anything that is making you uncomfortable as players with the people running it. Your main point of contact this auction is " + interaction.user.mention + ".")
+    await interaction.channel.send("We have set up the auction in " + auctionthreads[0].jump_url)
+    await interaction.followup.send("Auction has been set up.")
 
-        await writeEconSheet(GlobalVars.economyData)
-    except ssl.SSLEOFError:
-        await loadEconomySheet()
-        await interaction.channel.send(embed = discord.Embed(title = "Archive error...", description = "Please just try again until it works. Blame google.", colour = embcol))
-        await interaction.followup.send("Failed!")
-        return
-
-    await interaction.channel.send(embed = discord.Embed(title = "Bidding concluded", description = "The following dezzies have been removed:\n\n" + "\n".join(bidstatement), colour = embcol))
-    await interaction.followup.send("Successfully finished the task!")
-
-
-@staffgroup.command(
-        name="bidreset",
-        description="Resets the bids on a single slave."
-)  
-@app_commands.describe(
-    character = "Slave to reset the bids on."
-)
-@app_commands.default_permissions(manage_messages=True)
-@app_commands.checks.has_role("Staff")
-async def bidreset(interaction, character:str):
+@tree.command(name="bid", description="Places a bid on one of the wares available at the auction - Only works when an auction is on.")
+@app_commands.describe(name = "Name of the slave to bid on.")
+@app_commands.describe(amount = "Amount of dezzies to bid.")
+@discord.app_commands.checks.has_role("Verified")
+async def bid(interaction, name:str, amount:int):
     await interaction.response.defer(ephemeral=True, thinking=False)
-    bidtarget = character
     try:
-        if bidtarget.lower() in str(bidstock).lower():
-            for b in range(len(bidstock)):
-                if bidtarget.lower() in bidstock[b].lower():
-                    slaveindex = b
-                    break
-            await interaction.channel.send(embed = discord.Embed(title = "Reset successful!", description = "You have reset the bid for " + bidstock[slaveindex], colour = embcol))
-            bidders[slaveindex] = ""
-            bidprice[slaveindex] = 0
-            await bidthread.send(interaction.user.name + " has reset the bid for " + bidstock[slaveindex])
-            await interaction.followup.send("Successfully finished the task!")
+        slavesearch = await CommonDefinitions.selectItem(interaction=interaction, searchterm=name, searchlist=bidstock, top_n_results=10)
+    except IndexError:
+        await interaction.followup.send("There is not currently an active auction, so there is nothing for you to bid on here. If this is in error, contact the bot gods.")
+        return
+    slavename = slavesearch[0]
+    slaveindex = bidstock.index(slavename)
+    bidder_econ_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(interaction.user.id) in x][0])
+    if auctionvars[slaveindex][-1] == interaction.user:
+        await interaction.followup.send("You are already the highest bidder for this character.")
+        return
+    if amount < auctionvars[slaveindex][-2] + minincrease: #Check that the bid is above the minimum needed to bid.
+        await interaction.followup.send("Your bid was too low. You need to bid a minimum of " + str(auctionvars[slaveindex][-2] + minincrease))
+        return
+    otherbids = 0
+    for a in range(len(auctionvars)):
+        if interaction.user == auctionvars[a][-1]:
+            otherbids += int(auctionvars[a][-2])
+    if int(GlobalVars.economyData[bidder_econ_index+1][1]) < amount + otherbids: #Check that the player can afford the bid
+        bidderinventoryvalue = await inventoryValue(bidder_econ_index)
+        if int(GlobalVars.economyData[bidder_econ_index+1][1])+int(bidderinventoryvalue) < auctionvars[slaveindex][-2] + minincrease + otherbids:
+            await interaction.followup.send("You do not have the neccessary funds to place this bid - even if you sell all the items in your inventory. By our count, you have a maximum inventory value of " + str(bidderinventoryvalue) + ". This, combined with your balance of " + str(GlobalVars.economyData[bidder_econ_index+1][1]) + ", gives you a maximum balance of " + str(int(GlobalVars.economyData[bidder_econ_index+1][1])+int(bidderinventoryvalue)))
             return
         else:
-            await interaction.channel.send(embed = discord.Embed(title = "Could not find a slave of that name.", description = "Current slaves for sale are:\n\n" + "\n".join(bidstock), colour = embcol))
-    except ValueError:
-        await interaction.channel.send(embed = discord.Embed(title = "Something went wrong with finding the slave. Check the entered name...", description = "", colour = embcol))
-        await interaction.followup.send("failed...")
-        return
-    await interaction.followup.send("Successfully finished the task!")
+            await interaction.followup.send("While this bid is above your liquid balance, we are allowing you to make it, though you will need to sell some of the items from your inventory if you win.")
 
-
-
-@staffgroup.command(
-        name="bidset",
-        description="sets the auction for a character to an amount and player."
-)  
-@app_commands.describe(
-    character = "Character to set the bid on.",
-    player="Player that owns the bid. Use @user",
-    amount="Amount of the bid."
-)
-@app_commands.default_permissions(manage_messages=True)
-@app_commands.checks.has_role("Staff")
-async def bidset(interaction, character:str, player:str, amount:int):
-    await interaction.response.defer(ephemeral=True, thinking=False)
-
-    if character.lower() in str(bidstock).lower():
-        for b in range(len(bidstock)):
-            if character.lower() in bidstock[b].lower():
-                slaveindex = b
-                bidders[b] = get(client.get_all_members(), id=int(player.replace("<", "").replace(">", "").replace("@", "")))
-                bidprice[b] = int(amount)
-                break
+    await auctionthreads[0].send(embed = discord.Embed(title = "Bid Placed!", description = "**" + interaction.user.name + "/ " + interaction.user.display_name + "** has bid *" + str(amount) + dezzieemj + "* on " + auctionvars[slaveindex][0] + "!", colour= embcol))
+    if auctionvars[slaveindex][-1] != "No Bids Yet":
+        await auctionthreads[0].send(random.choice([str(auctionvars[slaveindex][-1].mention) + ", will you raise the bid?", "Do I hear " + str(amount + minincrease) + ",  " + str(auctionvars[slaveindex][-1].mention) + "?", "We think they are worth twice that, easily. Care to prove us right, " + str(auctionvars[slaveindex][-1].mention) + "?", str(auctionvars[slaveindex][-1].mention) + ", you have been outbid!", str(auctionvars[slaveindex][-1].mention) + " , another bid!", "Calling " + str(auctionvars[slaveindex][-1].mention) + ", for it is their turn to bid!", "Will " + str(auctionvars[slaveindex][0]) + " be going to " + str(interaction.user.name) + "? They might if " + str(auctionvars[slaveindex][-1].mention) + " doesn't raise the bid!", str(auctionvars[slaveindex][-1].mention) + " will hear about this.", "Break out the piggybank, " + str(auctionvars[slaveindex][-1].mention) + " - you need to outbid " + str(interaction.user.name), "Rinkling Chains thinks that " + str(auctionvars[slaveindex][-1].mention) + " should keep bidding - He has his eye on a set of expensive scratching posts, and really needs the extra riches.", "I believe there are some characters offering loans, should you require one, " + str(auctionvars[slaveindex][-1].mention) + ". Either way, it is once again your turn to assess your funds and determine how much you can bid.", "Going once... Going twice... Will " + str(auctionvars[slaveindex][-1].mention) + " get a bid in before " + str(auctionvars[slaveindex][0]) + " is sold?"]))
+    
+    msg = await auctionthreads[0].fetch_message(auctionvars[slaveindex][4].id)
+    emb = msg.embeds[0]
+    hist = emb.fields[-1].value
+    embnew = discord.Embed(title = emb.title, description= emb.description, colour = embcol).set_author(name = emb.author.name, icon_url= emb.author.icon_url).set_image(url = emb.image.url)
+    for a in range(len(emb.fields)-1):
+        embnew.add_field(name = "Previous", value = emb.fields[a].value)
+    if auctionvars[slaveindex][-1] == "No Bids Yet":
+        hist = interaction.user.name + ": **" + str(amount) + dezzieemj + "**"
     else:
-        bidstock.append(character)
-        biduser = get(client.get_all_members(), id=int(player.replace("<", "").replace(">", "").replace("@", "")))
-        bidders.append(biduser)
-        bidprice.append(int(amount))
-        slaveindex = -1
+        if len(hist + "\n" + interaction.user.name + ": **" + str(amount) + dezzieemj + "**") > 1024:
+            embnew.add_field(name = "Previous", value = hist)
+            hist = "Bids Continued"
+        hist += "\n" + interaction.user.name + ": **" + str(amount) + dezzieemj + "**"
+    embnew.add_field(name = "Bid History", value = hist)
+    await auctionvars[slaveindex][4].edit(embed = embnew)
+    res = []
+    tot = 0
 
-    await interaction.channel.send(embed = discord.Embed(title = "Success!", description = "You have set the bid for " + str(bidstock[slaveindex]) + " to " + str(bidprice[slaveindex]) + " bid by " + str(bidders[slaveindex]), colour = embcol))
-    await interaction.followup.send("Successfully finished the task!")
+    auctionvars[slaveindex][-2] = amount
+    auctionvars[slaveindex][-1] = interaction.user
 
-@staffgroup.command(
-        name="auctionthread",
-        description="sets the bid thread to the thread the command is called in."
-)  
+    for a in range(len(auctionvars)+2):
+        try:
+            if auctionvars[a][-1] != "No Bids Yet":
+                tot += int(auctionvars[a][-2])
+                res.append(auctionvars[a][0] + ": " + str(auctionvars[a][-2]))
+            else:
+                res.append(auctionvars[a][0] + ": 0")
+        except IndexError:
+            res.append("")
+    res.pop(-1)
+    res.append("**Total:** " + str(tot))
+    
+    await auctionthreads[1].edit(embed = discord.Embed(title = "Bid Results", description = "\n".join(res), colour = embcol))
+
+    await interaction.followup.send("Bid placed.")
+
+async def inventoryValue(player_econ_index):
+    invval = 0
+    itemcodes = []
+    for a in range(len(GlobalVars.itemdatabase[0])):
+        itemcodes.append(GlobalVars.itemdatabase[0][a][11])
+    for a in range(2, len(GlobalVars.inventoryData[player_econ_index+2])):
+        invval += (int(GlobalVars.itemdatabase[0][itemcodes.index(GlobalVars.inventoryData[player_econ_index+2][a])][2]) * int(math.floor(int(GlobalVars.inventoryData[player_econ_index+3][a])/2)))
+    return invval
+        
+@staffgroup.command(name="auctionrestore", description="Run in the bidding thread to be restored")
 @app_commands.default_permissions(manage_messages=True)
 @app_commands.checks.has_role("Staff")
-async def auctionthread(interaction):
+async def auctionsetup(interaction):
     await interaction.response.defer(ephemeral=True, thinking=False)
-    bidthread = interaction.channel
-    await interaction.channel.send("Bidding Thread Set")
-    await interaction.followup.send("Successfully finished the task!")
+    if len(auctionvars) != 0:
+        await interaction.followup.send("There is already an auction running! Running this will break things!")
+        return
+    mess = [joinedMessages async for joinedMessages in interaction.channel.history(limit = None, oldest_first= True)]
+    qguild = client.get_guild(guildid)
+    for a in range(len(mess)):
+        if mess[a].author == client.user:
+            try:
+                if mess[a].embeds[0].fields[0].name == "Bid History":
+                    player = discord.utils.get(qguild.members, name = mess[a].embeds[0].author.name.split("/")[0])
+                    if mess[a].embeds[0].fields[0].value == "No Bids Yet":
+                        topbid = 0
+                        topbidder = "No Bids Yet"
+                    else:
+                        topbid = mess[a].embeds[0].fields[0].value.split("\n")[-1].split(":")[1].rstrip(" ")
+                        topbidder = discord.utils.get(qguild.members, name = mess[a].embeds[0].fields[0].value.split("\n")[-1].split(":")[0])
+                    auctionvars.append([mess[a].embeds[0].title, player, mess[a].embeds[0].description, mess[a].embeds[0].image.url, mess[a], int(str(topbid).replace("*", "")), topbidder])
+                    bidstock.append(auctionvars[-1][0])
+            except IndexError:
+                pass
+            try:
+                if mess[a].embeds[0].title == "Bid Results":
+                    auctionthreads.append(interaction.channel)
+                    auctionthreads.append(mess[a])
+            except IndexError:
+                pass
+    await interaction.channel.send("Auction resumed!")
+    await interaction.followup.send("Complete")
+
+@staffgroup.command(name="auctionend", description="End the auction, and extract the dezzies from the winners.")
+@app_commands.default_permissions(manage_messages=True)
+@app_commands.checks.has_role("Staff")
+async def auctionend(interaction):
+    await interaction.response.defer(ephemeral=True, thinking=False)
+    msg = "Dezzies have been removed from the following players:\n"
+    
+    for a in range(len(auctionvars)):
+        try:
+            if int(GlobalVars.economyData[GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(interaction.user.id) in x][0])+1][1]) >= int(auctionvars[a][-2]):
+                await removeDezziesFromPlayerWithoutMessage(int(auctionvars[a][-2]), playerID=auctionvars[a][-1].id)
+                msg += "\n**" + auctionvars[a][-1].name + "/ " + auctionvars[a][-1].display_name + "**: " + str(auctionvars[a][-2]) + dezzieemj + " for " + auctionvars[a][0]
+                TransactionsDatabaseInterface.addTransaction(auctionvars[a][-1].name, TransactionsDatabaseInterface.DezzieMovingAction.Auction, -int(auctionvars[a][-2]))
+            else:
+                msg += "\n**" + auctionvars[a][-1].name + "/ " + auctionvars[a][-1].display_name + "** needs to sell items to be able to afford " + auctionvars[a][0] + ". They need a total of " + str(auctionvars[a][-2]) + dezzieemj + ". Please contact staff to finalise this."
+        except IndexError:
+            pass
+        except AttributeError:
+            pass
+
+    for a in range(len(auctionvars)):
+        auctionvars.pop(0)
+        bidstock.pop(0)
+    for a in range(len(auctionthreads)):
+        auctionthreads.pop(0)
+
+    await interaction.channel.send(embed = discord.Embed(title = "Auction has ended!", description = "Thank you all for participating. " + msg, colour = embcol))
+    await interaction.followup.send("Auction Complete")
+
+@staffgroup.command(name="setbid", description="Manually set the bid of a particular slave.")
+@app_commands.describe(name = "Name of the slave alter.")
+@app_commands.describe(amount = "Amount of dezzies to set the bid to.")
+@app_commands.describe(player = "Player that the new bid will belong to.")
+@discord.app_commands.checks.has_role("Staff")
+async def setbid(interaction, name:str, player:discord.Member = None, amount: int = None):
+    await interaction.response.defer(ephemeral=True, thinking=False)
+    try:
+        slavesearch = await CommonDefinitions.selectItem(interaction=interaction, searchterm=name, searchlist=bidstock, top_n_results=10)
+    except IndexError:
+        await interaction.followup.send("There is not currently an active auction, so there is nothing for you to bid on here. If this is in error, contact the bot gods.")
+        return
+    slavename = slavesearch[0]
+    slaveindex = bidstock.index(slavename)
+    if player != None:
+        player = client.get_user(player.id)
+        await auctionthreads[0].send(embed = discord.Embed(title = "Bid Placed!", description = "**" + player.name + "/ " + player.display_name + "** has bid *" + str(amount) + dezzieemj + "* on " + auctionvars[slaveindex][0] + "!\n\nThis bid was manually placed by " + interaction.user.name + "/ " + interaction.user.display_name, colour= embcol))
+        auctionvars[slaveindex][-2] = amount
+        auctionvars[slaveindex][-1] = player
+    else:
+        await auctionthreads[0].send(embed = discord.Embed(title = "Bid Reset!", description = "**" + interaction.user.name + "/ " + interaction.user.display_name + "** has reset the bid for " + auctionvars[slaveindex][0], colour= embcol))
+
+    msg = await auctionthreads[0].fetch_message(auctionvars[slaveindex][4].id)
+    emb = msg.embeds[0]
+    hist = emb.fields[-1].value
+    embnew = discord.Embed(title = emb.title, description= emb.description, colour = embcol).set_author(name = emb.author.name, icon_url= emb.author.icon_url).set_image(url = emb.image.url)
+    for a in range(len(emb.fields)-1):
+        embnew.add_field(name = "Previous - " + str(a+1), value = emb.fields[a].value)
+    if player != None:
+        if auctionvars[slaveindex][-1] == "No Bids Yet":
+            hist = interaction.user.name + ": **" + str(amount) + dezzieemj + "**"
+        else:
+            if len(hist + "\n" + interaction.user.name + ": **" + str(amount) + dezzieemj + "**") > 1024:
+                embnew.add_field(name = "Previous", value = hist)
+                hist = "Bids Continued"
+            hist += "\n" + interaction.user.name + ": **" + str(amount) + dezzieemj + "**"
+    else:
+        hist = "No Bids Yet"
+    embnew.add_field(name = "Bid History", value = hist)
+    await auctionvars[slaveindex][4].edit(embed = embnew)
+    res = []
+    tot = 0
+
+    for a in range(len(auctionvars)+2):
+        try:
+            if auctionvars[a][-1] != "No Bids Yet":
+                tot += int(auctionvars[a][-2])
+                res.append(auctionvars[a][0] + ": " + str(auctionvars[a][-2]))
+            else:
+                res.append(auctionvars[a][0] + ": 0")
+        except IndexError:
+            res.append("")
+    res.pop(-1)
+    res.append("**Total:** " + str(tot))
+    
+    await auctionthreads[1].edit(embed = discord.Embed(title = "Bid Results", description = "\n".join(res), colour = embcol))
+
+    await interaction.followup.send("Bid set.")
+
+# @tree.command(
+#     name="bid",
+#     description="Allows you to bid on characters in an auction."
+# )
+# @app_commands.describe(
+#     character = "character you want to bid on.",
+#     amount = "Amount you want to bid."
+# )
+# @app_commands.checks.has_role("Verified")
+# async def bid(interaction, character:str, amount:int):
+#     await interaction.response.defer(ephemeral=True, thinking=False)
+#     bidtarget = character
+#     try:
+#         bidamount = amount
+#         bidattempt = bidamount
+#         author_econ_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(interaction.user.id) in x][0])
+#         if interaction.user.name in str(bidders):
+#             for e in range(len(bidstock)):
+#                 if bidders[e] == interaction.user:
+#                     bidattempt += bidprice[e]
+#         if bidtarget.lower() in str(bidstock).lower():
+#             for b in range(len(bidstock)):
+#                 if bidtarget.lower() in bidstock[b].lower():
+#                     slaveindex = b
+#                     break
+#             if bidamount <= bidprice[slaveindex]:
+#                 await interaction.channel.send(embed = discord.Embed(title = "You need to bid more than that!", description = "The current bid for " + bidstock[slaveindex] + " is " + str(bidprice[slaveindex]) + dezzieemj + ", bid by " + bidders[slaveindex].name, colour = embcol))
+#             elif bidattempt > int(GlobalVars.economyData[author_econ_index+1][1]):
+#                 await interaction.channel.send(embed = discord.Embed(title = "You can't bid that much.", description = "You only have " + GlobalVars.economyData[author_econ_index+1][1] + dezzieemj + ".", colour = embcol))
+#             elif bidamount < 1000:
+#                 await interaction.channel.send(embed = discord.Embed(title = "The minimum bid is 1000" + dezzieemj, description = "Please increase your bid.", colour = embcol))
+#             else:
+#                 await interaction.channel.send(embed = discord.Embed(title = "Bid successful!", description = "You have bid " + str(bidamount) + dezzieemj + " for " + bidstock[slaveindex], colour = embcol))
+#                 bidders[slaveindex] = interaction.user
+#                 bidprice[slaveindex] = bidamount
+#                 await bidthread.send(interaction.user.name + " has bid " + str(bidamount) + dezzieemj + " on " + bidstock[slaveindex])
+#         else:
+#             await interaction.channel.send(embed = discord.Embed(title = "Could not find a slave of that name.", description = "Current slaves for sale are:\n\n" + "\n".join(bidstock), colour = embcol))
+#     except ValueError:
+#         await interaction.channel.send(embed = discord.Embed(title = "The price you bid needs to be an integer  ", description = "", colour = embcol))
+#     await interaction.followup.send("Successfully finished the task!")
+
+# @staffgroup.command(
+#         name="auctionsetup",
+#         description="Setups an auction."
+# )
+# @app_commands.describe(
+#     characters = "Characters to be auctioned off. Separate them with | (name1|name2|name3...)"
+# )
+# @app_commands.default_permissions(manage_messages=True)
+# @app_commands.checks.has_role("Staff")
+# async def auctionsetup(interaction, characters:str):
+#     await interaction.response.defer(ephemeral=True, thinking=False)
+#     for a in range(len(characters.split("|"))):
+#         bidstock.append(characters.split("|")[a])
+#         bidprice.append(0)
+#         bidders.append("")
+#     global bidthread
+#     bidthreadseed = await interaction.channel.send(embed = discord.Embed(title = "Bidding is open!", description = "This weekend's ~~slaves~~ *wares* are:\n" + "\n".join(bidstock), colour = embcol))
+#     bidthread = await bidthreadseed.create_thread(name = "Bids")
+#     await interaction.followup.send("Successfully finished the task!")
+
+# @tree.command(
+#         name="bidresults",
+#         description="Allows you to see the bid results."
+# )
+# @app_commands.checks.has_role("Verified")
+# async def bidresults(interaction):
+#     await interaction.response.defer(ephemeral=True, thinking=False)
+
+#     bidsummary = []
+#     auctiontot = 0
+#     for c in range(len(bidstock)):
+#         if bidders[c] != "":
+#             bidsummary.append(bidstock[c] + ": " + str(bidprice[c]) + dezzieemj + ", " + bidders[c].name)
+#             auctiontot += bidprice[c]
+#         else:
+#             bidsummary.append(bidstock[c] + ": No bids yet")
+#     await interaction.channel.send(embed = discord.Embed(title = "Current bids for this weekend's auctions", description = "\n".join(bidsummary) + "\n\nIn total, " + str(auctiontot) + " is being spent at this auction.",  colour = embcol))
+#     await interaction.followup.send("Successfully finished the task!")
+
+# @staffgroup.command(
+#         name="auctionend",
+#         description="Ends an auction."
+# )
+# @app_commands.default_permissions(manage_messages=True)
+# @app_commands.checks.has_role("Staff")
+# async def endauction(interaction): 
+#     await interaction.response.defer(ephemeral=True, thinking=False)
+
+#     bidtotal = sum(bidprice)
+#     bidsfinal = []
+#     bidwinners = []
+#     for d in range(len(bidstock)):
+#         if str(bidders[d]) in str(bidwinners):
+#             try:
+#                 bidsfinal[bidwinners.index(bidders[d])] += bidprice[d]
+#             except ValueError:
+#                 pass
+#         else:
+#             bidwinners.append(bidders[d])
+#             bidsfinal.append(bidprice[d]) 
+#     bidstatement = []
+
+#     indexes = []
+#     newbal = []
+#     balances = []
+#     #Save the economy once in case something happens, ex google disagrees with us wanting something from them.
+#     try:
+#         await writeEconSheet(GlobalVars.economyData)
+#     except ssl.SSLEOFError:
+#         await interaction.channel.send(embed = discord.Embed(title = "Archive error...", description = "Please just try again until it works. Blame google.", colour = embcol))
+#         await interaction.followup.send("Failed!")
+#         return
+#     #now try to properly do the transaction.
+#     try:
+#         for e in range(len(bidsfinal)):
+#             if await removeDezziesFromPlayerWithoutMessage(int(bidsfinal[e]), playerID=bidwinners[e].id):
+#                 bidstatement.append(str(bidwinners[e]) + ": " + str(bidsfinal[e]))
+#                 TransactionsDatabaseInterface.addTransaction(bidwinners[e].name, TransactionsDatabaseInterface.DezzieMovingAction.Auction, -int(bidsfinal[e]))
+#             else:
+#                 await interaction.channel.send(embed = discord.Embed(title = "Something went wrong in concluding the auction.", description = f"Couldn't remove dezzies from {bidwinners[e].name}. We don't know why that happened. Please ask the botgods.", colour = embcol))
+#                 return
+
+#         await writeEconSheet(GlobalVars.economyData)
+#     except ssl.SSLEOFError:
+#         await loadEconomySheet()
+#         await interaction.channel.send(embed = discord.Embed(title = "Archive error...", description = "Please just try again until it works. Blame google.", colour = embcol))
+#         await interaction.followup.send("Failed!")
+#         return
+
+#     await interaction.channel.send(embed = discord.Embed(title = "Bidding concluded", description = "The following dezzies have been removed:\n\n" + "\n".join(bidstatement), colour = embcol))
+#     await interaction.followup.send("Successfully finished the task!")
+
+
+# @staffgroup.command(
+#         name="bidreset",
+#         description="Resets the bids on a single slave."
+# )  
+# @app_commands.describe(
+#     character = "Slave to reset the bids on."
+# )
+# @app_commands.default_permissions(manage_messages=True)
+# @app_commands.checks.has_role("Staff")
+# async def bidreset(interaction, character:str):
+#     await interaction.response.defer(ephemeral=True, thinking=False)
+#     bidtarget = character
+#     try:
+#         if bidtarget.lower() in str(bidstock).lower():
+#             for b in range(len(bidstock)):
+#                 if bidtarget.lower() in bidstock[b].lower():
+#                     slaveindex = b
+#                     break
+#             await interaction.channel.send(embed = discord.Embed(title = "Reset successful!", description = "You have reset the bid for " + bidstock[slaveindex], colour = embcol))
+#             bidders[slaveindex] = ""
+#             bidprice[slaveindex] = 0
+#             await bidthread.send(interaction.user.name + " has reset the bid for " + bidstock[slaveindex])
+#             await interaction.followup.send("Successfully finished the task!")
+#             return
+#         else:
+#             await interaction.channel.send(embed = discord.Embed(title = "Could not find a slave of that name.", description = "Current slaves for sale are:\n\n" + "\n".join(bidstock), colour = embcol))
+#     except ValueError:
+#         await interaction.channel.send(embed = discord.Embed(title = "Something went wrong with finding the slave. Check the entered name...", description = "", colour = embcol))
+#         await interaction.followup.send("failed...")
+#         return
+#     await interaction.followup.send("Successfully finished the task!")
+
+
+
+# @staffgroup.command(
+#         name="bidset",
+#         description="sets the auction for a character to an amount and player."
+# )  
+# @app_commands.describe(
+#     character = "Character to set the bid on.",
+#     player="Player that owns the bid. Use @user",
+#     amount="Amount of the bid."
+# )
+# @app_commands.default_permissions(manage_messages=True)
+# @app_commands.checks.has_role("Staff")
+# async def bidset(interaction, character:str, player:str, amount:int):
+#     await interaction.response.defer(ephemeral=True, thinking=False)
+
+#     if character.lower() in str(bidstock).lower():
+#         for b in range(len(bidstock)):
+#             if character.lower() in bidstock[b].lower():
+#                 slaveindex = b
+#                 bidders[b] = get(client.get_all_members(), id=int(player.replace("<", "").replace(">", "").replace("@", "")))
+#                 bidprice[b] = int(amount)
+#                 break
+#     else:
+#         bidstock.append(character)
+#         biduser = get(client.get_all_members(), id=int(player.replace("<", "").replace(">", "").replace("@", "")))
+#         bidders.append(biduser)
+#         bidprice.append(int(amount))
+#         slaveindex = -1
+
+#     await interaction.channel.send(embed = discord.Embed(title = "Success!", description = "You have set the bid for " + str(bidstock[slaveindex]) + " to " + str(bidprice[slaveindex]) + " bid by " + str(bidders[slaveindex]), colour = embcol))
+#     await interaction.followup.send("Successfully finished the task!")
+
+# @staffgroup.command(
+#         name="auctionthread",
+#         description="sets the bid thread to the thread the command is called in."
+# )  
+# @app_commands.default_permissions(manage_messages=True)
+# @app_commands.checks.has_role("Staff")
+# async def auctionthread(interaction):
+#     await interaction.response.defer(ephemeral=True, thinking=False)
+#     bidthread = interaction.channel
+#     await interaction.channel.send("Bidding Thread Set")
+#     await interaction.followup.send("Successfully finished the task!")
 
 async def copyEconomy(message):
     GlobalVars.economyData = sheet.values().get(spreadsheetId = inventorysheet, range = "A1:E5", majorDimension='ROWS').execute().get("values")
@@ -2361,7 +2609,7 @@ async def loadItemSheet():
     itemlists = itemsheet.worksheets()
     GlobalVars.itemdatabase = []
     for a in range(len(itemlists)):
-            GlobalVars.itemdatabase.append(itemlists[a].get_all_values())
+        GlobalVars.itemdatabase.append(itemlists[a].get_all_values())
 
 async def writeItemsheetCell(shopnumber, row, column, values):
     async with economy_lock:
