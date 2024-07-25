@@ -1587,6 +1587,38 @@ async def auctionsetup(interaction, name:str, announce:str = None, endtime:int =
     await interaction.channel.send("We have set up the auction in " + auctionthreads[0].jump_url)
     await interaction.followup.send("Auction has been set up.")
 
+@staffgroup.command(name="auctionaddware", description="Add a character to an auction")
+@app_commands.default_permissions(manage_messages=True)
+@app_commands.describe(player = "Name of the player")
+@app_commands.describe(name = "The name of the character")
+@app_commands.describe(description = "The description for the embed/character bio.")
+@app_commands.describe(image = "The url of the image to use.")
+@app_commands.checks.has_role("Staff")
+async def auctionaddware(interaction, player:discord.Member, name:str, description:str, image:str):
+    await interaction.response.defer(ephemeral=True, thinking=False)
+    player = client.get_user(player.id)
+    auctionvars.append([name, player, description, image])
+    auctionvars[-1].append(await auctionthreads[0].send(embed = discord.Embed(title = auctionvars[-1][0], description = auctionvars[-1][2], colour = embcol).set_image(url = auctionvars[-1][3]).set_author(name = player.name + "/ " + player.display_name, icon_url=player.display_avatar.url).add_field(name = "Bid History", value = "No Bids Yet")))
+    auctionvars[-1].append(1000-minincrease)
+    auctionvars[-1].append("No Bids Yet")
+    bidstock.append(auctionvars[-1][0])
+    res = []
+    tot = 0
+    for a in range(len(auctionvars)+2):
+        try:
+            if auctionvars[a][-1] != "No Bids Yet":
+                tot += int(auctionvars[a][-2])
+                res.append(auctionvars[a][0] + ": " + str(auctionvars[a][-2]))
+            else:
+                res.append(auctionvars[a][0] + ": 0")
+        except IndexError:
+            res.append("")
+    res.pop(-1)
+    res.append("**Total:** " + str(tot))
+    await auctionvars[-1][4].pin()
+    await auctionthreads[1].edit(embed = discord.Embed(title = "Bid Results", description = "\n".join(res), colour = embcol))
+    await interaction.followup.send(name + " has been added")
+
 @tree.command(name="bid", description="Places a bid on one of the wares available at the auction - Only works when an auction is on.")
 @app_commands.describe(name = "Name of the slave to bid on.")
 @app_commands.describe(amount = "Amount of dezzies to bid.")

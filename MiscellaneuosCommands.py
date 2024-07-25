@@ -1934,7 +1934,11 @@ async def viewpins(interaction):
     pins = await interaction.channel.pins()
     pinmsg = "Here's a list of all the pinned messages in this thread:\n"
     for a in range(len(pins)):
-        pinmsg += "\n" + pins[a].author.name + ": " + pins[a].jump_url
+        pinmsg += "\n" + pins[a].author.name + ": " + pins[a].jump_url + " - "
+        try:
+            pinmsg += pins[a].embeds[0].title
+        except IndexError:
+            pinmsg += pins[a].content[:30] + "..."
     await interaction.followup.send(pinmsg)
 
 @staffgroup.command(name = "helplist", description = "Lists all converted slash commands")
