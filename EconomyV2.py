@@ -1722,7 +1722,7 @@ async def auctionsetup(interaction):
                     else:
                         topbid = mess[a].embeds[0].fields[0].value.split("\n")[-1].split(":")[1].rstrip(" ")
                         topbidder = discord.utils.get(qguild.members, name = mess[a].embeds[0].fields[0].value.split("\n")[-1].split(":")[0])
-                    auctionvars.append([mess[a].embeds[0].title, player, mess[a].embeds[0].description, mess[a].embeds[0].image.url, mess[a], int(str(topbid).replace("*", "")), topbidder])
+                    auctionvars.append([mess[a].embeds[0].title, player, mess[a].embeds[0].description, mess[a].embeds[0].image.url, mess[a], int(str(topbid).replace("*", "").replace("<", "")), topbidder])
                     bidstock.append(auctionvars[-1][0])
             except IndexError:
                 pass
