@@ -309,7 +309,7 @@ async def inventory(interaction, player:str=""):
         mechanics = item_database_info[5]
         flavour = item_database_info[6]
         default_curse = item_database_info[8]
-        additional_reference = ""
+        additional_reference = player_inventory[3][i+2]
 
 
         embed_string, unused, potential_curses, potential_curse_names, curseCount = await showItem(item_name, item_type, price, quantity_available, curses_identifier, rarity, attunement_requirement, mechanics, flavour, default_curse, additional_reference, show_quant_and_price=False)
