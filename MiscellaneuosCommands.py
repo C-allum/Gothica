@@ -1323,73 +1323,86 @@ async def mazerestore(message):
 
 
 #--------------Miscellaneous Commands-----------------
-    
-async def tarotfunc(message):
 
-    found = 0
-    index = ""
-    for a in range(len(tarot)):
-        if message.author == tarot[a][0]:
-            found = 1
-            index == a
-            await tarotdrawmany(a, message)
+@tree.command(name = "tarot", description = "Generates or draws from a tarot deck.")
+@app_commands.describe(shuffle = "Shuffles the deck before drawing cards")
+@app_commands.checks.has_role("Verified")
+async def tarot(interaction, shuffle:bool = None):
+    await interaction.response.defer(ephemeral=True, thinking=False)
+    if len(tarotvars) == 0 or not str(interaction.user.name) in str(tarotvars):
+        tarotvars.append([interaction.user.name, await tarotshuff(interaction)])
+    output = []
+    endshuff = False
+    knight = 0
+    for a in range(len(tarotvars)):
+        if interaction.user.name == tarotvars[a][0]:
+            if shuffle == True:
+                tarotvars.pop(a)
+                tarotvars.append([interaction.user.name, await tarotshuff(interaction)])
+            while b:
+
+                try:
+                    tarotvars[a][1]
+                except IndexError:
+                    output.append("*Deck is empty, reshuffling!*")
+                    tarotvars.pop(a)
+                    tarotvars[a].append([interaction.user.name, await tarotshuff(interaction)])
+
+                if tarotvars[a][1][0].startswith("Page") and  tarotvars[a][1][0][-1] == "U":
+                    tarotvars.pop(a)
+                    tarotvars.append([interaction.user.name, await tarotshuff(interaction)])
+                    output.append("- " + tarotvars[a][1][0][:-1] + ", Upright\nThe deck has been shuffled, and the following three cards are the next in the deck. Write down the order and orientation that you are putting them back on the deck in. You can then continue to pull cards using the /tarot function.")
+                    output.append(tarotvars[a][1][0][:-1])
+                    output.append(tarotvars[a][1][1][:-1])
+                    output.append(tarotvars[a][1][2][:-1])
+                elif tarotvars[a][1][0].startswith("Page") or tarotvars[a][1][0].startswith("Knight") or tarotvars[a][1][0].startswith("Queen") or tarotvars[a][1][0].startswith("King"):
+                    endshuff = True
+
+                if tarotvars[a][1][0].startswith("Knight") and  tarotvars[a][1][0][-1] == "U":
+                    knight = 1
+                elif tarotvars[a][1][0].startswith("Knight") and  tarotvars[a][1][0][-1] == "R":
+                    knight = -1
+
+                if tarotvars[a][1][0][-1] == "U":
+                    output.append("- " + tarotvars[a][1][0][:-1] + ", Upright")
+                else:
+                    output.append("- " + tarotvars[a][1][0][:-1] + ", Reversed")
+                try:
+                    int(tarotvars[a][1][0][0])
+                    if knight == -1 or tarotvars[a][1][0][-1] == "R":
+                        rev = True
+                    else:
+                        rev = False
+                    if rev and not knight == 1:
+                        output.append("\n*Dice Result:* **" + tarotvars[a][1][0].split(" ")[0] + "**")
+                    else:
+                        output.append("\n*Dice Result:* **" + str(21 - int(tarotvars[a][1][0].split(" ")[0])) + "**")
+                    tarotvars[a][1].pop(0)
+                    if endshuff == True:
+                        tarotvars.pop(a)
+                        tarotvars.append([interaction.user.name, await tarotshuff(interaction)])
+                        output.append("Due to the cards drawn, the deck has been shuffled after this result.")
+                    break
+                except ValueError:
+                    tarotvars[a][1].pop(0)
+
             break
-    if found == 0:
-        index = len(tarot)
-        tarot.append([message.author, await tarotshuffle()])
-        await message.channel.send(embed = discord.Embed(title = "A Tarot deck has been generated for you.", description= "Use the following commands to manipulate it:\n\n`%tarot`: Draws a single card.\n`%tarotresolve`: Draws cards until revealing a number\n`%tarotshuffle`: Shuffles your deck.", colour = embcol))
+    await interaction.channel.send(embed = discord.Embed(title = interaction.user.name + " drew from their tarot deck!", description= "The cards they pulled were:\n\n" + "\n".join(output), colour = embcol))
 
-    if message.content.startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "tarotshuffle"):
-        tarot.pop(index).append([message.author, await tarotshuffle()])
-        await message.channel.send(embed = discord.Embed(title = "Your tarot deck has been shuffled.", description= "Use the following commands to manipulate it:\n\n`%tarot`: Draws a single card.\n`%tarotresolve`: Draws cards until revealing a number\n`%tarotshuffle`: Shuffles your deck.", colour = embcol))
-    elif message.content.startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "tarotresolve"):
-        await tarotdrawmany(index, message)
-    else:
-        await tarotdraw1(index, message)            
+    await interaction.followup.send("Cards drawn!")
 
-async def tarotdraw1(ind, message):
-    drawncard = tarot[ind][1][0][1:]
-    orientation = tarot[ind][1][0][0]
-
-    if orientation == "U":
-        orientation = "Upright"
-        effect = tarotupright[tarotcards.index(drawncard)]
-    else:
-        orientation = "Reverse"
-        effect = tarotreverse[tarotcards.index(drawncard)]
-    await message.channel.send(embed = discord.Embed(title = message.author.display_name + " has drawn a Tarot Card!", description = "You drew the " + str(drawncard) + " in the " + orientation + " orientation.\n\n***" + effect + "***", colour = embcol))
-    tarot[ind][1].append(random.choice(["U", "R"]) + str(tarot[ind][1].pop(0)[1:]))
-
-async def tarotdrawmany(ind, message):
-    drawnlist = []
-    for a in range(len(tarotcards)):
-        try:
-            drawncard = tarot[ind][1][0][1:]
-            orientation = tarot[ind][1][0][0]
-        
-            if orientation == "U":
-                orientation = "Upright"
-            else:
-                orientation = "Reverse"
-            drawnlist.append("**" + str(drawncard) + "**, " + orientation)
-            tarot[ind][1].append(random.choice(["U", "R"]) + str(tarot[ind][1].pop(0)[1:]))
-            try:
-                num = int(drawncard)
-                break
-            except ValueError:
-                pass
-        except TypeError:
-            pass
-    if drawnlist != []:
-        await message.channel.send(embed = discord.Embed(title = message.author.display_name + " has drawn Tarot Cards!", description = "You drew:\n" + "\n".join(drawnlist), colour = embcol))
-
-
-async def tarotshuffle():
-    unqcards = list(tarotcards)
-    random.shuffle(unqcards)
-    for a in range(len(unqcards)):
-        unqcards[a] = random.choice(["U", "R"]) + str(unqcards[a])
-    return(unqcards)
+async def tarotshuff(interaction):
+    cards = []
+    suits = "Swords", "Pentacles", "Wands", "Chalices"
+    for a in range(4):
+        for b in range(14):
+            cards.append(tarotcards[b] + " of " + suits[a])
+    for a in range(len(tarotcards[14:])):
+        cards.append(tarotcards[a + 14])
+    for a in range(len(cards)):
+        cards[a] = cards[a] + random.choice(["U", "R"])
+    random.shuffle(cards)
+    return cards
 
 #----------------Dungeon Map-----------------
 
@@ -1778,7 +1791,7 @@ async def verify(interaction, user: discord.Member):
 @tree.command(name = "timestamp", description = "Generates a dynamic timestamp.")
 @app_commands.describe(time = "The time to display, in the format HH:MM", timezone = "Your timezone. This will be converted for everyone else to see")
 @app_commands.checks.has_role("Verified")
-async def embed(interaction, time: str, timezone: str = None):
+async def timestamp(interaction, time: str, timezone: str = None):
     await interaction.response.defer(ephemeral=True, thinking=False)
     if timezone == "GMT+12":
         timemod = 12
