@@ -1404,6 +1404,48 @@ async def tarotshuff(interaction):
     random.shuffle(cards)
     return cards
 
+@staffgroup.command(name = "hydragame", description = "Moves a number of squares in Hydra's Game")
+@app_commands.describe(number = "The number of squares to move")
+@app_commands.describe(draw = "Set to false to disable any effects - used for manually setting position.")
+@app_commands.checks.has_role("Staff")
+@app_commands.default_permissions(manage_messages=True)
+async def verify(interaction, number: int, draw:bool = True):
+    await interaction.response.defer(ephemeral=True, thinking=False)
+    ind = None
+    try:
+        for a in range(len(hydraprogress)):
+            if interaction.user.name == hydraprogress[a][0]:
+                ind = a
+                break
+    except IndexError:
+        pass
+    if ind == None:
+        hydraprogress.append([interaction.user.name, 1])
+        ind = len(hydraprogress) -1 
+    newsquare = number + hydraprogress[ind][1]
+    if newsquare >= len(hydrasquares):
+        await interaction.channel.send(embed = discord.Embed(title = "You won!", description = "This move would put " + interaction.user.name + " on square " + str(newsquare)))
+        return
+    else:
+        output = interaction.user.name + " moves forward to square " + str(newsquare) + "\n\n"
+        if hydrasquares[newsquare] == "S":
+            output += "This space is safe!"
+        elif hydrasquares[newsquare] == "P":
+            output += "Physical Transformation!\n\n" + random.choice(hydraeffects[0])
+        elif hydrasquares[newsquare] == "M":
+            output += "Mental Transformation!\n\n" + random.choice(hydraeffects[1])
+        elif hydrasquares[newsquare] == "G":
+            output += "Game Action!\n\n" + random.choice(hydraeffects[2])
+        elif hydrasquares[newsquare] == "L":
+            output += "Lewd Action!\n\n" + random.choice(hydraeffects[3])
+    
+    if draw:
+        await interaction.channel.send(embed = discord.Embed(title = interaction.user.name + " moved forward " + str(number) + " spaces!", description= output, colour= embcol))
+    else:
+        await interaction.channel.send(embed = discord.Embed(title = interaction.user.name + " manually moved", description= "They are now on square " + str(newsquare) + ", and ignoring other affects there.", colour = embcol))
+    await interaction.followup.send("Played!")
+
+
 #----------------Dungeon Map-----------------
 
 async def map(message):
