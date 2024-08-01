@@ -1420,9 +1420,13 @@ async def verify(interaction, number: int, draw:bool = True):
     except IndexError:
         pass
     if ind == None:
-        hydraprogress.append([interaction.user.name, 1])
-        ind = len(hydraprogress) -1 
-    newsquare = number + hydraprogress[ind][1]
+        hydraprogress.append([interaction.user.name, 1 + number])
+        ind = len(hydraprogress) -1
+    else:
+        prev = hydraprogress[ind][1]
+        hydraprogress.pop(ind)
+        hydraprogress.append([interaction.user.name, prev + number])
+    newsquare = hydraprogress[ind][1]
     if newsquare >= len(hydrasquares):
         await interaction.channel.send(embed = discord.Embed(title = "You won!", description = "This move would put " + interaction.user.name + " on square " + str(newsquare)))
         return
