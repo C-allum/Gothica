@@ -1016,7 +1016,7 @@ async def additem(interaction, recipient:str, searchterm:str, amount:int=1):
         return
     
     if confirm_view.button_response == "modifyquantity":
-        quantity_view = Dropdown_Select_View(message=message, optionamount=25, maxselectionamount=1, namelist=[])
+        quantity_view = Dropdown_Select_View(message=interaction, optionamount=25, maxselectionamount=1, namelist=[])
         selection_message = await interaction.channel.send(embed=discord.Embed(title=f"How many of these items do you want to add to {recipient_name}'s inventory?", colour = embcol), view=quantity_view)
 
         if await quantity_view.wait():
@@ -3293,7 +3293,7 @@ class Dropdown_Select_View(discord.ui.View):
         
     async def callback(self, interaction: discord.Interaction):
         self.button_response = self.select.values
-        await interaction.response.defer()
+        await interaction.response.send_message("Amount Modified!")
         self.stop()
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
