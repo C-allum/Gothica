@@ -2012,7 +2012,7 @@ async def threadsearch(interaction, name: str, channel: str):
     threadlist = []
     threadlinks = []
     for a in range(len(threads)):
-        if interaction.user in threads[a].members or "Staff" in str(interaction.user.roles):
+        if str(interaction.user.id) in str(await threads[a].fetch_members()) or "Staff" in str(interaction.user.roles):
             threadlist.append(threads[a].name)
             threadlinks.append(threads[a].name + ": " + threads[a].jump_url)
     ans = await CommonDefinitions.selectItem(interaction= interaction, searchterm= name, top_n_results=10, searchlist= threadlist)
