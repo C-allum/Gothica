@@ -1426,6 +1426,7 @@ async def verify(interaction, number: int, draw:bool = True):
         prev = hydraprogress[ind][1]
         hydraprogress.pop(ind)
         hydraprogress.append([interaction.user.name, prev + number])
+        ind = -1
     newsquare = hydraprogress[ind][1]
     if newsquare >= len(hydrasquares):
         await interaction.channel.send(embed = discord.Embed(title = "You won!", description = "This move would put " + interaction.user.name + " on square " + str(newsquare)))
@@ -1999,6 +2000,24 @@ async def viewpins(interaction):
         except IndexError:
             pinmsg += pins[a].content[:30] + "..."
     await interaction.followup.send(pinmsg)
+
+@tree.command(name = "threadsearch", description = "Searches for threads from a specific channel.")
+@app_commands.describe(channel = "The channel to search in.")
+@app_commands.describe(name = "The name of the thread to search for.")
+@app_commands.checks.has_role("Verified")
+async def threadsearch(interaction, name: str, channel: str):
+    await interaction.response.defer(ephemeral=True, thinking=False)
+    channel = client.get_channel(int(channel[2:-1]))
+    threads = channel.threads
+    threadlist = []
+    threadlinks = []
+    for a in range(len(threads)):
+        if interaction.user in threads[a].members or "Staff" in str(interaction.user.roles):
+            threadlist.append(threads[a].name)
+            threadlinks.append(threads[a].name + ": " + threads[a].jump_url)
+    ans = await CommonDefinitions.selectItem(interaction= interaction, searchterm= name, top_n_results=10, searchlist= threadlist)
+    await interaction.channel.send(embed = discord.Embed(title = "Link to your selected thread:", description=threadlinks[threadlist.index(ans[0])], colour = embcol))
+    await interaction.followup.send("Search complete")
 
 @staffgroup.command(name = "helplist", description = "Lists all converted slash commands")
 @app_commands.checks.has_role("Staff")
