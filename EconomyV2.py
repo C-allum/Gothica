@@ -1823,6 +1823,59 @@ async def setbid(interaction, name:str, player:discord.Member = None, amount: in
 
     await interaction.followup.send("Bid set.")
 
+@staffgroup.command(name="inventorystatistics", description="Get the statistics of rarities in the inventory")
+@discord.app_commands.checks.has_role("Staff")
+async def inventorystatistics(interaction):
+    await interaction.response.defer(ephemeral=True, thinking=False)
+    itemsheettallies = [0, 0, 0, 0, 0, 0]
+    inventorytallies = [0, 0, 0, 0, 0, 0, 0, 0]
+    invsheet = gc.open_by_key(inventorysheet).worksheet("Inventories").get_all_values()
+    itemids = gc.open_by_key(itemsheetID).worksheet("Main Item Sheet").col_values(12)
+    itemrares = gc.open_by_key(itemsheetID).worksheet("Main Item Sheet").col_values(5)
+    for a in range(len(itemrares)):
+        if itemrares[a] == "Common":
+            itemsheettallies[0] += 1
+        elif itemrares[a] == "Uncommon":
+            itemsheettallies[1] += 1
+        elif itemrares[a] == "Rare":
+            itemsheettallies[2] += 1
+        elif itemrares[a] == "Very Rare":
+            itemsheettallies[3] += 1
+        elif itemrares[a] == "Legendary":
+            itemsheettallies[4] += 1
+        else:
+            itemsheettallies[5] += 1
+    for a in range(len(invsheet)):
+        if a < 3:
+            pass
+        elif len(str(invsheet[a][0])) > 2:
+            inventorytallies[0] += 1
+            if len(str(invsheet[a][2])) < 1:
+                inventorytallies[1] += 1
+            else:
+                for b in range(2, len(invsheet[a])):
+                    if len(str(invsheet[a][b])) > 1:
+                        id = invsheet[a][b]
+                        try:
+                            if itemrares[itemids.index(id)] == "Common":
+                                inventorytallies[2] += 1
+                            elif itemrares[itemids.index(id)] == "Uncommon":
+                                inventorytallies[3] += 1
+                            elif itemrares[itemids.index(id)] == "Rare":
+                                inventorytallies[4] += 1
+                            elif itemrares[itemids.index(id)] == "Very Rare":
+                                inventorytallies[5] += 1
+                            elif itemrares[itemids.index(id)] == "Legendary":
+                                inventorytallies[6] += 1
+                        except ValueError:
+                            inventorytallies[7] += 1
+                    else:
+                        break
+    invt = inventorytallies
+    it = itemsheettallies
+    await interaction.channel.send(embed = discord.Embed(title = "Current Inventory Rarities", description = "Of the " + str(invt[0]) + " users in the economy, " + str(invt[1]) + " have no items. From the remaining " + str(invt[0] - invt[1]) + " players, these were the rarities of the items in their inventories:\n\n**Common:** " + str(invt[2]) + "\n**Uncommon:** " + str(invt[3]) + "\n**Rare:** " + str(invt[4]) + "\n**Very Rare:** " + str(invt[5]) + "\n**Legendary:** " + str(invt[6]) + "\nAdditionally, there were " + str(invt[7]) + " items that could not be classified. These are likely brands or houses (which have tiers rather than rarities).\n\nCurrently, the itemsheet has " + str(it[0]) + " common items, " + str(it[1]) + " uncommon items, " + str(it[2]) + " rare items, " + str(it[3]) + " very rare items, " + str(it[4]) + " legendary items, and " + str(it[5]) + " items that we couldn't classify.", colour = embcol))
+    await interaction.followup.send("Count Complete")
+
 # @tree.command(
 #     name="bid",
 #     description="Allows you to bid on characters in an auction."
