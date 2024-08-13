@@ -1867,13 +1867,15 @@ async def inventorystatistics(interaction):
                                 inventorytallies[5] += 1
                             elif itemrares[itemids.index(id)] == "Legendary":
                                 inventorytallies[6] += 1
+                            else:
+                                inventorytallies[7] += 1
                         except ValueError:
                             inventorytallies[7] += 1
                     else:
                         break
     invt = inventorytallies
     it = itemsheettallies
-    await interaction.channel.send(embed = discord.Embed(title = "Current Inventory Rarities", description = "Of the " + str(invt[0]) + " users in the economy, " + str(invt[1]) + " have no items. From the remaining " + str(invt[0] - invt[1]) + " players, these were the rarities of the items in their inventories:\n\n**Common:** " + str(invt[2]) + "\n**Uncommon:** " + str(invt[3]) + "\n**Rare:** " + str(invt[4]) + "\n**Very Rare:** " + str(invt[5]) + "\n**Legendary:** " + str(invt[6]) + "\nAdditionally, there were " + str(invt[7]) + " items that could not be classified. These are likely brands or houses (which have tiers rather than rarities).\n\nCurrently, the itemsheet has " + str(it[0]) + " common items, " + str(it[1]) + " uncommon items, " + str(it[2]) + " rare items, " + str(it[3]) + " very rare items, " + str(it[4]) + " legendary items, and " + str(it[5]) + " items that we couldn't classify.", colour = embcol))
+    await interaction.channel.send(embed = discord.Embed(title = "Current Inventory Rarities", description = "Of the " + str(invt[0]) + " users in the economy, " + str(invt[1]) + " have no items. From the remaining " + str(invt[0] - invt[1]) + " players, these were the rarities of the items in their inventories:\n\n**Common:** " + str(invt[2]) + "\n**Uncommon:** " + str(invt[3]) + "\n**Rare:** " + str(invt[4]) + "\n**Very Rare:** " + str(invt[5]) + "\n**Legendary:** " + str(invt[6]) + "\nAdditionally, there were " + str(invt[7]) + " items that could not be classified. These are likely lustbrands (which have tiers rather than rarities).\n\nCurrently, the itemsheet has " + str(it[0]) + " common items, " + str(it[1]) + " uncommon items, " + str(it[2]) + " rare items, " + str(it[3]) + " very rare items, " + str(it[4]) + " legendary items, and " + str(it[5]) + " items that we couldn't classify.", colour = embcol))
     await interaction.followup.send("Count Complete")
 
 # @tree.command(
