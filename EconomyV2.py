@@ -521,116 +521,121 @@ async def buyitem(interaction, searchterm:str, amount:int=1):
     return
 
 #Guides the user through selling an item
-@tree.command(
-        name="sellitem",
-        description="sell an item from your inventory for half the original price"
-)
-@app_commands.describe(
-    amount = "Enter the amount you want to sell"
-)
+@tree.command(name="sellitem", description="Sell an item from your inventory")
+@app_commands.describe(item = "The name of the item to sell", quantity = "The number of this item that you wish to sell.")
 @app_commands.checks.has_role("Verified")
-async def sellitem(interaction, amount:int=1):
+async def sellitem(interaction, item:str = None, quantity:int = 1):
     await interaction.response.defer(ephemeral=True, thinking=False)
+
     #Find person in the inventory sheet
-    author_inventory_row_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if str(interaction.user.id) in x][0])
-    author_economy_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(interaction.user.id) in x][0])
-    #Check if quantity was provided and prepare the search term
-    sellquant = amount
-   
-    #Show inventory to select item
-    i, item_list = await showInventoryAndChooseItem(interaction, author_inventory_row_index, "\n\n__To choose which item to sell, enter the according number.__ This message will time out in 30 seconds.")
-    if i == -1:
-        await interaction.followup.send("Failed to select item!")
-        return
-    if i >= 0:
-        i = i+2 #Because the first two columns are for personal info.
-
-    item_identifier = GlobalVars.inventoryData[author_inventory_row_index][i]
-    
-   
-
-    #find the shop that sells this item to later add stock to it.
-    shops_containing_sold_item = []
-    for y in range(3, len(GlobalVars.itemdatabase)):
+    inventory_row_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if str(interaction.user.id) in x][0])
+    economy_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(interaction.user.id) in x][0])
+    items_by_ID = GlobalVars.inventoryData[inventory_row_index][2:]
+    items_by_name = [] 
+    idlist = await itemids()
+    #Get item names
+    for a in range(len(items_by_ID)):
         try:
-            GlobalVars.itemdatabase[y].index([x for x in GlobalVars.itemdatabase[y] if item_identifier in x][0])
-            success = True
+            items_by_name.append(GlobalVars.itemdatabase[0][idlist.index(items_by_ID[a])][0])
         except IndexError:
-            success = False
-        if success == True:
-            shops_containing_sold_item.append(y)
-    #If multiple shops have the item, choose one at random.
-    if len(shops_containing_sold_item) > 1:
-        sell_shop_index = shops_containing_sold_item[random.randint(1, len(shops_containing_sold_item)) - 1]
-    elif len(shops_containing_sold_item) == 1: 
-        sell_shop_index = shops_containing_sold_item[0]
-    else:
-        await interaction.channel.send(embed=discord.Embed(title="Did not find a shop that sells, and therefore buys this item. Talk to the Bot Gods about that.", color=embcol))
-
-    #ask for confirmation
-    
-    item_index = GlobalVars.itemdatabase[sell_shop_index].index([x for x in GlobalVars.itemdatabase[sell_shop_index] if item_identifier in x][0])
-    item_price = GlobalVars.itemdatabase[sell_shop_index][item_index][13]
-    itemname = GlobalVars.itemdatabase[sell_shop_index][item_index][1]
-    
+            print("Index Error: Could not find " + items_by_ID[a] + " in itemsheet, while trying to sell items in " + interaction.user.name + "'s inventory.")
+        except ValueError:
+            print("Value Error: Could not find " + items_by_ID[a] + " in itemsheet, while trying to sell items in " + interaction.user.name + "'s inventory.")
+    if item != None: #Fuzzy search the provided item name against the list of inventoried items
+        itname = (await CommonDefinitions.selectItem(interaction = interaction, searchterm = item, top_n_results=10, searchlist = items_by_name))[0]
+    else: #Present all items in a dropdown to choose from
+        if len(items_by_name) <= 25:
+            itname = (await CommonDefinitions.quicksel(interaction=interaction, options = items_by_name, title = "Which item would you like to sell?", description = "Choose from the list in the dropdown.", dest = interaction.channel))[0]
+        else:
+            for a in range(math.ceil(len(items_by_name)/25)):
+                if (math.ceil(len(items_by_name)/25)-a) > 1:
+                    templist = items_by_name[a*25:((a+1)*25)-1]
+                    templist.append("Show More")
+                else:
+                    templist = items_by_name[a*25:]
+                itname = (await CommonDefinitions.quicksel(interaction=interaction, options = templist, title = "Which item would you like to sell?", description = "Choose from the list in the dropdown.", dest = interaction.channel))[0]
+                if itname != "Show More":
+                    break
+    invindex = items_by_name.index(itname)
+    itid = items_by_ID[items_by_name.index(itname)]
+    sellval0 = False
     confirm_view = Yes_No_Quantity_View(message=interaction)
-    
-    await interaction.channel.send(embed=discord.Embed(title=f"Do you want to sell {sellquant}x {itemname} for {int(int(item_price) * GlobalVars.config['economy']['sellpricemultiplier'] * sellquant)}?"), view = confirm_view)
-    
+    try:
+        if "SellValue0" in GlobalVars.inventoryData[inventory_row_index+4][invindex+2]:
+            await interaction.channel.send(embed = discord.Embed(title = "You will not earn dezzies from selling this item.", description = "The " + itname + " in your inventory cannot be sold. This may be because it is from a quest or is an item that you started with. If this should not be the case, speak to a member of the lore team.\n\nWould you like to remove it from your inventory anyway, earning you 0" + dezzieemj + "?", colour = embcol), view = confirm_view)
+            sellval0 = True
+    except IndexError:
+        #There is no additional info in the entry
+        pass
+
+    if sellval0 == False:
+        try:
+            sellprice = int(GlobalVars.itemdatabase[0][idlist.index(itid)][13])
+        except TypeError:
+            print("The sell value isn't a number?", GlobalVars.itemdatabase[0][idlist.index(itid)][13])
+        except IndexError:
+            try:
+                sellprice = int(GlobalVars.itemdatabase[0][idlist.index(itid)][2])/2
+            except ValueError:
+                print("The buy value isn't a number?")
+        except ValueError:
+            try:
+                sellprice = int(GlobalVars.itemdatabase[0][idlist.index(itid)][2]) * GlobalVars.config['economy']['sellpricemultiplier']
+            except ValueError:
+                print("The buy value isn't a number?")
+        sellprice = int(math.floor(sellprice))
+        if quantity < 1:
+            quantity = 1
+        if quantity > 1:
+            if int(GlobalVars.inventoryData[inventory_row_index+1][invindex+2]) > quantity:
+                quantity = int(GlobalVars.inventoryData[inventory_row_index+1][invindex+2])
+            sellmult = " each. This equates to " + str(sellprice*quantity) + dezzieemj + " in total."
+        else: 
+            sellmult = "."
+        newquant = int(GlobalVars.inventoryData[inventory_row_index+1][invindex+2])-quantity
+        await interaction.channel.send(embed = discord.Embed(title = str("You would like to sell " + str(quantity) + " instances of " + itname + "?").replace(" 1 instances of ", " your "), description = "These sell for " + str(sellprice) + sellmult + "\n\nConfirm this using the buttons below.", colour = embcol), view = confirm_view)
+     
     if await confirm_view.wait():
         await interaction.channel.send("Selection Timed Out")
         await interaction.followup.send("Selection Timed Out")
         return
     
+    possvalues = []
     if confirm_view.button_response == "modifyquantity":
-        quantity_view = Dropdown_Select_View(message=interaction, optionamount=int(GlobalVars.inventoryData[author_inventory_row_index+1][i]), maxselectionamount=1, namelist=[])
-        selection_message = await interaction.channel.send(embed=discord.Embed(title=f"How many of these items do you want to sell? You own {int(GlobalVars.inventoryData[author_inventory_row_index+1][i])}.", colour = embcol), view=quantity_view)
-
-        if await quantity_view.wait():
-            await interaction.followup.send("Selection Timed Out")
-            await interaction.channel.send("Selection Timed Out")
-            return
-        
-        sellquant = int(quantity_view.button_response[0])
-        await selection_message.delete()
-        #Ask if this is fine now
-        confirm_view = Yes_No_View(message=interaction)
-        await interaction.channel.send(embed=discord.Embed(title=f"Do you want to sell {sellquant}x {itemname} for {int(int(item_price) * GlobalVars.config['economy']['sellpricemultiplier'] * sellquant)}?"), view = confirm_view)
-        if await confirm_view.wait():
-            await interaction.followup.send("Selection Timed Out")
-            await interaction.channel.send("Selection Timed Out")
-            return
-
-    if confirm_view.button_response == "yes":
-        deleted = False
+        for a in range(1, int(GlobalVars.inventoryData[inventory_row_index+1][invindex+2])+1):
+            possvalues.append(str(a) + ": " + str(sellprice * a) + dezzieemj)
+        refquantity = await CommonDefinitions.quicksel(interaction = interaction, options = possvalues, title = "How many of these would you like to sell?", description = "You have " + str(int(GlobalVars.inventoryData[inventory_row_index+1][invindex+2])), dest = interaction.channel)
+        quantity = int(refquantity[1])+1
+    if confirm_view.button_response == "yes" or len(possvalues) > 0:
         #Remove items from inventory
-        if await removeItemFromInventory(author_inventory_row_index, i, sellquant):
-            #Add stock to the inventory of the shop
-            item_row_index = GlobalVars.itemdatabase[sell_shop_index].index([x for x in GlobalVars.itemdatabase[sell_shop_index] if item_identifier in x][0])
-            if GlobalVars.itemdatabase[sell_shop_index][item_row_index][18] == "":
-                new_stock = ""
-            else:
-                new_stock = int(GlobalVars.itemdatabase[sell_shop_index][item_row_index][18]) + sellquant
+        if await removeItemFromInventory(inventory_row_index, invindex+2, quantity):
+            pass
+        #     #Add stock to the inventory of the shop
+        #     item_row_index = GlobalVars.itemdatabase[sell_shop_index].index([x for x in GlobalVars.itemdatabase[sell_shop_index] if item_identifier in x][0])
+        #     if GlobalVars.itemdatabase[sell_shop_index][item_row_index][18] == "":
+        #         new_stock = ""
+        #     else:
+        #         new_stock = int(GlobalVars.itemdatabase[sell_shop_index][item_row_index][18]) + sellquant
 
-            #Add dezzies
-            await addDezziesToPlayer(interaction, int(int(item_price) * GlobalVars.config['economy']['sellpricemultiplier']) * sellquant, playerID=interaction.user.id, write_econ_sheet=False)
+#             #Add dezzies
+        await addDezziesToPlayer(interaction, int(int(sellprice) * quantity), playerID=interaction.user.id, write_econ_sheet=False)
 
-            #Update PlayerInfo sheet, and Inventory sheet.
-            await writeEconSheet(GlobalVars.economyData)
-            await writeInvetorySheet(GlobalVars.inventoryData)
-            await writeItemsheetCell(sell_shop_index, item_row_index, 18, new_stock)
+        #Update PlayerInfo sheet, and Inventory sheet.
+        await writeEconSheet(GlobalVars.economyData)
+        await writeInvetorySheet(GlobalVars.inventoryData)
+        #await writeItemsheetCell(sell_shop_index, item_row_index, 18, new_stock)
 
-            if deleted == True: #Clean up the internal inventory representation from trailing spaces
-                del GlobalVars.inventoryData[author_inventory_row_index][-1]
-                del GlobalVars.inventoryData[author_inventory_row_index+1][-1]
-                try:
-                    del GlobalVars.inventoryData[author_inventory_row_index+2][-1]
-                except IndexError: #If we get an index error, that cell wasn't occupied anyways and was a trailing cell.
-                    pass
+        if newquant == 0: #Clean up the internal inventory representation from trailing spaces
+            del GlobalVars.inventoryData[inventory_row_index][-1]
+            del GlobalVars.inventoryData[inventory_row_index+1][-1]
+            try:
+                del GlobalVars.inventoryData[inventory_row_index+2][-1]
+            except IndexError: #If we get an index error, that cell wasn't occupied anyways and was a trailing cell.
+                pass
             
-            TransactionsDatabaseInterface.addTransaction(interaction.user.name, TransactionsDatabaseInterface.DezzieMovingAction.Sell, int(int(item_price) * GlobalVars.config['economy']['sellpricemultiplier']) * sellquant)
-    await interaction.followup.send("Successfully finished the task!")
+        TransactionsDatabaseInterface.addTransaction(interaction.user.name, TransactionsDatabaseInterface.DezzieMovingAction.Sell, int(int(sellprice) * GlobalVars.config['economy']['sellpricemultiplier']) * quantity)
 
+    await interaction.followup.send("Transaction complete!")
 
 #Guides the user through giving an item
 @tree.command(
@@ -3365,3 +3370,6 @@ class Dropdown_Select_View(discord.ui.View):
             else:
                 await interaction.response.send_message("That is not your dropdown to click!", ephemeral=True)
                 return False
+
+async def itemids(): # Returns a list of the item IDs from the sheet.
+    return list(zip(*GlobalVars.itemdatabase[0]))[11]

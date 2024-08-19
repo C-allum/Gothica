@@ -14,7 +14,7 @@ from discord import app_commands
 import aiohttp
 import ConfigCommands
 import GlobalVars
-
+import winsound
 
 global startup
 startup = True
@@ -174,6 +174,7 @@ async def on_ready():
     await tree.sync(guild=my_guild)
     startup = False
     print("Startup completed.")
+    winsound.Beep(400, 300)
     #-----------------------------------------------------------
 
 

@@ -829,6 +829,7 @@ async def selectItem(interaction, searchterm, top_n_results, searchlist):
         #Wait for reply
         if await item_selection_view.wait():
             await interaction.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+            await interaction.followup.send("Selection Timed Out")
             return
         
         i = int(item_selection_view.button_response[0]) - 1
@@ -845,11 +846,13 @@ async def quicksel(interaction, options, title, description, dest = None):
     Drop = Dropdown_Select_View(interaction = interaction, namelist = options, timeout = 480)
     if dest == None:
         dest = interaction.channel
-    await dest.send(embed = discord.Embed(title = title, description = description, colour = embcol), view = Drop)
+    msg = await dest.send(embed = discord.Embed(title = title, description = description, colour = embcol), view = Drop)
     if await Drop.wait():
         await dest.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
+        await interaction.followup.send("Selection Timed Out")
         return
     i = int(Drop.button_response[0]) - 1
+    await msg.delete()
     return options[i], i
 
 class Dropdown_Select_View(discord.ui.View):
