@@ -43,7 +43,7 @@ async def spend(interaction, amount:int, reason:str = None):
     shop_name = "The name of the shop. Doesn't have to be accurate."
 )
 @app_commands.checks.has_role("Verified")
-async def shop(interaction, shop_name:str):
+async def shop(interaction, shop_name:str = None):
     await interaction.response.defer(ephemeral=True, thinking=False)
     message = interaction.message
     shopitems = []
@@ -55,7 +55,7 @@ async def shop(interaction, shop_name:str):
     if searchterm != None:  #Show only relevant shops if the searchterm was provided
         levenshtein_tuple_list = []
         shopindex = GlobalVars.config["general"]["index_of_first_shop"]
-        for entry in GlobalVars.itemdatabase[GlobalVars.config["general"]["index_of_first_shop"]:-1]:
+        for entry in GlobalVars.itemdatabase[GlobalVars.config["general"]["index_of_first_shop"]:]:
             #Maybe do a combination of ratio and partial ratio here to favour stuff like collars appearing when "collar" is the search word?
             levenshtein_distance_partial = fuzz.partial_token_set_ratio(entry[0][26].lower(), searchterm.lower())
             levenshtein_distance_complete = fuzz.ratio(entry[0][26].lower(), searchterm.lower())
@@ -68,7 +68,7 @@ async def shop(interaction, shop_name:str):
         for a in range(len(GlobalVars.itemdatabase)):
             if a >= int(GlobalVars.config["general"]["index_of_first_shop"]):
                 searchresults.append(GlobalVars.itemdatabase[a][0][26])
-        for n in range(int(GlobalVars.config["general"]["number_of_shops"])):
+        for n in range(len(GlobalVars.itemdatabase) - GlobalVars.config["general"]["index_of_first_shop"]):
             searchresults[n] = [searchresults[n], n + GlobalVars.config["general"]["index_of_first_shop"]]
     shop_selection_view = Dropdown_Select_View(message = interaction, timeout=30, optionamount=len(searchresults), maxselectionamount=1) #Only let them choose one item.
     
@@ -3353,7 +3353,6 @@ class Dropdown_Select_View(discord.ui.View):
         
     async def callback(self, interaction: discord.Interaction):
         self.button_response = self.select.values
-        await interaction.response.send_message("Amount Modified!")
         self.stop()
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
