@@ -55,7 +55,7 @@ async def shop(interaction, shop_name:str):
     if searchterm != None:  #Show only relevant shops if the searchterm was provided
         levenshtein_tuple_list = []
         shopindex = GlobalVars.config["general"]["index_of_first_shop"]
-        for entry in GlobalVars.itemdatabase[GlobalVars.config["general"]["index_of_first_shop"]:GlobalVars.config["general"]["index_of_first_shop"] + GlobalVars.config["general"]["number_of_shops"]]:
+        for entry in GlobalVars.itemdatabase[GlobalVars.config["general"]["index_of_first_shop"]:-1]:
             #Maybe do a combination of ratio and partial ratio here to favour stuff like collars appearing when "collar" is the search word?
             levenshtein_distance_partial = fuzz.partial_token_set_ratio(entry[0][26].lower(), searchterm.lower())
             levenshtein_distance_complete = fuzz.ratio(entry[0][26].lower(), searchterm.lower())
