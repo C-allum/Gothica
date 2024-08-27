@@ -75,7 +75,7 @@ async def kinklistA(user, outputchannel, trigger, interaction):
         
     #Fill in general preferences array
     currentKinkIndex = 3 #Begin at the Pronouns
-    for f in range(kinksPerCategory[categories.index("General Preferences")+1]):
+    for f in range(kinksPerCategory[categories.index("General Preferences")+1] + 1):
         currentRating = GlobalVars.kinkdatabase[playerindex][currentKinkIndex].replace("Fave", "**Fave**").replace("Kink", "**Kink**").replace("Soft Limit", "__Soft Limit__").replace("Hard Limit", "__Hard Limit__")
         generalPrefs.append(f"{GlobalVars.kinkdatabase[1][currentKinkIndex]}: {currentRating}")
         currentKinkIndex += 1
