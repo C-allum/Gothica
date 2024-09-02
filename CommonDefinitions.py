@@ -84,11 +84,13 @@ if liveVersion: #Set to 1 to use the real spreadsheets, or 0 to use the testing 
     #newEconsheet
     inventorysheet = "15u6xzZsY5mZAUVmXPolRqUkPeQcGFH1_H-sNCjfNhNM"
     
-    itemsheetID = "1rS4yTmVtaaCZEbfyAAEkB3KnVC_jkI9e2zhSI0AA7ws"
-    itemsheet = gc.open_by_key("1rS4yTmVtaaCZEbfyAAEkB3KnVC_jkI9e2zhSI0AA7ws") #New for economy rewrite
+    #itemsheetID = "1rS4yTmVtaaCZEbfyAAEkB3KnVC_jkI9e2zhSI0AA7ws" #THIS IS THE SHOP SHEET PRE-EONDOR REWORK (August 2nd 2024)
+    #itemsheet = gc.open_by_key("1rS4yTmVtaaCZEbfyAAEkB3KnVC_jkI9e2zhSI0AA7ws") #New for economy rewrite
+    itemsheetID = "11USPLiCvlLYtPCusabkbc9QW419nZ37FwFnMiPR-xdA"
+    itemsheet = gc.open_by_key(itemsheetID) #New for economy rewrite
     itemlists = itemsheet.worksheets()
 
-    shopsheet = "1gxNPXIichzK9mSN8eHYVdJvaaUgUnN6VF8WshL_4Les"
+    shopsheet = "1gxNPXIichzK9mSN8eHYVdJvaaUgUnN6VF8WshL_4Les" #ECONOMY V1 SHEET - NOT USED FOR ECON V2
 
     encountersheet = "1poNQfcqLqkiK9NaKBqNOk_DDUsTr8GuBEVQP_uQcjeg"
 
@@ -139,8 +141,10 @@ else:
 
     #itemsheetID = "17M2FS5iWchszIoimqNzk6lzJMOVLBWQgEZZKUPQuMR8"
     #itemsheet = gc.open_by_key("17M2FS5iWchszIoimqNzk6lzJMOVLBWQgEZZKUPQuMR8") #New for economy rewrite
-    itemsheetID = "1rS4yTmVtaaCZEbfyAAEkB3KnVC_jkI9e2zhSI0AA7ws"
-    itemsheet = gc.open_by_key("1rS4yTmVtaaCZEbfyAAEkB3KnVC_jkI9e2zhSI0AA7ws") #New for economy rewrite
+    #itemsheetID = "1rS4yTmVtaaCZEbfyAAEkB3KnVC_jkI9e2zhSI0AA7ws" #THIS IS THE SHOP SHEET PRE-EONDOR REWORK (August 2nd 2024)
+    #itemsheet = gc.open_by_key("1rS4yTmVtaaCZEbfyAAEkB3KnVC_jkI9e2zhSI0AA7ws") #New for economy rewrite
+    itemsheetID = "11USPLiCvlLYtPCusabkbc9QW419nZ37FwFnMiPR-xdA"
+    itemsheet = gc.open_by_key(itemsheetID) #New for economy rewrite
     itemlists = itemsheet.worksheets()
 
     encountersheet = "1poNQfcqLqkiK9NaKBqNOk_DDUsTr8GuBEVQP_uQcjeg" #No change as yet
@@ -659,7 +663,7 @@ async def helplist(message):
         ]
 
     #Check for lorekeeper channels
-    if message.channel.category.name != "﴿─﴾ 𝙻𝚘𝚛𝚎𝚔𝚎𝚎𝚙𝚎𝚛'𝚜 𝙲𝚊𝚋𝚊𝚕 ﴿─﴾" and message.channel.category.name != "▐ ₪₪ ▌𝙱𝚊𝚌𝚔 𝚘𝚏 𝙷𝚘𝚞𝚜𝚎▐ ₪₪ ▌" and message.channel.category.name != "Secret Lore":
+    if message.channel.category.id != 912757646581436416 and message.channel.category.name != "▐ ₪₪ ▌𝙱𝚊𝚌𝚔 𝚘𝚏 𝙷𝚘𝚞𝚜𝚎▐ ₪₪ ▌" and message.channel.category.name != "Secret Lore":
         helpcategories = helpcategories[:-1]
         helpnames = helpnames[:-1]
         helpsummary = helpsummary[:-1]

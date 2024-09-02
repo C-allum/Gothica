@@ -9,8 +9,11 @@ channels:
   - 1197346355484561419
   - 1197346447541149827
   - 1197346549752147988
+  - 1235416428618977371
   - 1197346668740366336
   - 1197346750608973925
+  - 1253091929466339328
+  - 1271610123001008270
   - 1197347027894403192
   - 1197347101072425051
   staff_vacation_channels:
@@ -55,6 +58,6 @@ experience:
 general:
   administrative_role: admin
   gothy_prefix: '%'
-  index_of_first_shop: 3
+  index_of_first_shop: 8
   number_of_shops: 12
   staff_role: staff
