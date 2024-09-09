@@ -9,3 +9,4 @@ __pycache__/*
 CLDTupper.db
 .venv/
 venv/
+persistent_views.json

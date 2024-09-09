@@ -4,6 +4,7 @@ import CharRegistry
 import KinklistCommands
 import CommonDefinitions
 import MiscellaneuosCommands
+import tickets
 from CommonDefinitions import *
 import TransactionsDatabaseInterface
 import TupperDatabase
@@ -175,6 +176,33 @@ async def on_ready():
     tree.copy_global_to(guild=my_guild)
     await tree.sync(guild=my_guild)
     startup = False
+
+    print("Loading views...")
+    saved_views = tickets.load_ticket_views()
+
+    # Re-register the persistent views
+    for view_data in saved_views:
+        category_ID = view_data["category_ID"]
+        current_ticket_number = view_data["current_ticket_number"]
+        ticket_title = view_data["embed_title"]
+        ticket_description = view_data["embed_description"]
+        custom_id = view_data["custom_id"]
+        roles = view_data["roles"]
+        member = view_data["member"]
+        view_type = view_data["view_type"]
+
+        # Recreate the persistent view and add it to the bot
+        if view_type == "ticket_spawn":
+            view = tickets.Ticket_Spawn_Button_View(category_ID, current_ticket_number, ticket_title, ticket_description, str(custom_id), roles, member)
+        elif view_type == "ticket_close":
+            view = tickets.Ticket_Button_View(category_ID, current_ticket_number, ticket_title, ticket_description, str(custom_id), roles, member)
+        elif view_type == "ticket_delete_reopen_tanscribe":
+            view = tickets.Ticket_Closed_Button_View(category_ID, current_ticket_number, ticket_title, ticket_description, str(custom_id), roles, member)
+
+        client.add_view(view)
+
+    print("All persistent views have been added.")
+
     print("Startup completed.")
     if platform.system() == 'Windows':
         winsound.Beep(400, 300)
