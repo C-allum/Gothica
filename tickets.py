@@ -6,7 +6,7 @@ import transcription
 #READ THIS!
 #To have the persistent view work, add client.add_view(tickets.Ticket_Spawn_Button_View()) to the startup routine
 
-@staffgroup.command(name="generate-ticket-embed", description="Sets up an embed that spawns tickets.")
+@admingroup.command(name="generate-ticket-embed", description="Sets up an embed that spawns tickets.")
 @app_commands.describe(title = "Title of the embed under which the ticket button will appear")
 @app_commands.describe(description = "Description of the embed under which the ticket button will appear")
 @app_commands.describe(ticket_title = "Title of the embed in the generated ticket")
@@ -85,7 +85,7 @@ class Ticket_Spawn_Button(discord.ui.Button):
             member_obj: discord.PermissionOverwrite(read_messages=True, send_messages=True)  # Allow the member to see and interact
         }
         role_ids = self.roles.split(',')
-        roles = [myGuild.get_role(role_id) for role_id in role_ids]
+        roles = [myGuild.get_role(int(role_id)) for role_id in role_ids]
         for role in roles:
             if role is not None:  # Ensure the role exists in the guild
                 overwrites[role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
@@ -158,7 +158,7 @@ class Ticket_Close_Button(discord.ui.Button):
         }
 
         role_ids = self.roles.split(',')
-        roles = [myGuild.get_role(role_id) for role_id in role_ids]
+        roles = [myGuild.get_role(int(role_id)) for role_id in role_ids]
         for role in roles:
             if role is not None:  # Ensure the role exists in the guild
                 new_overwrites[role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
@@ -273,6 +273,7 @@ class Ticket_Reopen_Button(discord.ui.Button):
         new_custom_id = str(new_custom_id)
         view = Ticket_Button_View(int(self.category_ID), self.current_ticket_number, "", "", new_custom_id, self.roles, self.member)
         embed = discord.Embed(title="Reopening Ticket!",description=f"*{interaction.user.name} reopened the ticket.*", color=embcol)
+        await interaction.channel.edit(overwrites=new_overwrites, name=f"Ticket-{self.current_ticket_number}")
         save_single_ticket_view(self.category_ID, self.current_ticket_number, "", "", new_custom_id, self.roles, self.member, "ticket_close")
         await channel.send(embed=embed, view=view)
 
