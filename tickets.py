@@ -1,5 +1,4 @@
 from CommonDefinitions import *
-import CommonDefinitions
 from discord import app_commands
 import json
 
@@ -224,9 +223,10 @@ class Ticket_Delete_Button(discord.ui.Button):
         channel = interaction.channel
 
         # Send the closure message
-        embed = discord.Embed(title="Deleting ticket!",description=f"*{interaction.user.name} deleted the ticket.*", color=embcol)
+        embed = discord.Embed(title="Deleting ticket!",description=f"*{interaction.user.name} deleted the ticket. Ticket will disappear in 10 seconds.*", color=embcol)
+        await channel.send(embed=embed)
         await myGuild.get_channel(logchannel).send(f"{interaction.user.name} deleted Ticket-{self.current_ticket_number}.")
-        
+        await asyncio.sleep(10)
         # Delete the button from the json file
         custom_id = self.custom_id.split(":")[1]
         delete_ticket_entry(custom_id)
@@ -287,7 +287,44 @@ class Ticket_Reopen_Button(discord.ui.Button):
 
         await interaction.followup.send(f"ticket reopened", ephemeral=True)
 
-        
+class Ticket_Transcribe_Button(discord.ui.Button):
+    def __init__(self, category_ID, current_ticket_number, default_embed_title, default_embed_description, custom_id, roles, member):
+        #Make sure custom_id is not something another bot might use as well!
+        super().__init__(label="Transcribe Ticket (Add pencil emoji)", style=discord.ButtonStyle.blurple, custom_id=f"ticket_module:{custom_id}")
+        self.category_ID = int(category_ID)
+        self.current_ticket_number = int(current_ticket_number)
+        self.default_embed_title = default_embed_title
+        self.default_embed_description = default_embed_description
+        self.custom_id = custom_id
+        self.roles = roles
+        self.member = member
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+
+        # Generate the new channel
+        myGuild = interaction.guild
+
+        channel = interaction.channel
+
+        # Send the transcription message
+        embed = discord.Embed(title="Transcribing ticket!",description=f"*{interaction.user.name} requested a transcription of the ticket. Please let me know which channel / thread we should transcribe into (use #channel-name).*", color=embcol)
+        await channel.send(embed=embed)
+        try:
+            msg = await client.wait_for('message', timeout = 90, check = checkAuthor(interaction.user))
+            newdata = msg.content
+        except asyncio.TimeoutError:
+            await interaction.channel.send("Message timed out")
+            return
+        print(msg.content)
+
+        # Call the transcribe function with the appropriate channels
+        target_channel = msg.content.replace('<', '').replace('>', '').replace('#','')
+        source_channel = interaction.channel.id
+
+        await interaction.followup.send(f"ticket transcription successful.", ephemeral=True)
+
+
 class Ticket_Closed_Button_View(discord.ui.View):
     def __init__(self, category_ID, current_ticket_number, default_embed_title, default_embed_description, custom_id, roles, member):
         super().__init__(timeout=None)
@@ -302,6 +339,7 @@ class Ticket_Closed_Button_View(discord.ui.View):
         # Pass necessary information to the buttons
         self.add_item(Ticket_Delete_Button(self.category_ID, self.current_ticket_number, self.default_embed_title, self.default_embed_description, f"ticket_bot_del:{custom_id}", roles, member))
         self.add_item(Ticket_Reopen_Button(self.category_ID, self.current_ticket_number, self.default_embed_title, self.default_embed_description, f"ticket_bot_reopen:{custom_id}", roles, member))
+        self.add_item(Ticket_Transcribe_Button(self.category_ID, self.current_ticket_number, self.default_embed_title, self.default_embed_description, f"ticket_bot_transcribe:{custom_id}", roles, member))
 
 #------ Json file management functions for saving and loading ------
 def save_single_ticket_view(category_ID, current_ticket_number, embed_title, embed_description, custom_id, roles, member, view_type):
