@@ -33,7 +33,7 @@ async def transcribe(sourceThreadId:str, destinationThreadId:str, message=None):
 @app_commands.describe(source = "Channel or thread to create a transcript of.")
 @app_commands.describe(destination = "Destination of the transcript.")
 async def transcribeSlash(interaction, 
-                          target: discord.TextChannel | discord.Thread, 
+                          source: discord.TextChannel | discord.Thread, 
                           destination: discord.Thread):
     
     await interaction.response.defer(ephemeral = True, thinking = False)
