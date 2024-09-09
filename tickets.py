@@ -1,6 +1,7 @@
 from CommonDefinitions import *
 from discord import app_commands
 import json
+import transcription
 
 #READ THIS!
 #To have the persistent view work, add client.add_view(tickets.Ticket_Spawn_Button_View()) to the startup routine
@@ -51,7 +52,7 @@ async def generate_ticket_embed(interaction, title:str, description:str, ticket_
 class Ticket_Spawn_Button(discord.ui.Button):
     def __init__(self, category_ID, current_ticket_number, default_embed_title, default_embed_description, custom_id, roles, member):
         #Make sure custom_id is not something another bot might use as well!
-        super().__init__(label=":envelope_with_arrow: Ticket", style=discord.ButtonStyle.green, custom_id=f"ticket_module:{custom_id}")
+        super().__init__(label="Ticket", emoji="📩", style=discord.ButtonStyle.green, custom_id=f"ticket_module:{custom_id}")
         self.category_ID = int(category_ID)
         self.current_ticket_number = int(current_ticket_number)
         self.default_embed_title = default_embed_title
@@ -134,7 +135,7 @@ class Ticket_Spawn_Button_View(discord.ui.View):
 class Ticket_Close_Button(discord.ui.Button):
     def __init__(self, category_ID, current_ticket_number, default_embed_title, default_embed_description, custom_id, roles, member):
         #Make sure custom_id is not something another bot might use as well!
-        super().__init__(label="Close Ticket (Add lock emoji)", style=discord.ButtonStyle.blurple, custom_id=f"ticket_module:{custom_id}")
+        super().__init__(label="Close Ticket", emoji= "🔒", style=discord.ButtonStyle.blurple, custom_id=f"ticket_module:{custom_id}")
         self.category_ID = int(category_ID)
         self.current_ticket_number = int(current_ticket_number)
         self.default_embed_title = default_embed_title
@@ -205,7 +206,7 @@ class Ticket_Button_View(discord.ui.View):
 class Ticket_Delete_Button(discord.ui.Button):
     def __init__(self, category_ID, current_ticket_number, default_embed_title, default_embed_description, custom_id, roles, member):
         #Make sure custom_id is not something another bot might use as well!
-        super().__init__(label="Delete Ticket (Add Stopsign emoji)", style=discord.ButtonStyle.blurple, custom_id=f"ticket_module:{custom_id}")
+        super().__init__(label="Delete Ticket", emoji="🗑️", style=discord.ButtonStyle.blurple, custom_id=f"ticket_module:{custom_id}")
         self.category_ID = int(category_ID)
         self.current_ticket_number = int(current_ticket_number)
         self.default_embed_title = default_embed_title
@@ -239,7 +240,7 @@ class Ticket_Delete_Button(discord.ui.Button):
 class Ticket_Reopen_Button(discord.ui.Button):
     def __init__(self, category_ID, current_ticket_number, default_embed_title, default_embed_description, custom_id, roles, member):
         #Make sure custom_id is not something another bot might use as well!
-        super().__init__(label="Reopen Ticket (Add ...some emoji)", style=discord.ButtonStyle.blurple, custom_id=f"ticket_module:{custom_id}")
+        super().__init__(label="Reopen Ticket",emoji="📂", style=discord.ButtonStyle.blurple, custom_id=f"ticket_module:{custom_id}")
         self.category_ID = int(category_ID)
         self.current_ticket_number = int(current_ticket_number)
         self.default_embed_title = default_embed_title
@@ -290,7 +291,7 @@ class Ticket_Reopen_Button(discord.ui.Button):
 class Ticket_Transcribe_Button(discord.ui.Button):
     def __init__(self, category_ID, current_ticket_number, default_embed_title, default_embed_description, custom_id, roles, member):
         #Make sure custom_id is not something another bot might use as well!
-        super().__init__(label="Transcribe Ticket (Add pencil emoji)", style=discord.ButtonStyle.blurple, custom_id=f"ticket_module:{custom_id}")
+        super().__init__(label="Transcribe Ticket", emoji="📝", style=discord.ButtonStyle.blurple, custom_id=f"ticket_module:{custom_id}")
         self.category_ID = int(category_ID)
         self.current_ticket_number = int(current_ticket_number)
         self.default_embed_title = default_embed_title
@@ -308,7 +309,7 @@ class Ticket_Transcribe_Button(discord.ui.Button):
         channel = interaction.channel
 
         # Send the transcription message
-        embed = discord.Embed(title="Transcribing ticket!",description=f"*{interaction.user.name} requested a transcription of the ticket. Please let me know which channel / thread we should transcribe into (use #channel-name).*", color=embcol)
+        embed = discord.Embed(title="Transcribing ticket!",description=f"*{interaction.user.name} requested a transcription of the ticket. Please let me know which **thread** (yes, has to be one) we should transcribe into.* \n**Just post the #thread-name.**", color=embcol)
         await channel.send(embed=embed)
         try:
             msg = await client.wait_for('message', timeout = 90, check = checkAuthor(interaction.user))
@@ -319,8 +320,10 @@ class Ticket_Transcribe_Button(discord.ui.Button):
         print(msg.content)
 
         # Call the transcribe function with the appropriate channels
-        target_channel = msg.content.replace('<', '').replace('>', '').replace('#','')
-        source_channel = interaction.channel.id
+        destination_channel = client.get_channel(int(msg.content.replace('<', '').replace('>', '').replace('#','')))
+        source_channel = interaction.channel
+
+        await transcription.copyFromTo(source_channel, destination_channel)
 
         await interaction.followup.send(f"ticket transcription successful.", ephemeral=True)
 

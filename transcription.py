@@ -1,3 +1,4 @@
+import discord.types
 from CommonDefinitions import *
 from discord import app_commands
 from discord import SyncWebhook
@@ -33,7 +34,7 @@ async def transcribe(targetThreadId:str, destinationThreadId:str, message=None):
 @app_commands.describe(destination = "Destination of the transcript.")
 async def transcribeSlash(interaction, 
                           target: discord.TextChannel | discord.Thread, 
-                          destination: discord.TextChannel | discord.Thread):
+                          destination: discord.Thread):
     
     await interaction.response.defer(ephemeral = True, thinking = False)
     
@@ -43,13 +44,17 @@ async def transcribeSlash(interaction,
     await interaction.followup.send("Transcription complete!")
 
 
-async def copyFromTo(target: discord.TextChannel | discord.Thread, 
-                     destination: discord.TextChannel | discord.Thread):
+async def copyFromTo(source: discord.TextChannel | discord.Thread, 
+                     destination: discord.Thread):
     
-    messageHistory = [joinedMessages async for joinedMessages in target.history(limit = None, oldest_first= True)]
+    messageHistory = [joinedMessages async for joinedMessages in source.history(limit = None, oldest_first= True)]
     messageHistory.sort(key=lambda x: x.created_at)
 
-    hook = await destination.parent.create_webhook(name= "Clonehook")
+    if destination.type == discord.ChannelType.private_thread or destination.type == discord.ChannelType.public_thread:
+        hook = await destination.parent.create_webhook(name= "Clonehook")
+    else:
+        await source.send("Destination is not a thread! Please only copy into a thread!")
+        return
     #lock = asyncio.Lock()
     
     async with aiohttp.ClientSession() as session:
