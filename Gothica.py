@@ -16,6 +16,7 @@ import aiohttp
 import ConfigCommands
 import GlobalVars
 import platform
+import transcription
 if platform.system() == 'Windows':
     import winsound
 
@@ -1200,47 +1201,7 @@ async def on_message(message):
                 del mess
 
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "clonev2") and "staff" in str(message.author.roles).lower():
-
-                await message.channel.send("Processing, please wait")
-
-                if message.content.split(" ")[1].startswith("https"):
-                    chanid = message.content.split(" ")[1].split("/")[-1]
-                    destid = message.content.split(" ")[2].split("/")[-1]
-                elif message.content.split(" ")[1].startswith("<"):
-                    chanid = message.content.split(" ")[1].split("#")[-1].rstrip(">")
-                    destid = message.content.split(" ")[2].split("#")[-1].rstrip(">")
-                else:
-                    chanid = message.content.split(" ")[1]
-                    destid = message.content.split(" ")[2]
-
-                channelid = int(message.channel.id)
-                chan = client.get_channel(int(chanid))
-                dest = client.get_channel(int(destid))
-                print("Copying from " + str(chan) + " to " + str(dest))
-                mess = [joinedMessages async for joinedMessages in message.channel.history(limit = None, oldest_first= True)]
-                mess.sort(key=lambda x: x.created_at)
-                hook = await dest.parent.create_webhook(name= "Clonehook")
-                lock = asyncio.Lock()
-                
-                async with aiohttp.ClientSession() as session:
-                    whook = SyncWebhook.from_url(hook.url)
-                    for a in range(len(mess)):
-                        try:
-                            if not mess[a].content.startswith("%clone"):
-                                whook.send(mess[a].content, username = mess[a].author.name, avatar_url = mess[a].author.avatar, thread = dest)
-                            else:
-                                break
-                        except discord.errors.HTTPException:
-                            pass
-                        if mess[a].attachments:
-                            for b in range(len(mess[a].attachments)):
-                                whook.send(mess[a].attachments[b].url, username = mess[a].author.name, avatar_url = mess[a].author.avatar, thread = dest)
-                        if mess[a].embeds:
-                            whook.send(embed= mess[a].embeds[0], username = mess[a].author.name, avatar_url = mess[a].author.avatar, thread = dest)
-
-                await message.channel.send("Complete")
-                await session.close()
-                await hook.delete()
+                await transcription.transcribe(message.content.split(" ")[1], message.content.split(" ")[2], message)
 
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"] + "export")):
                 await MiscellaneuosCommands.export(message)
