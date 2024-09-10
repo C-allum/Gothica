@@ -160,8 +160,8 @@ async def on_ready():
         await EconomyV2.writeEconSheet(GlobalVars.economyData)
         print("Weekly Dezzie Award Pool Reset!")
 
-        await MiscellaneuosCommands.spellrotate()
-        print("Random spell stock generated")
+        #await MiscellaneuosCommands.spellrotate()
+        #print("Random spell stock generated")
 
     else:
         print("It is not dezzie award pool reset time yet!")
@@ -396,7 +396,7 @@ async def on_message(message):
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "curse") and "staff" in str(message.author.roles).lower():
 
                 await OocFun.emotecurse(message)
-
+                
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "uncurse"):
 
                 await OocFun.emoteuncurse(message)

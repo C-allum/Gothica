@@ -176,7 +176,7 @@ async def kinkedit(interaction, kink: str = None, user: str = None):
         return    
     kinktoedit, kinkindex = await selkink(kink, interaction)
 
-    if "role" in GlobalVars.kinkdatabase[1][kinkindex]:
+    if "role" in GlobalVars.kinkdatabase[1][kinkindex].lower():
         kinkOpts = participationOptions
     elif GlobalVars.kinkdatabase[1][kinkindex] == "Pronouns" or GlobalVars.kinkdatabase[1][kinkindex] == "Additional Kinks" or GlobalVars.kinkdatabase[1][kinkindex] == "Additional Limits":
         kinkOpts = None
