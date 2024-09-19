@@ -52,10 +52,10 @@ async def kinklistA(user, outputchannel, trigger, interaction):
     currentKinkIndex = kinksPerCategory[0] #Begin at the first actual kink after the Player Info
 
     #Fill the category averages array
-    for x in range (len(categories)): #Go over all categories
+    for x in range (len(categories)): #Go over all categories EXCEPT ADDITIONAL KINKS/LIMITS
 
-        categoryName = categories[x]
-        categoryKinkCount = kinksPerCategory[x]
+        categoryName = categories[x - 1]
+        categoryKinkCount = kinksPerCategory[x - 1]
         categorySum = 0
         for y in range(categoryKinkCount): #Go over each kink in a category
 
@@ -418,11 +418,11 @@ async def kinksurvey(interaction):
     await threadid.send(embed = discord.Embed(title = "Pronouns", description = f"Pronouns set as: {msg.content}", colour = embcol))
     
     #Now ask for the remaining things.
-    kinkindex = kinksPerCategory[0] #Start at the first kink, not the player info.
+    kinkindex = categoryIndex[0] #Start at the first kink, not the player info.
     for x in range(len(categories)+1): #Go over all categories
         if x > 0:
             categoryName = categories[x-1]
-            categoryKinkCount = kinksPerCategory[x]
+            categoryKinkCount = kinksPerCategory[x-1]
             if categoryName == "Categories": #Check if this is the part of the survey about the categories. Need to list the involved kinks for those.
                 categorySection = True
             else:
@@ -561,11 +561,11 @@ async def kinkresume(interaction):
         await interaction.channel.send(embed = discord.Embed(title = "Pronouns", description = f"Pronouns set as: {msg.content}", colour = embcol))
     
     #Now ask for the remaining things.
-    kinkindex = kinksPerCategory[0] #Start at the first kink, not the player info.
+    kinkindex = categoryIndex[0] #Start at the first kink, not the player info.
     for x in range(len(categories)+1): #Go over all categories
         if x > 0:
             categoryName = categories[x-1]
-            categoryKinkCount = kinksPerCategory[x]
+            categoryKinkCount = kinksPerCategory[x-1]
             if categoryName == "Categories": #Check if this is the part of the survey about the categories. Need to list the involved kinks for those.
                 categorySection = True
             else:
@@ -773,11 +773,11 @@ async def kinkfill(interaction):
         await threadid.send(embed = discord.Embed(title = "Pronouns", description = f"Pronouns set as: {msg.content}", colour = embcol))
     
     #Now ask for the remaining things.
-    kinkindex = kinksPerCategory[0] #Start at the first kink, not the player info.
+    kinkindex = categoryIndex[0] #Start at the first kink, not the player info.
     for x in range(len(categories)+1): #Go over all categories
         if x > 0:
-            categoryName = categories[x-1]
-            categoryKinkCount = kinksPerCategory[x]
+            categoryName = categories[x - 1]
+            categoryKinkCount = kinksPerCategory[x - 1]
             if categoryName == "Categories": #Check if this is the part of the survey about the categories. Need to list the involved kinks for those.
                 categorySection = True
             else:
@@ -1101,7 +1101,7 @@ async def Kinklistdetail(categoryIndex, categories, printCategories, sel, player
     #Prepare the string containing the kinks and their ratings
     try:
         try:
-            kinkrange = [categoryIndex[categories.index(printCategories[sel])], categoryIndex[categories.index(printCategories[sel]) + 1]]
+            kinkrange = [categoryIndex[categories.index(printCategories[sel-1])], categoryIndex[categories.index(printCategories[sel-1]) + 1]]
         except IndexError:
             kinkrange = [categoryIndex[-1], categoryIndex[-1] + 2]
         kinkratingString = ""

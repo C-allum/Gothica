@@ -99,7 +99,7 @@ class Ticket_Spawn_Button(discord.ui.Button):
         )
 
         # Send the default message in the new channel
-        embed = discord.Embed(title=f"{self.default_embed_title}", description=f"{self.default_embed_description}", color=embcol)
+        embed = discord.Embed(title=f"{self.default_embed_title} {interaction.user.name}", description=f"{interaction.user.mention}\n{self.default_embed_description}", color=embcol)
         #Generate the custom ID
         new_custom_id = -1
         views = load_ticket_views()
