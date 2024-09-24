@@ -1288,17 +1288,13 @@ async def money(interaction, player:str=""):
         name="awardpool",
         description="Displays your dezzie award pool."
 )
-
 @app_commands.checks.has_role("Verified")
 async def awardpool(interaction):
     await interaction.response.defer(ephemeral=True, thinking=False)
-    if player == "":
-        id = interaction.user.id
-        name  = interaction.user.name
-    else:
-        name, id = await getUserNamestrInteraction(interaction, player)
+    id = interaction.user.id
+    name  = interaction.user.name
     author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(id) in x][0])
-    balance = GlobalVars.economyData[author_row_index][3]
+    balance = GlobalVars.economyData[author_row_index+3][0]
 
     await interaction.channel.send(embed=discord.Embed(title=f"{name} has {balance}{dezzieemj} left in their weekly award pool", colour = embcol))
     await interaction.followup.send("Successfully finished the task!")

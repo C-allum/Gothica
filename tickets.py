@@ -273,7 +273,7 @@ class Ticket_Reopen_Button(discord.ui.Button):
         new_custom_id = str(new_custom_id)
         view = Ticket_Button_View(int(self.category_ID), self.current_ticket_number, "", "", new_custom_id, self.roles, self.member)
         embed = discord.Embed(title="Reopening Ticket!",description=f"*{interaction.user.name} reopened the ticket.*", color=embcol)
-        await interaction.channel.edit(overwrites=new_overwrites, name=f"Ticket-{self.current_ticket_number}")
+        #await interaction.channel.edit(overwrites=new_overwrites, name=f"Ticket-{self.current_ticket_number}")
         save_single_ticket_view(self.category_ID, self.current_ticket_number, "", "", new_custom_id, self.roles, self.member, "ticket_close")
         await channel.send(embed=embed, view=view)
 
@@ -424,3 +424,26 @@ def delete_ticket_entry(custom_id):
         save_all_ticket_views(updated_tickets)
     else:
         print(f"Ticket with custom_id {custom_id} not found.")
+
+
+def load_persistent_views():
+    saved_views = load_ticket_views()
+    for view_data in saved_views:
+        category_ID = view_data["category_ID"]
+        current_ticket_number = view_data["current_ticket_number"]
+        ticket_title = view_data["embed_title"]
+        ticket_description = view_data["embed_description"]
+        custom_id = view_data["custom_id"]
+        roles = view_data["roles"]
+        member = view_data["member"]
+        view_type = view_data["view_type"]
+
+        # Recreate the persistent view and add it to the bot
+        if view_type == "ticket_spawn":
+            view = Ticket_Spawn_Button_View(category_ID, current_ticket_number, ticket_title, ticket_description, str(custom_id), roles, member)
+        elif view_type == "ticket_close":
+            view = Ticket_Button_View(category_ID, current_ticket_number, ticket_title, ticket_description, str(custom_id), roles, member)
+        elif view_type == "ticket_delete_reopen_tanscribe":
+            view = Ticket_Closed_Button_View(category_ID, current_ticket_number, ticket_title, ticket_description, str(custom_id), roles, member)
+
+        client.add_view(view)
