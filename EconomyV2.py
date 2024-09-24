@@ -1283,6 +1283,26 @@ async def money(interaction, player:str=""):
     await interaction.channel.send(embed=discord.Embed(title=f"{name} has {balance}{dezzieemj}", description=f"Leaderboard Rank: {user_leaderboard_rank + 1}", colour = embcol))
     await interaction.followup.send("Successfully finished the task!")
 
+#Shows the user their dezzie balance
+@tree.command(
+        name="awardpool",
+        description="Displays your dezzie award pool."
+)
+
+@app_commands.checks.has_role("Verified")
+async def awardpool(interaction):
+    await interaction.response.defer(ephemeral=True, thinking=False)
+    if player == "":
+        id = interaction.user.id
+        name  = interaction.user.name
+    else:
+        name, id = await getUserNamestrInteraction(interaction, player)
+    author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(id) in x][0])
+    balance = GlobalVars.economyData[author_row_index][3]
+
+    await interaction.channel.send(embed=discord.Embed(title=f"{name} has {balance}{dezzieemj} left in their weekly award pool", colour = embcol))
+    await interaction.followup.send("Successfully finished the task!")
+
 #Shows the leaderboard of the top 20 richest persons
 @tree.command(
         name="leaderboard",
