@@ -842,24 +842,25 @@ async def charlist(interaction, player:str=""):
             emb = discord.Embed(title = tit, description = desc[desc_index], colour = embcol)
         else:
             emb = discord.Embed(description = desc[desc_index], colour = embcol)
-        if str(interaction.user.name) == targname:
-            if pcharsact == 1:
-                if pcharsun == 0:
-                    emb.set_footer(text = "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active character, out of " + str(maxchars) + " slots." )
-                elif pcharsun == 1:
-                    emb.set_footer(text = "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active character, and " + str(pcharsun) + " unavailable character (" + str(pcharsact + pcharsun) + " in total), out of " + str(maxchars) + " slots." )    
-                else:
-                    emb.set_footer(text = "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active character, and " + str(pcharsun) + " unavailable characters (" + str(pcharsact + pcharsun) + " in total), out of " + str(maxchars) + " slots." )    
-            else:
-                if pcharsun == 0:        
-                    emb.set_footer(text = "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active characters, out of " + str(maxchars) + " slots." )
-                elif pcharsun ==1:
-                    emb.set_footer(text = "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active characters, and " + str(pcharsun) + " unavailable character (" + str(pcharsact + pcharsun) + " in total), out of " + str(maxchars) + " slots." )    
-                else:
-                    emb.set_footer(text = "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active characters, and " + str(pcharsun) + " unavailable characters (" + str(pcharsact + pcharsun) + " in total), out of " + str(maxchars) + " slots." )    
-        elif str(interaction.user.name) != targname:
-            emb.set_footer(text = "-------------------------------------------------------------\n\nThis search was summoned by " + str(interaction.user.name))
         
+        footer_text = ""
+        if pcharsact == 1:
+            if pcharsun == 0:
+                footer_text += "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active character, out of " + str(maxchars) + " slots."
+            elif pcharsun == 1:
+                footer_text += "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active character, and " + str(pcharsun) + " unavailable character (" + str(pcharsact + pcharsun) + " in total), out of " + str(maxchars) + " slots." 
+            else:
+                footer_text +=  "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active character, and " + str(pcharsun) + " unavailable characters (" + str(pcharsact + pcharsun) + " in total), out of " + str(maxchars) + " slots."    
+        else:
+            if pcharsun == 0:        
+                footer_text +=  "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active characters, out of " + str(maxchars) + " slots." 
+            elif pcharsun == 1:
+                footer_text +=  "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active characters, and " + str(pcharsun) + " unavailable character (" + str(pcharsact + pcharsun) + " in total), out of " + str(maxchars) + " slots."     
+            else:
+                footer_text += "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active characters, and " + str(pcharsun) + " unavailable characters (" + str(pcharsact + pcharsun) + " in total), out of " + str(maxchars) + " slots."     
+        if str(interaction.user.name) != targname:
+            footer_text += "\n\n-------------------------------------------------------------\n\nThis search was summoned by " + str(interaction.user.name)
+        emb.set_footer(text = footer_text)
         await interaction.channel.send(embed=emb)
         desc_index += 1
     
