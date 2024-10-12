@@ -9,13 +9,15 @@ import transcription
 @admingroup.command(name="generate-ticket-embed", description="Sets up an embed that spawns tickets.")
 @app_commands.describe(title = "Title of the embed under which the ticket button will appear")
 @app_commands.describe(description = "Description of the embed under which the ticket button will appear")
-@app_commands.describe(ticket_title = "Title of the embed in the generated ticket")
-@app_commands.describe(ticket_description = "Description of the embed in the generated ticket")
+@app_commands.describe(button_label = "Text that appears on the button to spawn tickets")
+@app_commands.describe(ticket_name = "Name of the channel that is generated when opening a ticket (e.g. Verification, staff application, etc.)")
+@app_commands.describe(ticket_embed_title = "Title of the embed in the generated ticket")
+@app_commands.describe(ticket_embed_description = "Description of the embed in the generated ticket")
 @app_commands.describe(ticket_category_id = "Channel category in which the tickets will appear. Should be only for tickets!")
 @app_commands.describe(roles = "The roles that get to see the ticket by default. @ **all** relevant roles.")
 @app_commands.describe(current_ticket_number = "The number from which the tickets will start to count (Default 0)")
 @discord.app_commands.checks.has_role("Staff")
-async def generate_ticket_embed(interaction, title:str, description:str, ticket_category_id:str, ticket_title:str, ticket_description:str, roles:str, current_ticket_number:int = 0):
+async def generate_ticket_embed(interaction, title:str, description:str, button_label:str, ticket_name:str, ticket_category_id:str, ticket_embed_title:str, ticket_embed_description:str, roles:str, current_ticket_number:int = 0):
     await interaction.response.defer(ephemeral=True, thinking=False)
 
     roles = roles.replace('@', '').replace('&', '').replace('<', '').replace('>', ',').replace(' ', '')[:-1]
@@ -40,8 +42,8 @@ async def generate_ticket_embed(interaction, title:str, description:str, ticket_
     custom_id = str(custom_id)
 
     member = interaction.user.id
-    button_view = Ticket_Spawn_Button_View(int(ticket_category_id), current_ticket_number, ticket_title, ticket_description, custom_id, roles, member)
-    save_single_ticket_view(ticket_category_id, current_ticket_number, ticket_title, ticket_description, custom_id, roles, member, "ticket_spawn")
+    button_view = Ticket_Spawn_Button_View(int(ticket_category_id), current_ticket_number, button_label, ticket_name, ticket_embed_title, ticket_embed_description, custom_id, roles, member)
+    save_single_ticket_view(ticket_category_id, current_ticket_number, ticket_name, ticket_embed_title, ticket_embed_description, custom_id, roles, member, "ticket_spawn", button_label)
     await current_channel.send(embed=discord.Embed(title=title, description=description, colour = embcol), view=button_view)
     await interaction.followup.send("Success!")
 
@@ -50,11 +52,13 @@ async def generate_ticket_embed(interaction, title:str, description:str, ticket_
 
 #--- Ticket spawn view ---
 class Ticket_Spawn_Button(discord.ui.Button):
-    def __init__(self, category_ID, current_ticket_number, default_embed_title, default_embed_description, custom_id, roles, member):
+    def __init__(self, category_ID, current_ticket_number, button_label, ticket_name, default_embed_title, default_embed_description, custom_id, roles, member):
         #Make sure custom_id is not something another bot might use as well!
-        super().__init__(label="Ticket", emoji="📩", style=discord.ButtonStyle.green, custom_id=f"ticket_module:{custom_id}")
+        super().__init__(label=button_label, emoji="📩", style=discord.ButtonStyle.green, custom_id=f"ticket_module:{custom_id}")
         self.category_ID = int(category_ID)
         self.current_ticket_number = int(current_ticket_number)
+        self.button_label = button_label
+        self.ticket_name = ticket_name
         self.default_embed_title = default_embed_title
         self.default_embed_description = default_embed_description
         self.custom_id = custom_id
@@ -93,7 +97,7 @@ class Ticket_Spawn_Button(discord.ui.Button):
 
         # Create the ticket channel in the category
         new_ticket_channel = await myGuild.create_text_channel(
-            name=f"ticket-{self.current_ticket_number}",
+            name=f"{self.ticket_name}-{self.current_ticket_number}",
             category=category,
             overwrites=overwrites
         )
@@ -108,36 +112,40 @@ class Ticket_Spawn_Button(discord.ui.Button):
                 new_custom_id = int(view["custom_id"])
         new_custom_id += 1
         new_custom_id = str(new_custom_id)
-        ticket_view = Ticket_Button_View(int(self.category_ID), self.current_ticket_number, "", "", new_custom_id, self.roles, interaction.user.id)
+        ticket_view = Ticket_Button_View(int(self.category_ID), self.current_ticket_number, self.button_label, self.ticket_name, "", "", new_custom_id, self.roles, interaction.user.id)
     	
         await new_ticket_channel.send(embed=embed, view=ticket_view)
         increment_ticket_number(self.custom_id)
-        save_single_ticket_view(self.category_ID, self.current_ticket_number, "", "", new_custom_id, self.roles, interaction.user.id, "ticket_close")
+        save_single_ticket_view(self.category_ID, self.current_ticket_number, self.ticket_name, "", "", new_custom_id, self.roles, interaction.user.id, "ticket_close", self.button_label)
         await interaction.followup.send(f"Ticket created: {new_ticket_channel.mention}", ephemeral=True)
 
 class Ticket_Spawn_Button_View(discord.ui.View):
-    def __init__(self, category_ID, current_ticket_number, default_embed_title, default_embed_description, custom_id, roles, member):
+    def __init__(self, category_ID, current_ticket_number, button_label, ticket_name, default_embed_title, default_embed_description, custom_id, roles, member):
         super().__init__(timeout=None)
         self.category_ID = category_ID
         self.current_ticket_number = current_ticket_number
+        self.ticket_name = ticket_name
         self.default_embed_title = default_embed_title
         self.default_embed_description = default_embed_description
         self.custom_id = custom_id
         self.roles = roles
         self.member = member
+        self.button_label = button_label
 
         # Pass necessary information to the button
-        self.add_item(Ticket_Spawn_Button(self.category_ID, self.current_ticket_number, self.default_embed_title, self.default_embed_description, custom_id, roles, self.member))
+        self.add_item(Ticket_Spawn_Button(self.category_ID, self.current_ticket_number, self.button_label, self.ticket_name, self.default_embed_title, self.default_embed_description, custom_id, roles, self.member))
 
 
 #--- Ticket View ---
 #Views
 class Ticket_Close_Button(discord.ui.Button):
-    def __init__(self, category_ID, current_ticket_number, default_embed_title, default_embed_description, custom_id, roles, member):
+    def __init__(self, category_ID, current_ticket_number, button_label, ticket_name, default_embed_title, default_embed_description, custom_id, roles, member):
         #Make sure custom_id is not something another bot might use as well!
         super().__init__(label="Close Ticket", emoji= "🔒", style=discord.ButtonStyle.blurple, custom_id=f"ticket_module:{custom_id}")
         self.category_ID = int(category_ID)
         self.current_ticket_number = int(current_ticket_number)
+        self.button_label = button_label
+        self.ticket_name = ticket_name
         self.default_embed_title = default_embed_title
         self.default_embed_description = default_embed_description
         self.custom_id = custom_id
@@ -181,17 +189,19 @@ class Ticket_Close_Button(discord.ui.Button):
                 new_custom_id = int(view["custom_id"])
         new_custom_id += 1
         new_custom_id = str(new_custom_id)
-        ticket_closed_view = Ticket_Closed_Button_View(int(self.category_ID), self.current_ticket_number, "", "", new_custom_id, self.roles, self.member)
+        ticket_closed_view = Ticket_Closed_Button_View(int(self.category_ID), self.current_ticket_number, self.button_label, self.ticket_name, "", "", new_custom_id, self.roles, self.member)
         view = ticket_closed_view
-        save_single_ticket_view(self.category_ID, self.current_ticket_number, "", "", new_custom_id, self.roles, self.member, "ticket_delete_reopen_tanscribe")
+        save_single_ticket_view(self.category_ID, self.current_ticket_number, self.ticket_name, "", "", new_custom_id, self.roles, self.member, "ticket_delete_reopen_tanscribe", self.button_label)
         await channel.send(embed=embed, view=view)
         await interaction.followup.send(f"ticket closed", ephemeral=True)
 
 class Ticket_Button_View(discord.ui.View):
-    def __init__(self, category_ID, current_ticket_number, default_embed_title, default_embed_description, custom_id, roles, member):
+    def __init__(self, category_ID, current_ticket_number, button_label, ticket_name, default_embed_title, default_embed_description, custom_id, roles, member):
         super().__init__(timeout=None)
         self.category_ID = category_ID
         self.current_ticket_number = current_ticket_number
+        self.button_label = button_label
+        self.ticket_name = ticket_name
         self.default_embed_title = default_embed_title
         self.default_embed_description = default_embed_description
         self.custom_id = custom_id
@@ -199,16 +209,18 @@ class Ticket_Button_View(discord.ui.View):
         self.member = member
 
         # Pass necessary information to the button
-        self.add_item(Ticket_Close_Button(self.category_ID, self.current_ticket_number, self.default_embed_title, self.default_embed_description, custom_id, roles, self.member))
+        self.add_item(Ticket_Close_Button(self.category_ID, self.current_ticket_number, self.button_label, self.ticket_name, self.default_embed_title, self.default_embed_description, custom_id, roles, self.member))
 
 
 # --- Closed Ticket button view ---
 class Ticket_Delete_Button(discord.ui.Button):
-    def __init__(self, category_ID, current_ticket_number, default_embed_title, default_embed_description, custom_id, roles, member):
+    def __init__(self, category_ID, current_ticket_number, button_label, ticket_name, default_embed_title, default_embed_description, custom_id, roles, member):
         #Make sure custom_id is not something another bot might use as well!
         super().__init__(label="Delete Ticket", emoji="🗑️", style=discord.ButtonStyle.blurple, custom_id=f"ticket_module:{custom_id}")
         self.category_ID = int(category_ID)
         self.current_ticket_number = int(current_ticket_number)
+        self.button_label = button_label
+        self.ticket_name = ticket_name
         self.default_embed_title = default_embed_title
         self.default_embed_description = default_embed_description
         self.custom_id = custom_id
@@ -238,11 +250,13 @@ class Ticket_Delete_Button(discord.ui.Button):
         await interaction.channel.delete()
 
 class Ticket_Reopen_Button(discord.ui.Button):
-    def __init__(self, category_ID, current_ticket_number, default_embed_title, default_embed_description, custom_id, roles, member):
+    def __init__(self, category_ID, current_ticket_number, button_label, ticket_name, default_embed_title, default_embed_description, custom_id, roles, member):
         #Make sure custom_id is not something another bot might use as well!
         super().__init__(label="Reopen Ticket",emoji="📂", style=discord.ButtonStyle.blurple, custom_id=f"ticket_module:{custom_id}")
         self.category_ID = int(category_ID)
         self.current_ticket_number = int(current_ticket_number)
+        self.button_label = button_label
+        self.ticket_name = ticket_name
         self.default_embed_title = default_embed_title
         self.default_embed_description = default_embed_description
         self.custom_id = custom_id
@@ -271,10 +285,10 @@ class Ticket_Reopen_Button(discord.ui.Button):
                 new_custom_id = int(view["custom_id"])
         new_custom_id += 1
         new_custom_id = str(new_custom_id)
-        view = Ticket_Button_View(int(self.category_ID), self.current_ticket_number, "", "", new_custom_id, self.roles, self.member)
+        view = Ticket_Button_View(int(self.category_ID), self.current_ticket_number, self.button_label, self.ticket_name, "", "", new_custom_id, self.roles, self.member)
         embed = discord.Embed(title="Reopening Ticket!",description=f"*{interaction.user.name} reopened the ticket.*", color=embcol)
         #await interaction.channel.edit(overwrites=new_overwrites, name=f"Ticket-{self.current_ticket_number}")
-        save_single_ticket_view(self.category_ID, self.current_ticket_number, "", "", new_custom_id, self.roles, self.member, "ticket_close")
+        save_single_ticket_view(self.category_ID, self.current_ticket_number, self.ticket_name, "", "", new_custom_id, self.roles, self.member, "ticket_close", self.button_label)
         await channel.send(embed=embed, view=view)
 
         # Add the person that opened the ticket back into the channel
@@ -285,16 +299,18 @@ class Ticket_Reopen_Button(discord.ui.Button):
             myGuild.default_role: discord.PermissionOverwrite(read_messages=False),  # Hide for @everyone
             member_obj: discord.PermissionOverwrite(read_messages=True, send_messages=True)  # Allow the member to see and interact
         }
-        await channel.edit(overwrites={**current_overwrites, **new_overwrites})   
+        await channel.edit(overwrites={**current_overwrites, **new_overwrites}, name=f"{self.ticket_name}-{self.current_ticket_number}")   
 
         await interaction.followup.send(f"ticket reopened", ephemeral=True)
 
 class Ticket_Transcribe_Button(discord.ui.Button):
-    def __init__(self, category_ID, current_ticket_number, default_embed_title, default_embed_description, custom_id, roles, member):
+    def __init__(self, category_ID, current_ticket_number, button_label, ticket_name, default_embed_title, default_embed_description, custom_id, roles, member):
         #Make sure custom_id is not something another bot might use as well!
         super().__init__(label="Transcribe Ticket", emoji="📝", style=discord.ButtonStyle.blurple, custom_id=f"ticket_module:{custom_id}")
         self.category_ID = int(category_ID)
         self.current_ticket_number = int(current_ticket_number)
+        self.button_label = button_label
+        self.ticket_name = ticket_name
         self.default_embed_title = default_embed_title
         self.default_embed_description = default_embed_description
         self.custom_id = custom_id
@@ -330,10 +346,12 @@ class Ticket_Transcribe_Button(discord.ui.Button):
 
 
 class Ticket_Closed_Button_View(discord.ui.View):
-    def __init__(self, category_ID, current_ticket_number, default_embed_title, default_embed_description, custom_id, roles, member):
+    def __init__(self, category_ID, current_ticket_number, button_label, ticket_name, default_embed_title, default_embed_description, custom_id, roles, member):
         super().__init__(timeout=None)
         self.category_ID = category_ID
         self.current_ticket_number = current_ticket_number
+        self.button_label = button_label
+        self.ticket_name = ticket_name
         self.default_embed_title = default_embed_title
         self.default_embed_description = default_embed_description
         self.custom_id = custom_id
@@ -341,21 +359,24 @@ class Ticket_Closed_Button_View(discord.ui.View):
         self.member = member
 
         # Pass necessary information to the buttons
-        self.add_item(Ticket_Delete_Button(self.category_ID, self.current_ticket_number, self.default_embed_title, self.default_embed_description, f"ticket_bot_del:{custom_id}", roles, member))
-        self.add_item(Ticket_Reopen_Button(self.category_ID, self.current_ticket_number, self.default_embed_title, self.default_embed_description, f"ticket_bot_reopen:{custom_id}", roles, member))
-        self.add_item(Ticket_Transcribe_Button(self.category_ID, self.current_ticket_number, self.default_embed_title, self.default_embed_description, f"ticket_bot_transcribe:{custom_id}", roles, member))
+        self.add_item(Ticket_Delete_Button(self.category_ID, self.current_ticket_number, self.button_label, self.ticket_name, self.default_embed_title, self.default_embed_description, f"ticket_bot_del:{custom_id}", roles, member))
+        self.add_item(Ticket_Reopen_Button(self.category_ID, self.current_ticket_number, self.button_label, self.ticket_name, self.default_embed_title, self.default_embed_description, f"ticket_bot_reopen:{custom_id}", roles, member))
+        self.add_item(Ticket_Transcribe_Button(self.category_ID, self.current_ticket_number, self.button_label, self.ticket_name, self.default_embed_title, self.default_embed_description, f"ticket_bot_transcribe:{custom_id}", roles, member))
 
 #------ Json file management functions for saving and loading ------
-def save_single_ticket_view(category_ID, current_ticket_number, embed_title, embed_description, custom_id, roles, member, view_type):
+def save_single_ticket_view(category_ID, current_ticket_number, ticket_name, embed_title, embed_description, custom_id, roles, member, view_type, button_label=""):
+
     data = {
         "category_ID": category_ID,
         "current_ticket_number": current_ticket_number,
+        "ticket_name": ticket_name,
         "embed_title": embed_title,
         "embed_description": embed_description,
         "custom_id": custom_id,
         "roles": roles,
         "member": member,
-        "view_type": view_type
+        "view_type": view_type,
+        "button_label": button_label
     }
 
     # Save to a JSON file (you can also use a database if preferred)
@@ -431,19 +452,21 @@ def load_persistent_views():
     for view_data in saved_views:
         category_ID = view_data["category_ID"]
         current_ticket_number = view_data["current_ticket_number"]
+        ticket_name = view_data["ticket_name"]
         ticket_title = view_data["embed_title"]
         ticket_description = view_data["embed_description"]
         custom_id = view_data["custom_id"]
         roles = view_data["roles"]
         member = view_data["member"]
         view_type = view_data["view_type"]
+        button_label = view_data["button_label"]
 
         # Recreate the persistent view and add it to the bot
         if view_type == "ticket_spawn":
-            view = Ticket_Spawn_Button_View(category_ID, current_ticket_number, ticket_title, ticket_description, str(custom_id), roles, member)
+            view = Ticket_Spawn_Button_View(category_ID, current_ticket_number, button_label, ticket_name, ticket_title, ticket_description, str(custom_id), roles, member)
         elif view_type == "ticket_close":
-            view = Ticket_Button_View(category_ID, current_ticket_number, ticket_title, ticket_description, str(custom_id), roles, member)
+            view = Ticket_Button_View(category_ID, current_ticket_number, button_label, ticket_name, ticket_title, ticket_description, str(custom_id), roles, member)
         elif view_type == "ticket_delete_reopen_tanscribe":
-            view = Ticket_Closed_Button_View(category_ID, current_ticket_number, ticket_title, ticket_description, str(custom_id), roles, member)
+            view = Ticket_Closed_Button_View(category_ID, current_ticket_number, button_label, ticket_name, ticket_title, ticket_description, str(custom_id), roles, member)
 
         client.add_view(view)

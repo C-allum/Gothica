@@ -499,7 +499,7 @@ async def buyitem(interaction, searchterm:str, amount:int=1):
                     itemindex = GlobalVars.itemdatabase[chosenShop].index(item_database_info)
                     GlobalVars.itemdatabase[chosenShop][itemindex][18] = int(quantity_available) - buyquant
                     await writeItemsheetCell(chosenShop, itemindex, 18, int(quantity_available) - buyquant)
-                await interaction.channel.send(embed=discord.Embed(title="Success!",description=f"Before this transaction you had {old_balance}{dezzieemj}. You paid {price}{dezzieemj} and your new balance is {new_balance}{dezzieemj}", colour = embcol))
+                await interaction.channel.send(embed=discord.Embed(title="Success!",description=f"Before this transaction {interaction.user.name} had {old_balance}{dezzieemj}. You paid {price}{dezzieemj} and your new balance is {new_balance}{dezzieemj}", colour = embcol))
                 rolled_curse_string = ""
                 if potential_curses != []:
                     rolled_curse_string += "\n\n**__Actual Curses:__**\n\n"
@@ -618,7 +618,9 @@ async def sellitem(interaction, item:str = None, quantity:int = 1):
         #         new_stock = int(GlobalVars.itemdatabase[sell_shop_index][item_row_index][18]) + sellquant
 
 #             #Add dezzies
+        
         await addDezziesToPlayer(interaction, int(int(sellprice) * quantity), playerID=interaction.user.id, write_econ_sheet=False)
+        await interaction.channel.send(embed = discord.Embed(title = str(f"{interaction.user.name} sold {quantity} {itname} for {int(int(sellprice) * quantity)}"), colour = embcol))
 
         #Update PlayerInfo sheet, and Inventory sheet.
         await writeEconSheet(GlobalVars.economyData)

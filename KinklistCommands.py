@@ -378,8 +378,9 @@ async def kinksurvey(interaction):
     
     #See if the user wants to retake the survey
     if any(targ.name in x for x in GlobalVars.kinkdatabase):
-        retake, n = await CommonDefinitions.quicksel(interaction=interaction, options=["Yes", "No"], title = "We already know your deepest desires", description = f"Your kinklist is already registered with us, <@{targ.id}>.\n If you want to edit it a single kink, use %kinkedit.")
+        retake, n = await CommonDefinitions.quicksel(interaction=interaction, options=["Yes", "No"], title = "We already know your deepest desires", description = f"Your kinklist is already registered with us, <@{targ.id}>.\n If you want to edit it a single kink, use %kinkedit. If you want to retake the whole survey, select Yes.")
         if retake == None or retake == "No":
+            await interaction.followup.send("Survey not repeated")
             return
         else:
             playerindex = GlobalVars.kinkdatabase.index([x for x in GlobalVars.kinkdatabase if str(targ.name) in x][0])
@@ -435,7 +436,7 @@ async def kinksurvey(interaction):
                 if not "Role" in kinkname and not "Additional" in kinkname:   #Everything but the "If you are Role" questions
                     if (categorySection == False):  #Every category but "Categories"
                         embedstring = f"What are your feelings about {kinkname}?"                   
-                        pref, n = await CommonDefinitions.quicksel(interaction=interaction, options = kinkOptions, title = f"{categoryName} ({x+1}/{len(categories)}) \nKink {y+1}/{categoryKinkCount}: {kinkname}", description = embedstring, dest = threadid)
+                        pref, n = await CommonDefinitions.quicksel(interaction=interaction, options = kinkOptions, title = f"{categoryName} ({x}/{len(categories)}) \nKink {y+1}/{categoryKinkCount}: {kinkname}", description = embedstring, dest = threadid)
 
                     else:   #"Categories" category needs to list kinks in the message so users understand what is part of the category
                         categoryID = categories.index(categoryName)  #Find the index of the category we are asking about to get the amount of kinks in that category.
@@ -493,15 +494,18 @@ async def kinksurvey(interaction):
                 #Increment kinkindex
                 kinkindex += 1
 
-    await threadid.send(embed = discord.Embed(title = "Kink Survey", description = "That concludes the kink survey! Thank you for your time. If you change your mind on anything I just asked you about, you can request us to change it with /kinkedit.", colour = embcol))
+    await threadid.send(embed = discord.Embed(title = "Kink Survey", description = "That concludes the kink survey! Thank you for your time. If you change your mind on anything I just asked you about, you can request us to change it with /kinkedit. Trying to save your replies...", colour = embcol))
 
     kinkws = gc.open_by_key(kinksheet).get_worksheet(0)
     if playerindex == 0:
         kinkws.append_row(values = newKinklist)
     else:
-        krange = "A" + str(playerindex+1) + ":GZ" + str(playerindex+1)
+        final_column = await numberToLetter(len(newKinklist))
+        krange = "A" + str(playerindex+1) + f":{final_column}" + str(playerindex+1)
         kinkws.update(krange, [newKinklist])
     GlobalVars.kinkdatabase = gc.open_by_key(kinksheet).sheet1.get_all_values()
+    await threadid.send(embed = discord.Embed(title = "... Save complete", colour = embcol))
+
     await interaction.followup.send("Survey complete.")
     return
 
@@ -1238,3 +1242,14 @@ async def selkink(kink, interaction):
         await interaction.channel.send(content = "@<&1055536891606351983>", embed = discord.Embed(title = "Your kink could not be found", description = "We're not actually sure how you managed this. The bot gods have been alerted to your location. ~~Run~~.", colour= embcol))
         return
     return kinkname, kinkindex
+
+
+async def numberToLetter(number):
+    letter = ''
+    start_index = 1
+    column_int = number
+    while column_int > 25 + start_index:
+        letter += chr(65 + int((column_int-start_index)/26) - 1)
+        column_int = column_int - (int((column_int-start_index)/26))*26
+    letter += chr(65 - start_index + (int(column_int)))
+    return letter
