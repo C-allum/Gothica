@@ -875,21 +875,20 @@ async def charlist(interaction, player:str=""):
     name = "The name of the character to search for. Partial matches work."
 )
 @app_commands.checks.has_role("Verified")
-async def charlist(interaction, name:str):
+async def charsearch(interaction, name:str):
 
     await interaction.response.defer(ephemeral=True, thinking=False)
 
     csheet = gc.open_by_key(CharSheet).get_worksheet(0)
-    cnames = csheet.col_values(6)
-    pnames = csheet.col_values(2)
+    charplayerlist = list(zip(csheet.col_values(6)[1:], csheet.col_values(2)[1:]))
 
     levenshtein_tuple_list = []
     index = 0
-    for entry in cnames:
-        levenshtein_distance_partial = fuzz.partial_token_set_ratio(entry.lower(), name.lower())
-        levenshtein_distance_complete = fuzz.ratio(entry.lower(), name.lower())
+    for charname, playername in charplayerlist:
+        levenshtein_distance_partial = fuzz.partial_token_set_ratio(charname.lower(), name.lower())
+        levenshtein_distance_complete = fuzz.ratio(charname.lower(), name.lower())
         levenshtein_distance = levenshtein_distance_complete * 0.5 + levenshtein_distance_partial * 0.5
-        levenshtein_tuple_list.append([entry, levenshtein_distance, pnames[cnames.index(entry)], index])
+        levenshtein_tuple_list.append([charname, levenshtein_distance, playername, index + 1])
         index += 1
 
     sorted_list = sorted(levenshtein_tuple_list,key=lambda l:l[1], reverse=True)
