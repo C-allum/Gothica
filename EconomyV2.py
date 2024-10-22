@@ -24,7 +24,8 @@ add_dezzie_lock = asyncio.Lock()
 @app_commands.checks.has_role("Verified")
 async def spend(interaction, amount:int, reason:str = None):
     await interaction.response.defer(ephemeral=True, thinking=False)
-
+    if amount < 0:
+        interaction.channel.send(embed=discord.Embed(title=f"You cannot spend negative amounts of dezzies!", colour = embcol))
     await removeDezziesFromPlayerWithoutMessage(amount, interaction.user.id, interaction.user.name)
     if reason != None:
         reason = "These dezzies were for:\n\n*" + reason + "*01"
