@@ -25,7 +25,7 @@ add_dezzie_lock = asyncio.Lock()
 async def spend(interaction, amount:int, reason:str = None):
     await interaction.response.defer(ephemeral=True, thinking=False)
     if amount < 0:
-        interaction.channel.send(embed=discord.Embed(title=f"You cannot spend negative amounts of dezzies!", colour = embcol))
+        interaction.channel.send(embed=discord.Embed(title=f"You cannot spend negative amounts of dezzies!", description= "You know... We should just take those dezzies off you anyways for trying that. Be glad we are nice. We want to hear a 'Thank you, Gothica'",colour = embcol))
     await removeDezziesFromPlayerWithoutMessage(amount, interaction.user.id, interaction.user.name)
     if reason != None:
         reason = "These dezzies were for:\n\n*" + reason + "*01"
@@ -339,6 +339,11 @@ async def inventory(interaction, player:str=""):
 #Guides the user through buying an item
 async def buyitem(interaction, searchterm:str, amount:int=1):
     await interaction.response.defer(ephemeral=True, thinking=False)
+    if amount < 1:
+        await interaction.channel.send(embed=discord.Embed(title=f"Negative numbers are cool", description="Scamming shopkeepers is not though. Try again when you *actually* want to buy something. Be glad we had a good day, otherwise we would take your dezzies for trying. We want to hear a 'Thank you, Gothica'", colour = embcol))
+        await interaction.followup.send("Successfully finished the task!")
+        return
+
     buyquant = amount
     
     #Search for item in the item sheet with fuzzy matching
@@ -527,7 +532,10 @@ async def buyitem(interaction, searchterm:str, amount:int=1):
 @app_commands.checks.has_role("Verified")
 async def sellitem(interaction, item:str = None, quantity:int = 1):
     await interaction.response.defer(ephemeral=True, thinking=False)
-
+    if quantity < 1:
+        await interaction.channel.send(embed=discord.Embed(title=f"Negative numbers are cool", description="Scamming shopkeepers is not though. Try again when you *actually* want to sell something. Be glad we had a good day, otherwise we would take your items anyways for trying. We want to hear a 'Thank you, Gothica'", colour = embcol))
+        await interaction.followup.send("Successfully finished the task!")
+        return
     #Find person in the inventory sheet
     inventory_row_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if str(interaction.user.id) in x][0])
     economy_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(interaction.user.id) in x][0])
@@ -653,6 +661,10 @@ async def sellitem(interaction, item:str = None, quantity:int = 1):
 #Guides the user through buying an item
 async def giveitem(interaction, recipient:str, amount:int=0):
     await interaction.response.defer(ephemeral=True, thinking=False)
+    if amount < 1:
+        await interaction.channel.send(embed=discord.Embed(title=f"Negative numbers are cool", description="Scamming shopkeepers is not though. Try again when you *actually* want to give something away. Be glad we had a good day, otherwise we would take your items anyways for trying. We want to hear a 'Thank you, Gothica'", colour = embcol))
+        await interaction.followup.send("Successfully finished the task!")
+        return
     #Find giver in the inventory sheet
     author_inventory_row_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if str(interaction.user.id) in x][0])
 
@@ -1335,6 +1347,11 @@ async def leaderboard(interaction):
 )
 @app_commands.checks.has_role("Verified")
 async def invest(interaction, amount:int):
+
+    if amount < 1:
+        await interaction.channel.send(embed=discord.Embed(title=f"Negative numbers are cool", description="Scamming shopkeepers is not though. Try again when you *actually* want to give invest.", colour = embcol))
+        await interaction.followup.send("Successfully finished the task!")
+        return
     await interaction.response.defer(ephemeral=True, thinking=False)
     devdata = sheet.values().get(spreadsheetId = Plotsheet, range = "AS1:AX200", majorDimension='COLUMNS').execute().get("values")
     row = devdata[0].index(str(interaction.channel))
