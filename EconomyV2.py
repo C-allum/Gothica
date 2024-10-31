@@ -2494,7 +2494,7 @@ async def dezReact(reaction):
 
 
     #Check if given amount is smaller than the pool of dezzies left for the user
-    if reaction.channel_id != 828545311898468352: #Disable Noticeboard Reacts
+    if reaction.channel_id != 828545311898468352 and reaction.channel_id != 1284999924009930855: #Disable Noticeboard Reacts
 
         if reaction.member.name == targetName:
             await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = "No.", description = targetName + ", you can't just award dezzies to yourself.", colour = embcol))
