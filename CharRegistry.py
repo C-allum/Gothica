@@ -859,7 +859,7 @@ async def charlist(interaction, player:str=""):
             else:
                 footer_text += "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active characters, and " + str(pcharsun) + " unavailable characters (" + str(pcharsact + pcharsun) + " in total), out of " + str(maxchars) + " slots."     
         if str(interaction.user.name) != targname:
-            footer_text += "\n\n-------------------------------------------------------------\n\nThis search was summoned by " + str(interaction.user.name)
+            footer_text += "\n\nThis search was summoned by " + str(interaction.user.name)
         emb.set_footer(text = footer_text)
         await interaction.channel.send(embed=emb)
         desc_index += 1
