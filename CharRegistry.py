@@ -775,6 +775,7 @@ async def charlist(interaction, player:str=""):
     else: 
 
         targname = content.split(" ")[1]
+        targid = interaction.user.id
 
     pindex = []
 
@@ -832,7 +833,7 @@ async def charlist(interaction, player:str=""):
 
     roles = str(str(interaction.user.roles))
 
-    player_econ_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(interaction.user.id) in x][0])
+    player_econ_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(targid) in x][0])
     maxchars = startingslots + int(GlobalVars.economyData[player_econ_index + 2][1])
 
 

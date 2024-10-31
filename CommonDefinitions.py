@@ -79,6 +79,7 @@ if liveVersion: #Set to 1 to use the real spreadsheets, or 0 to use the testing 
 
     CharSheet = "1iHvP4HC8UQqyiMmC3Xiggx8-17e5SGWJMncEeoiZP1s"
 
+    #Old, unused.
     EconSheet = "1qTC0gn7Fe_cHDVPB8KIEjSFUwrUSEhlLy1upHIKnKF8"
 
     #newEconsheet
