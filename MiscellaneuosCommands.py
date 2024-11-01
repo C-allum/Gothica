@@ -416,7 +416,7 @@ async def scenes(interaction: discord.Interaction, action: str):
         prevscenes = ""
         #Early return if trying to list, remove from or manage notifications of empty list of scenes
         if action in ["list", "remove", "notification"]:
-            await interaction.followup.send(embed = discord.Embed(title = "You have no scenes tracked.", description = "Add one using the Add option.", colour = embcol))
+            await interaction.followup.send(embed = discord.Embed(title = "You have no scenes tracked.", description = "Add one using the Add option.", colour = embcol), ephemeral=False)
             return
 
     #Create list of currently tracked scenes to show
@@ -442,23 +442,23 @@ async def scenes(interaction: discord.Interaction, action: str):
 
     #Execute selected action: List
     if action == "list":
-        await interaction.followup.send(embed = discord.Embed(title = interaction.user.name + "'s tracked scenes", description= "\n".join(prevlist), colour = embcol))
+        await interaction.channel.send(embed = discord.Embed(title = interaction.user.name + "'s tracked scenes", description= "\n".join(prevlist), colour = embcol))
         return
 
     #Execute selected action: Add
     elif action == "add":
-        await interaction.followup.send(embed = discord.Embed(title = "Track a new scene.", description= "Give a short description, followed by a link to the scene.\nStart the link with `#` and follow with the thread name, select the right thread.", colour = embcol))
+        await interaction.followup.send(embed = discord.Embed(title = "Track a new scene.", description= "Give a short description, followed by a link to the scene.\nStart the link with `#` and follow with the thread name, select the right thread.", colour = embcol), ephemeral=True)
         try:            
-            scene_desc_link = await client.wait_for('message', timeout = 30, check = checkAuthor(interaction.user))
+            scene_desc_link = await client.wait_for('message', timeout = 60, check = checkAuthor(interaction.user))
         except TimeoutError:
-            await interaction.followup.send("Selection Timed Out")
+            await interaction.followup.send("Selection Timed Out", ephemeral=True)
             return
 
         scenestr = scene_desc_link.content
         await scene_desc_link.delete()
 
         if scenestr.replace(" ", "") == "":
-            await interaction.followup.send("Add help here")
+            await interaction.followup.send("Add help here", ephemeral=True)
 
         else:
             if prevscenes != "":
@@ -467,14 +467,14 @@ async def scenes(interaction: discord.Interaction, action: str):
                 scenelist = scenestr + " Notifications:Disabled"
             GlobalVars.economyData[author_scenes_index][0] = scenelist
             await EconomyV2.writeEconSheet(GlobalVars.economyData)
-        await interaction.followup.send(embed = discord.Embed(title = "Added to your scenes", description = "We have added '" + scenestr + "' to your tracked scenes.", colour = embcol))
+        await interaction.followup.send(embed = discord.Embed(title = "Added to your scenes", description = "We have added '" + scenestr + "' to your tracked scenes.", colour = embcol), ephemeral=True)
         return
 
     #Execute selected action: Remove
     elif action == "remove":
-        await interaction.followup.send(embed = discord.Embed(title = "Type the number of the scene to stop tracking", description= "\n".join(prevlist), colour = embcol))
+        await interaction.followup.send(embed = discord.Embed(title = "Type the number of the scene to stop tracking", description= "\n".join(prevlist), colour = embcol), ephemeral=True)
         try:
-            scenerechoice = await client.wait_for('message', timeout = 30, check = check(interaction.user))
+            scenerechoice = await client.wait_for('message', timeout = 60, check = check(interaction.user))
             await scenerechoice.delete()
             try:
                 scenenum = int(scenerechoice.content)
@@ -488,21 +488,21 @@ async def scenes(interaction: discord.Interaction, action: str):
                     GlobalVars.economyData[author_scenes_index][0] = prevs[0]
                 await EconomyV2.writeEconSheet(GlobalVars.economyData) 
                 
-                await interaction.followup.send(embed = discord.Embed(title = "Scene removed", description = "The requested scene has been removed from your tracked scene list.", colour = embcol))
+                await interaction.followup.send(embed = discord.Embed(title = "Scene removed", description = "The requested scene has been removed from your tracked scene list.", colour = embcol), ephemeral=True)
 
             except TypeError:
-                await interaction.followup.send("Value not recognised")
+                await interaction.followup.send("Value not recognised", ephemeral=True)
 
         except TimeoutError:
-            await interaction.followup.send("Selection Timed Out")
+            await interaction.followup.send("Selection Timed Out", ephemeral=True)
         return
 
     #Execute selected action: Notification
     elif action == "notification":
-        await interaction.followup.send(embed = discord.Embed(title = "Select scenes to toggle notifications for", description= "Type either a number from the scenes shown, or type `all`. Add `enable` or `disable` to turn notifications on or off.\n\n" + "\n".join(prevlist), colour = embcol))
+        await interaction.followup.send(embed = discord.Embed(title = "Select scenes to toggle notifications for", description= "Type either a number from the scenes shown, or type `all`. Add `enable` or `disable` to turn notifications on or off.\n\n" + "\n".join(prevlist), colour = embcol), ephemeral=True)
 
         try:
-            user_input_msg = await client.wait_for('message', timeout = 30, check = checkAuthor(interaction.user))
+            user_input_msg = await client.wait_for('message', timeout = 60, check = checkAuthor(interaction.user))
             user_input = user_input_msg.content.lower()
             await user_input_msg.delete()
 
@@ -510,11 +510,11 @@ async def scenes(interaction: discord.Interaction, action: str):
             selected_scenes, selected_status = user_input[:-1], user_input[-1]
 
             if not "off" in selected_status and not "disable" in selected_status and not "on" in selected_status and not "enable" in selected_status:
-                await interaction.followup.send(embed = discord.Embed(title = "Wrong use of the command!", description = "Include `enable` or `disable` at the end of this command to specify how you want notifications set.", colour = embcol))
+                await interaction.followup.send(embed = discord.Embed(title = "Wrong use of the command!", description = "Include `enable` or `disable` at the end of this command to specify how you want notifications set.", colour = embcol), ephemeral=True)
                 return
 
         except TimeoutError:
-            await interaction.followup.send(embed = discord.Embed(title = "Selection timed out!", colour = embcol))
+            await interaction.followup.send(embed = discord.Embed(title = "Selection timed out!", colour = embcol), ephemeral=True)
             return
         
         prevs = prevscenes
@@ -530,10 +530,10 @@ async def scenes(interaction: discord.Interaction, action: str):
                     else:
                         raise ValueError("Number not in range")
             except ValueError:
-                await interaction.followup.send(embed = discord.Embed(title = "Selected numbers are not within your available scenes!", colour = embcol))
+                await interaction.followup.send(embed = discord.Embed(title = "Selected numbers are not within your available scenes!", colour = embcol), ephemeral=True)
                 return
             except TypeError:
-                await interaction.followup.send(embed = discord.Embed(title = "Enter only `all` or numbers to select scenes!", colour = embcol))
+                await interaction.followup.send(embed = discord.Embed(title = "Enter only `all` or numbers to select scenes!", colour = embcol), ephemeral=True)
                 return
         for scenenum in selected_scenes:
             try:
@@ -555,7 +555,7 @@ async def scenes(interaction: discord.Interaction, action: str):
                         prevs[scenenum] = prevs[scenenum] + (" Notifications:Enabled")
             
             except TypeError:
-                await interaction.followup.send(embed = discord.Embed(title = "Value not recognised!", colour = embcol))
+                await interaction.followup.send(embed = discord.Embed(title = "Value not recognised!", colour = embcol), ephemeral=True)
                 return
 
         #Save new scenes field to sheet.
@@ -568,14 +568,14 @@ async def scenes(interaction: discord.Interaction, action: str):
         await EconomyV2.writeEconSheet(GlobalVars.economyData)
                     
         if ("off" in selected_status or "disable" in selected_status):
-            await interaction.followup.send(embed = discord.Embed(title = "Scene notifications disabled", description = "The notfication function for the requested scenes is now disabled and we will not notify you of new messages for those scenes.", colour = embcol))
+            await interaction.followup.send(embed = discord.Embed(title = "Scene notifications disabled", description = "The notfication function for the requested scenes is now disabled and we will not notify you of new messages for those scenes.", colour = embcol), ephemeral=True)
         elif("on" in selected_status or "enable" in selected_status):
-            await interaction.followup.send(embed = discord.Embed(title = "Scene notifications enabled", description = "The notfication function for the requested scenes is now enabled and we will notify you of new messages for those scenes.", colour = embcol))
+            await interaction.followup.send(embed = discord.Embed(title = "Scene notifications enabled", description = "The notfication function for the requested scenes is now enabled and we will notify you of new messages for those scenes.", colour = embcol), ephemeral=True)
         
         return
 
     #Should be unreachable, but just in case, catch all.
-    await interaction.followup.send("Action was not recognized, task aborted.")
+    await interaction.followup.send("Action was not recognized, task aborted.", ephemeral=True)
     return
 
 
