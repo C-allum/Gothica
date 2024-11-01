@@ -775,6 +775,7 @@ async def charlist(interaction, player:str=""):
     else: 
 
         targname = content.split(" ")[1]
+        targid = interaction.user.id
 
     pindex = []
 
@@ -832,7 +833,7 @@ async def charlist(interaction, player:str=""):
 
     roles = str(str(interaction.user.roles))
 
-    player_econ_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(interaction.user.id) in x][0])
+    player_econ_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(targid) in x][0])
     maxchars = startingslots + int(GlobalVars.economyData[player_econ_index + 2][1])
 
 
@@ -859,7 +860,7 @@ async def charlist(interaction, player:str=""):
             else:
                 footer_text += "-------------------------------------------------------------\n\n" + targname + " has " + str(pcharsact) + " active characters, and " + str(pcharsun) + " unavailable characters (" + str(pcharsact + pcharsun) + " in total), out of " + str(maxchars) + " slots."     
         if str(interaction.user.name) != targname:
-            footer_text += "\n\n-------------------------------------------------------------\n\nThis search was summoned by " + str(interaction.user.name)
+            footer_text += "\n\nThis search was summoned by " + str(interaction.user.name)
         emb.set_footer(text = footer_text)
         await interaction.channel.send(embed=emb)
         desc_index += 1
