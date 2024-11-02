@@ -127,6 +127,7 @@ if liveVersion: #Set to 1 to use the real spreadsheets, or 0 to use the testing 
     menageriechannel = 917239168969621515
     vacationthread = 1251657363425853500
     arbchannel = 1145240920296538162
+    DMPCThread = 1157109590954090566
 
 else:
 

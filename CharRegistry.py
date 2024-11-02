@@ -243,7 +243,7 @@ async def charcreate(message):
     pcharsreg = 0
 
     for g in range(len(pnames)):
-        if pnames[g] == auth:
+        if pnames[g].replace('[', '').replace(']', '').replace(' ', '') == auth :
             if g <= len(charstats):
                 if "Active" in charstats[g]:
                     pcharsreg += 1
@@ -269,11 +269,11 @@ async def charcreate(message):
         #First Character
         emb2.set_footer(text="\n\n----------------------------------\n\nCongratulations! You've registered your first character! Create a tupper for " + determiner + " in <#1050503346374594660> or via the website: https://tupperbox.app/dashboard/list.")
 
-    elif pcharsreg > maxchars-1:
+    elif pcharsreg > maxchars-1 and not "Staff" in str(message.author.roles):
         #Above maximum
         emb2.set_footer(text="\n\n----------------------------------\n\nYou have more characters registered than you have slots! This character has been set as unavailable. Please retire one of your characters using `$retire name` if you want to play " + determiner + " in the dungeon")
 
-        await client.get_channel(logchannel).send(str(message.author) + " has too many characters registered!")
+        await client.get_channel(bridgechannel).send(str(message.author) + " has tried to register too many characters!")
 
         #Set Unavailable
         for a in range(len(headers)):
