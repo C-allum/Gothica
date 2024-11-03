@@ -1195,7 +1195,7 @@ async def selkink(kink, interaction):
         if await dropsel.wait():
             await interaction.channel.send(embed=discord.Embed(title="Selection Timed Out", colour = embcol))
             return
-        catindex = int(dropsel.button_response[0])
+        catindex = int(dropsel.button_response[0]) - 1
         await msg.delete()
         
         kinklis = []   
