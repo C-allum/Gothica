@@ -2717,7 +2717,11 @@ async def writeEconSheet(values, range = "A1:ZZ8000"):
     async with economy_lock:
         if not (":" in range):
             values = [[values]]
-        sheet.values().update(spreadsheetId = inventorysheet, range = range, valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values= values)).execute()
+        try:
+            sheet.values().update(spreadsheetId = inventorysheet, range = range, valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values= values)).execute()
+        except Exception as e:
+            print("Failed to write Economy Sheet. Proceeding. Exception was:")
+            print(e)
 
 #Loads the current Inventory Sheet state. This is not kept internally, so we need to call this every time we work on the sheet.
 async def loadInventorySheet():
@@ -2730,7 +2734,11 @@ async def writeInvetorySheet(values, range = "A1:ZZ8000"):
         #in case we write a single value
         if not (":" in range):
             values = [[values]]
-        sheet.values().update(spreadsheetId = inventorysheet, range = "Inventories!" + range, valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values= values)).execute()
+        try:
+            sheet.values().update(spreadsheetId = inventorysheet, range = "Inventories!" + range, valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values= values)).execute()
+        except Exception as e:
+            print("Failed to write Inventory Sheet. Proceeding. Exception was:")
+            print(e)
 
 async def loadItemSheet():
     #itemsheet = gc.open_by_key("17M2FS5iWchszIoimqNzk6lzJMOVLBWQgEZZKUPQuMR8") #New for economy rewrite

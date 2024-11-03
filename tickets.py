@@ -6,7 +6,7 @@ import transcription
 #READ THIS!
 #To have the persistent view work, add client.add_view(tickets.Ticket_Spawn_Button_View()) to the startup routine
 
-@admingroup.command(name="generate-ticket-embed", description="Sets up an embed that spawns tickets.")
+@staffgroup.command(name="generate-ticket-embed", description="Sets up an embed that spawns tickets.")
 @app_commands.describe(title = "Title of the embed under which the ticket button will appear")
 @app_commands.describe(description = "Description of the embed under which the ticket button will appear")
 @app_commands.describe(button_label = "Text that appears on the button to spawn tickets")
