@@ -245,7 +245,7 @@ async def charcreate(message):
     for g in range(len(pnames)):
         if pnames[g].replace('[', '').replace(']', '').replace(' ', '') == auth :
             if g <= len(charstats):
-                if "Active" in charstats[g]:
+                if "Active" in charstats[g] or "Unavailable" in charstats[g]:
                     pcharsreg += 1
 
     roles = str(message.author.roles)
@@ -269,12 +269,14 @@ async def charcreate(message):
         #First Character
         emb2.set_footer(text="\n\n----------------------------------\n\nCongratulations! You've registered your first character! Create a tupper for " + determiner + " in <#1050503346374594660> or via the website: https://tupperbox.app/dashboard/list.")
 
-    elif pcharsreg > maxchars-1 and not "Staff" in str(message.author.roles):
+    elif (pcharsreg >= maxchars) and (not "Staff" in str(message.author.roles)):
         #Above maximum
+        await client.get_channel(bridgechannel).send(str(message.author) + " has tried to register too many characters!")
+        await message.channel.send(embed=discord.Embed(title="You are at your character limit aleady!", description="Please retire a character first or buy another slot before registering another."))
+        return
         emb2.set_footer(text="\n\n----------------------------------\n\nYou have more characters registered than you have slots! This character has been set as unavailable. Please retire one of your characters using `$retire name` if you want to play " + determiner + " in the dungeon")
 
-        await client.get_channel(bridgechannel).send(str(message.author) + " has tried to register too many characters!")
-
+        
         #Set Unavailable
         for a in range(len(headers)):
             if headers[a] == "Status":
@@ -507,14 +509,38 @@ async def charedit(interaction, character: str = None, attribute: str = None, va
                         author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(interaction.user.id) in x][0])
                         additionalCharSlots = GlobalVars.economyData[author_row_index+2][1]
                         maxchars = startingslots + int(additionalCharSlots)
+                        
+                        #count active characters
+                        pnames = sheet.values().get(spreadsheetId = CharSheet, range = "B1:B4000").execute().get("values")
 
-                        if len(chars) < maxchars:
+                        targname = interaction.user.name
+                    
+                        pindex = []
+                        active_chars = 0
+                        for i in range(len(pnames)):
+                            if pnames[i][0].lower() == targname.lower():
+                                pindex.append(i)
+                    
+                        if pindex != []:
+                            charreg = sheet.values().get(spreadsheetId = CharSheet, range = "A1:AB" + str(pindex[-1]+1)).execute().get("values")
+                            for j in range(len(pindex)):
+                            
+                                #Get Char data
+                                cstat = str(charreg[pindex[j]][23])
+                                
+                                if cstat == "Active":
+                                    active_chars += 1
+
+
+
+                        if active_chars < maxchars:
                             if currentstat != "Unavailable":
                                 statoptions.append("Unavailable")
                             if currentstat != "Active":
                                 statoptions.append("Active")
                         else:
                             statoptions.append("Unavailable")
+                            await interaction.channel.send(embed = discord.Embed(title = "You have more characters registered than you have slots.", colour = embcol))
 
                         if currentstat != "Retired":
                             statoptions.append("Retired")
@@ -991,7 +1017,7 @@ async def displaychar(cindex, interaction, csheet):
     player = "The name of the recipient. Use @username."
 )
 @app_commands.checks.has_role("Verified")
-async def charlist(interaction, player:str=None):
+async def catalogue(interaction, player:str=None):
     await interaction.response.defer(ephemeral=True, thinking=False)
 
     csheet = gc.open_by_key(CharSheet).get_worksheet(0)
