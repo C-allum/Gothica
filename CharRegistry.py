@@ -171,7 +171,7 @@ async def charcreate(message):
 
                         if str(headers[i]) == "Age" and isinstance(arg,int):
                             if int(arg) < 18:
-                                await client.get_channel(logchannel).send(str(message.author) + " has tried to register a character under 18")
+                                await client.get_channel(bridgechannel).send(str(message.author) + " has tried to register a character under 18")
 
                         if str(headers[i]) == "Class":
 
@@ -183,7 +183,7 @@ async def charcreate(message):
                             #Test Character Level from sum
 
                             if lvltot > 14:
-                                await client.get_channel(logchannel).send(str(message.author) + " has tried to register a character over level 14")
+                                await client.get_channel(bridgechannel).send(str(message.author) + " has tried to register a character over level 14")
 
                             char[i+namecol+1] = lvltot
 
@@ -191,7 +191,7 @@ async def charcreate(message):
 
                         if str(headers[i]) == "Level" and isinstance(arg,int):
                             if int(arg) > 14:
-                                await client.get_channel(logchannel).send(str(message.author) + " has tried to register a character over level 14")
+                                await client.get_channel(bridgechannel).send(str(message.author) + " has tried to register a character over level 14")
 
                         if str(headers[i]) == "Image" and hasimage:
                             arg = message.attachments[0].url
@@ -231,20 +231,18 @@ async def charcreate(message):
     auth = message.author.name
 
     autres = sheet.values().get(spreadsheetId = CharSheet, range = "B2:B4000").execute()
-    authvalues = str(autres.get("values"))
-    authvalues = authvalues.replace("'","")
-    pnames = authvalues.split(",")
+    authvalues = autres.get("values")
+    pnames = [x[0] for x in authvalues]
 
     statres = sheet.values().get(spreadsheetId = CharSheet, range = "X2:X4000").execute()
-    statvalues = str(statres.get("values"))
-    statvalues = statvalues.replace("'","")
-    charstats = statvalues.split(",")
+    statvalues = statres.get("values")
+    charstats = [x[0] for x in statvalues]
 
     pcharsreg = 0
 
     for g in range(len(pnames)):
-        if pnames[g].replace('[', '').replace(']', '').replace(' ', '') == auth :
-            if g <= len(charstats):
+        if pnames[g] == auth :
+            if g <= len(charstats) - 1:
                 if "Active" in charstats[g] or "Unavailable" in charstats[g]:
                     pcharsreg += 1
 
@@ -269,9 +267,9 @@ async def charcreate(message):
         #First Character
         emb2.set_footer(text="\n\n----------------------------------\n\nCongratulations! You've registered your first character! Create a tupper for " + determiner + " in <#1050503346374594660> or via the website: https://tupperbox.app/dashboard/list.")
 
-    elif (pcharsreg >= maxchars) and (not "Staff" in str(message.author.roles)):
+    elif (pcharsreg >= maxchars):# and (not "Staff" in str(message.author.roles)):
         #Above maximum
-        await client.get_channel(bridgechannel).send(str(message.author) + " has tried to register too many characters!")
+        await client.get_channel(bridgechannel).send(str(message.author) + f" has tried to register too many characters! You have {pcharsreg} characters registered, and {maxchars} slots.")
         await message.channel.send(embed=discord.Embed(title="You are at your character limit aleady!", description="Please retire a character first or buy another slot before registering another."))
         return
         emb2.set_footer(text="\n\n----------------------------------\n\nYou have more characters registered than you have slots! This character has been set as unavailable. Please retire one of your characters using `$retire name` if you want to play " + determiner + " in the dungeon")
