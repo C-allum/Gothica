@@ -269,8 +269,8 @@ async def charcreate(message):
 
     elif (pcharsreg >= maxchars):# and (not "Staff" in str(message.author.roles)):
         #Above maximum
-        await client.get_channel(bridgechannel).send(str(message.author) + f" has tried to register too many characters! You have {pcharsreg} characters registered, and {maxchars} slots.")
-        await message.channel.send(embed=discord.Embed(title="You are at your character limit aleady!", description="Please retire a character first or buy another slot before registering another."))
+        await client.get_channel(bridgechannel).send(str(message.author) + f" has tried to register too many characters!")
+        await message.channel.send(embed=discord.Embed(title="You are at your character limit aleady!", description=f"Please retire a character first or buy another slot before registering another. You have {pcharsreg} characters registered, and {maxchars} slots."))
         return
         emb2.set_footer(text="\n\n----------------------------------\n\nYou have more characters registered than you have slots! This character has been set as unavailable. Please retire one of your characters using `$retire name` if you want to play " + determiner + " in the dungeon")
 
