@@ -267,7 +267,7 @@ async def charcreate(message):
         #First Character
         emb2.set_footer(text="\n\n----------------------------------\n\nCongratulations! You've registered your first character! Create a tupper for " + determiner + " in <#1050503346374594660> or via the website: https://tupperbox.app/dashboard/list.")
 
-    elif (pcharsreg >= maxchars):# and (not "Staff" in str(message.author.roles)):
+    elif (pcharsreg >= maxchars) and (not "Staff" in str(message.author.roles)):
         #Above maximum
         await client.get_channel(bridgechannel).send(str(message.author) + f" has tried to register too many characters!")
         await message.channel.send(embed=discord.Embed(title="You are at your character limit aleady!", description=f"Please retire a character first or buy another slot before registering another. You have {pcharsreg} characters registered, and {maxchars} slots."))
