@@ -3086,8 +3086,11 @@ async def addItemToInventory(recipient_inventory_row_index, item_identifier, qua
 async def removeItemFromInventory(inventory_row_index, item_inventory_index, quantity):
     deleted = False
     #Remove items from inventory
+
+    # Remove quantity from the amount they have
     if quantity < int(GlobalVars.inventoryData[inventory_row_index+1][item_inventory_index]):
         GlobalVars.inventoryData[inventory_row_index+1][item_inventory_index] = int(GlobalVars.inventoryData[inventory_row_index+1][item_inventory_index]) - quantity
+    # If the player wants to sell all items from a type they have, remove it from the inventory.    
     elif quantity == int(GlobalVars.inventoryData[inventory_row_index+1][item_inventory_index]):
         del GlobalVars.inventoryData[inventory_row_index][item_inventory_index]
         GlobalVars.inventoryData[inventory_row_index].append("")

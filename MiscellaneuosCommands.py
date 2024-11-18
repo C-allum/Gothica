@@ -389,7 +389,7 @@ async def spellrotate():
 #Guides the user through giving an item
 @tree.command(
         name="scenes",
-        description="Manage tracked scenes"
+        description="Simply press enter after choosing an action. We will guide you through it."
 )
 @app_commands.choices(action=[
     app_commands.Choice(name="List", value="list"),
