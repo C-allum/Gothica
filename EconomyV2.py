@@ -620,14 +620,19 @@ async def sellitem(interaction, item:str = None, quantity:int = 1):
         #Remove items from inventory
         if await removeItemFromInventory(inventory_row_index, invindex+2, quantity):
             pass
-        #     #Add stock to the inventory of the shop
-        #     item_row_index = GlobalVars.itemdatabase[sell_shop_index].index([x for x in GlobalVars.itemdatabase[sell_shop_index] if item_identifier in x][0])
-        #     if GlobalVars.itemdatabase[sell_shop_index][item_row_index][18] == "":
-        #         new_stock = ""
-        #     else:
-        #         new_stock = int(GlobalVars.itemdatabase[sell_shop_index][item_row_index][18]) + sellquant
 
-#             #Add dezzies
+
+        # Replace the "pass" above with this code, and determine the sell_shop_index if we ever want sell to restock the shops.
+        #    #Add stock to the inventory of the shop
+        #    item_row_index = GlobalVars.itemdatabase[sell_shop_index].index([x for x in GlobalVars.itemdatabase[sell_shop_index] if item_identifier in x][0])
+        #    if GlobalVars.itemdatabase[sell_shop_index][item_row_index][18] == "":
+        #        new_stock = ""
+        #    else:
+        #        new_stock = int(GlobalVars.itemdatabase[sell_shop_index][item_row_index][18]) + sellquant
+        else:
+            await interaction.channel.send(embed = discord.Embed(title = str(f"Failed to remove item from {interaction.user.name}'s inventory", description="Please contact Kendrax about it." ), colour = embcol))
+            return
+        #Add dezzies
         
         await addDezziesToPlayer(interaction, int(int(sellprice) * quantity), playerID=interaction.user.id, write_econ_sheet=False)
         await interaction.channel.send(embed = discord.Embed(title = str(f"{interaction.user.name} sold {quantity} {itname} for {int(int(sellprice) * quantity)}"), colour = embcol))
@@ -636,14 +641,6 @@ async def sellitem(interaction, item:str = None, quantity:int = 1):
         await writeEconSheet(GlobalVars.economyData)
         await writeInvetorySheet(GlobalVars.inventoryData)
         #await writeItemsheetCell(sell_shop_index, item_row_index, 18, new_stock)
-
-        if newquant == 0: #Clean up the internal inventory representation from trailing spaces
-            del GlobalVars.inventoryData[inventory_row_index][-1]
-            del GlobalVars.inventoryData[inventory_row_index+1][-1]
-            try:
-                del GlobalVars.inventoryData[inventory_row_index+2][-1]
-            except IndexError: #If we get an index error, that cell wasn't occupied anyways and was a trailing cell.
-                pass
             
         TransactionsDatabaseInterface.addTransaction(interaction.user.name, TransactionsDatabaseInterface.DezzieMovingAction.Sell, int(int(sellprice) * GlobalVars.config['economy']['sellpricemultiplier']) * quantity)
 
@@ -3103,7 +3100,6 @@ async def removeItemFromInventory(inventory_row_index, item_inventory_index, qua
         except IndexError: #If we get an index error, that cell wasn't occupied anyways and was a trailing cell.
             pass
     else:
-        await message.channel.send(embed=discord.Embed(title=f"You have less than {quantity} of selected item in your inventory!", description="You cannot sell more than you own! It's not the stock market!", colour = embcol))
         return False
         
     await writeInvetorySheet(GlobalVars.inventoryData)
