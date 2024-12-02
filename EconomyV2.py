@@ -264,14 +264,15 @@ async def item(interaction, item_name:str):
         description="Displays your or another persons inventory"
 )
 @app_commands.describe(
-    player = "Optional: The name of the player whose inventory you want to see. Use @username."
+    player = "Optional: The player whose inventory you want to see."
 )
 @app_commands.checks.has_role("Verified")
-async def inventory(interaction, player:str=""):
+async def inventory(interaction, player: discord.Member = None):
     await interaction.response.defer(ephemeral=True, thinking=False)
     #Find person in the inventory sheet
-    if player != "":
-        name, id = await getUserNamestrInteraction(interaction, player)
+    if player != None:
+        name = player.name
+        id = player.id
     else:
         id = str(interaction.user.id)
     author_row_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if str(id) in x][0])
@@ -652,12 +653,12 @@ async def sellitem(interaction, item:str = None, quantity:int = 1):
         description="Give an item to another person"
 )
 @app_commands.describe(
-    recipient = "The name of the recipient. Use @username.",
+    recipient = "The name of the recipient.",
     amount = "Enter the amount you want to give them"
 )
 @app_commands.checks.has_role("Verified")
 #Guides the user through buying an item
-async def giveitem(interaction, recipient:str, amount:int=0):
+async def giveitem(interaction, recipient:discord.Member, amount:int=0):
     await interaction.response.defer(ephemeral=True, thinking=False)
     if amount < 1:
         await interaction.channel.send(embed=discord.Embed(title=f"Negative numbers are cool", description="Scamming shopkeepers is not though. Try again when you *actually* want to give something away. Be glad we had a good day, otherwise we would take your items anyways for trying. We want to hear a 'Thank you, Gothica'", colour = embcol))
@@ -667,7 +668,8 @@ async def giveitem(interaction, recipient:str, amount:int=0):
     author_inventory_row_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if str(interaction.user.id) in x][0])
 
     #Find recipient in the inventory sheet
-    recipient_name, recipient_id = await getUserNamestrInteraction(interaction, recipient)
+    recipient_name = recipient.name
+    recipient_id = recipient.id
     recipient_inventory_row_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if str(recipient_id) in x][0])
 
     
@@ -736,17 +738,18 @@ async def giveitem(interaction, recipient:str, amount:int=0):
         description="Add an item from the shops to a players inventory"
 )
 @app_commands.describe(
-    recipient = "The name of the recipient. Use @username.",
+    recipient = "The name of the recipient.",
     searchterm = "The name of the item. Doesn't have to be accurate.",
     amount = "Enter the amount you want to buy"
 )
 @app_commands.default_permissions(manage_messages=True)
 @app_commands.checks.has_role("Staff")
 #Guides a staff member through adding an item to a players inventory
-async def additem(interaction, recipient:str, searchterm:str, amount:int=1):
+async def additem(interaction, recipient:discord.Member, searchterm:str, amount:int=1):
     await interaction.response.defer(ephemeral=True, thinking=False)
     #Find person in the inventory sheet
-    recipient_name, recipient_id = await getUserNamestrInteraction(interaction, recipient)
+    recipient_name = recipient.name
+    recipient_id = recipient.id
     recipient_inventory_row_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if str(recipient_id) in x][0])
 
     #Check if quantity was provided
@@ -1107,18 +1110,19 @@ async def giftAll(interaction, amount:int):
         description="Give dezzies to another person"
 )
 @app_commands.describe(
-    recipient = "The name of the recipient. Use @username.",
+    recipient = "The name of the recipient.",
     amount = "Enter the amount of dezzies you want to give them"
 )
 #Guides a player through giving money to another player
-async def giveMoney(interaction, recipient:str, amount:int):
+async def giveMoney(interaction, recipient:discord.Member, amount:int):
     await interaction.response.defer(ephemeral=True, thinking=False)
 
     amount = amount
     if int(amount) < 1:
         await interaction.channel.send(embed=discord.Embed(title="Can't give zero or negative dezzies! The sentence for thievery in the dungeon is one hour in the public stocks!", colour = embcol))
         return
-    recipient_name, recipient_id = await getUserNamestrInteraction(interaction, recipient)
+    recipient_name = recipient.name
+    recipient_id = recipient.id
     if recipient_id == interaction.user.id:
         await interaction.channel.send(embed=discord.Embed(title="Can't give yourself dezzies!", colour = embcol))
         return
@@ -1145,13 +1149,13 @@ async def giveMoney(interaction, recipient:str, amount:int):
         description="Adds dezzies to someones balance"
 )
 @app_commands.describe(
-    recipient = "The name of the recipient. Use @username.",
+    recipient = "The name of the recipient.",
     amount = "Enter the amount of dezzies you want to gift to the recipient"
 )
 @app_commands.default_permissions(manage_messages=True)
 @app_commands.checks.has_role("Staff")
 #Guides a staff member through adding money to a players balance
-async def addMoney(interaction, recipient:str, amount:int):
+async def addMoney(interaction, recipient:discord.Member, amount:int):
     await interaction.response.defer(ephemeral=True, thinking=False)
 
     amount = amount
@@ -1159,7 +1163,8 @@ async def addMoney(interaction, recipient:str, amount:int):
         await interaction.channel.send(embed=discord.Embed(title="You cannot add negative amounts of dezzies!",description=f"Use %removemoney instead!", colour = embcol))
         return
     
-    recipient_name, recipient_id = await getUserNamestrInteraction(interaction, recipient)
+    recipient_name = recipient.name
+    recipient_id = recipient.id
     recipient_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(recipient_id) in x][0])
     await addDezziesToPlayer(interaction, int(amount), playerID=recipient_id, write_econ_sheet=True, send_message=True)
     
@@ -1171,15 +1176,16 @@ async def addMoney(interaction, recipient:str, amount:int):
         description="Removes dezzies from someones balance"
 )
 @app_commands.describe(
-    recipient = "The name of the recipient. Use @username.",
+    recipient = "The name of the recipient.",
     amount = "Enter the amount of dezzies you want to take away from the recipient"
 )
 @app_commands.default_permissions(manage_messages=True)
 @app_commands.checks.has_role("Staff")
 #Guides staff member through removing money from a players balance
-async def removeMoney(interaction, recipient:str, amount:int):
+async def removeMoney(interaction, recipient:discord.Member, amount:int):
     await interaction.response.defer(ephemeral=True, thinking=False)
-    recipient_name, recipient_id = await getUserNamestrInteraction(interaction, recipient)
+    recipient_name = recipient.name
+    recipient_id = recipient.id
     recipient_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(recipient_id) in x][0])
     if await removeDezziesFromPlayerWithoutMessage(int(amount), recipient_id):
         new_balance = GlobalVars.economyData[recipient_row_index+1][1]
@@ -1274,16 +1280,17 @@ async def useitem(interaction):
         description="Displays your dezzie balance."
 )
 @app_commands.describe(
-    player = "OPTIONAL: The name of the recipient. Use @username. Leave empty to see your own balance."
+    player = "OPTIONAL: The name of the recipient. Leave empty to see your own balance."
 )
 @app_commands.checks.has_role("Verified")
-async def money(interaction, player:str=""):
+async def money(interaction, player:discord.Member = None):
     await interaction.response.defer(ephemeral=True, thinking=False)
-    if player == "":
+    if player == None:
         id = interaction.user.id
         name  = interaction.user.name
     else:
-        name, id = await getUserNamestrInteraction(interaction, player)
+        name = player.name
+        id = player.id
     author_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(id) in x][0])
     balance = GlobalVars.economyData[author_row_index+1][1]
     leaderboard_list = []
@@ -1477,16 +1484,17 @@ async def invest(interaction, amount:int):
         description="displays your income for the last 7 days"
 )
 @app_commands.describe(
-    player = "OPTIONAL: Leave empty to see your own income. The name of the player. Use @username.",
+    player = "OPTIONAL: The name of the player whose income you want to see. Leave empty to see your own income.",
 
 )
 @app_commands.checks.has_role("Verified")
-async def incomeWeek(interaction, player:str=""):
+async def incomeWeek(interaction, player:discord.Member = None):
     await interaction.response.defer(ephemeral=True, thinking=False)
-    if player == "":
+    if player == None:
         name = interaction.user.name
     else:
-        name, id = await getUserNamestrInteraction(interaction, player)
+        name = player.name
+        id = player.id
     income = await TransactionsDatabaseInterface.playerTransactionsInfo(name, "7 Days")
     
     incomeString = ""
@@ -2551,7 +2559,10 @@ async def rpDezReact(reaction):
     mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)
     #Get unique tupper img id
     tup_image_url = mess.author.display_avatar
-
+    if mess.author.id == 876440980356755456:
+        await client.get_channel(botchannel).send(embed=discord.Embed(title = f"Do not feed us Dezzies.", description = "We will get tummy aches.", colour = embcol, url = mess.jump_url))
+        return
+        
     #Check if tupper img id in database, if not, check if name + player id combination is. If name + playerid is, update image.
     try:
         playerID, imgURL, charName = await TupperDatabase.lookup(tup_image_url, mess)
@@ -2704,12 +2715,12 @@ async def addUserToEconomy(name, id, last_message_time = datetime.timestamp(date
 #Updates the economy sheet - Needs to be called on startup or on manual changes to the sheet
 async def loadEconomySheet():
     async with economy_lock:
-        GlobalVars.economyData = sheet.values().get(spreadsheetId = inventorysheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
+        GlobalVars.economyData = sheet.values().get(spreadsheetId = inventorysheet, range = "A1:ZZ16000", majorDimension='ROWS').execute().get("values")
     await loadInventorySheet()
 
     return
 #Writes to the economy sheet. Optional argument "range" used for instances where we only want to write a few or a single cell of the sheet instead of all cells.
-async def writeEconSheet(values, range = "A1:ZZ8000"):
+async def writeEconSheet(values, range = "A1:ZZ16000"):
     #in case we write a single value
     async with economy_lock:
         if not (":" in range):
@@ -2723,10 +2734,10 @@ async def writeEconSheet(values, range = "A1:ZZ8000"):
 #Loads the current Inventory Sheet state. This is not kept internally, so we need to call this every time we work on the sheet.
 async def loadInventorySheet():
     async with economy_lock:
-        GlobalVars.inventoryData = sheet.values().get(spreadsheetId = inventorysheet, range = "Inventories!A1:ZZ8000", majorDimension = 'ROWS').execute().get("values")
+        GlobalVars.inventoryData = sheet.values().get(spreadsheetId = inventorysheet, range = "Inventories!A1:ZZ16000", majorDimension = 'ROWS').execute().get("values")
 
 #Writes values to the Inventory sheet. Optional argument "range" used for instances where we only want to write a few or a single cell of the sheet instead of all cells.
-async def writeInvetorySheet(values, range = "A1:ZZ8000"):
+async def writeInvetorySheet(values, range = "A1:ZZ16000"):
     async with economy_lock:
         #in case we write a single value
         if not (":" in range):
