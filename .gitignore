@@ -6,7 +6,9 @@ __pycache__/*
 .vs/*
 .vscode/launch.json
 *.pyc
-CLDTupper.db
+*.db
 .venv/
 venv/
 persistent_views.json
+
+

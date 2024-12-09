@@ -45,6 +45,9 @@ economy:
   weeklydezziepoolplus2: 800
   weeklydezziepoolplus3: 1000
   weeklydezziepoolverified: 500
+events:
+  christmas_gifts: 1
+  christmas_naughty_nice: 1
 experience:
   characterslot_levels:
   - 5

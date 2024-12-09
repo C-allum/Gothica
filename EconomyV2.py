@@ -8,6 +8,7 @@ import TransactionsDatabaseInterface
 from discord import app_commands
 from typing import Literal
 import ssl
+import Christmas2024
 
 economy_lock = asyncio.Lock() 
 add_dezzie_lock = asyncio.Lock()
@@ -2529,8 +2530,10 @@ async def dezReact(reaction):
                 else:
                     await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(GlobalVars.economyData[reciprow+1][1]) + dezzieemj + "\n\n" + givename + " has " + str(GlobalVars.economyData[giverow+3][0]) + dezzieemj + " in their dezzie award pool left for the week!", colour = embcol, url = mess.jump_url))
 
-                await client.get_channel(918257057428279326).send(embed=discord.Embed(title = givename + " awarded Dezzies to " + targetName, url=mess.jump_url))
-
+                await client.get_channel(logchannel).send(embed=discord.Embed(title = givename + " awarded Dezzies to " + targetName, url=mess.jump_url))
+                # Christmas Stocking stuffer gifts event
+                if GlobalVars.config["events"]["christmas_gifts"] == 1:
+                    await Christmas2024.roll_for_christmas_dez_reward_item(reaction.member, mess, giveamount)
             #User has less dezzies in their pool than they reacted with
             elif prevDezziePool > 0:
                 newDezziePool = 0
@@ -2546,8 +2549,11 @@ async def dezReact(reaction):
                 await writeEconSheet(GlobalVars.economyData)
                 TransactionsDatabaseInterface.addTransaction(target.name, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
                 await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(GlobalVars.economyData[reciprow+1][1]) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
-                await client.get_channel(918257057428279326).send(embed=discord.Embed(title = givename + " awarded Dezzies to " + targetName, url=mess.jump_url))
-
+                await client.get_channel(logchannel).send(embed=discord.Embed(title = givename + " awarded Dezzies to " + targetName, url=mess.jump_url))
+                
+                # Christmas Stocking stuffer gifts event
+                if GlobalVars.config["events"]["christmas_gifts"] == 1:
+                    await Christmas2024.roll_for_christmas_dez_reward_item(reaction.member, mess, giveamount)
             #User dezzie pool is empty:
             else:
                 await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + "'s dezzie award pool for the week is empty!" , description = "You will receive a fresh pool of dezzies to award to others at the start of next week!", colour = embcol, url = mess.jump_url))
@@ -2569,7 +2575,7 @@ async def rpDezReact(reaction):
     except TypeError:
         giveid = reaction.member.id
         giver = await client.fetch_user(giveid)
-        await client.get_channel(botchannel).send(embed=discord.Embed(title = str(giver.display_name) + ": The post you tried to award is too old, or was too long (< ~2000 characters) and edited.", description = "The first time a character is awarded dezzies, the post has to be rather new and can't be a long, edited post! Try awarding a different, unedited post of that character. If the issue persists, contact the bot gods.", colour = embcol, url = mess.jump_url))
+        await client.get_channel(botchannel).send(embed=discord.Embed(title = str(giver.display_name) + ": We didn't find the tupper in our database.", description = "The first time a character is awarded dezzies, the post has to be rather new and can't be a long, edited post! Try awarding a different, unedited post of that character. If the issue persists, contact the bot gods. (Note from Kendrax: This is a known bug and I have no clue why this happens.)", colour = embcol, url = mess.jump_url))
         return
 
     #economydata = sheet.values().get(spreadsheetId = EconSheet, range = "A1:ZZ8000", majorDimension='ROWS').execute().get("values")
@@ -2657,7 +2663,11 @@ async def rpDezReact(reaction):
                 else:
                     await client.get_channel(botchannel).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(reward) + dezzieemj + " to " + targetName + " for an RP message", description = targetName + " now has " + str(GlobalVars.economyData[int(reciprow)+1][1]) + dezzieemj + "\n\n" + givename + " has " + str(GlobalVars.economyData[int(giverow)+3][0]) + dezzieemj + " in their dezzie award pool left for the week! (RP Rewards award 25% more while costing the same!)", colour = embcol, url = mess.jump_url))
 
-                await client.get_channel(918257057428279326).send(embed=discord.Embed(title = givename + " awarded Dezzies to " + targetName, url=mess.jump_url))
+                await client.get_channel(logchannel).send(embed=discord.Embed(title = givename + " awarded Dezzies to " + targetName, url=mess.jump_url))
+
+                # Christmas Stocking stuffer gifts event
+                if GlobalVars.config["events"]["christmas_gifts"] == 1:
+                    await Christmas2024.roll_for_christmas_dez_reward_item(reaction.member, mess, giveamount)
 
             #User has less dezzies in their pool than they reacted with
             elif prevDezziePool > 0:
@@ -2675,7 +2685,11 @@ async def rpDezReact(reaction):
                 TransactionsDatabaseInterface.addTransaction(target.name, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
 
                 await client.get_channel(botchannel).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(reward) + dezzieemj + " to " + targetName + " for an RP message", description = targetName + " now has " + str(GlobalVars.economyData[int(reciprow)+1][1]) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
-                await client.get_channel(918257057428279326).send(embed=discord.Embed(title = givename + " awarded Dezzies to " + targetName, url=mess.jump_url))
+                await client.get_channel(logchannel).send(embed=discord.Embed(title = givename + " awarded Dezzies to " + targetName, url=mess.jump_url))
+
+                # Christmas Stocking stuffer gifts event
+                if GlobalVars.config["events"]["christmas_gifts"] == 1:
+                    await Christmas2024.roll_for_christmas_dez_reward_item(reaction.member, mess, giveamount)
 
             #User dezzie pool is empty:
             else:

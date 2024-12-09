@@ -89,7 +89,7 @@ async def lookup(imgURL:str, message:discord.Message):
     tupperDBConnection = sqlite3.connect('CLDTupper.db')
     tupperCursor = tupperDBConnection.cursor()
     imgURL = imgURL.key
-    print(imgURL)
+    #print(imgURL)
     tupperCursor.execute(f'''SELECT PlayerID, ImgURL, CharName FROM Tuppers WHERE ImgURL = ('{imgURL}')''')
     data=tupperCursor.fetchall()
     
