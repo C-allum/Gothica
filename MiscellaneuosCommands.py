@@ -10,6 +10,7 @@ import EconomyV2
 from discord import app_commands
 from typing import List
 import CharRegistry
+import CustomSlashDecorator
 
 @tree.command(name = "vacation", description = "Toggles the user's staff vacation state")
 @app_commands.checks.has_any_role("Staff", "Staff Vacation")
@@ -578,189 +579,6 @@ async def scenes(interaction: discord.Interaction, action: str):
     await interaction.followup.send("Action was not recognized, task aborted.", ephemeral=True)
     return
 
-
-#TODO: Complete rewrite eventually
-# async def scenes(message):
-#     await message.delete()
-
-#     waitmess = await message.channel.send("We are processing your request now.")
-#     author_scenes_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if str(message.author.id) in x][0]) + 2
-
-#     if len(GlobalVars.economyData[author_scenes_index]) > 0 and not GlobalVars.economyData[author_scenes_index][0] == "":
-#         if len(GlobalVars.economyData[author_scenes_index][0]) == 1:
-#             prevscenes = [GlobalVars.economyData[author_scenes_index][0]]
-#         else:
-#             prevscenes = GlobalVars.economyData[author_scenes_index][0].split("|")
-#     else:
-#         prevscenes = ""
-#         await message.channel.send(embed = discord.Embed(title = "You have no scenes tracked.", description = "Add one using:\n\n`%scenes add Brief Scene Description #Channel Name`\n\nFor example, to watch the a particular scene in the cantina, you might type:\n\n`%scenes add Dinner Date #<832842032073670676>`", colour = embcol))
-
-#     #Scenes add
-#     if message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "scenes add"):
-#         scenestr = message.content.split(" ", 2)[2]
-
-#         if scenestr.replace(" ", "") == "":
-#             await message.channel.send("Add help here")
-
-#         else:
-#             if prevscenes != "":
-#                 scenelist = "|".join(prevscenes) + "|" + scenestr
-#             else:
-#                 scenelist = scenestr
-#             GlobalVars.economyData[author_scenes_index][0] = scenelist
-#             await EconomyV2.writeEconSheet(GlobalVars.economyData)
-#         await message.channel.send(embed = discord.Embed(title = "Added to your scenes", description = "We have added '" + scenestr + "' to your tracked scenes.", colour = embcol))
-
-#     else:
-#         if "|" in prevscenes:
-#             prevs = prevscenes.split("|")
-
-#         else:
-#             prevs = prevscenes
-
-#         if prevs != "":
-#             prevlist = []
-#             prevscenelist = []
-#             for a in range(0, len(prevs)):
-#                 if "#" in prevs[a]:
-#                     try:
-#                         sceneno = int(prevs[a].split("#")[1].split(">")[0])
-
-#                         if (not "remove" in message.content.lower()) and (not "notif" in message.content.lower()):
-#                             try:
-#                                 #last = await client.get_channel(sceneno).history(limit=1, oldest_first=False).flatten()
-#                                 last = [joinedMessages async for joinedMessages in client.get_channel(sceneno).history(limit=1, oldest_first=False)] #Fix for pebblehost Await issue
-#                                 prevlist.append(str("`" + str(a+1) + "` " + str(prevs[a]) + " - Last message by: " + last[0].author.name))
-
-#                             except AttributeError:
-#                                 prevname = ""
-#                                 prevlist.append(str("`" + str(a+1) + "` " + str(prevs[a]) + " - Thread archived or channel deleted."))
-
-#                         else:
-#                             prevlist.append(str("`" + str(a+1) + "` " + str(prevs[a])))
-#                             prevscenelist.append(str(prevs[a]))
-
-#                     except ValueError:
-#                         prevlist.append(str("`" + str(a+1) + "` " + str(prevs[a])))
-
-#                 else:
-#                     prevlist.append(str("`" + str(a+1) + "` " + str(prevs[a])))
-
-#             if "remove" in message.content.lower():
-#                 scenetemp = await message.channel.send(embed = discord.Embed(title = "Type the number of the scene to stop tracking", description= "\n".join(prevlist), colour = embcol))
-#                 try:
-#                     scenerechoice = await client.wait_for('message', timeout = 30, check = check(message.author))
-#                     await scenerechoice.delete()
-#                     try:
-#                         scenenum = int(scenerechoice.content)
-#                         prevs = prevs[:scenenum-1] + prevs[scenenum:]
-#                         await message.channel.send(embed = discord.Embed(title = "Scene removed", description = "The requested scene has been removed from your tracked scene list.", colour = embcol))
-#                         if len(prevs) > 1:
-#                             GlobalVars.economyData[author_scenes_index][0] = "|".join(prevs)
-#                             await EconomyV2.writeEconSheet(GlobalVars.economyData)
-#                         elif len(prevs) == 0:
-#                             GlobalVars.economyData[author_scenes_index][0] = ""
-#                             await EconomyV2.writeEconSheet(GlobalVars.economyData)
-#                         else:
-#                             GlobalVars.economyData[author_scenes_index][0] = prevs[0]
-#                             await EconomyV2.writeEconSheet(GlobalVars.economyData) 
-
-#                     except TypeError:
-#                         await message.channel.send("Value not recognised")
-
-#                 except TimeoutError:
-#                     await message.channel.send("Selection Timed Out")
-
-#             elif "notif" in message.content.lower() and "all" in message.content.lower():
-#                 for scenenum in range(0, len(prevs)):
-#                     try:
-#                         trackedStatus = prevs[scenenum].split(" ")[-1]
-#                         if (" off" in message.content.lower() or " disable"in message.content.lower()) and "Enabled" in trackedStatus:
-#                             splitScene = prevs[scenenum].rsplit(" ", 1)
-#                             splitScene [-1]= " Notifications:Disabled"
-#                             prevs[scenenum] = "".join(splitScene)
-
-#                         elif (" on" in message.content.lower() or " enable" in message.content.lower()) and "Disabled" in trackedStatus:
-#                             splitScene = prevs[scenenum].rsplit(" ", 1)
-#                             splitScene [-1]= " Notifications:Enabled"
-#                             prevs[scenenum] = "".join(splitScene)
-
-#                         elif not "Enabled" in trackedStatus and not "Disabled" in trackedStatus:
-#                             if " off" in message.content.lower() or " disable" in message.content.lower():
-#                                 prevs[scenenum] = prevs[scenenum] + (" Notifications:Disabled")
-
-#                             elif " on" in message.content.lower() or " enable" in message.content.lower():
-#                                 prevs[scenenum] = prevs[scenenum] + (" Notifications:Enabled")
-#                             else: 
-#                                 await message.channel.send(embed = discord.Embed(title = "Wrong use of the command!", description = "Include `on` or `off` at the end of this command to specify how you want all scenes toggled.", colour = embcol))
-#                                 return
-#                         elif not " off" in message.content.lower() and not " disable" in message.content.lower() and not " on" in message.content.lower() and not " enable" in message.content.lower():
-#                             await message.channel.send(embed = discord.Embed(title = "Wrong use of the command!", description = "Include `on` or `off` at the end of this command to specify how you want all scenes toggled.", colour = embcol))
-#                             return
-
-#                     except TypeError:
-#                         await message.channel.send("Value not recognised")
-#                 #Save new scenes field to sheet.
-#                 if len(prevs) > 1:
-#                     GlobalVars.economyData[author_scenes_index][0] = "|".join(prevs)
-#                     await EconomyV2.writeEconSheet(GlobalVars.economyData)
-#                 elif len(prevs) == 0:
-#                     GlobalVars.economyData[author_scenes_index][0] = ""
-#                     await EconomyV2.writeEconSheet(GlobalVars.economyData)
-#                 else:
-#                     GlobalVars.economyData[author_scenes_index][0] = prevs[0]
-#                     await EconomyV2.writeEconSheet(GlobalVars.economyData)
-#                 if " off" in message.content:
-#                     await message.channel.send(embed = discord.Embed(title = "Scene notifications disabled on all tracked scenes", description = "The notfication function for the all scenes has been disabled. It is now enabled and we will notify you of new messages for your scenes.", colour = embcol))
-#                 if " on" in message.content:
-#                     await message.channel.send(embed = discord.Embed(title = "Scene notifications enabled on all tracked scenes", description = "The notfication function for the all scenes has been enabled. It is now enabled and we will notify you of new messages for your scenes.", colour = embcol))
-
-#             elif "notif" in message.content:
-#                 #Make user choose the scene to toggle
-#                 scenetemp = await message.channel.send(embed = discord.Embed(title = "Type the number of the scene to toggle notifications for", description= "\n".join(prevlist), colour = embcol))
-
-#                 try:
-#                     scenerechoice = await client.wait_for('message', timeout = 30, check = check(message.author))
-#                     scenenum = int(scenerechoice.content) - 1
-
-#                     try:
-#                         trackedStatus = prevs[scenenum].split(" ")[-1]
-#                         if trackedStatus == "Notifications:Enabled":
-#                             splitScene = prevs[scenenum].rsplit(" ", 1)
-#                             splitScene [-1]= " Notifications:Disabled"
-#                             prevs[scenenum] = "".join(splitScene)
-#                             await message.channel.send(embed = discord.Embed(title = "Scene notifications disabled", description = "The notfication function for the requested scene has been toggled. It is now disabled and we will not notify you of new messages for that scene.", colour = embcol))
-
-
-#                         elif trackedStatus == "Notifications:Disabled":
-#                             splitScene = prevs[scenenum].rsplit(" ", 1)
-#                             splitScene [-1]= " Notifications:Enabled"
-#                             prevs[scenenum] = "".join(splitScene)
-#                             await message.channel.send(embed = discord.Embed(title = "Scene notifications enabled", description = "The notfication function for the requested scene has been toggled. It is now enabled and we will notify you of new messages for that scene.", colour = embcol))
-
-#                         else:
-#                             prevs[scenenum] = prevs[scenenum] + (" Notifications:Enabled")
-#                             await message.channel.send(embed = discord.Embed(title = "Scene notifications enabled", description = "The notfication function for the requested scene has been toggled. It is now enabled and we will notify you of new messages for that scene.", colour = embcol))
-
-#                         #Save new scenes field to sheet.
-#                         if len(prevs) > 1:
-#                             GlobalVars.economyData[author_scenes_index][0] = "|".join(prevs)
-#                             await EconomyV2.writeEconSheet(GlobalVars.economyData)
-#                         elif len(prevs) == 0:
-#                             GlobalVars.economyData[author_scenes_index][0] = ""
-#                             await EconomyV2.writeEconSheet(GlobalVars.economyData)
-#                         else:
-#                             GlobalVars.economyData[author_scenes_index][0] = prevs[0]
-#                             await EconomyV2.writeEconSheet(GlobalVars.economyData) 
-#                     except TypeError:
-#                         await message.channel.send("Value not recognised")
-
-#                 except TimeoutError:
-#                     await message.channel.send("Selection Timed Out")
-#             else:
-#                 await message.channel.send(embed = discord.Embed(title = message.author.name + "'s tracked scenes", description= "\n".join(prevlist), colour = embcol))
-
-#     await waitmess.delete()
 
 async def countscenes(message):
     scenesWithNotifications = 0
@@ -1987,6 +1805,25 @@ async def embed(interaction, title: str, description: str = None, image: str = N
 
     await interaction.followup.send("Embed sent!")
 
+@tree.command(name = "editembed", description = "Edits an Embed")
+@app_commands.describe(embed_to_edit = "Link to the embed that needs editing", title = "The title of the embed", description = "The main body of the embed", image = "A link to the main image for the embed", thumbnail = "A link to the image for the thumbnail")
+@app_commands.checks.has_role("Verified")
+async def editembed(interaction, embed_to_edit: str, title: str, description: str = None, image: str = None, thumbnail: str = None, channel: str = None):
+    await interaction.response.defer(ephemeral=True, thinking=False)
+    print(embed_to_edit)
+    split = embed_to_edit.split("/")
+    embed_channel = client.get_channel(int(split[-2]))
+    embed_message = embed_channel.get_partial_message(int(split[-1]))
+    if description != None:
+        description = description.replace("The Mistress", "T̴̯̳̳̠͚͓͚̂͗̽̾̈́͌̐̅͠ͅh̸̨̫͓͖͎͍͔̠͇̊̂̏͝ę̶͎͇͍̲̮̠̭̮͛̃̈́͑̓̔̚ ̸͙̺̦̮͈̹̮̑̿̊̀̂́͂̿͒̚͜M̶̬͇̤̾͐̊̽̈́̀̀̕͘͝í̸̬͎͔͍̠͓̋͜͠͝s̶̡̡̧̪̺͍̞̲̬̮͆͋̇̐͋͌̒̋͛̕t̷̤̲̠̠̄̊͌̀͂̈́̊̎̕ȓ̶̼̂̿̇͛̚e̶̹̪̣̫͎͉̫̫͗s̸̟͉̱͈̞̬̽̽̒̔́̉s̸̛̖̗̜̻̻͚̭͇̈́̀̄͒̅̎")
+
+    if "Staff" in str(interaction.user.roles):
+        await embed_message.edit(embed = discord.Embed(title = title, description = description, colour = embcol).set_image(url = image).set_thumbnail(url = thumbnail))
+    else:
+        await embed_message.edit(embed = discord.Embed(title = title, description = description, colour = embcol).set_image(url = image).set_thumbnail(url = thumbnail).set_author(name = interaction.user.name + "/" + interaction.user.display_name))
+
+    await interaction.followup.send("Embed edited!")
+
 @tree.command(name = "break", description = "Generates a line under a scene, useful for visual separation")
 @app_commands.checks.has_role("Verified")
 async def breakscene(interaction):
@@ -2012,7 +1849,7 @@ async def oocmsg(interaction, message: str, channel: str = None):
 @tree.command(name = "verify", description = "Verifies a user and adds them to the economy.")
 @app_commands.describe(user = "The user to verify. This should be in the form of @username.")
 #@app_commands.checks.has_role("Bouncer")
-@CommonDefinitions.has_role_custom("Bouncer")
+@CustomSlashDecorator.has_role_custom("Bouncer")
 #@app_commands.default_permissions(manage_messages=True)
 async def verify(interaction, user: discord.Member):
     await interaction.response.defer(ephemeral=True, thinking=False)

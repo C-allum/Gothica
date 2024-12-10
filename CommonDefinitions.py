@@ -367,24 +367,7 @@ loadingtips = ["The ancient rivalry between Nurse and Maid is not actually ancie
 '''
 This is a check decorator to check if a role is present in a users profile.
 Unlike discords own function, this doesn't throw an internal error, but rather sends a message to clarify what happened.
-'''          
-def has_role_custom(item: Union[int, str], /) -> Callable[[T], T]:
-
-    async def predicate(interaction: discord.Interaction) -> bool:
-        if isinstance(interaction.user, discord.User):
-            raise NoPrivateMessage()
-
-        if isinstance(item, int):
-            role = interaction.user.get_role(item)
-        else:
-            role = discord.utils.get(interaction.user.roles, name=item)
-
-        if role is None:
-            await interaction.channel.send(f"{interaction.user.mention} you do not have the required role to do that.")
-            raise discord.app_commands.errors.MissingRole(item)
-        return True
-
-    return discord.app_commands.checks.check(predicate)
+'''        
 
 def check(author):
     def inner_check(message): 
