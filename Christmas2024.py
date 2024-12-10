@@ -93,7 +93,7 @@ async def show_nice_naughty_results(interaction: discord.Interaction) -> list[(s
         scores.sort(key= lambda x: x[0])
         desc.append("Each players scores for being naughty or being nice:\n\n")
         for (name, naughty, nice) in scores:
-            entry = f"```{name:<{user_name_max_length}}  {"Naughty:"} {str(naughty):>{naughty_score_max_length}}  {"Nice:"} {str(nice):>{nice_score_max_length}}\n```"
+            entry = f"```{name:<{user_name_max_length}}  {'Naughty:'} {str(naughty):>{naughty_score_max_length}}  {'Nice:'} {str(nice):>{nice_score_max_length}}\n```"
             if len(desc[-1] + entry) < 4096: 
                 desc[-1] += entry
             else:
@@ -154,7 +154,7 @@ async def show_naughty_results(interaction: discord.Interaction) -> list[(str, i
         scores.sort(key= lambda x: x[1], reverse= True)
         desc.append("Each players score for being naughty:\n\n")
         for (name, naughty) in scores:
-            entry = f"```{name:<{user_name_max_length}}  {"Naughty:"} {str(naughty):>{naughty_score_max_length}}\n```"
+            entry = f"```{name:<{user_name_max_length}}  {'Naughty:'} {str(naughty):>{naughty_score_max_length}}\n```"
             if len(desc[-1] + entry) < 4096: 
                 desc[-1] += entry
             else:
@@ -215,7 +215,7 @@ async def show_nice_results(interaction: discord.Interaction) -> list[(str, int)
         scores.sort(key= lambda x: x[1], reverse= True)
         desc.append("Each players score for being nice:\n\n")
         for (name, nice) in scores:
-            entry = f"```{name:<{user_name_max_length}}  {"Nice:"} {str(nice):>{nice_score_max_length}}\n```"
+            entry = f"```{name:<{user_name_max_length}}  {'Nice:'} {str(nice):>{nice_score_max_length}}\n```"
             if len(desc[-1] + entry) < 4096: 
                 desc[-1] += entry
             else:
