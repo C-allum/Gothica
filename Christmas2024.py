@@ -48,7 +48,8 @@ async def nice_vote(target:discord.user, voter:discord.user, message:discord.mes
         description="Print NiceNaughtyList"
 )
 @app_commands.checks.has_role("Verified")
-async def show_nice_naughty_results(interaction) -> list[(str, int, int)]:
+async def show_nice_naughty_results(interaction: discord.Interaction) -> list[(str, int, int)]:
+    interaction.response.defer()
     try:
         transactionsConnection = sqlite3.connect('ChristmasList.db')
         transactionsCursor = transactionsConnection.cursor()
@@ -65,7 +66,7 @@ async def show_nice_naughty_results(interaction) -> list[(str, int, int)]:
         scores = []
         for user in users:
             try:
-                naughty_score = [naughty[1] for naughty in naughty_data if naughty[0] == user][0]
+                naughty_score = [-naughty[1] for naughty in naughty_data if naughty[0] == user][0]
             except:
                 naughty_score = 0
 
@@ -83,16 +84,16 @@ async def show_nice_naughty_results(interaction) -> list[(str, int, int)]:
         print('Error occured fetching list data - ', error)
         
     desc = []
-    user_name_max_length = len(max(users, key=lambda x: len(x)))
-    score_1_max_length = len(str(max(scores, key=lambda x: len(str(x[1])))[1]))
-    score_2_max_length = len(str(max(scores, key=lambda x: len(str(x[2])))[2]))
-    score_max_length = len("Naughty: ") + max(score_1_max_length, score_2_max_length)
     if not scores:
         desc = ["The Naughty and Nice List is empty!"]
     else:
+        user_name_max_length = len(max(users, key=lambda x: len(x)))
+        naughty_score_max_length = len(str(max(scores, key=lambda x: len(str(x[1])))[1]))
+        nice_score_max_length = len(str(max(scores, key=lambda x: len(str(x[2])))[2]))
+        scores.sort(key= lambda x: x[0])
         desc.append("Each players scores for being naughty or being nice:\n\n")
         for (name, naughty, nice) in scores:
-            entry = f"```{name:<{user_name_max_length + 1}} Naughty: {str(naughty):>{score_max_length + 1}} Nice: {str(nice):>{score_max_length + 1}}\n```"
+            entry = f"```{name:<{user_name_max_length}}  {"Naughty:"} {str(naughty):>{naughty_score_max_length}}  {"Nice:"} {str(nice):>{nice_score_max_length}}\n```"
             if len(desc[-1] + entry) < 4096: 
                 desc[-1] += entry
             else:
@@ -100,15 +101,137 @@ async def show_nice_naughty_results(interaction) -> list[(str, int, int)]:
             print(entry.strip("`"))
 
     desc_index = 0
+    emb = []
     for elem in desc:
         if desc_index == 0:
-            emb = discord.Embed(title = "Naughty and Nice List", description = desc[desc_index], colour = embcol)
+            emb.append(discord.Embed(title = "Naughty and Nice List", description = desc[desc_index], colour = embcol))
         else:
-            emb = discord.Embed(description = desc[desc_index], colour = embcol)
+            emb.append(discord.Embed(description = desc[desc_index], colour = embcol))
+        desc_index += 1
+    
+    await interaction.response.send_message(embeds=emb)
+    return scores
 
-        await interaction.channel.send(embed=emb)
-        desc_index += 1    
+
+@staffgroup.command(
+        name="print-christmas-results_naughty",
+        description="Print NaughtyList"
+)
+@app_commands.checks.has_role("Verified")
+async def show_naughty_results(interaction: discord.Interaction) -> list[(str, int)]:
+    interaction.response.defer()
+    try:
+        transactionsConnection = sqlite3.connect('ChristmasList.db')
+        transactionsCursor = transactionsConnection.cursor()
+
+        nice_data = transactionsCursor.execute("SELECT Person, SUM(Vote) FROM NiceNaughtyList WHERE Vote = 1 GROUP BY Person ORDER BY Person").fetchall()
+        naughty_data = transactionsCursor.execute("SELECT Person, SUM(Vote) FROM NiceNaughtyList WHERE Vote = -1 GROUP BY Person ORDER BY Person").fetchall()
+        print("Naughty Data:")
+        for entry in naughty_data:
+            print(entry)
+        users = list(set([user for (user, value) in naughty_data + nice_data]))
+        scores = []
+        for user in users:
+            try:
+                naughty_score = [-naughty[1] for naughty in naughty_data if naughty[0] == user][0]
+            except:
+                naughty_score = 0
+                
+            scores.append((user, naughty_score))
+        print("\nMerged Data (user, naughty):")
+        for entry in scores:
+            print(entry)
+
+    except sqlite3.Error as error:
+        print('Error occured fetching list data - ', error)
         
+    desc = []
+    if not scores:
+        desc = ["The Naughty List is empty!"]
+    else:
+        user_name_max_length = len(max(users, key=lambda x: len(x)))
+        naughty_score_max_length = len(str(max(scores, key=lambda x: len(str(x[1])))[1]))
+        scores.sort(key= lambda x: x[1], reverse= True)
+        desc.append("Each players score for being naughty:\n\n")
+        for (name, naughty) in scores:
+            entry = f"```{name:<{user_name_max_length}}  {"Naughty:"} {str(naughty):>{naughty_score_max_length}}\n```"
+            if len(desc[-1] + entry) < 4096: 
+                desc[-1] += entry
+            else:
+                desc.append(entry)
+            print(entry.strip("`"))
+
+    desc_index = 0
+    emb = []
+    for elem in desc:
+        if desc_index == 0:
+            emb.append(discord.Embed(title = "Naughty List", description = desc[desc_index], colour = embcol))
+        else:
+            emb.append(discord.Embed(description = desc[desc_index], colour = embcol))
+        desc_index += 1
+    
+    await interaction.response.send_message(embeds=emb)
+    return scores
+
+
+@staffgroup.command(
+        name="print-christmas-results_nice",
+        description="Print NiceList"
+)
+@app_commands.checks.has_role("Verified")
+async def show_nice_results(interaction: discord.Interaction) -> list[(str, int)]:
+    interaction.response.defer()
+    try:
+        transactionsConnection = sqlite3.connect('ChristmasList.db')
+        transactionsCursor = transactionsConnection.cursor()
+
+        nice_data = transactionsCursor.execute("SELECT Person, SUM(Vote) FROM NiceNaughtyList WHERE Vote = 1 GROUP BY Person ORDER BY Person").fetchall()
+        naughty_data = transactionsCursor.execute("SELECT Person, SUM(Vote) FROM NiceNaughtyList WHERE Vote = -1 GROUP BY Person ORDER BY Person").fetchall()
+        print("Nice Data:")
+        for entry in nice_data:
+            print(entry)
+        users = list(set([user for (user, value) in naughty_data + nice_data]))
+        scores = []
+        for user in users:
+            try:
+                nice_score = [nice[1] for nice in nice_data if nice[0] == user][0]
+            except:
+                nice_score = 0
+                
+            scores.append((user, nice_score))
+        print("\nMerged Data (user, nice):")
+        for entry in scores:
+            print(entry)
+
+    except sqlite3.Error as error:
+        print('Error occured fetching list data - ', error)
+        
+    desc = []
+    if not scores:
+        desc = ["The Nice List is empty!"]
+    else:
+        user_name_max_length = len(max(users, key=lambda x: len(x)))
+        nice_score_max_length = len(str(max(scores, key=lambda x: len(str(x[1])))[1]))
+        scores.sort(key= lambda x: x[1], reverse= True)
+        desc.append("Each players score for being nice:\n\n")
+        for (name, nice) in scores:
+            entry = f"```{name:<{user_name_max_length}}  {"Nice:"} {str(nice):>{nice_score_max_length}}\n```"
+            if len(desc[-1] + entry) < 4096: 
+                desc[-1] += entry
+            else:
+                desc.append(entry)
+            print(entry.strip("`"))
+
+    desc_index = 0
+    emb = []
+    for elem in desc:
+        if desc_index == 0:
+            emb.append(discord.Embed(title = "Nice List", description = desc[desc_index], colour = embcol))
+        else:
+            emb.append(discord.Embed(description = desc[desc_index], colour = embcol))
+        desc_index += 1
+    
+    await interaction.response.send_message(embeds=emb)
     return scores
 
 
@@ -143,7 +266,7 @@ async def add_christmas_dez_reward_item(reacter:discord.user, message:discord.me
             playerID, imgURL, charName = await TupperDatabase.lookup(tup_image_url, message)
         except TypeError:
             giver = reacter
-            await client.get_channel(botchannel).send(embed=discord.Embed(title = str(giver.display_name) + ": We didn't find the tupper in our database.", description = "The first time a character is awarded dezzies, the post has to be rather new and can't be a long, edited post! Try awarding a different, unedited post of that character. If the issue persists, contact the bot gods. (Note from Kendrax: This is a known bug and I have no clue why this happens.)", colour = embcol, url = mess.jump_url))
+            await client.get_channel(botchannel).send(embed=discord.Embed(title = str(giver.display_name) + ": We didn't find the tupper in our database.", description = "The first time a character is awarded dezzies, the post has to be rather new and can't be a long, edited post! Try awarding a different, unedited post of that character. If the issue persists, contact the bot gods. (Note from Kendrax: This is a known bug and I have no clue why this happens.)", colour = embcol, url = message.jump_url))
             return
         target = await client.fetch_user(playerID)
 
