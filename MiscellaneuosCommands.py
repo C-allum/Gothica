@@ -1779,7 +1779,7 @@ async def getPlayerNameList():
 #         await hook.delete()
 #     await processing.delete()
 
-@tree.command(name = "embed", description = "Generates an Embed")
+@staffgroup.command(name = "embed", description = "Generates an Embed")
 @app_commands.describe(title = "The title of the embed", description = "The main body of the embed", image = "A link to the main image for the embed", thumbnail = "A link to the image for the thumbnail", channel = "The channel in which to send the embed (Staff only).")
 @app_commands.checks.has_role("Verified")
 async def embed(interaction, title: str, description: str = None, image: str = None, thumbnail: str = None, channel: str = None):
@@ -1805,7 +1805,7 @@ async def embed(interaction, title: str, description: str = None, image: str = N
 
     await interaction.followup.send("Embed sent!")
 
-@tree.command(name = "editembed", description = "Edits an Embed")
+@staffgroup.command(name = "editembed", description = "Edits an Embed")
 @app_commands.describe(embed_to_edit = "Link to the embed that needs editing", title = "The title of the embed", description = "The main body of the embed", image = "A link to the main image for the embed", thumbnail = "A link to the image for the thumbnail")
 @app_commands.checks.has_role("Verified")
 async def editembed(interaction, embed_to_edit: str, title: str, description: str = None, image: str = None, thumbnail: str = None, channel: str = None):
