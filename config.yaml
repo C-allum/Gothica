@@ -62,5 +62,5 @@ general:
   administrative_role: admin
   gothy_prefix: '%'
   index_of_first_shop: 8
-  number_of_shops: 12
+  number_of_shops: 14
   staff_role: staff
