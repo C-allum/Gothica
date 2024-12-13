@@ -197,6 +197,10 @@ else:
     menageriechannel = botchannel
     arbchannel = botchannel
 
+# Event Stuff
+#       Christmas event stuffing stocker item ids
+stuffing_stockers = ["2024Winter01", "2024Winter02", "2024Winter03", "2024Winter04", "2024Winter05", "2024Winter06", "2024Winter07", "2024Winter08", "2024Winter09", "2024Winter10", "2024Winter11", "2024Winter12", "2024Winter13", "2024Winter14", "2024Winter15", "2024Winter16", "2024Winter17", "2024Winter18"]
+
 
 sheet = service.spreadsheets()
 result = sheet.values().get(spreadsheetId = CharSheet, range = "E1:AB1").execute()

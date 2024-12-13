@@ -144,6 +144,8 @@ async def on_ready():
                 if "cult of the mistress" in str(roles).lower():
                     dezziePool += int(GlobalVars.config["economy"]["weeklydezziebonuspatront4"])
 
+                if GlobalVars.config["events"]["christmas_gifts"] == 1: 
+                    dezziePool = dezziePool * 1.5
             try:
                 GlobalVars.economyData[i+3][0] = dezziePool
             except IndexError:
@@ -1644,10 +1646,10 @@ async def on_raw_reaction_add(reaction):
             player = " The player who sent the message was " + mess.author.name + "/ " + mess.author.display_name
         await client.get_channel(arbchannel).send("<@&1145870554503585872>, " + reaction.member.name + "/ " + reaction.member.display_name + " has reacted to a message with a red circle. Could somebody check in to ensure everything is ok?\n\nHere's the relevant information:\nThe message (" + mess.jump_url + ") was sent in " + mess.channel.name + " at " + str(mess.created_at).split(".")[0] + ".\n" + reaction.member.name + " reacted to it with a red circle at " + str(datetime.now()).split(".")[0]  + "\n" + player)
 
-    elif reaction.emoji.name == "💀" and GlobalVars.config["events"]["christmas_naughty_nice"] == 1 and mess.author.bot == False:
+    elif reaction.emoji.name == "naughty" and GlobalVars.config["events"]["christmas_naughty_nice"] == 1 and mess.author.bot == False:
         await Christmas2024.naughty_vote(mess.author, reaction.member, mess)
 
-    elif reaction.emoji.name == "💀" and GlobalVars.config["events"]["christmas_naughty_nice"] == 1 and mess.author.bot == True and not mess.author.name in botnames:
+    elif reaction.emoji.name == "naughty" and GlobalVars.config["events"]["christmas_naughty_nice"] == 1 and mess.author.bot == True and not mess.author.name in botnames:
         tup_image_url = mess.author.display_avatar
         if mess.author.id == 876440980356755456:
             await client.get_channel(botchannel).send(embed=discord.Embed(title = f"Do not feed us Dezzies.", description = "We will get tummy aches.", colour = embcol, url = mess.jump_url))
@@ -1664,10 +1666,10 @@ async def on_raw_reaction_add(reaction):
         target = await client.fetch_user(playerID)
         await Christmas2024.naughty_vote(target, reaction.member, mess)
 
-    elif reaction.emoji.name == "👌" and GlobalVars.config["events"]["christmas_naughty_nice"] == 1 and mess.author.bot == False:
+    elif reaction.emoji.name == "nice" and GlobalVars.config["events"]["christmas_naughty_nice"] == 1 and mess.author.bot == False:
         await Christmas2024.nice_vote(mess.author, reaction.member, mess)
 
-    elif reaction.emoji.name == "👌" and GlobalVars.config["events"]["christmas_naughty_nice"] == 1 and mess.author.bot == True and not mess.author.name in botnames:
+    elif reaction.emoji.name == "nice" and GlobalVars.config["events"]["christmas_naughty_nice"] == 1 and mess.author.bot == True and not mess.author.name in botnames:
         tup_image_url = mess.author.display_avatar
         if mess.author.id == 876440980356755456:
             await client.get_channel(botchannel).send(embed=discord.Embed(title = f"Do not feed us Dezzies.", description = "We will get tummy aches.", colour = embcol, url = mess.jump_url))

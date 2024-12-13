@@ -271,7 +271,7 @@ async def add_christmas_dez_reward_item(reacter:discord.user, message:discord.me
         target = await client.fetch_user(playerID)
 
     # Fetch list of christmas items
-    item_list = ["spellScroll001", "spellScroll002", "spellScroll003", "spellScroll004"]
+    item_list = stuffing_stockers
     # Choose one of the items at random
     items_to_gift = []
     for i in range(0, amount):
