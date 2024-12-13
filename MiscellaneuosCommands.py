@@ -630,7 +630,7 @@ async def manualDezPoolReset(message):
         #If they aren't on the server anymore, we can just not refresh their dezzie pool.
         if userStillOnServer == 1:
             #Base values
-            dezziePool = GlobalVars.config["economy"]["weeklydezziepoolverified"]
+            dezziePool = int(GlobalVars.config["economy"]["weeklydezziepoolverified"])
             econ_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if name in x][0])
 
             #Add char slot bonus
@@ -654,6 +654,9 @@ async def manualDezPoolReset(message):
             if "cult of the mistress" in str(roles).lower():
                 dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront4"]
 
+
+            if GlobalVars.config["events"]["christmas_gifts"] == 1: 
+                    dezziePool = dezziePool * 1.5
         try:
             GlobalVars.economyData[i+3][0] = dezziePool
         except IndexError:

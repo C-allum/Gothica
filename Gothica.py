@@ -388,11 +388,11 @@ async def on_message(message):
                 await OocFun.emoteuncurse(message)
 
             #manual Dezzie reward pool reset
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "rewardpoolreset") and "mod team" in str(authroles).lower():
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "rewardpoolreset") and ("mod team" in str(authroles).lower() or GlobalVars.config["general"]["administrative_role"] in str(authroles).lower()):
                 await MiscellaneuosCommands.manualDezPoolReset(message)
 
             #Character Index Update - On CharRegistry, untested
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "indexupdate") and "mod team" in str(authroles).lower():
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "indexupdate") and ("mod team" in str(authroles).lower() or GlobalVars.config["general"]["administrative_role"] in str(authroles).lower()):
 
                 await CharRegistry.updatereg(message)
 
