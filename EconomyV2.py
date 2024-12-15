@@ -2469,7 +2469,7 @@ async def dezReact(reaction):
                 break
     except IndexError:
         if not mess.author.bot:
-            await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = str(givename) + " is not in the economy.", description = "If this should not be the case, speak to Callum", colour = embcol))
+            await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = str(givename) + " is not in the economy.", description = "If this should not be the case, speak to Kendrax", colour = embcol))
 
 
     #Determine gift amount - Values in CommonDefinitions.py
@@ -2525,10 +2525,10 @@ async def dezReact(reaction):
                 TransactionsDatabaseInterface.addTransaction(target.name, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
 
                 if GlobalVars.economyData[int(giverow)+3][0] == 0:
-                    await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(GlobalVars.economyData[reciprow+1][1]) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
+                    await client.get_channel(botchannel).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName + f" in channel \"{mess.channel.name}\"", description = targetName + " now has " + str(GlobalVars.economyData[reciprow+1][1]) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
 
                 else:
-                    await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(GlobalVars.economyData[reciprow+1][1]) + dezzieemj + "\n\n" + givename + " has " + str(GlobalVars.economyData[giverow+3][0]) + dezzieemj + " in their dezzie award pool left for the week!", colour = embcol, url = mess.jump_url))
+                    await client.get_channel(botchannel).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName + f" in channel \"{mess.channel.name}\"", description = targetName + " now has " + str(GlobalVars.economyData[reciprow+1][1]) + dezzieemj + "\n\n" + givename + " has " + str(GlobalVars.economyData[giverow+3][0]) + dezzieemj + " in their dezzie award pool left for the week!", colour = embcol, url = mess.jump_url))
 
                 await client.get_channel(logchannel).send(embed=discord.Embed(title = givename + " awarded Dezzies to " + targetName, url=mess.jump_url))
                 # Christmas Stocking stuffer gifts event
@@ -2548,7 +2548,7 @@ async def dezReact(reaction):
                 GlobalVars.economyData[giverow+3][0] = 0
                 await writeEconSheet(GlobalVars.economyData)
                 TransactionsDatabaseInterface.addTransaction(target.name, TransactionsDatabaseInterface.DezzieMovingAction.React, int(giveamount))
-                await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName, description = targetName + " now has " + str(GlobalVars.economyData[reciprow+1][1]) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
+                await client.get_channel(botchannel).send(embed=discord.Embed(title = reaction.member.name + " has awarded " + str(giveamount) + dezzieemj + " to " + targetName + f" in channel \"{mess.channel.name}\"", description = targetName + " now has " + str(GlobalVars.economyData[reciprow+1][1]) + dezzieemj + "\n\n" + givename + " has used up their dezzie award pool for the week!", colour = embcol, url = mess.jump_url))
                 await client.get_channel(logchannel).send(embed=discord.Embed(title = givename + " awarded Dezzies to " + targetName, url=mess.jump_url))
                 
                 # Christmas Stocking stuffer gifts event
@@ -2556,10 +2556,10 @@ async def dezReact(reaction):
                     await Christmas2024.roll_for_christmas_dez_reward_item(reaction.member, mess, giveamount)
             #User dezzie pool is empty:
             else:
-                await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = reaction.member.name + "'s dezzie award pool for the week is empty!" , description = "You will receive a fresh pool of dezzies to award to others at the start of next week!", colour = embcol, url = mess.jump_url))
+                await client.get_channel(botchannel).send(embed=discord.Embed(title = reaction.member.name + "'s dezzie award pool for the week is empty!" , description = "You will receive a fresh pool of dezzies to award to others at the start of next week!", colour = embcol, url = mess.jump_url))
 
     else:
-        await client.get_channel(reaction.channel_id).send(embed=discord.Embed(title = "You can't award dezzies in this channel.", colour = embcol, url = mess.jump_url))
+        await client.get_channel(botchannel).send(embed=discord.Embed(title = "You can't award dezzies in this channel.", colour = embcol, url = mess.jump_url))
 
 async def rpDezReact(reaction):
     mess = await client.get_channel(reaction.channel_id).fetch_message(reaction.message_id)

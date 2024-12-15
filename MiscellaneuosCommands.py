@@ -634,25 +634,25 @@ async def manualDezPoolReset(message):
             econ_row_index = GlobalVars.economyData.index([x for x in GlobalVars.economyData if name in x][0])
 
             #Add char slot bonus
-            dezziePool += GlobalVars.config["economy"]["dezziepoolpercharslot"] * GlobalVars.economyData[econ_row_index + 2][1]
-                    
+            dezziePool += int(GlobalVars.config["economy"]["dezziepoolpercharslot"]) * int(GlobalVars.economyData[econ_row_index + 2][1])
+                
             #Bonus
             if "licensed fucksmith" in str(roles).lower():
-                dezziePool += GlobalVars.config["economy"]["weeklydezziebonusfucksmith"]
+                dezziePool += int(GlobalVars.config["economy"]["weeklydezziebonusfucksmith"])
             if "server booster" in str(roles).lower():
-                dezziePool += GlobalVars.config["economy"]["weeklydezziebonusboost"]
+                dezziePool += int(GlobalVars.config["economy"]["weeklydezziebonusboost"])
             if "server veteran" in str(roles).lower():
-                dezziePool += GlobalVars.config["economy"]["weeklydezziebonusveteran"]
-            if "staff" in str(roles).lower() or "mod team" in str(roles).lower() or "admin" in str(roles).lower():
-                dezziePool += GlobalVars.config["economy"]["weeklydezziebonusstaff"]
+                dezziePool += int(GlobalVars.config["economy"]["weeklydezziebonusveteran"])
+            if "staff" in str(roles).lower():
+                dezziePool += int(GlobalVars.config["economy"]["weeklydezziebonusstaff"])
             if "patron tier 1" in str(roles).lower():
-                dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront1"]
+                dezziePool += int(GlobalVars.config["economy"]["weeklydezziebonuspatront1"])
             if "patron tier 2" in str(roles).lower():
-                dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront2"]
+                dezziePool += int(GlobalVars.config["economy"]["weeklydezziebonuspatront2"])
             if "patron tier 3" in str(roles).lower():
-                dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront3"]
+                dezziePool += int(GlobalVars.config["economy"]["weeklydezziebonuspatront3"])
             if "cult of the mistress" in str(roles).lower():
-                dezziePool += GlobalVars.config["economy"]["weeklydezziebonuspatront4"]
+                dezziePool += int(GlobalVars.config["economy"]["weeklydezziebonuspatront4"])
 
 
             if GlobalVars.config["events"]["christmas_gifts"] == 1: 
