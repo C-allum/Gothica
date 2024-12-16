@@ -785,7 +785,7 @@ async def on_message(message):
                 print("Done")
 
             #Guild Adventurer Command
-            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "adventurer") and ("staff" in str(message.author.roles).lower() or "licensed fucksmith" in str(message.author.roles).lower() or "guild licenser" in str(message.author.roles).lower() or message.author.name == "C_allum"):
+            elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) + "adventurer") and ("staff" in str(message.author.roles).lower() or "licensed smith" in str(message.author.roles).lower() or "guild licenser" in str(message.author.roles).lower() or message.author.name == "C_allum"):
 
                 adventarget = message.content.split("@")[1]
 
@@ -811,7 +811,7 @@ async def on_message(message):
 
                     await advenmemb.add_roles(role)
 
-                    await client.get_channel(841736084362362940).send(str(advenname) + " has been given the Guild Adventurer role")
+                    await client.get_channel(servermemberlog).send(str(advenname) + " has been given the Guild Adventurer role")
 
                     chardata = sheet.values().get(spreadsheetId = CharSheet, range = "B1:F8000", majorDimension='COLUMNS').execute().get("values")
 
@@ -820,6 +820,8 @@ async def on_message(message):
                     advenping = "<@" + str(advenid) + ">"
 
                     charappend = "\n\nThe role was granted, but the character could not be found"
+
+                    charindex = None
 
                     if advenchar != None and advenchar.lower() in str(chardata[4]).lower():
 
@@ -830,12 +832,20 @@ async def on_message(message):
                                 sheet.values().update(spreadsheetId = CharSheet, range = str("AA" + str(a+1)), valueInputOption = "USER_ENTERED", body = dict(majorDimension='ROWS', values=[["Approved"]])).execute()
 
                                 charappend = ""
-
+                                charindex = a
                                 break
 
                     rand = random.randint(1,10)
 
                     await message.channel.send(embed = discord.Embed(title = random.choice(["Approved"]), description = random.choice(["You are now an adventurer"]) + charappend, colour = embcol))
+                    
+                    # Reward for approving charsheets
+                    amount = GlobalVars.config["economy"]["licenserreward"]
+                    await EconomyV2.addDezziesToPlayer(message, amount, message.author.id, message.author.name, True, False)
+                    try:
+                        await client.get_channel(licenserchannel).send(embed = discord.Embed(title = f"Licenser {message.author.name} approved {chardata[4][a]}!", description = f"Incredible work. We appreciate you helping us to keep our records in order. Here, have {amount}{dezzieemj} for your help."))
+                    except:
+                        print("Couldn't find smith channel by ID.")
 
             #Looking for RP
             elif message.content.lower().startswith(str(GlobalVars.config["general"]["gothy_prefix"]) +"lfg"):

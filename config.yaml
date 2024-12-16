@@ -28,6 +28,7 @@ economy:
   dezziepoolpercharslot: 100
   fixed_currecy_per_ooc_message: 2
   fixed_currecy_per_rp_message: 5
+  licenserreward: 500
   reactcashmoney: 100
   reactdz: 20
   reactmakeitrain: 200
