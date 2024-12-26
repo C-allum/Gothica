@@ -131,8 +131,8 @@ if liveVersion: #Set to 1 to use the real spreadsheets, or 0 to use the testing 
 
     datingchannel = 1204872179871653898
 
-    guildid = 828411760365142076
 
+    guildid = 828411760365142076
     oocchannel = 832435243117445131
     welcchannel = 828411760847356005
     servermemberlog = 841736084362362940

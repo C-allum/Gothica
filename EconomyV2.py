@@ -3155,7 +3155,11 @@ async def showInventoryAndChooseItem(message, author_row_index, embed_bottom_not
         item_descriptor = player_inventory[0][i]
         item_list.append(item_descriptor)
         #Find item in database
-        item_database_info = [x for x in GlobalVars.itemdatabase[0] if item_descriptor in x][0]
+        try:
+            item_database_info = [x for x in GlobalVars.itemdatabase[0] if item_descriptor in x][0]
+        except:
+            await message.channel.send(f"We could not find the item '{item_descriptor}'. Where did you get that?! (No seriously, tell Kendrax).")
+            continue
         #Collect info about this item
         item_name = item_database_info[0]
         item_short_description = item_database_info[7]

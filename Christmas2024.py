@@ -44,6 +44,88 @@ async def nice_vote(target:discord.user, voter:discord.user, message:discord.mes
 
 
 @staffgroup.command(
+        name="give-christmas-reward-items",
+        description="Print NiceNaughtyList. CALL IN ANNOUNCEMENT CHANNEL!"
+)
+@app_commands.checks.has_role("Verified")
+async def nice_naughty_item_handout(interaction: discord.Interaction):
+    await interaction.response.defer()
+    try:
+        transactionsConnection = sqlite3.connect('ChristmasList.db')
+        transactionsCursor = transactionsConnection.cursor()
+
+        nice_data = transactionsCursor.execute("SELECT Person, SUM(Vote) FROM NiceNaughtyList WHERE Vote = 1 GROUP BY Person ORDER BY Person").fetchall()
+        naughty_data = transactionsCursor.execute("SELECT Person, SUM(Vote) FROM NiceNaughtyList WHERE Vote = -1 GROUP BY Person ORDER BY Person").fetchall()
+        print("Naughty Data:")
+        for entry in naughty_data:
+            print(entry)
+        print("\nNice Data:")
+        for entry in nice_data:
+            print(entry)
+        users = list(set([user for (user, value) in naughty_data + nice_data]))
+        scores = []
+        for user in users:
+            try:
+                naughty_score = [-naughty[1] for naughty in naughty_data if naughty[0] == user][0]
+            except:
+                naughty_score = 0
+
+            try:
+                nice_score = [nice[1] for nice in nice_data if nice[0] == user][0]
+            except:
+                nice_score = 0
+                
+            scores.append((user, naughty_score, nice_score))
+        print("\nMerged Data (user, naughty, nice):")
+        for entry in scores:
+            print(entry)
+
+    except sqlite3.Error as error:
+        print('Error occured fetching list data - ', error)
+        
+    desc = []
+    if not scores:
+        await interaction.followup.send("Naughty/Nice list is empty!")
+        return
+    else: 
+        naughty_item_id = "collar001"
+        nice_item_id = "collar002"
+
+        guild = client.get_guild(guildid)
+        neutral_list = []
+        # Now iterate through the people in the list
+        for user in scores:
+            target_user = discord.utils.get(guild.members, name=user[0])
+            # Check if they were nice
+            if user[1] < user[2]:
+                # Add nice
+                target_inv_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if str(target_user.id) in x][0])
+                await EconomyV2.addItemToInventory(target_inv_index, nice_item_id, 1, "", "")
+
+
+            # Check if they were naughty
+            elif user[1] > user[2]:
+                # Add naughty
+                target_inv_index = GlobalVars.inventoryData.index([x for x in GlobalVars.inventoryData if str(target_user.id) in x][0])
+                await EconomyV2.addItemToInventory(target_inv_index, naughty_item_id, 1, "", "")
+            # And maybe they were just as naughty as they were nice
+            else:
+                neutral_list.append(target_user)
+                continue
+            # Add to the list of people getting to choose.
+
+        neutral_message = f"The following people managed to be equally naughty and nice: \n"
+        for user in neutral_list:
+            neutral_message += f"{user.mention} \n"
+        
+        neutral_message += "\nPlease ping staff and tell them which item (naughty or nice) you would like to receive!"
+        await interaction.channel.send(neutral_message)
+        await EconomyV2.writeInvetorySheet(GlobalVars.inventoryData)
+    await interaction.followup.send("Successfully finished the task!")
+
+
+
+@staffgroup.command(
         name="print-christmas-results",
         description="Print NiceNaughtyList"
 )
