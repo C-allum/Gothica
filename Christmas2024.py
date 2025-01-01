@@ -88,8 +88,8 @@ async def nice_naughty_item_handout(interaction: discord.Interaction):
         await interaction.followup.send("Naughty/Nice list is empty!")
         return
     else: 
-        naughty_item_id = "collar001"
-        nice_item_id = "collar002"
+        naughty_item_id = "2024Winter19"
+        nice_item_id = "2024Winter20"
 
         guild = client.get_guild(guildid)
         neutral_list = []
